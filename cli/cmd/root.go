@@ -107,8 +107,19 @@ func findAllOpenAPI() []*parser.OpenAPIFileInfo {
 	return result
 }
 
-func loadParametersIntoCommand(parameters openapi3.Parameters, cmd *cobra.Command) {
-	// TODO
+func loadParametersIntoCommand(action *parser.OpenAPIAction, cmd *cobra.Command) {
+	action.PathParams, action.HeaderParam = GetParams(action.Parameters)
+	action.RequestBodyParam = GetRequestBodyParams(action)
+
+	for _, p := range action.PathParams {
+		AddFlag(cmd, p)
+	}
+	for _, p := range action.HeaderParam {
+		AddFlag(cmd, p)
+	}
+	for _, p := range action.RequestBodyParam {
+		AddFlag(cmd, p)
+	}
 }
 
 func createActionLoader(
@@ -130,7 +141,7 @@ func createActionLoader(
 		}
 
 		cmdBuildHandler.loadActionFlags = func() {
-			loadParametersIntoCommand(action.Parameters, actionCmd)
+			loadParametersIntoCommand(action, actionCmd)
 		}
 
 		nativeHelpFunc := actionCmd.HelpFunc()
