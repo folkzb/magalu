@@ -1,0 +1,1815 @@
+openapi: 3.0.2
+info:
+  title: Virtual Machine Api Product
+  description: Virtual Machine Api Product
+  contact:
+    name: Tribo IAAS Cloud
+    url: https://github.com/luizalabs
+    email: lia.furtado@luizalabs.com
+  version: 1.60.0
+paths:
+    /v0/healthcheck:
+        get:
+            tags:
+                - healthchecks
+            summary: Healthcheck
+            description: Check api status
+            operationId: healthcheck_v0_healthcheck_get
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Healthcheck'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+
+    /v0/images:
+        get:
+            tags:
+                - images
+            summary: List Images
+            description: Retrive a list of images
+            operationId: list_images_v0_images_get
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListImageResponse'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+        post:
+            tags:
+                - images
+            summary: Create Image
+            description: Creates images only in DB
+            operationId: create_image_v0_images_post
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ImageRequest'
+                required: true
+            responses:
+                '201':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ImageResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+    /v0/images_all:
+        get:
+            tags:
+                - images
+            summary: List Images All
+            description: Retrive a list of all images
+            operationId: list_images_all_v0_images_all_get
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListImageInternalResponse'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+    '/v0/images/{image_id}':
+        delete:
+            tags:
+                - images
+            summary: Delete Image
+            description: Deletes images only in DB
+            operationId: delete_image_v0_images__image_id__delete
+            parameters:
+                -   description: image_id
+                    required: true
+                    schema:
+                        title: Image Id
+                        type: string
+                        format: uuid
+                    name: image_id
+                    in: path
+            responses:
+                '204':
+                    description: Successful Response
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+    /v0/instance_types:
+        get:
+            tags:
+                - instance-types
+            summary: List Instance Types
+            description: Returns a list of instance types
+            operationId: list_instance_types_v0_instance_types_get
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/InstanceTypesListResponse'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+        post:
+            tags:
+                - instance-types
+            summary: Create Instance Type
+            description: Creates a instance type in DB only
+            operationId: create_instance_type_v0_instance_types_post
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/InstanceTypesRequest'
+                required: true
+            responses:
+                '201':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/InstanceTypesResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+    /v0/instance_types_all:
+        get:
+            tags:
+                - instance-types
+            summary: List Instance Types All
+            description: Returns a list of all instance types
+            operationId: list_instance_types_all_v0_instance_types_all_get
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/InstanceTypeDbListResponse'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+    '/v0/instance_types/{instance_type_id}':
+        delete:
+            tags:
+                - instance-types
+            summary: Delete Instance Type
+            description: Deletes a instance type in DB only
+            operationId: delete_instance_type_v0_instance_types__instance_type_id__delete
+            parameters:
+                -   description: instance_type_id
+                    required: true
+                    schema:
+                        title: Instance Type Id
+                        type: string
+                        format: uuid
+                    name: instance_type_id
+                    in: path
+            responses:
+                '204':
+                    description: Successful Response
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+    /v0/instances:
+        get:
+            tags:
+                - instances
+            summary: List Instances
+            description: Returns a list of instances for a provided tenant_id
+            operationId: list_instances_v0_instances_get
+            parameters:
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListInstanceResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+        post:
+            tags:
+                - instances
+            summary: Instance Create
+            description: Create a instance asynchronously
+            operationId: instance_create_v0_instances_post
+            parameters:
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/InstanceCreateRequest'
+                required: true
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+    '/v0/instances/{id}':
+        get:
+            tags:
+                - instances
+            summary: Instance Details
+            description: Returns a instance details
+            operationId: instance_details_v0_instances__id__get
+            parameters:
+                -   description: id
+                    required: true
+                    schema:
+                        title: Id
+                        type: string
+                        format: uuid
+                    name: id
+                    in: path
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/InstanceResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+        delete:
+            tags:
+                - instances
+            summary: Instance Delete
+            description: Delete a instance
+            operationId: instance_delete_v0_instances__id__delete
+            parameters:
+                -   description: id
+                    required: true
+                    schema:
+                        title: Id
+                        type: string
+                        format: uuid
+                    name: id
+                    in: path
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '204':
+                    description: Successful Response
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+
+        patch:
+            tags:
+                - instances
+            summary: Update Instance Status
+            description: Update a instance
+            operationId: update_instance_status_v0_instances__id__patch
+            parameters:
+                -   description: id
+                    required: true
+                    schema:
+                        title: Id
+                        type: string
+                        format: uuid
+                    name: id
+                    in: path
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/InstancePatchRequest'
+                required: true
+            responses:
+                '204':
+                    description: Successful Response
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+    '/v0/instances/{id}/events':
+        get:
+            tags:
+                - instances
+            summary: List Instance Events
+            description: Returns a list for all events in a instance
+            operationId: list_instance_events_v0_instances__id__events_get
+            parameters:
+                -   description: id
+                    required: true
+                    schema:
+                        title: Id
+                        type: string
+                        format: uuid
+                    name: id
+                    in: path
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListInstanceEventResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+    '/v0/instances/{id}/events/{event_id}':
+        get:
+            tags:
+                - instances
+            summary: Details Instance Event
+            description: Returns the event details for the instance
+            operationId: details_instance_event_v0_instances__id__events__event_id__get
+            parameters:
+                -   description: id
+                    required: true
+                    schema:
+                        title: Id
+                        type: string
+                        format: uuid
+                    name: id
+                    in: path
+                -   description: event_id
+                    required: true
+                    schema:
+                        title: Event Id
+                        type: string
+                        format: uuid
+                    name: event_id
+                    in: path
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/InstanceEventDetailsResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+    /v0/keypairs:
+        get:
+            tags:
+                - keypairs
+            summary: List Keypairs
+            description: Returns a list of keypairs from a provided tenant_id
+            operationId: list_keypairs_v0_keypairs_get
+            parameters:
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/KeypairsListResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.read
+        post:
+            tags:
+                - keypairs
+            summary: Create Keypair
+            description: Create a keypair
+            operationId: create_keypair_v0_keypairs_post
+            parameters:
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/KeypairRequest'
+                required: true
+            responses:
+                '201':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/KeypairResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+    '/v0/keypairs/{keypair_name}':
+        post:
+            tags:
+                - keypairs
+            summary: Create Private Public Key
+            description: Create a private and public key
+            operationId: create_private_public_key_v0_keypairs__keypair_name__post
+            parameters:
+                -   description: keypair_name
+                    required: true
+                    schema:
+                        title: Keypair Name
+                        type: string
+                    name: keypair_name
+                    in: path
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '201':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/KeypairCreateResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+        delete:
+            tags:
+                - keypairs
+            summary: Delete Keypair
+            description: Delete a keypair
+            operationId: delete_keypair_v0_keypairs__keypair_name__delete
+            parameters:
+                -   description: keypair_name
+                    required: true
+                    schema:
+                        title: Keypair Name
+                        type: string
+                    name: keypair_name
+                    in: path
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '204':
+                    description: Successful Response
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+            security:
+                - OAuth2:
+                    - virtual-machine.write
+    /v0/xaas/instances:
+        get:
+            tags:
+                - xaas-instances
+            summary: List Instances
+            description: Returns a list of instances for a provided tenant_id from xaas project
+            operationId: list_instances_v0_xaas_instances_get
+            parameters:
+                -   description: project_type
+                    required: true
+                    schema:
+                        $ref: '#/components/schemas/ProjectType'
+                    name: project_type
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListInstanceResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+        post:
+            tags:
+                - xaas-instances
+            summary: Instance Create
+            description: Create a instance asynchronously in a xaas project
+            operationId: instance_create_v0_xaas_instances_post
+            parameters:
+                -   description: project_type
+                    required: true
+                    schema:
+                        $ref: '#/components/schemas/ProjectType'
+                    name: project_type
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/InstanceCreateRequest'
+                required: true
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+    '/v0/xaas/instances/{id}':
+        get:
+            tags:
+                - xaas-instances
+            summary: Instance Details
+            description: Returns a instance details from xaas project
+            operationId: instance_details_v0_xaas_instances__id__get
+            parameters:
+                -   description: id
+                    required: true
+                    schema:
+                        title: Id
+                        type: string
+                        format: uuid
+                    name: id
+                    in: path
+                -   description: project_type
+                    required: true
+                    schema:
+                        $ref: '#/components/schemas/ProjectType'
+                    name: project_type
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/InstanceResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+        delete:
+            tags:
+                - xaas-instances
+            summary: Instance Delete
+            description: Delete a instance in xaas project
+            operationId: instance_delete_v0_xaas_instances__id__delete
+            parameters:
+                -   description: id
+                    required: true
+                    schema:
+                        title: Id
+                        type: string
+                        format: uuid
+                    name: id
+                    in: path
+                -   description: project_type
+                    required: true
+                    schema:
+                        $ref: '#/components/schemas/ProjectType'
+                    name: project_type
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '204':
+                    description: Successful Response
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+        patch:
+            tags:
+                - xaas-instances
+            summary: Update Instance Status
+            description: Update a instance in xaas project
+            operationId: update_instance_status_v0_xaas_instances__id__patch
+            parameters:
+                -   description: id
+                    required: true
+                    schema:
+                        title: Id
+                        type: string
+                        format: uuid
+                    name: id
+                    in: path
+                -   description: project_type
+                    required: true
+                    schema:
+                        $ref: '#/components/schemas/ProjectType'
+                    name: project_type
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/InstancePatchRequest'
+                required: true
+            responses:
+                '204':
+                    description: Successful Response
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+    /v0/xaas/keypairs:
+        get:
+            tags:
+                - xaas-keypairs
+            summary: List Keypairs
+            description: Returns a list of keypairs from a provided tenant_id
+            operationId: list_keypairs_v0_xaas_keypairs_get
+            parameters:
+                -   description: project_type
+                    required: true
+                    schema:
+                        $ref: '#/components/schemas/ProjectType'
+                    name: project_type
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/KeypairsListResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+        post:
+            tags:
+                - xaas-keypairs
+            summary: Create Keypair
+            description: Create a keypair
+            operationId: create_keypair_v0_xaas_keypairs_post
+            parameters:
+                -   description: project_type
+                    required: true
+                    schema:
+                        $ref: '#/components/schemas/ProjectType'
+                    name: project_type
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/KeypairRequest'
+                required: true
+            responses:
+                '201':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/KeypairResponse'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+    '/v0/xaas/keypairs/{keypair_name}':
+        delete:
+            tags:
+                - xaas-keypairs
+            summary: Delete Keypair
+            description: Delete a keypair
+            operationId: delete_keypair_v0_xaas_keypairs__keypair_name__delete
+            parameters:
+                -   description: keypair_name
+                    required: true
+                    schema:
+                        title: Keypair Name
+                        type: string
+                    name: keypair_name
+                    in: path
+                -   description: project_type
+                    required: true
+                    schema:
+                        $ref: '#/components/schemas/ProjectType'
+                    name: project_type
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '204':
+                    description: Successful Response
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+    /v0/usage:
+        get:
+            tags:
+                - usage
+            summary: Get usage
+            description: Retrieve usage for specific quota_slug (vcpus, ram, disk & instances)
+            operationId: get_usage_v0_usage_get
+            parameters:
+                -   description: quota_slug
+                    required: false
+                    schema:
+                        title: Quota Slug
+                        type: string
+                        format: string
+                    name: quota_slug
+                    in: query
+                -   description: x-tenant-id
+                    required: true
+                    schema:
+                        title: X-Tenant-Id
+                        type: string
+                        format: uuid
+                    name: x-tenant-id
+                    in: header
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListResourceUsage'
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+components:
+    schemas:
+        CreateResponse:
+            title: CreateResponse
+            required:
+                - id
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+            example:
+                id: 76e3b8c4-407f-422b-a1e9-343a40faf1cd
+        HTTPValidationError:
+            title: HTTPValidationError
+            type: object
+            properties:
+                detail:
+                    title: Detail
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ValidationError'
+        Healthcheck:
+            title: Healthcheck
+            required:
+                - status
+            type: object
+            properties:
+                status:
+                    title: Status
+                    type: string
+            example:
+                status: OK
+        IdResponse:
+            title: IdResponse
+            required:
+                - id
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+            example:
+                id: 76e3b8c4-407f-422b-a1e9-343a40faf1cd
+        ImageInstanceResponse:
+            title: ImageInstanceResponse
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    title: Name
+                    type: string
+        ImageInternalResponse:
+            title: ImageInternalResponse
+            required:
+                - id
+                - name
+                - internal
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                name:
+                    title: Name
+                    type: string
+                sku:
+                    title: Sku
+                    type: string
+                internal:
+                    title: Internal
+                    type: boolean
+            example:
+                id: 76e3b8c4-407f-422b-a1e9-343a40faf1cd
+                name: ubuntu
+                sku: sku1234
+                internal: false
+        ImageRequest:
+            title: ImageRequest
+            required:
+                - id
+                - sku
+                - internal
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                sku:
+                    title: Sku
+                    type: string
+                internal:
+                    title: Internal
+                    type: boolean
+            example:
+                id: 76e3b8c4-407f-422b-a1e9-343a40faf1cd
+                sku: sku1234
+                internal: false
+        ImageResponse:
+            title: ImageResponse
+            required:
+                - id
+                - name
+                - size
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                name:
+                    title: Name
+                    type: string
+                os_distribution:
+                    title: Os Distribution
+                    type: string
+                version:
+                    title: Version
+                    type: string
+                size:
+                    title: Size
+                    type: integer
+                sku:
+                    title: Sku
+                    type: string
+            example:
+                id: 76e3b8c4-407f-422b-a1e9-343a40faf1cd
+                name: ubuntu
+                os_distribution: Ubuntu
+                version: yy.zz
+                size: 10
+                sku: sku1234
+        InstanceCreateRequest:
+            title: InstanceCreateRequest
+            required:
+                - name
+                - type
+                - image
+            type: object
+            properties:
+                name:
+                    title: Name
+                    type: string
+                type:
+                    title: Type
+                    type: string
+                key_name:
+                    title: Key Name
+                    type: string
+                image:
+                    title: Image
+                    type: string
+                availability_zone:
+                    title: Availability Zone
+                    type: string
+                network_interfaces:
+                    title: Network Interfaces
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/NetworkID'
+                allocate_fip:
+                    title: Allocate Fip
+                    type: boolean
+                    default: true
+                user_data:
+                    title: User Data
+                    type: string
+            example:
+                name: instance name
+                type: abc.small
+                key_name: keypair_name_here
+                image: ubuntu-1234
+                availability_zone: br-regiao-1a
+                network_interfaces:
+                    - id: 76e3b8c4-407f-422b-a1e9-343a40faf1cd
+                allocate_fip: true
+                user_data: some_base64_script
+        InstanceEventDetailsResponse:
+            title: InstanceEventDetailsResponse
+            required:
+                - event
+                - event_id
+                - start_time
+            type: object
+            properties:
+                event:
+                    title: Event
+                    type: string
+                event_id:
+                    title: Event Id
+                    type: string
+                    format: uuid
+                start_time:
+                    title: Start Time
+                    type: string
+                message:
+                    title: Message
+                    type: string
+            example:
+                event: suspend
+                event_id: b4efbcdf-3529-4627-8d66-5aabf213df4e
+                start_time: '2023-01-24T18:01:01.000000'
+                message: an error occurred
+        InstanceEventResponse:
+            title: InstanceEventResponse
+            required:
+                - event
+                - event_id
+                - start_time
+            type: object
+            properties:
+                event:
+                    title: Event
+                    type: string
+                event_id:
+                    title: Event Id
+                    type: string
+                    format: uuid
+                start_time:
+                    title: Start Time
+                    type: string
+            example:
+                event: suspend
+                event_id: 76e3b8c4-407f-422b-a1e9-343a40faf1cd
+                start_time: '2023-01-24T18:01:01.000000'
+        InstancePatchRequest:
+            title: InstancePatchRequest
+            required:
+                - status
+            type: object
+            properties:
+                status:
+                    $ref: '#/components/schemas/InstanceStatus'
+            example:
+                status: shutoff
+        InstanceResponse:
+            title: InstanceResponse
+            required:
+                - id
+                - instance_type
+                - image
+                - status
+                - created_at
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                instance_id:
+                    title: Instance Id
+                    type: string
+                    format: uuid
+                name:
+                    title: Name
+                    type: string
+                instance_type:
+                    $ref: '#/components/schemas/InstanceTypeForInstanceResponse'
+                image:
+                    $ref: '#/components/schemas/ImageInstanceResponse'
+                vcpus:
+                    title: Vcpus
+                    type: integer
+                memory:
+                    title: Memory
+                    type: integer
+                root_storage:
+                    title: Root Storage
+                    type: integer
+                power_state:
+                    title: Power State
+                    type: integer
+                power_state_label:
+                    title: Power State Label
+                    type: string
+                status:
+                    title: Status
+                    type: string
+                created_at:
+                    title: Created At
+                    type: string
+                updated_at:
+                    title: Updated At
+                    type: string
+                key_name:
+                    title: Key Name
+                    type: string
+                availability_zone:
+                    title: Availability Zone
+                    type: string
+                volumes:
+                    title: Volumes
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/InstanceVolumeResponse'
+                network_interfaces:
+                    title: Network Interfaces
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/NetworkInterface'
+                security_groups:
+                    title: Security Groups
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/SecurityGroup'
+                ports:
+                    title: Ports
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/IdResponse'
+                error:
+                    title: Error
+                    type: string
+            example:
+                id: 76e3b8c4-407f-422b-a1e9-343a40faf1cd
+                instance_id: 176f2b61-306e-4d6f-977d-b9d5bf916322
+                name: instance name
+                image:
+                    name: ubuntu-1234
+                instance_type:
+                    name: abc.small
+                vcpus: 2
+                memory: 4
+                root_storage: 10
+                power_state: 1
+                power_state_label: active
+                status: ACTIVE
+                created_at: '2022-06-10T18:33:12Z'
+                updated_at: '2022-06-11T18:33:12Z'
+                key_name: keypair_name_here
+                availability_zone: br-regiao-1a
+                volumes:
+                    - id: 176f2b61-306e-4d6f-977d-b9d5bf916322
+                network_interfaces:
+                    - 
+                        mac_address: 'fa:12:12:12:12:12'
+                        network:
+                            name: vpc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-network
+                        addresses:
+                            - 
+                                ip_address: 172.0.0.1
+                                version: 4
+                                type: fixed
+                            - 
+                                ip_address: 159.0.0.1
+                                version: 4
+                                type: floating
+                security_groups:
+                    - id: 2d313622-c9cb-4454-b9bb-cdf6dfa74690
+                      name: port-name
+                ports:
+                      - id: cd8792d1-0367-4c2d-bd76-3e11cbaa8e61
+                error: some error description
+        InstanceStatus:
+            title: InstanceStatus
+            enum:
+                - shutoff
+                - active
+            type: string
+            description: An enumeration.
+        InstanceTypeDbListResponse:
+            title: InstanceTypeDbListResponse
+            required:
+                - instance_types
+            type: object
+            properties:
+                instance_types:
+                    title: Instance Types
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/InstanceTypeDbResponse'
+            example:
+                instance_types:
+                    -   id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        name: abc.small
+                        sku: sku1234
+                        internal: false
+        InstanceTypeDbResponse:
+            title: InstanceTypeDbResponse
+            required:
+                - id
+                - name
+                - sku
+                - internal
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                name:
+                    title: Name
+                    type: string
+                sku:
+                    title: Sku
+                    type: string
+                internal:
+                    title: Internal
+                    type: boolean
+            example:
+                id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                name: abc.small
+                sku: sku1234
+                internal: false
+        InstanceTypeForInstanceResponse:
+            title: InstanceTypeForInstanceResponse
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    title: Name
+                    type: string
+        InstanceTypesListResponse:
+            title: InstanceTypesListResponse
+            required:
+                - instance_types
+            type: object
+            properties:
+                instance_types:
+                    title: Instance Types
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/InstanceTypesResponse'
+            example:
+                instance_types:
+                    -   id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        name: abc.small
+                        vcpus: 2
+                        ram: 2
+                        disk: 10
+                        sku: sku1234
+        InstanceTypesRequest:
+            title: InstanceTypesRequest
+            required:
+                - id
+                - sku
+                - internal
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                sku:
+                    title: Sku
+                    type: string
+                internal:
+                    title: Internal
+                    type: boolean
+            example:
+                id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                sku: sku1234
+                internal: true
+        InstanceTypesResponse:
+            title: InstanceTypesResponse
+            required:
+                - id
+                - name
+                - vcpus
+                - ram
+                - disk
+                - sku
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                name:
+                    title: Name
+                    type: string
+                vcpus:
+                    title: Vcpus
+                    type: integer
+                ram:
+                    title: Ram
+                    type: integer
+                disk:
+                    title: Disk
+                    type: integer
+                sku:
+                    title: Sku
+                    type: string
+            example:
+                id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                name: abc.small
+                vcpus: 2
+                ram: 2
+                disk: 10
+                sku: sku1234
+        InstanceVolumeResponse:
+            title: InstanceVolumeResponse
+            required:
+                - id
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+        KeypairCreateResponse:
+            title: KeypairCreateResponse
+            required:
+                - name
+                - private_key
+                - public_key
+            type: object
+            properties:
+                name:
+                    title: Name
+                    type: string
+                private_key:
+                    title: Private Key
+                    type: string
+                public_key:
+                    title: Public Key
+                    type: string
+            example:
+                name: keypair_name_here
+                private_key: some ssh private key here...
+                public_key: some ssh public key here...
+        KeypairRequest:
+            title: KeypairRequest
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    title: Name
+                    type: string
+                public_key:
+                    title: Public Key
+                    type: string
+            example:
+                name: keypair_name_here
+                public_key: some ssh public key here...
+        KeypairResponse:
+            title: KeypairResponse
+            required:
+                - name
+                - public_key
+            type: object
+            properties:
+                name:
+                    title: Name
+                    type: string
+                public_key:
+                    title: Public Key
+                    type: string
+            example:
+                name: keypair_name_here
+                public_key: some ssh public key here...
+        KeypairsListResponse:
+            title: KeypairsListResponse
+            required:
+                - keypairs
+            type: object
+            properties:
+                keypairs:
+                    title: Keypairs
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/KeypairResponse'
+            example:
+                keypairs:
+                    - 
+                        name: keypair_name_here
+                        public_key: some ssh public key here...
+        ListImageInternalResponse:
+            title: ListImageInternalResponse
+            required:
+                - images
+            type: object
+            properties:
+                images:
+                    title: Images
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ImageInternalResponse'
+            example:
+                images:
+                    -   id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        name: ubuntu
+                        sku: sku1234
+                        internal: false
+        ListImageResponse:
+            title: ListImageResponse
+            required:
+                - images
+            type: object
+            properties:
+                images:
+                    title: Images
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ImageResponse'
+            example:
+                images:
+                    -   id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        name: ubuntu
+                        os_distribution: Ubuntu
+                        version: yy.zz
+                        size: 10
+                        sku: sku1234
+        ListInstanceEventResponse:
+            title: ListInstanceEventResponse
+            required:
+                - events
+            type: object
+            properties:
+                events:
+                    title: Events
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/InstanceEventResponse'
+            example:
+                events:
+                    -   event: suspend
+                        event_id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        start_time: '2023-01-24T18:01:01.000000'
+                    -   event: pause
+                        event_id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        start_time: '2023-01-24T18:01:01.000000'
+        ListInstanceResponse:
+            title: ListInstanceResponse
+            required:
+                - instances
+            type: object
+            properties:
+                instances:
+                    title: Instances
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/InstanceResponse'
+            example:
+                instances:
+                    -   id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        instance_id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        name: instance name
+                        image:
+                            name: ubuntu-1234
+                        instance_type:
+                            name: abc.small
+                        vcpus: 2
+                        memory: 4
+                        root_storage: 10
+                        power_state: 1
+                        power_state_label: active
+                        status: ACTIVE
+                        created_at: '2022-06-10T18:33:12Z'
+                        updated_at: '2022-06-11T18:33:12Z'
+                        key_name: keypair_name_here
+                        availability_zone: br-regiao-1a
+                        volumes:
+                            -  id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        network_interfaces:
+                            -   mac_address: 'fa:12:12:12:12:12'
+                                network:
+                                    name: vpc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-network
+                                addresses:
+                                    -   ip_address: 172.0.0.1
+                                        version: 4
+                                        type: fixed
+                                    -   ip_address: 159.0.0.1
+                                        version: 4
+                                        type: floating
+                        security_groups:
+                            -   id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                                name: port-name
+                        ports:
+                            -   id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                        error: some error description
+                    -   id: acf5fe8c-70d9-4d78-b58d-e06858a452ba
+                        name: some name instance
+                        instance_type:
+                            name: cloud-bs1.xsmall
+                        image:
+                            name: cloud-ubuntu-20.04 LTS
+                        status: pending
+                        created_at: '2022-09-01 12:54:15.635186'
+                        key_name: some_keypair_name
+                        volumes: []
+                        network_interfaces: []
+                        security_groups: []
+                        ports: []
+        NetworkAddress:
+            title: NetworkAddress
+            type: object
+            properties:
+                ip_address:
+                    title: Ip Address
+                    type: string
+                version:
+                    title: Version
+                    type: integer
+                type:
+                    title: Type
+                    type: string
+        NetworkID:
+            title: NetworkID
+            required:
+                - id
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+        NetworkInfo:
+            title: NetworkInfo
+            type: object
+            properties:
+                name:
+                    title: Name
+                    type: string
+        NetworkInterface:
+            title: NetworkInterface
+            required:
+                - addresses
+            type: object
+            properties:
+                mac_address:
+                    title: Mac Address
+                    type: string
+                network:
+                    $ref: '#/components/schemas/NetworkInfo'
+                addresses:
+                    title: Addresses
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/NetworkAddress'
+        ProjectType:
+            title: ProjectType
+            enum:
+                - dbaas
+                - iamaas
+            description: An enumeration.
+        SecurityGroup:
+            title: SecurityGroup
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                name:
+                    title: Name
+                    type: string
+        ValidationError:
+            title: ValidationError
+            required:
+                - loc
+                - msg
+                - type
+            type: object
+            properties:
+                loc:
+                    title: Location
+                    type: array
+                    items:
+                        anyOf:
+                            - 
+                                type: string
+                            - 
+                                type: integer
+                msg:
+                    title: Message
+                    type: string
+                type:
+                    title: Error Type
+                    type: string
+        ResourceUsage:
+            title: ResourceUsage
+            required:
+                - quota_slug
+                - used
+            type: object
+            properties:
+                quota_slug:
+                    title: quota_slug
+                    type: string
+                used:
+                    title: used
+                    type: integer
+        ListResourceUsage:
+            title: ListResourceUsage
+            required:
+                - results
+            type: object
+            properties:
+                results:
+                    title: Results 
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ResourceUsage'
+            example:
+                results:
+                    -
+                        quota_slug: "vcpus"
+                        used: 0
+                    -
+                        quota_slug: "disk"
+                        used: 0
+                    -
+                        quota_slug: "ram"
+                        used: 0
+                    -
+                        quota_slug: "instances"
+                        used: 0
+    securitySchemes:
+        OAuth2:
+            flows:
+                authorizationCode:
+                    authorizationUrl: https://idp-maas-sandbox.ipet.sh/auth/realms/master/protocol/openid-connect/auth
+                    tokenUrl: https://idp-maas-sandbox.ipet.sh/auth/realms/master/protocol/openid-connect/token
+                    scopes:
+                        virtual-machine.read: Ler informações de recursos IaaS
+                        virtual-machine.write: Escrever informações de recursos IaaS
+            type: oauth2
+            description: OAuth2 via IDPA
+tags:
+  - name: instances
+    description: instances
+  - name: healthchecks
+    description: healthchecks
+  - name: keypairs
+    description: keypairs
+  - name: instance-types
+    description: instance types
+  - name: images
+    description: images
+  - name: xaas-keypairs
+    description: xaas-keypairs
+  - name: xaas-instances
+    description: xaas-instances
+  - name: usage
+    description: usage
+servers:
+  - url: https://virtual-machine.br-ne1-prod.jaxyendy.com
