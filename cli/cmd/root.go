@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -136,7 +137,21 @@ func createActionLoader(
 
 			Run: func(cmd *cobra.Command, args []string) {
 				// TODO: Actually execute action command here
-				cmd.Help()
+
+				for _, param := range action.PathParams {
+					if cmd.Flags().Changed(param.Name) {
+						value := cmd.Flags().Lookup(param.Name).Value.String()
+						action.PathName = strings.Replace(action.PathName, "{"+param.Name+"}", fmt.Sprintf("%v", value), 1)
+					}
+				}
+
+				header := http.Header{}
+				for _, param := range action.HeaderParam {
+					if cmd.Flags().Changed(param.Name) {
+						value := cmd.Flags().Lookup(param.Name)
+						header.Add(param.Name, value.Value.String())
+					}
+				}
 			},
 		}
 
