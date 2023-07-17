@@ -3,6 +3,8 @@ package parser
 import (
 	"context"
 	"log"
+	"reflect"
+	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/profusion/magalu/libs/functional"
@@ -63,23 +65,26 @@ func CollapsePointer[T any](optional *T, fallback *T) *T {
 	return fallback
 }
 
+func fieldByCaseInsensitiveName(value reflect.Value, fieldName string) reflect.Value {
+	lowerFieldName := strings.ToLower(fieldName)
+	return value.FieldByNameFunc(func(s string) bool {
+		return strings.ToLower(s) == lowerFieldName
+	})
+}
+
 func getHttpMethodOperation(
 	httpMethod HttpMethod,
 	pathItem *openapi3.PathItem,
 ) *openapi3.Operation {
-	switch httpMethod {
-	case GET:
-		return pathItem.Get
-	case PUT:
-		return pathItem.Put
-	case POST:
-		return pathItem.Post
-	case DELETE:
-		return pathItem.Delete
-	case PATCH:
-		return pathItem.Patch
+	value := reflect.Indirect(reflect.ValueOf(pathItem))
+	field := fieldByCaseInsensitiveName(value, string(httpMethod))
+
+	if !field.IsValid() {
+		return nil
 	}
-	return nil
+
+	operationPtr := field.Interface().(*openapi3.Operation)
+	return operationPtr
 }
 
 /* We only accept a single server URL for now, this will be the address used to
