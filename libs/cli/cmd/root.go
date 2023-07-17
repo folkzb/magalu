@@ -136,7 +136,6 @@ func createActionLoader(
 			Long:  action.Description,
 
 			Run: func(cmd *cobra.Command, args []string) {
-				// TODO: Actually execute action command here
 
 				for _, param := range action.PathParams {
 					if cmd.Flags().Changed(param.Name) {
@@ -152,6 +151,8 @@ func createActionLoader(
 						header.Add(param.Name, value.Value.String())
 					}
 				}
+
+				_ = GetRequestBody(cmd, action.RequestBodyParam)
 			},
 		}
 
