@@ -1,6 +1,6 @@
-module github.com/profusion/cobra-cloud
+module github.com/profusion/magalu/libs/cli
 
-go 1.19
+go 1.20
 
 require (
 	github.com/cilium/ebpf v0.7.0 // indirect

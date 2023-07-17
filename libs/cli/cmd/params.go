@@ -7,7 +7,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/spf13/cobra"
 
-	"github.com/profusion/cobra-cloud/parser"
+	"github.com/profusion/magalu/libs/parser"
 )
 
 func SanitizeFlagName(name string) string {

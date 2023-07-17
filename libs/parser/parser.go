@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/profusion/cobra-cloud/functional"
+	"github.com/profusion/magalu/libs/functional"
 )
 
 func (module *OpenAPIModule) ActionsByTag() map[*openapi3.Tag][]*OpenAPIAction {

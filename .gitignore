@@ -1,0 +1,13 @@
+# General
+.DS_Store
+*~
+
+# VS Code
+.vscode/*
+.history/
+
+# VIM
+*.swp
+
+# Builds
+libs/cli/cli
