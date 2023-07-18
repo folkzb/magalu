@@ -35,9 +35,11 @@ const (
 )
 
 type OpenAPIFileInfo struct {
-	Name      string
-	Extension string
-	Path      string
+	Name        string
+	Extension   string
+	Path        string
+	Description string
+	Version     string
 }
 
 type OpenAPIContext struct {
@@ -57,6 +59,7 @@ type OpenAPIModule struct {
 }
 
 type OpenAPIAction struct {
+	Name             string
 	Summary          string
 	Description      string
 	ServerURL        string
