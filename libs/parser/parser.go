@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"reflect"
+	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -99,6 +101,28 @@ func getServerURL(servers *openapi3.Servers) string {
 	return (*servers)[0].URL
 }
 
+var openAPIPathArgRegex = regexp.MustCompile("[{](?P<name>[^}]+)[}]")
+
+func getActionName(httpMethod HttpMethod, pathName string) string {
+	name := []string{string(httpMethod)}
+	hasArgs := false
+
+	for _, pathEntry := range strings.Split(pathName, "/") {
+		match := openAPIPathArgRegex.FindStringSubmatch(pathEntry)
+		for i, substr := range match {
+			if openAPIPathArgRegex.SubexpNames()[i] == "name" {
+				name = append(name, substr)
+				hasArgs = true
+			}
+		}
+		if len(match) == 0 && hasArgs {
+			name = append(name, pathEntry)
+		}
+	}
+
+	return strings.Join(name, "-")
+}
+
 func getPathAction(
 	pathName string,
 	httpMethod HttpMethod,
@@ -106,6 +130,7 @@ func getPathAction(
 	ctx OpenAPIActionContext,
 ) *OpenAPIAction {
 	return &OpenAPIAction{
+		Name:        getActionName(httpMethod, pathName),
 		Summary:     operation.Summary + ctx.Summary,
 		Description: operation.Description + ctx.Description,
 		ServerURL:   getServerURL(operation.Servers) + ctx.ServerURL,
@@ -180,12 +205,17 @@ func LoadOpenAPI(fileInfo *OpenAPIFileInfo) (*OpenAPIModule, error) {
 	}
 	actions := getAllActionsInPaths(doc.Paths, &openAPICtx)
 
+	sortedTags := doc.Tags
+	sort.Slice(sortedTags, func(i, j int) bool {
+		return sortedTags[i].Name < sortedTags[j].Name
+	})
+
 	module := &OpenAPIModule{
 		Name:                 fileInfo.Name,
 		Description:          doc.Info.Description,
 		Version:              doc.OpenAPI,
 		ServerURL:            serverURL,
-		Tags:                 doc.Tags,
+		Tags:                 sortedTags,
 		SecurityRequirements: &doc.Security,
 		Actions:              actions,
 	}
