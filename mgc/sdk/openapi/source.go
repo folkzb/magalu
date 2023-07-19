@@ -1,4 +1,4 @@
-package mgc_openapi
+package openapi
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"mgc_sdk"
+	"sdk"
 )
 
 // Source -> Module -> Resource -> Operation
@@ -38,7 +38,7 @@ func (o *Source) Description() string {
 
 var openAPIFileNameRe = regexp.MustCompile("^(?P<name>[^.]+)(?:|[.]openapi)[.](?P<ext>json|yaml|yml)$")
 
-func (o *Source) VisitChildren(visitor mgc_sdk.DescriptorVisitor) (finished bool, err error) {
+func (o *Source) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
 	// TODO: load from an index with description + version information
 
 	items, err := os.ReadDir(o.Dir)
@@ -80,10 +80,10 @@ func (o *Source) VisitChildren(visitor mgc_sdk.DescriptorVisitor) (finished bool
 	return true, nil
 }
 
-func (o *Source) GetChildByName(name string) (child mgc_sdk.Descriptor, err error) {
+func (o *Source) GetChildByName(name string) (child sdk.Descriptor, err error) {
 	// TODO: write O(1) version that doesn't list
-	var found mgc_sdk.Descriptor
-	finished, err := o.VisitChildren(func(child mgc_sdk.Descriptor) (run bool, err error) {
+	var found sdk.Descriptor
+	finished, err := o.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
@@ -102,6 +102,6 @@ func (o *Source) GetChildByName(name string) (child mgc_sdk.Descriptor, err erro
 	return found, err
 }
 
-var _ mgc_sdk.Grouper = (*Source)(nil)
+var _ sdk.Grouper = (*Source)(nil)
 
 // END: Grouper interface

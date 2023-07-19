@@ -1,9 +1,9 @@
-package mgc_openapi
+package openapi
 
 import (
 	"fmt"
-	"mgc_sdk"
 	"regexp"
+	"sdk"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -20,8 +20,8 @@ type Operation struct {
 	path          *openapi3.PathItem
 	operation     *openapi3.Operation
 	doc           *openapi3.T
-	paramsSchema  *mgc_sdk.Schema
-	configsSchema *mgc_sdk.Schema
+	paramsSchema  *sdk.Schema
+	configsSchema *sdk.Schema
 	// TODO: configsMapping map[string]...
 	extensionPrefix *string
 }
@@ -70,7 +70,7 @@ func (o *Operation) Description() string {
 
 // BEGIN: Executor interface:
 
-func addParameters(schema *mgc_sdk.Schema, parameters openapi3.Parameters, extensionPrefix *string) {
+func addParameters(schema *sdk.Schema, parameters openapi3.Parameters, extensionPrefix *string) {
 	for _, ref := range parameters {
 		parameter := ref.Value
 		name := getNameExtension(extensionPrefix, parameter.Schema.Value.Extensions, parameter.Name)
@@ -83,7 +83,7 @@ func addParameters(schema *mgc_sdk.Schema, parameters openapi3.Parameters, exten
 	}
 }
 
-func addRequestBodyParameters(schema *mgc_sdk.Schema, rbr *openapi3.RequestBodyRef, extensionPrefix *string) {
+func addRequestBodyParameters(schema *sdk.Schema, rbr *openapi3.RequestBodyRef, extensionPrefix *string) {
 	if rbr == nil {
 		return
 	}
@@ -120,9 +120,9 @@ func addRequestBodyParameters(schema *mgc_sdk.Schema, rbr *openapi3.RequestBodyR
 	}
 }
 
-func (o *Operation) ParametersSchema() *mgc_sdk.Schema {
+func (o *Operation) ParametersSchema() *sdk.Schema {
 	if o.paramsSchema == nil {
-		rootSchema := mgc_sdk.NewObjectSchema(map[string]*mgc_sdk.Schema{}, []string{})
+		rootSchema := sdk.NewObjectSchema(map[string]*sdk.Schema{}, []string{})
 
 		addParameters(rootSchema, o.path.Parameters, o.extensionPrefix)
 		addParameters(rootSchema, o.operation.Parameters, o.extensionPrefix)
@@ -133,9 +133,9 @@ func (o *Operation) ParametersSchema() *mgc_sdk.Schema {
 	return o.paramsSchema
 }
 
-func (o *Operation) ConfigsSchema() *mgc_sdk.Schema {
+func (o *Operation) ConfigsSchema() *sdk.Schema {
 	if o.configsSchema == nil {
-		rootSchema := mgc_sdk.NewObjectSchema(map[string]*mgc_sdk.Schema{}, []string{})
+		rootSchema := sdk.NewObjectSchema(map[string]*sdk.Schema{}, []string{})
 		// TODO: convert and save
 		// likely filter by location, like header/cookie are config?
 		o.configsSchema = rootSchema
@@ -143,7 +143,7 @@ func (o *Operation) ConfigsSchema() *mgc_sdk.Schema {
 	return o.configsSchema
 }
 
-func (o *Operation) Execute(parameters map[string]mgc_sdk.Value, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
+func (o *Operation) Execute(parameters map[string]sdk.Value, configs map[string]sdk.Value) (result sdk.Value, err error) {
 	// load definitions if not done yet
 	parametersSchema := o.ParametersSchema()
 	configsSchema := o.ConfigsSchema()
@@ -160,6 +160,6 @@ func (o *Operation) Execute(parameters map[string]mgc_sdk.Value, configs map[str
 	return nil, fmt.Errorf("not implemented")
 }
 
-var _ mgc_sdk.Executor = (*Operation)(nil)
+var _ sdk.Executor = (*Operation)(nil)
 
 // END: Executor interface

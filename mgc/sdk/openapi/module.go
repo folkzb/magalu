@@ -1,9 +1,9 @@
-package mgc_openapi
+package openapi
 
 import (
 	"context"
 	"fmt"
-	"mgc_sdk"
+	"sdk"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -51,7 +51,7 @@ func (o *Module) getDoc() (*openapi3.T, error) {
 	return o.doc, nil
 }
 
-func (o *Module) VisitChildren(visitor mgc_sdk.DescriptorVisitor) (finished bool, err error) {
+func (o *Module) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
 	doc, err := o.getDoc()
 	if err != nil {
 		return false, err
@@ -80,10 +80,10 @@ func (o *Module) VisitChildren(visitor mgc_sdk.DescriptorVisitor) (finished bool
 	return true, nil
 }
 
-func (o *Module) GetChildByName(name string) (child mgc_sdk.Descriptor, err error) {
+func (o *Module) GetChildByName(name string) (child sdk.Descriptor, err error) {
 	// TODO: write O(1) version that doesn't list
-	var found mgc_sdk.Descriptor
-	finished, err := o.VisitChildren(func(child mgc_sdk.Descriptor) (run bool, err error) {
+	var found sdk.Descriptor
+	finished, err := o.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
@@ -102,6 +102,6 @@ func (o *Module) GetChildByName(name string) (child mgc_sdk.Descriptor, err erro
 	return found, err
 }
 
-var _ mgc_sdk.Grouper = (*Module)(nil)
+var _ sdk.Grouper = (*Module)(nil)
 
 // END: Grouper interface

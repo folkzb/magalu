@@ -1,4 +1,4 @@
-module mgc_sdk
+module sdk
 
 go 1.20
 

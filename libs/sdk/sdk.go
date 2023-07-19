@@ -1,1 +1,0 @@
-package mgc_sdk

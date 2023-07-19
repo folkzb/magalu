@@ -1,8 +1,8 @@
-package mgc_openapi
+package openapi
 
 import (
 	"fmt"
-	"mgc_sdk"
+	"sdk"
 
 	"golang.org/x/exp/slices"
 
@@ -37,7 +37,7 @@ func (o *Resource) Description() string {
 
 // BEGIN: Grouper interface:
 
-func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor mgc_sdk.DescriptorVisitor) (run bool, err error) {
+func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor sdk.DescriptorVisitor) (run bool, err error) {
 	ops := map[string]*openapi3.Operation{
 		"get":    p.Get,
 		"post":   p.Post,
@@ -73,7 +73,7 @@ func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor mgc_sdk.D
 	return true, nil
 }
 
-func (o *Resource) VisitChildren(visitor mgc_sdk.DescriptorVisitor) (finished bool, err error) {
+func (o *Resource) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
 	// TODO: provide optimized lookup
 	for k, p := range o.doc.Paths {
 		if getHiddenExtension(o.extensionPrefix, p.Extensions) {
@@ -92,10 +92,10 @@ func (o *Resource) VisitChildren(visitor mgc_sdk.DescriptorVisitor) (finished bo
 	return true, nil
 }
 
-func (o *Resource) GetChildByName(name string) (child mgc_sdk.Descriptor, err error) {
+func (o *Resource) GetChildByName(name string) (child sdk.Descriptor, err error) {
 	// TODO: write O(1) version that doesn't list
-	var found mgc_sdk.Descriptor
-	finished, err := o.VisitChildren(func(child mgc_sdk.Descriptor) (run bool, err error) {
+	var found sdk.Descriptor
+	finished, err := o.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
@@ -114,6 +114,6 @@ func (o *Resource) GetChildByName(name string) (child mgc_sdk.Descriptor, err er
 	return found, err
 }
 
-var _ mgc_sdk.Grouper = (*Resource)(nil)
+var _ sdk.Grouper = (*Resource)(nil)
 
 // END: Grouper interface

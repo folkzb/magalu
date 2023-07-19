@@ -1,9 +1,8 @@
 package main
 
 import (
+	"cli/cmd"
 	"fmt"
-
-	"github.com/profusion/magalu/libs/cli/cmd"
 )
 
 func main() {

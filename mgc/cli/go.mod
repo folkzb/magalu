@@ -1,4 +1,4 @@
-module github.com/profusion/magalu/libs/cli
+module cli
 
 go 1.20
 

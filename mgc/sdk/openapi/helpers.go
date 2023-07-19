@@ -1,4 +1,4 @@
-package mgc_openapi
+package openapi
 
 func getExtension(prefix *string, name string, extensions map[string]any, def any) (value any, ok bool) {
 	if prefix == nil || *prefix == "" {

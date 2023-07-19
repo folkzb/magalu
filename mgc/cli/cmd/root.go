@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"mgc_sdk"
-	mgc_openapi "mgc_sdk/openapi"
-	mgc_static "mgc_sdk/static"
+	"sdk"
+	"sdk/openapi"
+	"sdk/static"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
@@ -43,20 +43,20 @@ func createCommonDynamicArgLoader(
 
 // -- END: create Dynamic Argument Loaders --
 
-func handleLoaderChild(cmd *cobra.Command, child mgc_sdk.Descriptor) (*cobra.Command, DynamicArgLoader, error) {
-	if childGroup, ok := child.(mgc_sdk.Grouper); ok {
+func handleLoaderChild(cmd *cobra.Command, child sdk.Descriptor) (*cobra.Command, DynamicArgLoader, error) {
+	if childGroup, ok := child.(sdk.Grouper); ok {
 		return AddGroup(cmd, childGroup)
-	} else if childExec, ok := child.(mgc_sdk.Executor); ok {
+	} else if childExec, ok := child.(sdk.Executor); ok {
 		return AddAction(cmd, childExec)
 	} else {
 		return nil, nil, fmt.Errorf("child %v not group/executor", child)
 	}
 }
 
-func createGroupLoader(group mgc_sdk.Grouper) DynamicArgLoader {
+func createGroupLoader(group sdk.Grouper) DynamicArgLoader {
 	return createCommonDynamicArgLoader(
 		func(cmd *cobra.Command) error {
-			_, err := group.VisitChildren(func(child mgc_sdk.Descriptor) (bool, error) {
+			_, err := group.VisitChildren(func(child sdk.Descriptor) (bool, error) {
 				_, _, err := handleLoaderChild(cmd, child)
 				return true, err
 			})
@@ -75,7 +75,7 @@ func createGroupLoader(group mgc_sdk.Grouper) DynamicArgLoader {
 	)
 }
 
-func loadParametersIntoCommand(exec mgc_sdk.Executor, cmd *cobra.Command) {
+func loadParametersIntoCommand(exec sdk.Executor, cmd *cobra.Command) {
 	schema := exec.ParametersSchema()
 	for name, propRef := range schema.Properties {
 		prop := propRef.Value
@@ -99,7 +99,7 @@ func loadParametersIntoCommand(exec mgc_sdk.Executor, cmd *cobra.Command) {
 	}
 }
 
-func loadParametersFromCommand(cmd *cobra.Command, schema *mgc_sdk.Schema, dst map[string]mgc_sdk.Value) error {
+func loadParametersFromCommand(cmd *cobra.Command, schema *sdk.Schema, dst map[string]sdk.Value) error {
 	if cmd == nil || schema == nil || dst == nil {
 		return fmt.Errorf("invalid command or parameter schema")
 	}
@@ -132,9 +132,9 @@ func loadParametersFromCommand(cmd *cobra.Command, schema *mgc_sdk.Schema, dst m
 
 func AddAction(
 	parentCmd *cobra.Command,
-	exec mgc_sdk.Executor,
+	exec sdk.Executor,
 ) (*cobra.Command, DynamicArgLoader, error) {
-	desc := exec.(mgc_sdk.Descriptor)
+	desc := exec.(sdk.Descriptor)
 
 	actionCmd := &cobra.Command{
 		Use:   desc.Name(),
@@ -142,8 +142,8 @@ func AddAction(
 		// TODO: Long:    desc.Description,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			parameters := map[string]mgc_sdk.Value{}
-			configs := map[string]mgc_sdk.Value{}
+			parameters := map[string]sdk.Value{}
+			configs := map[string]sdk.Value{}
 
 			schema := exec.ParametersSchema()
 			err := loadParametersFromCommand(cmd, schema, parameters)
@@ -174,9 +174,9 @@ func runHelpE(cmd *cobra.Command, args []string) error {
 
 func AddGroup(
 	parentCmd *cobra.Command,
-	group mgc_sdk.Grouper,
+	group sdk.Grouper,
 ) (*cobra.Command, DynamicArgLoader, error) {
-	desc := group.(mgc_sdk.Descriptor)
+	desc := group.(sdk.Descriptor)
 	moduleCmd := &cobra.Command{
 		Use:     desc.Name(),
 		Short:   desc.Description(),
@@ -286,61 +286,61 @@ func DynamicLoadCommand(cmd *cobra.Command, args []string, loader DynamicArgLoad
 }
 
 // NOTE: these will be build in their own files, one file per static command
-var staticCmds = mgc_static.NewStaticGroup(
+var staticCmds = static.NewStaticGroup(
 	"Static Commands",
 	"12.34",
 	"Test static commands",
-	[]mgc_sdk.Descriptor{
-		mgc_static.NewStaticExecute(
+	[]sdk.Descriptor{
+		static.NewStaticExecute(
 			"static",
 			"34.56",
 			"static first level",
 			// NOTE: these can (should?) be defined in JSON and unmarshal from string
-			mgc_sdk.NewObjectSchema(
-				map[string]*mgc_sdk.Schema{
-					"param1": mgc_sdk.SetDescription(
-						mgc_sdk.NewNumberSchema(),
+			sdk.NewObjectSchema(
+				map[string]*sdk.Schema{
+					"param1": sdk.SetDescription(
+						sdk.NewNumberSchema(),
 						"Example static parameter of type number",
 					),
 				},
 				[]string{},
 			),
-			&mgc_sdk.Schema{},
-			func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
+			&sdk.Schema{},
+			func(parameters, configs map[string]sdk.Value) (result sdk.Value, err error) {
 				println("TODO: static first level called")
 				return nil, nil
 			},
 		),
-		mgc_static.NewStaticGroup(
+		static.NewStaticGroup(
 			"vpc",
 			"",
 			"",
-			[]mgc_sdk.Descriptor{
-				mgc_static.NewStaticGroup(
+			[]sdk.Descriptor{
+				static.NewStaticGroup(
 					"port",
 					"",
 					"",
-					[]mgc_sdk.Descriptor{
-						mgc_static.NewStaticExecute(
+					[]sdk.Descriptor{
+						static.NewStaticExecute(
 							"static",
 							"",
 							"static third level",
-							&mgc_sdk.Schema{},
-							&mgc_sdk.Schema{},
-							func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
+							&sdk.Schema{},
+							&sdk.Schema{},
+							func(parameters, configs map[string]sdk.Value) (result sdk.Value, err error) {
 								println("TODO: vpc port static (third level) called")
 								return nil, nil
 							},
 						),
 					},
 				),
-				mgc_static.NewStaticExecute(
+				static.NewStaticExecute(
 					"static",
 					"",
 					"static second level",
-					&mgc_sdk.Schema{},
-					&mgc_sdk.Schema{},
-					func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
+					&sdk.Schema{},
+					&sdk.Schema{},
+					func(parameters, configs map[string]sdk.Value) (result sdk.Value, err error) {
 						println("TODO: vpc static (second level) called")
 						return nil, nil
 					},
@@ -375,16 +375,16 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.SetCompletionCommandGroupID("other")
 
 	extensionPrefix := "x-cli"
-	openApi := &mgc_openapi.Source{
+	openApi := &openapi.Source{
 		Dir:             openApiDir,
 		ExtensionPrefix: &extensionPrefix,
 	}
 
-	merge := mgc_sdk.NewMergeGroup(
+	merge := sdk.NewMergeGroup(
 		"MagaLu CLI",
 		"1.0",
 		"All MagaLu Commands",
-		[]mgc_sdk.Grouper{
+		[]sdk.Grouper{
 			openApi,
 			staticCmds,
 		},

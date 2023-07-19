@@ -10,4 +10,4 @@
 *.swp
 
 # Builds
-libs/cli/cli
+mgc/cli/cli

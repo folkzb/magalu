@@ -1,11 +1,11 @@
-package mgc_sdk
+package sdk
 
 import "github.com/getkin/kin-openapi/openapi3"
 
 // NOTE: TODO: should we duplicate this, or find a more generic package?
 type Schema openapi3.Schema
 
-func (s* Schema) VisitJSON(value any, opts ...openapi3.SchemaValidationOption) error {
+func (s *Schema) VisitJSON(value any, opts ...openapi3.SchemaValidationOption) error {
 	return (*openapi3.Schema)(s).VisitJSON(value, opts...)
 }
 

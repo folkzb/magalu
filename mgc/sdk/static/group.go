@@ -1,18 +1,18 @@
-package mgc_static
+package static
 
 import (
 	"fmt"
-	"mgc_sdk"
+	"sdk"
 )
 
 type StaticGroup struct {
 	name        string
 	version     string
 	description string
-	children    []mgc_sdk.Descriptor
+	children    []sdk.Descriptor
 }
 
-func NewStaticGroup(name string, version string, description string, children []mgc_sdk.Descriptor) *StaticGroup {
+func NewStaticGroup(name string, version string, description string, children []sdk.Descriptor) *StaticGroup {
 	return &StaticGroup{name, version, description, children}
 }
 
@@ -34,7 +34,7 @@ func (o *StaticGroup) Description() string {
 
 // BEGIN: Grouper interface:
 
-func (o *StaticGroup) VisitChildren(visitor mgc_sdk.DescriptorVisitor) (finished bool, err error) {
+func (o *StaticGroup) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
 	for _, c := range o.children {
 		run, err := visitor(c)
 		if err != nil {
@@ -48,9 +48,9 @@ func (o *StaticGroup) VisitChildren(visitor mgc_sdk.DescriptorVisitor) (finished
 	return true, nil
 }
 
-func (o *StaticGroup) GetChildByName(name string) (child mgc_sdk.Descriptor, err error) {
-	var found mgc_sdk.Descriptor
-	finished, err := o.VisitChildren(func(child mgc_sdk.Descriptor) (run bool, err error) {
+func (o *StaticGroup) GetChildByName(name string) (child sdk.Descriptor, err error) {
+	var found sdk.Descriptor
+	finished, err := o.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
@@ -69,6 +69,6 @@ func (o *StaticGroup) GetChildByName(name string) (child mgc_sdk.Descriptor, err
 	return found, err
 }
 
-var _ mgc_sdk.Grouper = (*StaticGroup)(nil)
+var _ sdk.Grouper = (*StaticGroup)(nil)
 
 // END: Grouper interface

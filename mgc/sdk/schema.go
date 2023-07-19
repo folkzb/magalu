@@ -1,4 +1,4 @@
-package mgc_sdk
+package sdk
 
 import "github.com/getkin/kin-openapi/openapi3"
 
