@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"log"
+	"mgc_sdk"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -88,29 +89,27 @@ func GetRequestBodyParams(action *parser.OpenAPIAction) []*parser.Param {
 	return requestBodyParams
 }
 
-func AddFlag(cmd *cobra.Command, p *parser.Param) {
-	name := p.Name
-
-	switch p.Type {
+func AddFlag(cmd *cobra.Command, name string, p mgc_sdk.Parameter) {
+	switch p.Schema().Type {
 	case "boolean":
-		cmd.Flags().Bool(name, false, p.Description)
+		cmd.Flags().Bool(name, false, p.Description())
 	case "integer":
-		cmd.Flags().Int(name, 0, p.Description)
+		cmd.Flags().Int(name, 0, p.Description())
 	case "number":
-		cmd.Flags().Float64(name, 0.0, p.Description)
+		cmd.Flags().Float64(name, 0.0, p.Description())
 	case "string":
-		cmd.Flags().String(name, "", p.Description)
+		cmd.Flags().String(name, "", p.Description())
 	case "array[boolean]":
-		cmd.Flags().BoolSlice(name, []bool{}, p.Description)
+		cmd.Flags().BoolSlice(name, []bool{}, p.Description())
 	case "array[integer]":
-		cmd.Flags().IntSlice(name, []int{}, p.Description)
+		cmd.Flags().IntSlice(name, []int{}, p.Description())
 	case "array[number]":
-		log.Printf("number slice not implemented for param %s", p.Name)
+		log.Printf("number slice not implemented for param %s", p.Name())
 	case "array[string]":
-		cmd.Flags().StringSlice(name, []string{}, p.Description)
+		cmd.Flags().StringSlice(name, []string{}, p.Description())
 	}
 
-	if p.Required {
+	if p.Required() {
 		cmd.MarkFlagRequired(name)
 	}
 }

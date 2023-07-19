@@ -2,73 +2,22 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/profusion/magalu/libs/parser"
+	"mgc_sdk"
+	mgc_openapi "mgc_sdk/openapi"
+
 	"github.com/spf13/cobra"
 
 	flag "github.com/spf13/pflag"
 )
 
-// -- BEGIN: OpenAPI finder
-
-var openAPIFileNameRe = regexp.MustCompile("^(?P<name>[^.]+)(?:|[.]openapi)[.](?P<ext>json|yaml|yml)$")
-
-// TODO: investigate channels to provide range iterOpenApis()...
-// will it stop early when closed? how to do it?
-func IterOpenApis(dir string, cb func(*parser.OpenAPIFileInfo) (run bool, err error)) (finished bool, err error) {
-	// TODO: load from an index with description + version information
-
-	items, err := os.ReadDir(dir)
-	if err != nil {
-		return false, fmt.Errorf("Unable to read OpenAPI files at %s: %w", dir, err)
-	}
-
-	for _, item := range items {
-		info, err := item.Info()
-		if err != nil {
-			continue
-		}
-
-		if info.IsDir() {
-			continue
-		}
-
-		matches := openAPIFileNameRe.FindStringSubmatch(item.Name())
-
-		if len(matches) == 0 {
-			continue
-		}
-
-		fileInfo := &parser.OpenAPIFileInfo{
-			Name:      matches[1],
-			Extension: matches[2],
-			Path:      filepath.Join(dir, item.Name()),
-			// TODO: load from an index with description + version information
-			Description: "TODO: load description from index",
-			Version:     "TODO: load version from index",
-		}
-
-		run, err := cb(fileInfo)
-		if err != nil {
-			return false, err
-		}
-		if !run {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
-
-// -- END: OpenAPI finder
-
 // -- BEGIN: create Dynamic Argument Loaders --
+
+// TODO: likely this DynamicArgLoader is not needed anymore,
+// I just converted it to use the sdk stuff without checking in detail
 
 type DynamicArgLoader func(cmd *cobra.Command, target *string) (*cobra.Command, DynamicArgLoader, error)
 
@@ -90,159 +39,77 @@ func createCommonDynamicArgLoader(
 
 // -- END: create Dynamic Argument Loaders --
 
-// -- BEGIN: OpenApi Dynamic Loaders: Action, Resource, Module --
-
-func createOpenApiResourceCmdLoader(
-	openApi *parser.OpenAPIFileInfo,
-) DynamicArgLoader {
-	return createCommonDynamicArgLoader(
-		func(cmd *cobra.Command) error {
-			module, err := parser.LoadOpenAPI(openApi)
-			if err != nil {
-				return err
-			}
-			for _, tag := range module.Tags {
-				_, _, err = AddOpenApiResourceCmd(cmd, module, tag)
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		},
-		func(target string, cmd *cobra.Command) (*cobra.Command, DynamicArgLoader, error) {
-			module, err := parser.LoadOpenAPI(openApi)
-			if err != nil {
-				return nil, nil, err
-			}
-			for _, tag := range module.Tags {
-				if target == tag.Name {
-					return AddOpenApiResourceCmd(cmd, module, tag)
-				}
-			}
-			return nil, nil, fmt.Errorf("Resource not found: %s", target)
-		},
-	)
+func handleLoaderChild(cmd *cobra.Command, child mgc_sdk.Descriptor) (*cobra.Command, DynamicArgLoader, error) {
+	if childGroup, ok := child.(mgc_sdk.Grouper); ok {
+		return AddGroup(cmd, childGroup)
+	} else if childExec, ok := child.(mgc_sdk.Executor); ok {
+		return AddAction(cmd, childExec)
+	} else {
+		return nil, nil, fmt.Errorf("child %v not group/executor", child)
+	}
 }
 
-func createOpenApiActionCmdLoader(
-	module *parser.OpenAPIModule,
-	tag *openapi3.Tag,
-) DynamicArgLoader {
+func createGroupLoader(group mgc_sdk.Grouper) DynamicArgLoader {
 	return createCommonDynamicArgLoader(
 		func(cmd *cobra.Command) error {
-			// TODO: fix ActionsByTag() to be an existing map or iterate and stop at the tag
-			for _, action := range module.ActionsByTag()[tag] {
-				_, _, err := AddOpenApiActionCmd(cmd, action)
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		},
-		func(target string, cmd *cobra.Command) (*cobra.Command, DynamicArgLoader, error) {
-			// TODO: fix ActionsByTag() to be an existing map or iterate and stop at the tag
-			for _, action := range module.ActionsByTag()[tag] {
-				if target == action.Name {
-					return AddOpenApiActionCmd(cmd, action)
-				}
-			}
-			return nil, nil, fmt.Errorf("Action not found: %s", target)
-		},
-	)
-}
-
-func createOpenApiCmdLoader(openApiDir string) DynamicArgLoader {
-	return createCommonDynamicArgLoader(
-		func(cmd *cobra.Command) error {
-			_, err := IterOpenApis(openApiDir, func(fileInfo *parser.OpenAPIFileInfo) (run bool, err error) {
-				_, _, e := AddOpenApiModuleCmd(cmd, fileInfo)
-				return true, e
+			_, err := group.VisitChildren(func(child mgc_sdk.Descriptor) (bool, error) {
+				_, _, err := handleLoaderChild(cmd, child)
+				return true, err
 			})
+
 			return err
 		},
 		func(target string, cmd *cobra.Command) (*cobra.Command, DynamicArgLoader, error) {
-			var childCmd *cobra.Command = nil
-			var loader DynamicArgLoader = nil
-			var err error = nil
-			finished, err := IterOpenApis(openApiDir, func(fileInfo *parser.OpenAPIFileInfo) (run bool, err error) {
-				if fileInfo.Name == target {
-					childCmd, loader, err = AddOpenApiModuleCmd(cmd, fileInfo)
-					return false, err
-				}
-				return true, nil
-			})
+			child, err := group.GetChildByName(target)
+
 			if err != nil {
 				return nil, nil, err
 			}
-			if !finished {
-				// stopped early = found an item
-				return childCmd, loader, nil
-			}
-			return nil, nil, fmt.Errorf("OpenAPI %s not found at %s", target, openApiDir)
+
+			return handleLoaderChild(cmd, child)
 		},
 	)
 }
 
-// -- BEGIN: OpenApi Dynamic Loaders: Action, Resource, Module --
-
-// -- BEGIN: AddOpenApi command structure --
-
-func addOpenApiGroup(parentCmd *cobra.Command, kind string) {
-	parentCmd.AddGroup(&cobra.Group{
-		ID:    "openapi",
-		Title: fmt.Sprintf("OpenAPI generated %s:", kind),
-	})
-}
-
-func loadParametersIntoCommand(action *parser.OpenAPIAction, cmd *cobra.Command) {
-	action.PathParams, action.HeaderParam = GetParams(action.Parameters)
-	action.RequestBodyParam = GetRequestBodyParams(action)
-
-	for _, p := range action.PathParams {
-		AddFlag(cmd, p)
-	}
-	for _, p := range action.HeaderParam {
-		AddFlag(cmd, p)
-	}
-	for _, p := range action.RequestBodyParam {
-		AddFlag(cmd, p)
+func loadParametersIntoCommand(exec mgc_sdk.Executor, cmd *cobra.Command) {
+	for k, v := range exec.Parameters() {
+		AddFlag(cmd, k, v)
 	}
 }
 
-func AddOpenApiActionCmd(
+func AddAction(
 	parentCmd *cobra.Command,
-	action *parser.OpenAPIAction,
+	exec mgc_sdk.Executor,
 ) (*cobra.Command, DynamicArgLoader, error) {
+	desc := exec.(mgc_sdk.Descriptor)
+
 	actionCmd := &cobra.Command{
-		Use:     action.Name,
-		Short:   action.Summary,
-		Long:    action.Description,
-		GroupID: "openapi",
+		Use:   desc.Name(),
+		Short: desc.Description(),
+		// TODO: Long:    desc.Description,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			println("\033[42mTODO: EXECUTE\033[0m", action.Name, "--", strings.Join(args, " "))
+			parameters := map[string]mgc_sdk.Value{}
+			configs := map[string]mgc_sdk.Value{}
 
-			// TODO: Actually execute action command here
-			for _, param := range action.PathParams {
-				if cmd.Flags().Changed(param.Name) {
-					value := cmd.Flags().Lookup(param.Name).Value.String()
-					action.PathName = strings.Replace(action.PathName, "{"+param.Name+"}", fmt.Sprintf("%v", value), 1)
-				}
-			}
+			flags := cmd.Flags()
+			flags.Visit(func(f *flag.Flag) {
+				parameters[f.Name] = f.Value
+			})
 
-			header := http.Header{}
-			for _, param := range action.HeaderParam {
-				if cmd.Flags().Changed(param.Name) {
-					value := cmd.Flags().Lookup(param.Name)
-					header.Add(param.Name, value.Value.String())
-				}
-			}
+			flags = cmd.InheritedFlags()
+			flags.Visit(func(f *flag.Flag) {
+				configs[f.Name] = f.Value
+			})
 
-			return nil
+			result, err := exec.Execute(parameters, configs)
+			fmt.Println("RESULT:", result, err)
+			return err
 		},
 	}
 
-	loadParametersIntoCommand(action, actionCmd)
+	loadParametersIntoCommand(exec, actionCmd)
+	// TODO: load config
 
 	println("\033[1;36mACTION: ADDED CMD:\033[0m", actionCmd.Use)
 	parentCmd.AddCommand(actionCmd)
@@ -253,42 +120,21 @@ func runHelpE(cmd *cobra.Command, args []string) error {
 	return cmd.Help()
 }
 
-func AddOpenApiResourceCmd(
+func AddGroup(
 	parentCmd *cobra.Command,
-	module *parser.OpenAPIModule,
-	tag *openapi3.Tag,
+	group mgc_sdk.Grouper,
 ) (*cobra.Command, DynamicArgLoader, error) {
-	resourceCmd := &cobra.Command{
-		Use:     tag.Name,
-		Short:   tag.Description,
-		GroupID: "openapi",
-		RunE:    runHelpE,
-	}
-	addOpenApiGroup(resourceCmd, "actions")
-
-	loader := createOpenApiActionCmdLoader(module, tag)
-
-	println("\033[1;35mRESOURCE: ADDED CMD:\033[0m", resourceCmd.Use)
-	parentCmd.AddCommand(resourceCmd)
-	return resourceCmd, loader, nil
-}
-
-func AddOpenApiModuleCmd(
-	parentCmd *cobra.Command,
-	openApi *parser.OpenAPIFileInfo,
-) (*cobra.Command, DynamicArgLoader, error) {
+	desc := group.(mgc_sdk.Descriptor)
 	moduleCmd := &cobra.Command{
-		Use:     openApi.Name,
-		Short:   openApi.Description,
-		Version: openApi.Version,
-		GroupID: "openapi",
+		Use:     desc.Name(),
+		Short:   desc.Description(),
+		Version: desc.Version(),
 		RunE:    runHelpE,
 	}
-	addOpenApiGroup(moduleCmd, "resources")
 
-	loader := createOpenApiResourceCmdLoader(openApi)
+	loader := createGroupLoader(group)
 
-	println("\033[1;34mMODULE: ADDED CMD:\033[0m", moduleCmd.Use)
+	println("\033[1;34mGROUP: ADDED CMD:\033[0m", moduleCmd.Use)
 	parentCmd.AddCommand(moduleCmd)
 	return moduleCmd, loader, nil
 }
@@ -404,7 +250,6 @@ func Execute() error {
 can generate a command line on-demand for Rest manipulation`,
 		RunE: runHelpE,
 	}
-	addOpenApiGroup(rootCmd, "modules")
 	rootCmd.AddGroup(&cobra.Group{
 		ID:    "other",
 		Title: "Other commands:",
@@ -412,7 +257,13 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.SetHelpCommandGroupID("other")
 	rootCmd.SetCompletionCommandGroupID("other")
 
-	err = DynamicLoadCommand(rootCmd, os.Args[1:], createOpenApiCmdLoader(openApiDir))
+	extensionPrefix := "x-cli"
+	openApi := &mgc_openapi.Source{
+		Dir:             openApiDir,
+		ExtensionPrefix: &extensionPrefix,
+	}
+
+	err = DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(openApi))
 	if err != nil {
 		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
 	}
