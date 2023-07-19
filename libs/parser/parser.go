@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/profusion/magalu/libs/functional"
+	"golang.org/x/exp/slices"
 )
 
 func (module *OpenAPIModule) ActionsByTag() map[*openapi3.Tag][]*OpenAPIAction {
@@ -41,18 +41,20 @@ func JoinParameters(base openapi3.Parameters, merger openapi3.Parameters) openap
 		resultMap[o.Value.Name] = o
 	}
 
-	return functional.TransformMap(
-		resultMap,
-		func(key string, obj *openapi3.ParameterRef) *openapi3.ParameterRef {
-			return obj
-		},
-	)
+	length := len(resultMap)
+	result := make([]*openapi3.ParameterRef, length)
+	i := 0
+	for _, value := range resultMap {
+		result[i] = value
+		i++
+	}
+	return result
 }
 
 func filterTags(tags openapi3.Tags, include []string) openapi3.Tags {
 	result := make(openapi3.Tags, 0)
 	for _, tag := range tags {
-		if functional.Contains(include, tag.Name) {
+		if slices.Contains(include, tag.Name) {
 			result = append(result, tag)
 		}
 	}
