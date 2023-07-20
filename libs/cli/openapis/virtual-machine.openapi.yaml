@@ -1,12 +1,12 @@
 openapi: 3.0.2
 info:
-  title: Virtual Machine Api Product
-  description: Virtual Machine Api Product
-  contact:
-    name: Tribo IAAS Cloud
-    url: https://github.com/luizalabs
-    email: lia.furtado@luizalabs.com
-  version: 1.60.0
+    title: Virtual Machine Api Product
+    description: Virtual Machine Api Product
+    contact:
+        name: Tribo IAAS Cloud
+        url: https://github.com/luizalabs
+        email: lia.furtado@luizalabs.com
+    version: 1.60.0
 paths:
     /v0/healthcheck:
         get:
@@ -25,7 +25,6 @@ paths:
             security:
                 - OAuth2:
                     - virtual-machine.read
-
     /v0/images:
         get:
             tags:
@@ -333,7 +332,6 @@ paths:
             security:
                 - OAuth2:
                     - virtual-machine.write
-
         patch:
             tags:
                 - instances
@@ -954,16 +952,16 @@ components:
                 volumes:
                     - id: 176f2b61-306e-4d6f-977d-b9d5bf916322
                 network_interfaces:
-                    - 
+                    -
                         mac_address: 'fa:12:12:12:12:12'
                         network:
                             name: vpc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-network
                         addresses:
-                            - 
+                            -
                                 ip_address: 172.0.0.1
                                 version: 4
                                 type: fixed
-                            - 
+                            -
                                 ip_address: 159.0.0.1
                                 version: 4
                                 type: floating
@@ -971,7 +969,7 @@ components:
                     - id: 2d313622-c9cb-4454-b9bb-cdf6dfa74690
                       name: port-name
                 ports:
-                      - id: cd8792d1-0367-4c2d-bd76-3e11cbaa8e61
+                    - id: cd8792d1-0367-4c2d-bd76-3e11cbaa8e61
                 error: some error description
         InstanceStatus:
             title: InstanceStatus
@@ -1186,7 +1184,7 @@ components:
                         $ref: '#/components/schemas/KeypairResponse'
             example:
                 keypairs:
-                    - 
+                    -
                         name: keypair_name_here
                         public_key: some ssh public key here...
         ListImageResponse:
@@ -1357,9 +1355,9 @@ components:
                     type: array
                     items:
                         anyOf:
-                            - 
+                            -
                                 type: string
-                            - 
+                            -
                                 type: integer
                 msg:
                     title: Message
@@ -1387,7 +1385,7 @@ components:
             type: object
             properties:
                 results:
-                    title: Results 
+                    title: Results
                     type: array
                     items:
                         $ref: '#/components/schemas/ResourceUsage'
@@ -1417,21 +1415,17 @@ components:
             type: oauth2
             description: OAuth2 via IDPA
 tags:
-  - name: instances
-    description: instances
-  - name: healthchecks
-    description: healthchecks
-  - name: keypairs
-    description: keypairs
-  - name: instance-types
-    description: instance types
-  - name: images
-    description: images
-  - name: xaas-keypairs
-    description: xaas-keypairs
-  - name: xaas-instances
-    description: xaas-instances
-  - name: usage
-    description: usage
+    - name: instances
+      description: instances
+    - name: healthchecks
+      description: healthchecks
+    - name: keypairs
+      description: keypairs
+    - name: instance-types
+      description: instance types
+    - name: images
+      description: images
+    - name: usage
+      description: usage
 servers:
     - url: https://api-virtual-machine.br-ne-1.jaxyendy.com
