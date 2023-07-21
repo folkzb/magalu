@@ -35,17 +35,15 @@ func (p *Parameter) Schema() *mgc_sdk.Schema {
 }
 
 func (p *Parameter) Examples() []mgc_sdk.Example {
-	examples := make([]mgc_sdk.Example, len(p.ref.Examples)+1)
-	i := 0
+	exampleCapacity := len(p.ref.Examples) + 1
+	examples := make([]mgc_sdk.Example, 0, exampleCapacity)
 
 	if p.ref.Example != nil {
-		examples[i] = p.ref.Example
-		i++
+		examples = append(examples, p.ref.Example)
 	}
 
 	for _, example := range p.ref.Examples {
-		examples[i] = example.Value
-		i++
+		examples = append(examples, example.Value)
 	}
 
 	return examples
