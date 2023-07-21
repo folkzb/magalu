@@ -148,6 +148,13 @@ func (o *Operation) Execute(parameters map[string]mgc_sdk.Value, configs map[str
 	parametersSchema := o.ParametersSchema()
 	configsSchema := o.ConfigsSchema()
 
+	parameterErr := parametersSchema.VisitJSON(parameters)
+	if parameterErr != nil {
+		return nil, parameterErr
+	}
+
+	// TODO: Validate configs
+
 	fmt.Printf("TODO: execute: %v %v\ninput: p=%v; c=%v\ndefinitions: p=%v; c=%v\n", o.method, o.key, parameters, configs, parametersSchema.Properties, configsSchema)
 
 	return nil, fmt.Errorf("not implemented")
