@@ -15,12 +15,12 @@ func SanitizeFlagName(name string) string {
 	return sanitizedName
 }
 
-func isPathParam(parameter *openapi3.Parameter) bool {
-	return parameter.In == "path"
+func isPathParam(param *openapi3.Parameter) bool {
+	return param.In == "path"
 }
 
-func isHeatherParam(parameter *openapi3.Parameter) bool {
-	return parameter.In == "header"
+func isHeatherParam(param *openapi3.Parameter) bool {
+	return param.In == "header"
 }
 
 func isRequiredProperty(requriedSet []string, property string) bool {
@@ -33,24 +33,24 @@ func isRequiredProperty(requriedSet []string, property string) bool {
 	return false
 }
 
-func GetParams(parameters openapi3.Parameters) ([]*parser.Param, []*parser.Param) {
+func GetParams(params openapi3.Parameters) ([]*parser.Param, []*parser.Param) {
 	pathParams := []*parser.Param{}
 	headerParams := []*parser.Param{}
 
-	for _, parameterRef := range parameters {
-		parameter := parser.Param{
-			Type:        parameterRef.Value.Schema.Value.Type,
-			Name:        parameterRef.Value.Name,
-			Required:    parameterRef.Value.Required,
-			Description: parameterRef.Value.Description,
+	for _, paramRef := range params {
+		param := parser.Param{
+			Type:        paramRef.Value.Schema.Value.Type,
+			Name:        paramRef.Value.Name,
+			Required:    paramRef.Value.Required,
+			Description: paramRef.Value.Description,
 		}
 
-		if isPathParam(parameterRef.Value) {
-			pathParams = append(pathParams, &parameter)
+		if isPathParam(paramRef.Value) {
+			pathParams = append(pathParams, &param)
 		}
 
-		if isHeatherParam(parameterRef.Value) {
-			headerParams = append(headerParams, &parameter)
+		if isHeatherParam(paramRef.Value) {
+			headerParams = append(headerParams, &param)
 		}
 	}
 
@@ -59,11 +59,11 @@ func GetParams(parameters openapi3.Parameters) ([]*parser.Param, []*parser.Param
 
 func GetRequestBodyParams(action *parser.OpenAPIAction) []*parser.Param {
 
-	requestBodyParams := []*parser.Param{}
+	reqbody := []*parser.Param{}
 
 	request := action.Request
 	if request == nil {
-		return requestBodyParams
+		return reqbody
 	}
 
 	content := request.Value.Content.Get("application/json").Schema.Value
@@ -73,15 +73,15 @@ func GetRequestBodyParams(action *parser.OpenAPIAction) []*parser.Param {
 		property := propertyRef.Value
 
 		sanitizedName := SanitizeFlagName(property.Title)
-		parameter := parser.Param{
+		param := parser.Param{
 			Type:        property.Type,
 			Name:        sanitizedName,
 			Required:    isRequiredProperty(requiredProperties, sanitizedName),
 			Description: property.Description,
 		}
 
-		requestBodyParams = append(requestBodyParams, &parameter)
+		reqbody = append(reqbody, &param)
 	}
 
-	return requestBodyParams
+	return reqbody
 }

@@ -21,15 +21,15 @@ type Module struct {
 
 // BEGIN: Descriptor interface:
 
-func (o *Module) Name() string {
-	return o.name
+func (m *Module) Name() string {
+	return m.name
 }
 
-func (o *Module) Version() string {
+func (m *Module) Version() string {
 	return "TODO: load version from index"
 }
 
-func (o *Module) Description() string {
+func (m *Module) Description() string {
 	return "TODO: load description from index"
 }
 
@@ -37,35 +37,35 @@ func (o *Module) Description() string {
 
 // BEGIN: Grouper interface:
 
-func (o *Module) getDoc() (*openapi3.T, error) {
-	if o.doc == nil {
+func (m *Module) getDoc() (*openapi3.T, error) {
+	if m.doc == nil {
 		ctx := context.Background()
 		loader := openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
-		doc, err := loader.LoadFromFile(o.path)
+		doc, err := loader.LoadFromFile(m.path)
 		if err != nil {
 			return nil, err
 		}
-		o.doc = doc
+		m.doc = doc
 	}
 
-	return o.doc, nil
+	return m.doc, nil
 }
 
-func (o *Module) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
-	doc, err := o.getDoc()
+func (m *Module) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
+	doc, err := m.getDoc()
 	if err != nil {
 		return false, err
 	}
 
 	for _, tag := range doc.Tags {
-		if getHiddenExtension(o.extensionPrefix, tag.Extensions) {
+		if getHiddenExtension(m.extensionPrefix, tag.Extensions) {
 			continue
 		}
 
 		resource := &Resource{
 			tag:             tag,
 			doc:             doc,
-			extensionPrefix: o.extensionPrefix,
+			extensionPrefix: m.extensionPrefix,
 		}
 
 		run, err := visitor(resource)
@@ -80,10 +80,10 @@ func (o *Module) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, er
 	return true, nil
 }
 
-func (o *Module) GetChildByName(name string) (child sdk.Descriptor, err error) {
+func (m *Module) GetChildByName(name string) (child sdk.Descriptor, err error) {
 	// TODO: write O(1) version that doesn't list
 	var found sdk.Descriptor
-	finished, err := o.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
+	finished, err := m.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
