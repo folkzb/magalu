@@ -1,12 +1,9 @@
 package cmd
 
 import (
-	"log"
-	"mgc_sdk"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/spf13/cobra"
 
 	"github.com/profusion/magalu/libs/parser"
 )
@@ -87,32 +84,4 @@ func GetRequestBodyParams(action *parser.OpenAPIAction) []*parser.Param {
 	}
 
 	return requestBodyParams
-}
-
-func AddFlag(cmd *cobra.Command, name string, p mgc_sdk.Parameter) {
-	switch p.Schema().Type {
-	case "boolean":
-		cmd.Flags().Bool(name, false, p.Description())
-	case "integer":
-		cmd.Flags().Int(name, 0, p.Description())
-	case "number":
-		cmd.Flags().Float64(name, 0.0, p.Description())
-	case "string":
-		cmd.Flags().String(name, "", p.Description())
-	case "array[boolean]":
-		cmd.Flags().BoolSlice(name, []bool{}, p.Description())
-	case "array[integer]":
-		cmd.Flags().IntSlice(name, []int{}, p.Description())
-	case "array[number]":
-		log.Printf("number slice not implemented for param %s", p.Name())
-	case "array[string]":
-		cmd.Flags().StringSlice(name, []string{}, p.Description())
-	}
-
-	if p.Required() {
-		err := cmd.MarkFlagRequired(name)
-		if err != nil {
-			log.Printf("Error marking %s flag as required %s", name, err)
-		}
-	}
 }

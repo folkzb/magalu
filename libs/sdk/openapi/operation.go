@@ -7,62 +7,22 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/exp/slices"
 )
-
-// Parameter
-
-type Parameter struct {
-	ref             *openapi3.Parameter
-	extensionPrefix *string
-}
-
-// BEGIN: Parameter interface:
-
-func (p *Parameter) Name() string {
-	return getNameExtension(p.extensionPrefix, p.Schema().Extensions, p.ref.Name)
-}
-
-func (p *Parameter) Description() string {
-	return p.ref.Description
-}
-
-func (p *Parameter) Required() bool {
-	return p.ref.Required
-}
-
-func (p *Parameter) Schema() *mgc_sdk.Schema {
-	return (*mgc_sdk.Schema)(p.ref.Schema.Value)
-}
-
-func (p *Parameter) Examples() []mgc_sdk.Example {
-	exampleCapacity := len(p.ref.Examples) + 1
-	examples := make([]mgc_sdk.Example, 0, exampleCapacity)
-
-	if p.ref.Example != nil {
-		examples = append(examples, p.ref.Example)
-	}
-
-	for _, example := range p.ref.Examples {
-		examples = append(examples, example.Value)
-	}
-
-	return examples
-}
-
-var _ mgc_sdk.Parameter = (*Parameter)(nil)
 
 // Source -> Module -> Resource -> Operation
 
 // Operation
 
 type Operation struct {
-	key             string
-	method          string
-	path            *openapi3.PathItem
-	operation       *openapi3.Operation
-	doc             *openapi3.T
-	parameters      *map[string]mgc_sdk.Parameter
-	configs         *map[string]mgc_sdk.Config
+	key           string
+	method        string
+	path          *openapi3.PathItem
+	operation     *openapi3.Operation
+	doc           *openapi3.T
+	paramsSchema  *mgc_sdk.Schema
+	configsSchema *mgc_sdk.Schema
+	// TODO: configsMapping map[string]...
 	extensionPrefix *string
 }
 
@@ -110,41 +70,85 @@ func (o *Operation) Description() string {
 
 // BEGIN: Executor interface:
 
-func addParameters(dst map[string]mgc_sdk.Parameter, src openapi3.Parameters, extensionPrefix *string) {
-	// likely filter by location, like header/cookie are config
-	for _, ref := range src {
-		p := &Parameter{ref: ref.Value, extensionPrefix: extensionPrefix}
-		dst[p.Name()] = p
+func addParameters(schema *mgc_sdk.Schema, parameters openapi3.Parameters, extensionPrefix *string) {
+	for _, ref := range parameters {
+		parameter := ref.Value
+		name := getNameExtension(extensionPrefix, parameter.Schema.Value.Extensions, parameter.Name)
+
+		schema.Properties[name] = parameter.Schema
+
+		if parameter.Required && !slices.Contains(schema.Required, name) {
+			schema.Required = append(schema.Required, name)
+		}
 	}
 }
 
-func (o *Operation) Parameters() map[string]mgc_sdk.Parameter {
-	if o.parameters == nil {
-		p := map[string]mgc_sdk.Parameter{}
-
-		addParameters(p, o.path.Parameters, o.extensionPrefix)
-		addParameters(p, o.operation.Parameters, o.extensionPrefix)
-
-		o.parameters = &p
+func addRequestBodyParameters(schema *mgc_sdk.Schema, rbr *openapi3.RequestBodyRef, extensionPrefix *string) {
+	if rbr == nil {
+		return
 	}
-	return *o.parameters
+
+	rb := rbr.Value
+	mt := rb.Content.Get("application/json")
+	if mt == nil {
+		return
+	}
+
+	content := mt.Schema.Value
+	if content == nil {
+		return
+	}
+
+	for name, ref := range content.Properties {
+		parameter := ref.Value
+		name = getNameExtension(extensionPrefix, parameter.Extensions, name)
+
+		for {
+			_, exists := schema.Properties[name]
+			if exists {
+				name = "req-" + name
+			} else {
+				break
+			}
+		}
+
+		schema.Properties[name] = ref
+
+		if slices.Contains(content.Required, name) && !slices.Contains(schema.Required, name) {
+			schema.Required = append(schema.Required, name)
+		}
+	}
 }
 
-func (o *Operation) Configs() map[string]mgc_sdk.Config {
-	if o.configs == nil {
+func (o *Operation) ParametersSchema() *mgc_sdk.Schema {
+	if o.paramsSchema == nil {
+		rootSchema := mgc_sdk.NewObjectSchema(map[string]*mgc_sdk.Schema{}, []string{})
+
+		addParameters(rootSchema, o.path.Parameters, o.extensionPrefix)
+		addParameters(rootSchema, o.operation.Parameters, o.extensionPrefix)
+		addRequestBodyParameters(rootSchema, o.operation.RequestBody, o.extensionPrefix)
+
+		o.paramsSchema = rootSchema
+	}
+	return o.paramsSchema
+}
+
+func (o *Operation) ConfigsSchema() *mgc_sdk.Schema {
+	if o.configsSchema == nil {
+		rootSchema := mgc_sdk.NewObjectSchema(map[string]*mgc_sdk.Schema{}, []string{})
 		// TODO: convert and save
 		// likely filter by location, like header/cookie are config?
-		return map[string]mgc_sdk.Config{}
+		o.configsSchema = rootSchema
 	}
-	return *o.configs
+	return o.configsSchema
 }
 
 func (o *Operation) Execute(parameters map[string]mgc_sdk.Value, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
 	// load definitions if not done yet
-	p := o.Parameters()
-	c := o.Configs()
+	parametersSchema := o.ParametersSchema()
+	configsSchema := o.ConfigsSchema()
 
-	fmt.Printf("TODO: execute: %v %v\ninput: p=%v; c=%v\ndefinitions: p=%v; c=%v\n", o.method, o.key, parameters, configs, p, c)
+	fmt.Printf("TODO: execute: %v %v\ninput: p=%v; c=%v\ndefinitions: p=%v; c=%v\n", o.method, o.key, parameters, configs, parametersSchema.Properties, configsSchema)
 
 	return nil, fmt.Errorf("not implemented")
 }

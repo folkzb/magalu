@@ -6,12 +6,12 @@ type StaticExecute struct {
 	name        string
 	version     string
 	description string
-	parameters  map[string]mgc_sdk.Parameter
-	config      map[string]mgc_sdk.Config
+	parameters  *mgc_sdk.Schema
+	config      *mgc_sdk.Schema
 	execute     func(parameters map[string]mgc_sdk.Value, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error)
 }
 
-func NewStaticExecute(name string, version string, description string, parameters map[string]mgc_sdk.Parameter, config map[string]mgc_sdk.Config, execute func(parameters map[string]mgc_sdk.Value, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error)) *StaticExecute {
+func NewStaticExecute(name string, version string, description string, parameters *mgc_sdk.Schema, config *mgc_sdk.Schema, execute func(parameters map[string]mgc_sdk.Value, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error)) *StaticExecute {
 	return &StaticExecute{name, version, description, parameters, config, execute}
 }
 
@@ -33,11 +33,11 @@ func (o *StaticExecute) Description() string {
 
 // BEGIN: Executor interface:
 
-func (o *StaticExecute) Parameters() map[string]mgc_sdk.Parameter {
+func (o *StaticExecute) ParametersSchema() *mgc_sdk.Schema {
 	return o.parameters
 }
 
-func (o *StaticExecute) Configs() map[string]mgc_sdk.Config {
+func (o *StaticExecute) ConfigsSchema() *mgc_sdk.Schema {
 	return o.config
 }
 

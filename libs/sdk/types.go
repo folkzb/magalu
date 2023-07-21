@@ -26,22 +26,9 @@ type Value any
 // Type comes from the Schema
 type Example Value
 
-type Parameter interface {
-	Name() string
-	Description() string
-	Required() bool
-	Schema() *Schema
-	Examples() []Example
-}
-
-// Config are similar to Parameters, but for less variant parts,
-// usually saved in configuration files
-// So far it's the same, but let's be future-proof
-type Config Parameter
-
 type Executor interface {
 	Descriptor
-	Parameters() map[string]Parameter
-	Configs() map[string]Config
+	ParametersSchema() *Schema
+	ConfigsSchema() *Schema
 	Execute(parameters map[string]Value, configs map[string]Value) (result Value, err error)
 }

@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +13,7 @@ import (
 	mgc_static "mgc_sdk/static"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 
 	flag "github.com/spf13/pflag"
 )
@@ -73,9 +76,58 @@ func createGroupLoader(group mgc_sdk.Grouper) DynamicArgLoader {
 }
 
 func loadParametersIntoCommand(exec mgc_sdk.Executor, cmd *cobra.Command) {
-	for k, v := range exec.Parameters() {
-		AddFlag(cmd, k, v)
+	schema := exec.ParametersSchema()
+	for name, propRef := range schema.Properties {
+		prop := propRef.Value
+
+		value := ""
+		if prop.Default != nil {
+			str, err := json.Marshal(prop.Default)
+			if err == nil {
+				value = string(str)
+			}
+		}
+
+		cmd.Flags().String(name, value, prop.Description)
+
+		if slices.Contains(schema.Required, name) {
+			err := cmd.MarkFlagRequired(name)
+			if err != nil {
+				log.Printf("Error marking %s as required: %s", name, err)
+			}
+		}
 	}
+}
+
+func loadParametersFromCommand(cmd *cobra.Command, schema *mgc_sdk.Schema, dst map[string]mgc_sdk.Value) error {
+	if cmd == nil || schema == nil || dst == nil {
+		return fmt.Errorf("invalid command or parameter schema")
+	}
+
+	for name, ref := range schema.Properties {
+		parameter := ref.Value
+
+		flag := cmd.Flags().Lookup(name)
+		if flag == nil {
+			continue
+		}
+
+		str := flag.Value.String()
+		var value any
+
+		if parameter.Type == "string" && !strings.HasPrefix(str, "\"") {
+			value = str
+		} else {
+			err := json.Unmarshal([]byte(str), value)
+			if err != nil {
+				return err
+			}
+		}
+
+		dst[name] = value
+	}
+
+	return nil
 }
 
 func AddAction(
@@ -93,15 +145,14 @@ func AddAction(
 			parameters := map[string]mgc_sdk.Value{}
 			configs := map[string]mgc_sdk.Value{}
 
-			flags := cmd.Flags()
-			flags.Visit(func(f *flag.Flag) {
-				parameters[f.Name] = f.Value
-			})
+			schema := exec.ParametersSchema()
+			err := loadParametersFromCommand(cmd, schema, parameters)
 
-			flags = cmd.InheritedFlags()
-			flags.Visit(func(f *flag.Flag) {
-				configs[f.Name] = f.Value
-			})
+			if err != nil {
+				fmt.Printf("Error when loading flags into command: %v", err)
+			}
+
+			// TODO: Load config
 
 			result, err := exec.Execute(parameters, configs)
 			fmt.Println("RESULT:", result, err)
@@ -234,6 +285,7 @@ func DynamicLoadCommand(cmd *cobra.Command, args []string, loader DynamicArgLoad
 	return DynamicLoadCommand(childCmd, childArgs, childLoader)
 }
 
+// NOTE: these will be build in their own files, one file per static command
 var staticCmds = mgc_static.NewStaticGroup(
 	"Static Commands",
 	"12.34",
@@ -243,8 +295,17 @@ var staticCmds = mgc_static.NewStaticGroup(
 			"static",
 			"34.56",
 			"static first level",
-			map[string]mgc_sdk.Parameter{},
-			map[string]mgc_sdk.Config{},
+			// NOTE: these can (should?) be defined in JSON and unmarshal from string
+			mgc_sdk.NewObjectSchema(
+				map[string]*mgc_sdk.Schema{
+					"param1": mgc_sdk.SetDescription(
+						mgc_sdk.NewNumberSchema(),
+						"Example static parameter of type number",
+					),
+				},
+				[]string{},
+			),
+			&mgc_sdk.Schema{},
 			func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
 				println("TODO: static first level called")
 				return nil, nil
@@ -264,8 +325,8 @@ var staticCmds = mgc_static.NewStaticGroup(
 							"static",
 							"",
 							"static third level",
-							map[string]mgc_sdk.Parameter{},
-							map[string]mgc_sdk.Config{},
+							&mgc_sdk.Schema{},
+							&mgc_sdk.Schema{},
 							func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
 								println("TODO: vpc port static (third level) called")
 								return nil, nil
@@ -277,8 +338,8 @@ var staticCmds = mgc_static.NewStaticGroup(
 					"static",
 					"",
 					"static second level",
-					map[string]mgc_sdk.Parameter{},
-					map[string]mgc_sdk.Config{},
+					&mgc_sdk.Schema{},
+					&mgc_sdk.Schema{},
 					func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
 						println("TODO: vpc static (second level) called")
 						return nil, nil
