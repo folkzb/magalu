@@ -8,6 +8,7 @@ import (
 
 	"mgc_sdk"
 	mgc_openapi "mgc_sdk/openapi"
+	mgc_static "mgc_sdk/static"
 
 	"github.com/spf13/cobra"
 
@@ -233,6 +234,61 @@ func DynamicLoadCommand(cmd *cobra.Command, args []string, loader DynamicArgLoad
 	return DynamicLoadCommand(childCmd, childArgs, childLoader)
 }
 
+var staticCmds = mgc_static.NewStaticGroup(
+	"Static Commands",
+	"12.34",
+	"Test static commands",
+	[]mgc_sdk.Descriptor{
+		mgc_static.NewStaticExecute(
+			"static",
+			"34.56",
+			"static first level",
+			map[string]mgc_sdk.Parameter{},
+			map[string]mgc_sdk.Config{},
+			func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
+				println("TODO: static first level called")
+				return nil, nil
+			},
+		),
+		mgc_static.NewStaticGroup(
+			"vpc",
+			"",
+			"",
+			[]mgc_sdk.Descriptor{
+				mgc_static.NewStaticGroup(
+					"port",
+					"",
+					"",
+					[]mgc_sdk.Descriptor{
+						mgc_static.NewStaticExecute(
+							"static",
+							"",
+							"static third level",
+							map[string]mgc_sdk.Parameter{},
+							map[string]mgc_sdk.Config{},
+							func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
+								println("TODO: vpc port static (third level) called")
+								return nil, nil
+							},
+						),
+					},
+				),
+				mgc_static.NewStaticExecute(
+					"static",
+					"",
+					"static second level",
+					map[string]mgc_sdk.Parameter{},
+					map[string]mgc_sdk.Config{},
+					func(parameters, configs map[string]mgc_sdk.Value) (result mgc_sdk.Value, err error) {
+						println("TODO: vpc static (second level) called")
+						return nil, nil
+					},
+				),
+			},
+		),
+	},
+)
+
 func Execute() error {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -263,7 +319,17 @@ can generate a command line on-demand for Rest manipulation`,
 		ExtensionPrefix: &extensionPrefix,
 	}
 
-	err = DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(openApi))
+	merge := mgc_sdk.NewMergeGroup(
+		"MagaLu CLI",
+		"1.0",
+		"All MagaLu Commands",
+		[]mgc_sdk.Grouper{
+			openApi,
+			staticCmds,
+		},
+	)
+
+	err = DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(merge))
 	if err != nil {
 		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
 	}
