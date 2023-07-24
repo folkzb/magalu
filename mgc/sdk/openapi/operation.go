@@ -71,9 +71,14 @@ func (o *Operation) Description() string {
 
 // BEGIN: Executor interface:
 
-func addParameters(schema *core.Schema, parameters openapi3.Parameters, extensionPrefix *string) {
+func addParameters(schema *core.Schema, parameters openapi3.Parameters, extensionPrefix *string, locations []string) {
 	for _, ref := range parameters {
 		parameter := ref.Value
+
+		if !slices.Contains(locations, parameter.In) {
+			continue
+		}
+
 		name := getNameExtension(extensionPrefix, parameter.Schema.Value.Extensions, parameter.Name)
 
 		schema.Properties[name] = parameter.Schema
@@ -121,12 +126,17 @@ func addRequestBodyParameters(schema *core.Schema, rbr *openapi3.RequestBodyRef,
 	}
 }
 
+var (
+	parametersLocations = []string{openapi3.ParameterInPath, openapi3.ParameterInQuery}
+	configLocations     = []string{openapi3.ParameterInHeader, openapi3.ParameterInCookie}
+)
+
 func (o *Operation) ParametersSchema() *core.Schema {
 	if o.paramsSchema == nil {
 		rootSchema := core.NewObjectSchema(map[string]*core.Schema{}, []string{})
 
-		addParameters(rootSchema, o.path.Parameters, o.extensionPrefix)
-		addParameters(rootSchema, o.operation.Parameters, o.extensionPrefix)
+		addParameters(rootSchema, o.path.Parameters, o.extensionPrefix, parametersLocations)
+		addParameters(rootSchema, o.operation.Parameters, o.extensionPrefix, parametersLocations)
 		addRequestBodyParameters(rootSchema, o.operation.RequestBody, o.extensionPrefix)
 
 		o.paramsSchema = rootSchema
@@ -137,8 +147,10 @@ func (o *Operation) ParametersSchema() *core.Schema {
 func (o *Operation) ConfigsSchema() *core.Schema {
 	if o.configsSchema == nil {
 		rootSchema := core.NewObjectSchema(map[string]*core.Schema{}, []string{})
-		// TODO: convert and save
-		// likely filter by location, like header/cookie are config?
+
+		addParameters(rootSchema, o.path.Parameters, o.extensionPrefix, configLocations)
+		addParameters(rootSchema, o.operation.Parameters, o.extensionPrefix, configLocations)
+
 		o.configsSchema = rootSchema
 	}
 	return o.configsSchema
@@ -149,12 +161,13 @@ func (o *Operation) Execute(parameters map[string]core.Value, configs map[string
 	parametersSchema := o.ParametersSchema()
 	configsSchema := o.ConfigsSchema()
 
-	parameterErr := parametersSchema.VisitJSON(parameters)
-	if parameterErr != nil {
-		return nil, parameterErr
+	if err = parametersSchema.VisitJSON(parameters); err != nil {
+		return nil, err
 	}
 
-	// TODO: Validate configs
+	if err = configsSchema.VisitJSON(configs); err != nil {
+		return nil, err
+	}
 
 	fmt.Printf("TODO: execute: %v %v\ninput: p=%v; c=%v\ndefinitions: p=%v; c=%v\n", o.method, o.key, parameters, configs, parametersSchema.Properties, configsSchema)
 
