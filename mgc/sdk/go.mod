@@ -2,7 +2,10 @@ module sdk
 
 go 1.20
 
-require github.com/getkin/kin-openapi v0.118.0
+require (
+	github.com/getkin/kin-openapi v0.118.0
+	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
+)
 
 require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
@@ -12,7 +15,6 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

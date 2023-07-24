@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"sdk"
-	"sdk/openapi"
-	"sdk/static"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
@@ -286,12 +284,12 @@ func DynamicLoadCommand(cmd *cobra.Command, args []string, loader DynamicArgLoad
 }
 
 // NOTE: these will be build in their own files, one file per static command
-var staticCmds = static.NewStaticGroup(
+var staticCmds = sdk.NewStaticGroup(
 	"Static Commands",
 	"12.34",
 	"Test static commands",
 	[]sdk.Descriptor{
-		static.NewStaticExecute(
+		sdk.NewStaticExecute(
 			"static",
 			"34.56",
 			"static first level",
@@ -311,17 +309,17 @@ var staticCmds = static.NewStaticGroup(
 				return nil, nil
 			},
 		),
-		static.NewStaticGroup(
+		sdk.NewStaticGroup(
 			"vpc",
 			"",
 			"",
 			[]sdk.Descriptor{
-				static.NewStaticGroup(
+				sdk.NewStaticGroup(
 					"port",
 					"",
 					"",
 					[]sdk.Descriptor{
-						static.NewStaticExecute(
+						sdk.NewStaticExecute(
 							"static",
 							"",
 							"static third level",
@@ -334,7 +332,7 @@ var staticCmds = static.NewStaticGroup(
 						),
 					},
 				),
-				static.NewStaticExecute(
+				sdk.NewStaticExecute(
 					"static",
 					"",
 					"static second level",
@@ -375,7 +373,7 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.SetCompletionCommandGroupID("other")
 
 	extensionPrefix := "x-cli"
-	openApi := &openapi.Source{
+	openApi := &sdk.OpenApiSource{
 		Dir:             openApiDir,
 		ExtensionPrefix: &extensionPrefix,
 	}

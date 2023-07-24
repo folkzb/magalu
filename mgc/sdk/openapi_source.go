@@ -1,34 +1,32 @@
-package openapi
+package sdk
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-
-	"sdk"
 )
 
 // Source -> Module -> Resource -> Operation
 
 // -- ROOT: Source
 
-type Source struct {
+type OpenApiSource struct {
 	Dir             string
 	ExtensionPrefix *string
 }
 
 // BEGIN: Descriptor interface:
 
-func (o *Source) Name() string {
+func (o *OpenApiSource) Name() string {
 	return "OpenApis"
 }
 
-func (o *Source) Version() string {
+func (o *OpenApiSource) Version() string {
 	return ""
 }
 
-func (o *Source) Description() string {
+func (o *OpenApiSource) Description() string {
 	return fmt.Sprintf("OpenApis loaded from %v", o.Dir)
 }
 
@@ -38,7 +36,7 @@ func (o *Source) Description() string {
 
 var openAPIFileNameRe = regexp.MustCompile("^(?P<name>[^.]+)(?:|[.]openapi)[.](?P<ext>json|yaml|yml)$")
 
-func (o *Source) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
+func (o *OpenApiSource) VisitChildren(visitor DescriptorVisitor) (finished bool, err error) {
 	// TODO: load from an index with description + version information
 
 	items, err := os.ReadDir(o.Dir)
@@ -62,7 +60,7 @@ func (o *Source) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, er
 			continue
 		}
 
-		module := &Module{
+		module := &OpenApiModule{
 			name:            matches[1],
 			path:            filepath.Join(o.Dir, item.Name()),
 			extensionPrefix: o.ExtensionPrefix,
@@ -80,10 +78,10 @@ func (o *Source) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, er
 	return true, nil
 }
 
-func (o *Source) GetChildByName(name string) (child sdk.Descriptor, err error) {
+func (o *OpenApiSource) GetChildByName(name string) (child Descriptor, err error) {
 	// TODO: write O(1) version that doesn't list
-	var found sdk.Descriptor
-	finished, err := o.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
+	var found Descriptor
+	finished, err := o.VisitChildren(func(child Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
@@ -102,6 +100,6 @@ func (o *Source) GetChildByName(name string) (child sdk.Descriptor, err error) {
 	return found, err
 }
 
-var _ sdk.Grouper = (*Source)(nil)
+var _ Grouper = (*OpenApiSource)(nil)
 
 // END: Grouper interface

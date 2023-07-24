@@ -1,9 +1,8 @@
-package openapi
+package sdk
 
 import (
 	"fmt"
 	"regexp"
-	"sdk"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -14,14 +13,14 @@ import (
 
 // Operation
 
-type Operation struct {
+type OpenApiOperation struct {
 	key           string
 	method        string
 	path          *openapi3.PathItem
 	operation     *openapi3.Operation
 	doc           *openapi3.T
-	paramsSchema  *sdk.Schema
-	configsSchema *sdk.Schema
+	paramsSchema  *Schema
+	configsSchema *Schema
 	// TODO: configsMapping map[string]...
 	extensionPrefix *string
 }
@@ -50,7 +49,7 @@ func getActionName(httpMethod string, pathName string) string {
 	return strings.Join(name, "-")
 }
 
-func (o *Operation) Name() string {
+func (o *OpenApiOperation) Name() string {
 	name := getNameExtension(o.extensionPrefix, o.operation.Extensions, "")
 	if name == "" {
 		name = getActionName(o.method, o.key)
@@ -58,11 +57,11 @@ func (o *Operation) Name() string {
 	return name
 }
 
-func (o *Operation) Version() string {
+func (o *OpenApiOperation) Version() string {
 	return ""
 }
 
-func (o *Operation) Description() string {
+func (o *OpenApiOperation) Description() string {
 	return o.operation.Description
 }
 
@@ -70,7 +69,7 @@ func (o *Operation) Description() string {
 
 // BEGIN: Executor interface:
 
-func addParameters(schema *sdk.Schema, parameters openapi3.Parameters, extensionPrefix *string) {
+func addParameters(schema *Schema, parameters openapi3.Parameters, extensionPrefix *string) {
 	for _, ref := range parameters {
 		parameter := ref.Value
 		name := getNameExtension(extensionPrefix, parameter.Schema.Value.Extensions, parameter.Name)
@@ -83,7 +82,7 @@ func addParameters(schema *sdk.Schema, parameters openapi3.Parameters, extension
 	}
 }
 
-func addRequestBodyParameters(schema *sdk.Schema, rbr *openapi3.RequestBodyRef, extensionPrefix *string) {
+func addRequestBodyParameters(schema *Schema, rbr *openapi3.RequestBodyRef, extensionPrefix *string) {
 	if rbr == nil {
 		return
 	}
@@ -120,9 +119,9 @@ func addRequestBodyParameters(schema *sdk.Schema, rbr *openapi3.RequestBodyRef, 
 	}
 }
 
-func (o *Operation) ParametersSchema() *sdk.Schema {
+func (o *OpenApiOperation) ParametersSchema() *Schema {
 	if o.paramsSchema == nil {
-		rootSchema := sdk.NewObjectSchema(map[string]*sdk.Schema{}, []string{})
+		rootSchema := NewObjectSchema(map[string]*Schema{}, []string{})
 
 		addParameters(rootSchema, o.path.Parameters, o.extensionPrefix)
 		addParameters(rootSchema, o.operation.Parameters, o.extensionPrefix)
@@ -133,9 +132,9 @@ func (o *Operation) ParametersSchema() *sdk.Schema {
 	return o.paramsSchema
 }
 
-func (o *Operation) ConfigsSchema() *sdk.Schema {
+func (o *OpenApiOperation) ConfigsSchema() *Schema {
 	if o.configsSchema == nil {
-		rootSchema := sdk.NewObjectSchema(map[string]*sdk.Schema{}, []string{})
+		rootSchema := NewObjectSchema(map[string]*Schema{}, []string{})
 		// TODO: convert and save
 		// likely filter by location, like header/cookie are config?
 		o.configsSchema = rootSchema
@@ -143,7 +142,7 @@ func (o *Operation) ConfigsSchema() *sdk.Schema {
 	return o.configsSchema
 }
 
-func (o *Operation) Execute(parameters map[string]sdk.Value, configs map[string]sdk.Value) (result sdk.Value, err error) {
+func (o *OpenApiOperation) Execute(parameters map[string]Value, configs map[string]Value) (result Value, err error) {
 	// load definitions if not done yet
 	parametersSchema := o.ParametersSchema()
 	configsSchema := o.ConfigsSchema()
@@ -160,6 +159,6 @@ func (o *Operation) Execute(parameters map[string]sdk.Value, configs map[string]
 	return nil, fmt.Errorf("not implemented")
 }
 
-var _ sdk.Executor = (*Operation)(nil)
+var _ Executor = (*OpenApiOperation)(nil)
 
 // END: Executor interface

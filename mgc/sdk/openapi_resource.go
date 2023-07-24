@@ -1,8 +1,7 @@
-package openapi
+package sdk
 
 import (
 	"fmt"
-	"sdk"
 
 	"golang.org/x/exp/slices"
 
@@ -13,7 +12,7 @@ import (
 
 // Resource
 
-type Resource struct {
+type OpenApiResource struct {
 	tag             *openapi3.Tag
 	doc             *openapi3.T
 	extensionPrefix *string
@@ -21,15 +20,15 @@ type Resource struct {
 
 // BEGIN: Descriptor interface:
 
-func (o *Resource) Name() string {
+func (o *OpenApiResource) Name() string {
 	return getNameExtension(o.extensionPrefix, o.tag.Extensions, o.tag.Name)
 }
 
-func (o *Resource) Version() string {
+func (o *OpenApiResource) Version() string {
 	return ""
 }
 
-func (o *Resource) Description() string {
+func (o *OpenApiResource) Description() string {
 	return o.tag.Description
 }
 
@@ -37,7 +36,7 @@ func (o *Resource) Description() string {
 
 // BEGIN: Grouper interface:
 
-func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor sdk.DescriptorVisitor) (run bool, err error) {
+func (o *OpenApiResource) visitPath(key string, p *openapi3.PathItem, visitor DescriptorVisitor) (run bool, err error) {
 	ops := map[string]*openapi3.Operation{
 		"get":    p.Get,
 		"post":   p.Post,
@@ -55,7 +54,7 @@ func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor sdk.Descr
 			continue
 		}
 
-		operation := &Operation{
+		operation := &OpenApiOperation{
 			key:             key,
 			method:          method,
 			path:            p,
@@ -73,7 +72,7 @@ func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor sdk.Descr
 	return true, nil
 }
 
-func (o *Resource) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
+func (o *OpenApiResource) VisitChildren(visitor DescriptorVisitor) (finished bool, err error) {
 	// TODO: provide optimized lookup
 	for k, p := range o.doc.Paths {
 		if getHiddenExtension(o.extensionPrefix, p.Extensions) {
@@ -92,10 +91,10 @@ func (o *Resource) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, 
 	return true, nil
 }
 
-func (o *Resource) GetChildByName(name string) (child sdk.Descriptor, err error) {
+func (o *OpenApiResource) GetChildByName(name string) (child Descriptor, err error) {
 	// TODO: write O(1) version that doesn't list
-	var found sdk.Descriptor
-	finished, err := o.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
+	var found Descriptor
+	finished, err := o.VisitChildren(func(child Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
@@ -114,6 +113,6 @@ func (o *Resource) GetChildByName(name string) (child sdk.Descriptor, err error)
 	return found, err
 }
 
-var _ sdk.Grouper = (*Resource)(nil)
+var _ Grouper = (*OpenApiResource)(nil)
 
 // END: Grouper interface

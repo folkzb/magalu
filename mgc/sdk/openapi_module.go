@@ -1,9 +1,8 @@
-package openapi
+package sdk
 
 import (
 	"context"
 	"fmt"
-	"sdk"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -12,7 +11,7 @@ import (
 
 // Module
 
-type Module struct {
+type OpenApiModule struct {
 	name            string
 	path            string
 	extensionPrefix *string
@@ -21,15 +20,15 @@ type Module struct {
 
 // BEGIN: Descriptor interface:
 
-func (m *Module) Name() string {
+func (m *OpenApiModule) Name() string {
 	return m.name
 }
 
-func (m *Module) Version() string {
+func (m *OpenApiModule) Version() string {
 	return "TODO: load version from index"
 }
 
-func (m *Module) Description() string {
+func (m *OpenApiModule) Description() string {
 	return "TODO: load description from index"
 }
 
@@ -37,7 +36,7 @@ func (m *Module) Description() string {
 
 // BEGIN: Grouper interface:
 
-func (m *Module) getDoc() (*openapi3.T, error) {
+func (m *OpenApiModule) getDoc() (*openapi3.T, error) {
 	if m.doc == nil {
 		ctx := context.Background()
 		loader := openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
@@ -51,7 +50,7 @@ func (m *Module) getDoc() (*openapi3.T, error) {
 	return m.doc, nil
 }
 
-func (m *Module) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, err error) {
+func (m *OpenApiModule) VisitChildren(visitor DescriptorVisitor) (finished bool, err error) {
 	doc, err := m.getDoc()
 	if err != nil {
 		return false, err
@@ -62,7 +61,7 @@ func (m *Module) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, er
 			continue
 		}
 
-		resource := &Resource{
+		resource := &OpenApiResource{
 			tag:             tag,
 			doc:             doc,
 			extensionPrefix: m.extensionPrefix,
@@ -80,10 +79,10 @@ func (m *Module) VisitChildren(visitor sdk.DescriptorVisitor) (finished bool, er
 	return true, nil
 }
 
-func (m *Module) GetChildByName(name string) (child sdk.Descriptor, err error) {
+func (m *OpenApiModule) GetChildByName(name string) (child Descriptor, err error) {
 	// TODO: write O(1) version that doesn't list
-	var found sdk.Descriptor
-	finished, err := m.VisitChildren(func(child sdk.Descriptor) (run bool, err error) {
+	var found Descriptor
+	finished, err := m.VisitChildren(func(child Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
@@ -102,6 +101,6 @@ func (m *Module) GetChildByName(name string) (child sdk.Descriptor, err error) {
 	return found, err
 }
 
-var _ sdk.Grouper = (*Module)(nil)
+var _ Grouper = (*OpenApiModule)(nil)
 
 // END: Grouper interface
