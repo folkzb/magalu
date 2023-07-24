@@ -1,32 +1,34 @@
-package sdk
+package openapi
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"magalu.cloud/core"
 )
 
 // Source -> Module -> Resource -> Operation
 
 // -- ROOT: Source
 
-type OpenApiSource struct {
+type Source struct {
 	Dir             string
 	ExtensionPrefix *string
 }
 
 // BEGIN: Descriptor interface:
 
-func (o *OpenApiSource) Name() string {
+func (o *Source) Name() string {
 	return "OpenApis"
 }
 
-func (o *OpenApiSource) Version() string {
+func (o *Source) Version() string {
 	return ""
 }
 
-func (o *OpenApiSource) Description() string {
+func (o *Source) Description() string {
 	return fmt.Sprintf("OpenApis loaded from %v", o.Dir)
 }
 
@@ -36,7 +38,7 @@ func (o *OpenApiSource) Description() string {
 
 var openAPIFileNameRe = regexp.MustCompile("^(?P<name>[^.]+)(?:|[.]openapi)[.](?P<ext>json|yaml|yml)$")
 
-func (o *OpenApiSource) VisitChildren(visitor DescriptorVisitor) (finished bool, err error) {
+func (o *Source) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {
 	// TODO: load from an index with description + version information
 
 	items, err := os.ReadDir(o.Dir)
@@ -60,7 +62,7 @@ func (o *OpenApiSource) VisitChildren(visitor DescriptorVisitor) (finished bool,
 			continue
 		}
 
-		module := &OpenApiModule{
+		module := &Module{
 			name:            matches[1],
 			path:            filepath.Join(o.Dir, item.Name()),
 			extensionPrefix: o.ExtensionPrefix,
@@ -78,10 +80,10 @@ func (o *OpenApiSource) VisitChildren(visitor DescriptorVisitor) (finished bool,
 	return true, nil
 }
 
-func (o *OpenApiSource) GetChildByName(name string) (child Descriptor, err error) {
+func (o *Source) GetChildByName(name string) (child core.Descriptor, err error) {
 	// TODO: write O(1) version that doesn't list
-	var found Descriptor
-	finished, err := o.VisitChildren(func(child Descriptor) (run bool, err error) {
+	var found core.Descriptor
+	finished, err := o.VisitChildren(func(child core.Descriptor) (run bool, err error) {
 		if child.Name() == name {
 			found = child
 			return false, nil
@@ -100,6 +102,6 @@ func (o *OpenApiSource) GetChildByName(name string) (child Descriptor, err error
 	return found, err
 }
 
-var _ Grouper = (*OpenApiSource)(nil)
+var _ core.Grouper = (*Source)(nil)
 
 // END: Grouper interface

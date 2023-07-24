@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 
 	"magalu.cloud/core"
+	"magalu.cloud/sdk/openapi"
+	"magalu.cloud/sdk/static"
 )
 
 // Re-exports from Core
@@ -24,7 +26,7 @@ func NewSdk() *Sdk {
 	return &Sdk{}
 }
 
-func (o *Sdk) newOpenApiSource() *OpenApiSource {
+func (o *Sdk) newOpenApiSource() *openapi.Source {
 	// TODO: are these going to be fixed? configurable?
 	extensionPrefix := "x-cli"
 	openApiDir := os.Getenv("MGC_SDK_OPENAPI_DIR")
@@ -35,7 +37,7 @@ func (o *Sdk) newOpenApiSource() *OpenApiSource {
 		}
 	}
 
-	return &OpenApiSource{
+	return &openapi.Source{
 		Dir:             openApiDir,
 		ExtensionPrefix: &extensionPrefix,
 	}
@@ -48,7 +50,7 @@ func (o *Sdk) Group() core.Grouper {
 			"1.0",
 			"All MagaLu Groups & Executors",
 			[]core.Grouper{
-				newStaticRoot(),
+				static.NewGroup(),
 				o.newOpenApiSource(),
 			},
 		)

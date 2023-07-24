@@ -1,16 +1,16 @@
-package sdk
+package vpc
 
 import "magalu.cloud/core"
 
-func newStaticRootVpcPortStatic() *core.StaticExecute {
+func newStatic() *core.StaticExecute {
 	return core.NewStaticExecute(
 		"static",
 		"",
-		"static third level",
+		"static second level",
 		&core.Schema{},
 		&core.Schema{},
 		func(parameters, configs map[string]core.Value) (result core.Value, err error) {
-			println("TODO: vpc port static (third level) called")
+			println("TODO: vpc static (second level) called")
 			return nil, nil
 		},
 	)

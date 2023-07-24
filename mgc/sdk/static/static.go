@@ -1,8 +1,8 @@
-package sdk
+package static
 
 import "magalu.cloud/core"
 
-func newStaticRootStatic() *core.StaticExecute {
+func newStatic() *core.StaticExecute {
 	return core.NewStaticExecute(
 		"static",
 		"34.56",

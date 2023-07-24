@@ -1,4 +1,4 @@
-package sdk
+package openapi
 
 func getExtension(prefix *string, name string, extensions map[string]any, def any) (value any, ok bool) {
 	if prefix == nil || *prefix == "" {
