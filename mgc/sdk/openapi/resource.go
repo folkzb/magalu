@@ -31,7 +31,7 @@ func (o *Resource) Version() string {
 }
 
 func (o *Resource) Description() string {
-	return o.tag.Description
+	return getDescriptionExtension(o.extensionPrefix, o.tag.Extensions, o.tag.Description)
 }
 
 // END: Descriptor interface

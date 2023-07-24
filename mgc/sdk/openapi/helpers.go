@@ -29,6 +29,11 @@ func getNameExtension(prefix *string, extensions map[string]any, def string) str
 	return str
 }
 
+func getDescriptionExtension(prefix *string, extensions map[string]any, def string) string {
+	str, _ := getExtensionString(prefix, "description", extensions, def)
+	return str
+}
+
 func getHiddenExtension(prefix *string, extensions map[string]any) bool {
 	b, _ := getExtensionBool(prefix, "hidden", extensions, false)
 	return b

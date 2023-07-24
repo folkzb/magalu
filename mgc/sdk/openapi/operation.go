@@ -65,7 +65,7 @@ func (o *Operation) Version() string {
 }
 
 func (o *Operation) Description() string {
-	return o.operation.Description
+	return getDescriptionExtension(o.extensionPrefix, o.operation.Extensions, o.operation.Description)
 }
 
 // END: Descriptor interface
@@ -84,7 +84,11 @@ func addParameters(schema *core.Schema, parameters openapi3.Parameters, extensio
 		paramSchema := paramSchemaRef.Value
 
 		name := getNameExtension(extensionPrefix, paramSchema.Extensions, parameter.Name)
-		desc := parameter.Description // TODO: getDescriptionExtension()
+
+		desc := getDescriptionExtension(extensionPrefix, parameter.Extensions, parameter.Description)
+		if desc == "" {
+			desc = getDescriptionExtension(extensionPrefix, paramSchema.Extensions, paramSchema.Description)
+		}
 
 		if desc != "" && paramSchema.Description != desc {
 			// copy, never modify parameter stuff
