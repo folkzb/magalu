@@ -25,10 +25,10 @@ type Grouper interface {
 }
 
 // Type comes from the Schema
-type Value any
+type Value = any
 
 // Type comes from the Schema
-type Example Value
+type Example = Value
 
 type Executor interface {
 	Descriptor
