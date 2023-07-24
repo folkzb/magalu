@@ -72,8 +72,7 @@ func createGroupLoader(group sdk.Grouper) DynamicArgLoader {
 	)
 }
 
-func loadParametersIntoCommand(exec sdk.Executor, cmd *cobra.Command) {
-	schema := exec.ParametersSchema()
+func addFlags(flags *flag.FlagSet, schema *sdk.Schema) {
 	for name, propRef := range schema.Properties {
 		prop := propRef.Value
 
@@ -85,26 +84,25 @@ func loadParametersIntoCommand(exec sdk.Executor, cmd *cobra.Command) {
 			}
 		}
 
-		cmd.Flags().String(name, value, prop.Description)
+		flags.String(name, value, prop.Description)
 
 		if slices.Contains(schema.Required, name) {
-			err := cmd.MarkFlagRequired(name)
-			if err != nil {
+			if err := cobra.MarkFlagRequired(flags, name); err != nil {
 				log.Printf("Error marking %s as required: %s\n", name, err)
 			}
 		}
 	}
 }
 
-func loadParametersFromCommand(cmd *cobra.Command, schema *sdk.Schema, dst map[string]sdk.Value) error {
-	if cmd == nil || schema == nil || dst == nil {
+func loadDataFromFlags(flags *flag.FlagSet, schema *sdk.Schema, dst map[string]sdk.Value) error {
+	if flags == nil || schema == nil || dst == nil {
 		return fmt.Errorf("invalid command or parameter schema")
 	}
 
 	for name, ref := range schema.Properties {
 		parameter := ref.Value
 
-		flag := cmd.Flags().Lookup(name)
+		flag := flags.Lookup(name)
 		if flag == nil {
 			continue
 		}
@@ -146,13 +144,13 @@ func AddAction(
 			parameters := map[string]sdk.Value{}
 			configs := map[string]sdk.Value{}
 
-			schema := exec.ParametersSchema()
-			err := loadParametersFromCommand(cmd, schema, parameters)
-			if err != nil {
+			if err := loadDataFromFlags(cmd.Flags(), exec.ParametersSchema(), parameters); err != nil {
 				return err
 			}
 
-			// TODO: Load config
+			if err := loadDataFromFlags(cmd.PersistentFlags(), exec.ConfigsSchema(), configs); err != nil {
+				return err
+			}
 
 			result, err := exec.Execute(parameters, configs)
 			fmt.Println("RESULT:", result, err)
@@ -160,8 +158,8 @@ func AddAction(
 		},
 	}
 
-	loadParametersIntoCommand(exec, actionCmd)
-	// TODO: load config
+	addFlags(actionCmd.Flags(), exec.ParametersSchema())
+	addFlags(actionCmd.PersistentFlags(), exec.ConfigsSchema())
 
 	println("\033[1;36mACTION: ADDED CMD:\033[0m", actionCmd.Use)
 	parentCmd.AddCommand(actionCmd)
