@@ -110,6 +110,10 @@ func loadParametersFromCommand(cmd *cobra.Command, schema *sdk.Schema, dst map[s
 		}
 
 		str := flag.Value.String()
+		if str == "" {
+			continue
+		}
+
 		var value any
 
 		if parameter.Type == "string" && !strings.HasPrefix(str, "\"") {
