@@ -1,6 +1,6 @@
 package sdk
 
-import "core"
+import "magalu.cloud/core"
 
 func newStaticRootVpcStatic() *core.StaticExecute {
 	return core.NewStaticExecute(

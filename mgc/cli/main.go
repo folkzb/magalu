@@ -1,8 +1,9 @@
 package main
 
 import (
-	"cli/cmd"
 	"fmt"
+
+	"magalu.cloud/cli/cmd"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"sdk"
+	"magalu.cloud/sdk"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"

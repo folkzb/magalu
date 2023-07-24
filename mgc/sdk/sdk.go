@@ -1,9 +1,10 @@
 package sdk
 
 import (
-	"core"
 	"os"
 	"path/filepath"
+
+	"magalu.cloud/core"
 )
 
 // Re-exports from Core

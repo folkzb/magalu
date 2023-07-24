@@ -1,6 +1,6 @@
 package sdk
 
-import "core"
+import "magalu.cloud/core"
 
 func newStaticRoot() *core.StaticGroup {
 	return core.NewStaticGroup(

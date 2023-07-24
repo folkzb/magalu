@@ -1,10 +1,11 @@
 package sdk
 
 import (
-	"core"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"magalu.cloud/core"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"golang.org/x/exp/slices"

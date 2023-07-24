@@ -1,4 +1,4 @@
-module core
+module magalu.cloud/core
 
 go 1.20
 

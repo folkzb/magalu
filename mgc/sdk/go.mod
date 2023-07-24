@@ -1,10 +1,11 @@
-module sdk
+module magalu.cloud/sdk
 
 go 1.20
 
 require (
 	github.com/getkin/kin-openapi v0.118.0
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
+	magalu.cloud/core v0.0.0-unversioned
 )
 
 require (
@@ -18,3 +19,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace magalu.cloud/core => ../core
