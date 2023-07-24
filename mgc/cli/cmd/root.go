@@ -121,7 +121,7 @@ func loadParametersFromCommand(cmd *cobra.Command, schema *sdk.Schema, dst map[s
 		} else {
 			err := json.Unmarshal([]byte(str), value)
 			if err != nil {
-				return err
+				return fmt.Errorf("Could not parse JSON %q: %w", str, err)
 			}
 		}
 
@@ -148,9 +148,8 @@ func AddAction(
 
 			schema := exec.ParametersSchema()
 			err := loadParametersFromCommand(cmd, schema, parameters)
-
 			if err != nil {
-				fmt.Printf("Error when loading flags into command: %v\n", err)
+				return err
 			}
 
 			// TODO: Load config
