@@ -79,9 +79,24 @@ func addParameters(schema *core.Schema, parameters openapi3.Parameters, extensio
 			continue
 		}
 
-		name := getNameExtension(extensionPrefix, parameter.Schema.Value.Extensions, parameter.Name)
+		paramSchemaRef := parameter.Schema
+		paramSchema := paramSchemaRef.Value
 
-		schema.Properties[name] = parameter.Schema
+		name := getNameExtension(extensionPrefix, paramSchema.Extensions, parameter.Name)
+		desc := parameter.Description // TODO: getDescriptionExtension()
+
+		if desc != "" && paramSchema.Description != desc {
+			// copy, never modify parameter stuff
+			newSchema := *paramSchema
+			newSchema.Description = desc
+			paramSchema = &newSchema
+
+			newSchemaRef := *paramSchemaRef
+			newSchemaRef.Value = paramSchema
+			paramSchemaRef = &newSchemaRef
+		}
+
+		schema.Properties[name] = paramSchemaRef
 
 		if parameter.Required && !slices.Contains(schema.Required, name) {
 			schema.Required = append(schema.Required, name)
