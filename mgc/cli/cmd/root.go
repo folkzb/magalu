@@ -90,7 +90,7 @@ func loadParametersIntoCommand(exec sdk.Executor, cmd *cobra.Command) {
 		if slices.Contains(schema.Required, name) {
 			err := cmd.MarkFlagRequired(name)
 			if err != nil {
-				log.Printf("Error marking %s as required: %s", name, err)
+				log.Printf("Error marking %s as required: %s\n", name, err)
 			}
 		}
 	}
@@ -146,7 +146,7 @@ func AddAction(
 			err := loadParametersFromCommand(cmd, schema, parameters)
 
 			if err != nil {
-				fmt.Printf("Error when loading flags into command: %v", err)
+				fmt.Printf("Error when loading flags into command: %v\n", err)
 			}
 
 			// TODO: Load config
