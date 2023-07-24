@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"sdk"
@@ -283,80 +282,7 @@ func DynamicLoadCommand(cmd *cobra.Command, args []string, loader DynamicArgLoad
 	return DynamicLoadCommand(childCmd, childArgs, childLoader)
 }
 
-// NOTE: these will be build in their own files, one file per static command
-var staticCmds = sdk.NewStaticGroup(
-	"Static Commands",
-	"12.34",
-	"Test static commands",
-	[]sdk.Descriptor{
-		sdk.NewStaticExecute(
-			"static",
-			"34.56",
-			"static first level",
-			// NOTE: these can (should?) be defined in JSON and unmarshal from string
-			sdk.NewObjectSchema(
-				map[string]*sdk.Schema{
-					"param1": sdk.SetDescription(
-						sdk.NewNumberSchema(),
-						"Example static parameter of type number",
-					),
-				},
-				[]string{},
-			),
-			&sdk.Schema{},
-			func(parameters, configs map[string]sdk.Value) (result sdk.Value, err error) {
-				println("TODO: static first level called")
-				return nil, nil
-			},
-		),
-		sdk.NewStaticGroup(
-			"vpc",
-			"",
-			"",
-			[]sdk.Descriptor{
-				sdk.NewStaticGroup(
-					"port",
-					"",
-					"",
-					[]sdk.Descriptor{
-						sdk.NewStaticExecute(
-							"static",
-							"",
-							"static third level",
-							&sdk.Schema{},
-							&sdk.Schema{},
-							func(parameters, configs map[string]sdk.Value) (result sdk.Value, err error) {
-								println("TODO: vpc port static (third level) called")
-								return nil, nil
-							},
-						),
-					},
-				),
-				sdk.NewStaticExecute(
-					"static",
-					"",
-					"static second level",
-					&sdk.Schema{},
-					&sdk.Schema{},
-					func(parameters, configs map[string]sdk.Value) (result sdk.Value, err error) {
-						println("TODO: vpc static (second level) called")
-						return nil, nil
-					},
-				),
-			},
-		),
-	},
-)
-
 func Execute() error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	// TODO: this should be in viper + viper.SetDefault()
-	openApiDir := filepath.Join(cwd, "openapis")
-
 	rootCmd := &cobra.Command{
 		Use:     "cloud",
 		Version: "TODO",
@@ -372,23 +298,9 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.SetHelpCommandGroupID("other")
 	rootCmd.SetCompletionCommandGroupID("other")
 
-	extensionPrefix := "x-cli"
-	openApi := &sdk.OpenApiSource{
-		Dir:             openApiDir,
-		ExtensionPrefix: &extensionPrefix,
-	}
+	sdk := &sdk.Sdk{}
 
-	merge := sdk.NewMergeGroup(
-		"MagaLu CLI",
-		"1.0",
-		"All MagaLu Commands",
-		[]sdk.Grouper{
-			openApi,
-			staticCmds,
-		},
-	)
-
-	err = DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(merge))
+	err := DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(sdk.Group()))
 	if err != nil {
 		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
 	}

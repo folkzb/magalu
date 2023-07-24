@@ -1,4 +1,4 @@
-package sdk
+package core
 
 type StaticExecute struct {
 	name        string

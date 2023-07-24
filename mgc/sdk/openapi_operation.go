@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"core"
 	"fmt"
 	"regexp"
 	"strings"
@@ -121,7 +122,7 @@ func addRequestBodyParameters(schema *Schema, rbr *openapi3.RequestBodyRef, exte
 
 func (o *OpenApiOperation) ParametersSchema() *Schema {
 	if o.paramsSchema == nil {
-		rootSchema := NewObjectSchema(map[string]*Schema{}, []string{})
+		rootSchema := core.NewObjectSchema(map[string]*Schema{}, []string{})
 
 		addParameters(rootSchema, o.path.Parameters, o.extensionPrefix)
 		addParameters(rootSchema, o.operation.Parameters, o.extensionPrefix)
@@ -134,7 +135,7 @@ func (o *OpenApiOperation) ParametersSchema() *Schema {
 
 func (o *OpenApiOperation) ConfigsSchema() *Schema {
 	if o.configsSchema == nil {
-		rootSchema := NewObjectSchema(map[string]*Schema{}, []string{})
+		rootSchema := core.NewObjectSchema(map[string]*Schema{}, []string{})
 		// TODO: convert and save
 		// likely filter by location, like header/cookie are config?
 		o.configsSchema = rootSchema
