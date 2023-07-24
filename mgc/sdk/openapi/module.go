@@ -67,6 +67,7 @@ func (m *Module) VisitChildren(visitor core.DescriptorVisitor) (finished bool, e
 			tag:             tag,
 			doc:             doc,
 			extensionPrefix: m.extensionPrefix,
+			servers:         doc.Servers,
 		}
 
 		run, err := visitor(resource)

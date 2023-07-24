@@ -17,6 +17,7 @@ type Resource struct {
 	tag             *openapi3.Tag
 	doc             *openapi3.T
 	extensionPrefix *string
+	servers         openapi3.Servers
 }
 
 // BEGIN: Descriptor interface:
@@ -37,6 +38,18 @@ func (o *Resource) Description() string {
 
 // BEGIN: Grouper interface:
 
+func getServers(p *openapi3.PathItem, op *openapi3.Operation) openapi3.Servers {
+	var servers openapi3.Servers
+	if op.Servers != nil && len(*op.Servers) > 0 {
+		servers = *op.Servers
+	}
+	if servers == nil && len(p.Servers) > 0 {
+		servers = p.Servers
+	}
+
+	return servers
+}
+
 func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor core.DescriptorVisitor) (run bool, err error) {
 	ops := map[string]*openapi3.Operation{
 		"get":    p.Get,
@@ -55,6 +68,11 @@ func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor core.Desc
 			continue
 		}
 
+		servers := getServers(p, op)
+		if servers == nil {
+			servers = o.servers
+		}
+
 		operation := &Operation{
 			key:             key,
 			method:          method,
@@ -62,6 +80,7 @@ func (o *Resource) visitPath(key string, p *openapi3.PathItem, visitor core.Desc
 			operation:       op,
 			doc:             o.doc,
 			extensionPrefix: o.extensionPrefix,
+			servers:         servers,
 		}
 
 		run, err := visitor(operation)

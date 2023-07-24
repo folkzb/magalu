@@ -25,6 +25,7 @@ type Operation struct {
 	configsSchema *core.Schema
 	// TODO: configsMapping map[string]...
 	extensionPrefix *string
+	servers         openapi3.Servers
 }
 
 // BEGIN: Descriptor interface:
@@ -171,6 +172,20 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 	return o.configsSchema
 }
 
+func getServerURL(servers openapi3.Servers, path string, configs map[string]core.Value) (string, error) {
+	var s *openapi3.Server
+	if len(servers) > 0 {
+		s = servers[0]
+	}
+
+	if s == nil {
+		return "", fmt.Errorf("no available servers in spec")
+	}
+
+	// TODO: Map Server Variables to URL based on received config
+	return s.URL + path, nil
+}
+
 func (o *Operation) Execute(parameters map[string]core.Value, configs map[string]core.Value) (result core.Value, err error) {
 	// load definitions if not done yet
 	parametersSchema := o.ParametersSchema()
@@ -184,6 +199,9 @@ func (o *Operation) Execute(parameters map[string]core.Value, configs map[string
 		return nil, err
 	}
 
+	serverURL, _ := getServerURL(o.servers, o.key, configs)
+
+	fmt.Println("server: " + serverURL)
 	fmt.Printf("TODO: execute: %v %v\ninput: p=%v; c=%v\ndefinitions: p=%v; c=%v\n", o.method, o.key, parameters, configs, parametersSchema.Properties, configsSchema)
 
 	return nil, fmt.Errorf("not implemented")
