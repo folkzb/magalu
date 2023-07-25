@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -60,4 +61,21 @@ type Executor interface {
 	ParametersSchema() *Schema
 	ConfigsSchema() *Schema
 	Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
+}
+
+func VisitAllExecutors(child Descriptor, path []string, visitExecutor func(executor Executor, path []string) (bool, error)) (bool, error) {
+	if executor, ok := child.(Executor); ok {
+		return visitExecutor(executor, path)
+	} else if group, ok := child.(Grouper); ok {
+		return group.VisitChildren(func(child Descriptor) (run bool, err error) {
+			size := len(path)
+			path = append(path, child.Name())
+			run, err = VisitAllExecutors(child, path, visitExecutor)
+			path = path[:size]
+
+			return run, err
+		})
+	} else {
+		return false, fmt.Errorf("child %v not group/executor", child)
+	}
 }
