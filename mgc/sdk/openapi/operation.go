@@ -83,7 +83,7 @@ func addParameters(schema *core.Schema, parameters openapi3.Parameters, extensio
 		paramSchemaRef := parameter.Schema
 		paramSchema := paramSchemaRef.Value
 
-		name := getNameExtension(extensionPrefix, paramSchema.Extensions, parameter.Name)
+		name := getNameExtension(extensionPrefix, parameter.Extensions, parameter.Name)
 
 		desc := getDescriptionExtension(extensionPrefix, parameter.Extensions, parameter.Description)
 		if desc == "" {
