@@ -1,6 +1,13 @@
 package core
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/invopop/jsonschema"
+	"github.com/mitchellh/mapstructure"
+)
 
 type StaticExecute struct {
 	name        string
@@ -11,8 +18,91 @@ type StaticExecute struct {
 	execute     func(ctx context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
 }
 
+// Raw Parameter and Config JSON Schemas
 func NewStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)) *StaticExecute {
 	return &StaticExecute{name, version, description, parameters, config, execute}
+}
+
+// Go Parameter and Config structs
+// Note: we use both 'jsonschema' and 'mapstructure' for this helper. Be careful
+// when using struct tags in your Params and Configs structs, as the tags from those
+// libraries can't be out of sync when it comes to field names/json names
+func NewStaticExecuteSimple[ParamsT any, ConfigsT any, ResultT any](
+	name string,
+	version string,
+	description string,
+	execute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
+) *StaticExecute {
+	ps := schemaReflector.Reflect(new(ParamsT))
+	cs := schemaReflector.Reflect(new(ConfigsT))
+
+	corePs, pErr := toCoreSchema(ps)
+	coreCs, cErr := toCoreSchema(cs)
+
+	if pErr != nil || cErr != nil {
+		fmt.Println(pErr, cErr)
+		log.Fatalf("Unable to create JSON Schema for Params and Configs structs: %T, %T", ps, cs)
+	}
+
+	return NewStaticExecute(
+		name,
+		version,
+		description,
+		corePs,
+		coreCs,
+		func(ctx context.Context, parameters, configs map[string]any) (Value, error) {
+			var paramsStruct ParamsT
+			var configsStruct ConfigsT
+
+			err := mapstructure.Decode(parameters, &paramsStruct)
+			if err != nil {
+				return nil, fmt.Errorf("error when decoding parameters. Did you forget to set 'mapstructure' struct flags?: %v", err)
+			}
+
+			err = mapstructure.Decode(configs, &configsStruct)
+			if err != nil {
+				return nil, fmt.Errorf("error when decoding configs. Did you forget to set 'mapstructure' struct flags?: %v", err)
+			}
+
+			result, err := execute(ctx, paramsStruct, configsStruct)
+			if err != nil {
+				return nil, err
+			}
+
+			if m, ok := any(result).(map[string]Value); ok {
+				return m, nil
+			}
+
+			if any(result) == nil {
+				return result, err
+			}
+
+			resultMap := map[string]Value{}
+			err = mapstructure.Decode(result, &resultMap)
+			if err != nil {
+				return nil, err
+			}
+
+			return resultMap, nil
+		},
+	)
+}
+
+// No parameters or configs
+func NewStaticExecuteSimplest[ResultT any](
+	name string,
+	version string,
+	description string,
+	execute func(ctx context.Context) (result ResultT, err error),
+) *StaticExecute {
+	return NewStaticExecuteSimple(
+		name,
+		version,
+		description,
+		func(ctx context.Context, _, _ struct{}) (ResultT, error) {
+			return execute(ctx)
+		},
+	)
 }
 
 // BEGIN: Descriptor interface:
@@ -48,3 +138,9 @@ func (o *StaticExecute) Execute(context context.Context, parameters map[string]V
 var _ Executor = (*StaticExecute)(nil)
 
 // END: Executor interface
+
+var schemaReflector *jsonschema.Reflector
+
+func init() {
+	schemaReflector = new(jsonschema.Reflector)
+}
