@@ -21,6 +21,7 @@ type Value = core.Value
 
 type Sdk struct {
 	group *core.MergeGroup
+	auth  *core.Auth
 }
 
 func NewSdk() *Sdk {
@@ -32,6 +33,7 @@ func NewSdk() *Sdk {
 func (o *Sdk) NewContext() context.Context {
 	var ctx = context.Background()
 	ctx = core.NewGrouperContext(ctx, o.Group())
+	ctx = core.NewAuthContext(ctx, o.Auth())
 	return ctx
 }
 
@@ -65,4 +67,13 @@ func (o *Sdk) Group() core.Grouper {
 		)
 	}
 	return o.group
+}
+
+func (o *Sdk) Auth() *core.Auth {
+	if o.auth == nil {
+		o.auth = &core.Auth{
+			RefreshToken: "",
+		}
+	}
+	return o.auth
 }

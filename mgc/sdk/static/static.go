@@ -30,6 +30,10 @@ func newStatic() *core.StaticExecute {
 					return true, nil
 				})
 			}
+			if auth := core.AuthFromContext(ctx); auth != nil {
+				println("I have auth from context", auth)
+				return nil, nil
+			}
 			return nil, nil
 		},
 	)
