@@ -1,6 +1,10 @@
 package static
 
-import "magalu.cloud/core"
+import (
+	"context"
+
+	"magalu.cloud/core"
+)
 
 func newStatic() *core.StaticExecute {
 	return core.NewStaticExecute(
@@ -18,7 +22,7 @@ func newStatic() *core.StaticExecute {
 			[]string{},
 		),
 		&core.Schema{},
-		func(parameters, configs map[string]core.Value) (result core.Value, err error) {
+		func(ctx context.Context, parameters, configs map[string]core.Value) (result core.Value, err error) {
 			println("TODO: static first level called")
 			return nil, nil
 		},

@@ -1,15 +1,17 @@
 package core
 
+import "context"
+
 type StaticExecute struct {
 	name        string
 	version     string
 	description string
 	parameters  *Schema
 	config      *Schema
-	execute     func(parameters map[string]Value, configs map[string]Value) (result Value, err error)
+	execute     func(ctx context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
 }
 
-func NewStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, execute func(parameters map[string]Value, configs map[string]Value) (result Value, err error)) *StaticExecute {
+func NewStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)) *StaticExecute {
 	return &StaticExecute{name, version, description, parameters, config, execute}
 }
 
@@ -39,8 +41,8 @@ func (o *StaticExecute) ConfigsSchema() *Schema {
 	return o.config
 }
 
-func (o *StaticExecute) Execute(parameters map[string]Value, configs map[string]Value) (result Value, err error) {
-	return o.execute(parameters, configs)
+func (o *StaticExecute) Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error) {
+	return o.execute(context, parameters, configs)
 }
 
 var _ Executor = (*StaticExecute)(nil)

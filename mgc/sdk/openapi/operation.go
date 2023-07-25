@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -190,7 +191,7 @@ func getServerURL(servers openapi3.Servers, path string, configs map[string]core
 	return s.URL + path, nil
 }
 
-func (o *Operation) Execute(parameters map[string]core.Value, configs map[string]core.Value) (result core.Value, err error) {
+func (o *Operation) Execute(ctx context.Context, parameters map[string]core.Value, configs map[string]core.Value) (result core.Value, err error) {
 	// load definitions if not done yet
 	parametersSchema := o.ParametersSchema()
 	configsSchema := o.ConfigsSchema()

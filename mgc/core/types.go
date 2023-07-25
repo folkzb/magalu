@@ -1,6 +1,10 @@
 package core
 
-import "github.com/getkin/kin-openapi/openapi3"
+import (
+	"context"
+
+	"github.com/getkin/kin-openapi/openapi3"
+)
 
 // NOTE: TODO: should we duplicate this, or find a more generic package?
 type Schema openapi3.Schema
@@ -34,5 +38,5 @@ type Executor interface {
 	Descriptor
 	ParametersSchema() *Schema
 	ConfigsSchema() *Schema
-	Execute(parameters map[string]Value, configs map[string]Value) (result Value, err error)
+	Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
 }

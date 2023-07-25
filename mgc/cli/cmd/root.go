@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"magalu.cloud/sdk"
+	mgcSdk "magalu.cloud/sdk"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
@@ -40,21 +40,21 @@ func createCommonDynamicArgLoader(
 
 // -- END: create Dynamic Argument Loaders --
 
-func handleLoaderChild(cmd *cobra.Command, child sdk.Descriptor) (*cobra.Command, DynamicArgLoader, error) {
-	if childGroup, ok := child.(sdk.Grouper); ok {
-		return AddGroup(cmd, childGroup)
-	} else if childExec, ok := child.(sdk.Executor); ok {
-		return AddAction(cmd, childExec)
+func handleLoaderChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, child mgcSdk.Descriptor) (*cobra.Command, DynamicArgLoader, error) {
+	if childGroup, ok := child.(mgcSdk.Grouper); ok {
+		return AddGroup(sdk, cmd, childGroup)
+	} else if childExec, ok := child.(mgcSdk.Executor); ok {
+		return AddAction(sdk, cmd, childExec)
 	} else {
 		return nil, nil, fmt.Errorf("child %v not group/executor", child)
 	}
 }
 
-func createGroupLoader(group sdk.Grouper) DynamicArgLoader {
+func createGroupLoader(sdk *mgcSdk.Sdk, group mgcSdk.Grouper) DynamicArgLoader {
 	return createCommonDynamicArgLoader(
 		func(cmd *cobra.Command) error {
-			_, err := group.VisitChildren(func(child sdk.Descriptor) (bool, error) {
-				_, _, err := handleLoaderChild(cmd, child)
+			_, err := group.VisitChildren(func(child mgcSdk.Descriptor) (bool, error) {
+				_, _, err := handleLoaderChild(sdk, cmd, child)
 				return true, err
 			})
 
@@ -67,12 +67,12 @@ func createGroupLoader(group sdk.Grouper) DynamicArgLoader {
 				return nil, nil, err
 			}
 
-			return handleLoaderChild(cmd, child)
+			return handleLoaderChild(sdk, cmd, child)
 		},
 	)
 }
 
-func addFlags(flags *flag.FlagSet, schema *sdk.Schema) {
+func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 	for name, propRef := range schema.Properties {
 		prop := propRef.Value
 
@@ -94,7 +94,7 @@ func addFlags(flags *flag.FlagSet, schema *sdk.Schema) {
 	}
 }
 
-func loadDataFromFlags(flags *flag.FlagSet, schema *sdk.Schema, dst map[string]sdk.Value) error {
+func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[string]mgcSdk.Value) error {
 	if flags == nil || schema == nil || dst == nil {
 		return fmt.Errorf("invalid command or parameter schema")
 	}
@@ -130,10 +130,11 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *sdk.Schema, dst map[string]s
 }
 
 func AddAction(
+	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
-	exec sdk.Executor,
+	exec mgcSdk.Executor,
 ) (*cobra.Command, DynamicArgLoader, error) {
-	desc := exec.(sdk.Descriptor)
+	desc := exec.(mgcSdk.Descriptor)
 
 	actionCmd := &cobra.Command{
 		Use:   desc.Name(),
@@ -141,8 +142,8 @@ func AddAction(
 		// TODO: Long:    desc.Description,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			parameters := map[string]sdk.Value{}
-			configs := map[string]sdk.Value{}
+			parameters := map[string]mgcSdk.Value{}
+			configs := map[string]mgcSdk.Value{}
 
 			if err := loadDataFromFlags(cmd.Flags(), exec.ParametersSchema(), parameters); err != nil {
 				return err
@@ -152,7 +153,8 @@ func AddAction(
 				return err
 			}
 
-			result, err := exec.Execute(parameters, configs)
+			ctx := sdk.NewContext()
+			result, err := exec.Execute(ctx, parameters, configs)
 			fmt.Println("RESULT:", result, err)
 			return err
 		},
@@ -171,10 +173,11 @@ func runHelpE(cmd *cobra.Command, args []string) error {
 }
 
 func AddGroup(
+	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
-	group sdk.Grouper,
+	group mgcSdk.Grouper,
 ) (*cobra.Command, DynamicArgLoader, error) {
-	desc := group.(sdk.Descriptor)
+	desc := group.(mgcSdk.Descriptor)
 	moduleCmd := &cobra.Command{
 		Use:     desc.Name(),
 		Short:   desc.Description(),
@@ -182,7 +185,7 @@ func AddGroup(
 		RunE:    runHelpE,
 	}
 
-	loader := createGroupLoader(group)
+	loader := createGroupLoader(sdk, group)
 
 	println("\033[1;34mGROUP: ADDED CMD:\033[0m", moduleCmd.Use)
 	parentCmd.AddCommand(moduleCmd)
@@ -299,9 +302,9 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.SetHelpCommandGroupID("other")
 	rootCmd.SetCompletionCommandGroupID("other")
 
-	sdk := &sdk.Sdk{}
+	sdk := &mgcSdk.Sdk{}
 
-	err := DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(sdk.Group()))
+	err := DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(sdk, sdk.Group()))
 	if err != nil {
 		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
 	}

@@ -1,6 +1,10 @@
 package port
 
-import "magalu.cloud/core"
+import (
+	"context"
+
+	"magalu.cloud/core"
+)
 
 func newStatic() *core.StaticExecute {
 	return core.NewStaticExecute(
@@ -9,7 +13,7 @@ func newStatic() *core.StaticExecute {
 		"static third level",
 		&core.Schema{},
 		&core.Schema{},
-		func(parameters, configs map[string]core.Value) (result core.Value, err error) {
+		func(ctx context.Context, parameters, configs map[string]core.Value) (result core.Value, err error) {
 			println("TODO: vpc port static (third level) called")
 			return nil, nil
 		},
