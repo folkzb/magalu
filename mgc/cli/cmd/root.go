@@ -117,7 +117,7 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *sdk.Schema, dst map[string]s
 		if parameter.Type == "string" && !strings.HasPrefix(str, "\"") {
 			value = str
 		} else {
-			err := json.Unmarshal([]byte(str), value)
+			err := json.Unmarshal([]byte(str), &value)
 			if err != nil {
 				return fmt.Errorf("Could not parse JSON %q: %w", str, err)
 			}
