@@ -27,6 +27,7 @@ paths:
             security:
             -   OAuth2:
                 - network.read
+        x-cli-hidden: true
     /v0/xaas/ports/all:
         delete:
             tags:
@@ -227,6 +228,7 @@ paths:
                     format: uuid
                 name: vpc_id
                 in: path
+                x-cli-name: vpc
             responses:
                 '200':
                     description: Successful Response
@@ -243,6 +245,8 @@ paths:
             security:
             -   OAuth2:
                 - network.read
+            x-cli-description: List VPC ports
+            x-cli-name: list
         post:
             tags:
             - port
@@ -3204,29 +3208,43 @@ components:
 tags:
 -   name: vpc
     description: Rotas relacionadas as apis da VPC API Product para Vpcs
+    x-cli-description: Virtual Private Cloud (VPC)
 -   name: port
     description: Rotas relacionadas as apis da VPC API Product para Portas
+    x-cli-description: VPC Port
 -   name: security_group
     description: Rotas relacionadas as apis da VPC API Product para Security Groups
+    x-cli-description: VPC Security Groups
 -   name: rule
     description: Rotas relacionadas as apis da VPC API Product para Rules
+    x-cli-description: VPC Rules
 -   name: public_ip
     description: Rotas relacionadas as apis da VPC API Product para Public IPs
+    x-cli-description: VPC Public IPs
 -   name: subnets
     description: Rotas relacionadas as apis da VPC API Product para Subnets
+    x-cli-description: VPC Subnets
 -   name: healthcheck
     description: Rotas relacionadas a verificação da saúde da aplicação
+    x-cli-hidden: true
 -   name: xaas_vpc
     description: Rotas relacionadas as apis utilizadas por outros produtos
+    x-cli-hidden: true
 -   name: xaas_subnetpools
     description: Rotas relacionadas as apis da VPC API Product para Subnetpools
+    x-cli-hidden: true
 -   name: xaas_rule
     description: Rotas relacionadas as apis utilizadas por outros produtos
+    x-cli-hidden: true
 -   name: xaas_security_group
     description: Rotas relacionadas as apis utilizadas por outros produtos
+    x-cli-hidden: true
 -   name: xaas_port
     description: Rotas relacionadas as apis utilizadas por outros produtos
+    x-cli-hidden: true
 -   name: xaas_subnets
     description: Rotas relacionadas as apis utilizadas por outros produtos
+    x-cli-hidden: true
 -   name: quotas
     description: Rotas relacionadas as apis da VPC API Product para Quotas
+    x-cli-description: VPC Quotas

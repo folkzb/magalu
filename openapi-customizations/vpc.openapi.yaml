@@ -1,0 +1,44 @@
+# This file is to be merged on top of mgc/cli/openapis/vpc.openapi.yaml
+# using yaml_merge.py
+# NOTE: Lists are merged by their indexes, be careful with parameters, tags and such!
+# to keep it sane, keep some list item identifier (ex: "name") and add extra properties,
+# such as "x-cli-name" or "x-cli-description"
+
+paths:
+    /v0/vpcs/{vpc_id}/ports:
+        get:
+            x-cli-description: List VPC ports
+            x-cli-name: list
+            parameters:
+            - name: vpc_id
+              x-cli-name: vpc
+
+tags:
+-   name: vpc
+    x-cli-description: Virtual Private Cloud (VPC)
+-   name: port
+    x-cli-description: VPC Port
+-   name: security_group
+    x-cli-description: VPC Security Groups
+-   name: rule
+    x-cli-description: VPC Rules
+-   name: public_ip
+    x-cli-description: VPC Public IPs
+-   name: subnets
+    x-cli-description: VPC Subnets
+-   name: healthcheck
+    x-cli-hidden: true
+-   name: xaas_vpc
+    x-cli-hidden: true
+-   name: xaas_subnetpools
+    x-cli-hidden: true
+-   name: xaas_rule
+    x-cli-hidden: true
+-   name: xaas_security_group
+    x-cli-hidden: true
+-   name: xaas_port
+    x-cli-hidden: true
+-   name: xaas_subnets
+    x-cli-hidden: true
+-   name: quotas
+    x-cli-description: VPC Quotas
