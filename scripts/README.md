@@ -60,3 +60,28 @@ For running:
 ```shell
 python3 remove_tenant_id.py <path-to-openapi-spec>
 ```
+
+### [yaml_merge.py](./yaml_merge.py):
+
+Merge some extras/customizations on top of an existing YAML, this is
+useful to add `x-cli-name`, `x-cli-description` and `x-cli-hidden`
+to an OpenAPI specification.
+
+#### Running
+
+For help:
+
+```shell
+python3 yaml_merge.py  --help
+```
+
+For running:
+
+```shell
+
+```shell
+cd ..
+python3 scripts/yaml_merge.py \
+    mgc/cli/openapis/vpc.openapi.yaml \
+    openapi-customizations/vpc.openapi.yaml
+```
