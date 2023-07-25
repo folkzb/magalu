@@ -2,11 +2,17 @@ module magalu.cloud/core
 
 go 1.20
 
-require github.com/getkin/kin-openapi v0.118.0
+require (
+	github.com/getkin/kin-openapi v0.118.0
+	github.com/invopop/jsonschema v0.7.0
+	github.com/mitchellh/mapstructure v1.5.0
+	github.com/stoewer/go-strcase v1.3.0
+)
 
 require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
+	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
