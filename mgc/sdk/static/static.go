@@ -24,6 +24,12 @@ func newStatic() *core.StaticExecute {
 		&core.Schema{},
 		func(ctx context.Context, parameters, configs map[string]core.Value) (result core.Value, err error) {
 			println("TODO: static first level called")
+			if root := core.GrouperFromContext(ctx); root != nil {
+				_, _ = root.VisitChildren(func(child core.Descriptor) (run bool, err error) {
+					println(">>> root child: ", child.Name())
+					return true, nil
+				})
+			}
 			return nil, nil
 		},
 	)

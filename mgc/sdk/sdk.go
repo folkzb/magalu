@@ -27,15 +27,12 @@ func NewSdk() *Sdk {
 	return &Sdk{}
 }
 
+// The Context is created with the following values:
+// - use GrouperFromContext() to retrieve Sdk.Group() (root group)
 func (o *Sdk) NewContext() context.Context {
-	// when Auth and others are added, just nest `context.WithValue()`
-	// but be aware that one needs to retrieve it from static/ and openapi/ (subpackages)
-	// without causing a cycle.
-	// At https://pkg.go.dev/context#Context one can see how we should proceed,
-	// we should add core.Auth.NewContext(parentCtx) and then core.Auth.FromContext(ctx)
-	// to retrieve, using an unexported key.
-	// if these functions + key is in core, there is no dep cycle
-	return context.Background()
+	var ctx = context.Background()
+	ctx = core.NewGrouperContext(ctx, o.Group())
+	return ctx
 }
 
 func (o *Sdk) newOpenApiSource() *openapi.Source {

@@ -28,6 +28,27 @@ type Grouper interface {
 	GetChildByName(name string) (child Descriptor, err error)
 }
 
+// contextKey is an unexported type for keys defined in this package.
+// This prevents collisions with keys defined in other packages.
+type contextKey string
+
+// grouperContextKey is the key for sdk.Grouper values in Contexts. It is
+// unexported; clients use NewGrouperContext() and GrouperFromContext()
+// instead of using this key directly.
+var grouperContextKey contextKey = "magalu.cloud/core/Grouper"
+
+func NewGrouperContext(parent context.Context, group Grouper) context.Context {
+	return context.WithValue(parent, grouperContextKey, group)
+}
+
+func GrouperFromContext(ctx context.Context) Grouper {
+	if value, ok := ctx.Value(grouperContextKey).(Grouper); !ok {
+		return nil
+	} else {
+		return value
+	}
+}
+
 // Type comes from the Schema
 type Value = any
 
