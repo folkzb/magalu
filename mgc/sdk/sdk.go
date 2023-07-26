@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -22,6 +23,34 @@ type Value = core.Value
 type Sdk struct {
 	group *core.MergeGroup
 	auth  *core.Auth
+}
+
+// TODO: Change config with build tags or from environment
+var config core.AuthConfig = core.AuthConfig{
+	ClientId:      "cw9qpaUl2nBiC8PVjNFN5jZeb2vTd_1S5cYs1FhEXh0",
+	RedirectUri:   "http://localhost:8095/callback",
+	LoginUrl:      "https://id.magalu.com/login",
+	TokenUrl:      "https://id.magalu.com/oauth/token",
+	ValidationUrl: "https://id.magalu.com/oauth/introspect",
+	RefreshUrl:    "https://id.magalu.com/oauth/token",
+	Scopes: []string{
+		"openid",
+		"mke.read",
+		"mke.write",
+		"network.read",
+		"network.write",
+		"object-storage.read",
+		"object-storage.write",
+		"block-storage.read",
+		"block-storage.write",
+		"virtual-machine.read",
+		"virtual-machine.write",
+		"dbaas.read",
+		"dbaas.write",
+		"cpo:read",
+		"cpo:write",
+		"api-consulta.read",
+	},
 }
 
 func NewSdk() *Sdk {
@@ -70,10 +99,9 @@ func (o *Sdk) Group() core.Grouper {
 }
 
 func (o *Sdk) Auth() *core.Auth {
+	client := &http.Client{}
 	if o.auth == nil {
-		o.auth = &core.Auth{
-			RefreshToken: "",
-		}
+		o.auth = core.NewAuth(config, client)
 	}
 	return o.auth
 }
