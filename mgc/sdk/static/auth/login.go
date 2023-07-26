@@ -42,7 +42,6 @@ func newLogin() *core.StaticExecute {
 				return nil, err
 			}
 			defer func() {
-				output = nil
 				err = srv.Shutdown(context.Background())
 			}()
 
