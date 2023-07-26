@@ -21,7 +21,7 @@ type MyResult struct {
 }
 
 func newStatic() *core.StaticExecute {
-	return core.NewStaticExecuteSimple(
+	return core.NewStaticExecute(
 		"static",
 		"34.56",
 		"static first level",

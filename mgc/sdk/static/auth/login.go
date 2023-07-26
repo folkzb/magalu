@@ -27,7 +27,7 @@ var (
 )
 
 func newLogin() *core.StaticExecute {
-	return core.NewStaticExecuteSimplest(
+	return core.NewStaticExecuteSimple(
 		"login",
 		"",
 		"authenticate with magalu cloud",

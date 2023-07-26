@@ -19,7 +19,7 @@ type StaticExecute struct {
 }
 
 // Raw Parameter and Config JSON Schemas
-func NewStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)) *StaticExecute {
+func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)) *StaticExecute {
 	return &StaticExecute{name, version, description, parameters, config, execute}
 }
 
@@ -27,7 +27,7 @@ func NewStaticExecute(name string, version string, description string, parameter
 // Note: we use both 'jsonschema' and 'mapstructure' for this helper. Be careful
 // when using struct tags in your Params and Configs structs, as the tags from those
 // libraries can't be out of sync when it comes to field names/json names
-func NewStaticExecuteSimple[ParamsT any, ConfigsT any, ResultT any](
+func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 	name string,
 	version string,
 	description string,
@@ -44,7 +44,7 @@ func NewStaticExecuteSimple[ParamsT any, ConfigsT any, ResultT any](
 		log.Fatalf("Unable to create JSON Schema for Params and Configs structs: %T, %T", ps, cs)
 	}
 
-	return NewStaticExecute(
+	return NewRawStaticExecute(
 		name,
 		version,
 		description,
@@ -89,13 +89,13 @@ func NewStaticExecuteSimple[ParamsT any, ConfigsT any, ResultT any](
 }
 
 // No parameters or configs
-func NewStaticExecuteSimplest[ResultT any](
+func NewStaticExecuteSimple[ResultT any](
 	name string,
 	version string,
 	description string,
 	execute func(ctx context.Context) (result ResultT, err error),
 ) *StaticExecute {
-	return NewStaticExecuteSimple(
+	return NewStaticExecute(
 		name,
 		version,
 		description,

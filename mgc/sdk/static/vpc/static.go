@@ -7,7 +7,7 @@ import (
 )
 
 func newStatic() *core.StaticExecute {
-	return core.NewStaticExecuteSimplest(
+	return core.NewStaticExecuteSimple(
 		"static",
 		"",
 		"static second level",
