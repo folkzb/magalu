@@ -17,19 +17,21 @@ type AuthResult struct {
 	err   error
 }
 
+type LoginResult struct {
+	AccessToken string
+}
+
 var (
 	//go:embed success.html
 	successPage string
 )
 
 func newLogin() *core.StaticExecute {
-	return core.NewStaticExecute(
+	return core.NewStaticExecuteSimplest(
 		"login",
 		"",
 		"authenticate with magalu cloud",
-		&core.Schema{},
-		&core.Schema{},
-		func(ctx context.Context, parameters, configs map[string]core.Value) (output core.Value, err error) {
+		func(ctx context.Context) (output *LoginResult, err error) {
 			auth := core.AuthFromContext(ctx)
 			if auth == nil {
 				return nil, errors.New("unable to retrieve authentication configuration")
@@ -59,7 +61,7 @@ func newLogin() *core.StaticExecute {
 				return nil, result.err
 			}
 
-			return result.value, nil
+			return &LoginResult{AccessToken: result.value}, nil
 		},
 	)
 }

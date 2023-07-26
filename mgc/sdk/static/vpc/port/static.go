@@ -7,13 +7,11 @@ import (
 )
 
 func newStatic() *core.StaticExecute {
-	return core.NewStaticExecute(
+	return core.NewStaticExecuteSimplest(
 		"static",
 		"",
 		"static third level",
-		&core.Schema{},
-		&core.Schema{},
-		func(ctx context.Context, parameters, configs map[string]core.Value) (result core.Value, err error) {
+		func(ctx context.Context) (result core.Value, err error) {
 			println("TODO: vpc port static (third level) called")
 			return nil, nil
 		},
