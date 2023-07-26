@@ -10,6 +10,8 @@ import (
 	mgcSdk "magalu.cloud/sdk"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/stoewer/go-strcase"
 	"golang.org/x/exp/slices"
 
 	flag "github.com/spf13/pflag"
@@ -301,6 +303,11 @@ func DynamicLoadCommand(cmd *cobra.Command, args []string, loader DynamicArgLoad
 	return DynamicLoadCommand(childCmd, childArgs, childLoader)
 }
 
+func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
+	name = strcase.KebabCase(name)
+	return pflag.NormalizedName(name)
+}
+
 func Execute() error {
 	rootCmd := &cobra.Command{
 		Use:     "cloud",
@@ -310,6 +317,7 @@ func Execute() error {
 can generate a command line on-demand for Rest manipulation`,
 		RunE: runHelpE,
 	}
+	rootCmd.SetGlobalNormalizationFunc(normalizeFlagName)
 	rootCmd.AddGroup(&cobra.Group{
 		ID:    "other",
 		Title: "Other commands:",
