@@ -37,15 +37,13 @@ type Auth struct {
 	codeVerifier *codeVerifier
 }
 
-type authKey string
-
-var key = authKey("auth")
+var authKey contextKey = "magalu.cloud/core/Authentication"
 
 func NewAuthContext(parentCtx context.Context, auth *Auth) context.Context {
-	return context.WithValue(parentCtx, key, auth)
+	return context.WithValue(parentCtx, authKey, auth)
 }
 func AuthFromContext(ctx context.Context) *Auth {
-	a, _ := ctx.Value(key).(*Auth)
+	a, _ := ctx.Value(authKey).(*Auth)
 	return a
 }
 
