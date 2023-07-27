@@ -281,10 +281,10 @@ func setSecurityHeader(req *http.Request, auth *core.Auth, secRequirements *open
 	}
 	for _, reqRef := range *secRequirements {
 		for secScheme := range reqRef {
-			if "oauth2" == strings.ToLower(secScheme) {
-				accessToken := auth.AccessToken()
-				if accessToken == "" {
-					return fmt.Errorf("Unauthenticated, run `auth login`")
+			if strings.ToLower(secScheme) == "oauth2" {
+				accessToken, err := auth.AccessToken()
+				if err != nil {
+					return err
 				}
 				req.Header.Set("Authorization", "Bearer "+accessToken)
 				return nil

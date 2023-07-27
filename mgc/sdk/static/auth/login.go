@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	_ "embed"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -34,7 +33,7 @@ func newLogin() *core.StaticExecute {
 		func(ctx context.Context) (output *LoginResult, err error) {
 			auth := core.AuthFromContext(ctx)
 			if auth == nil {
-				return nil, errors.New("unable to retrieve authentication configuration")
+				return nil, fmt.Errorf("unable to retrieve authentication configuration")
 			}
 
 			srv, c, err := startCallbackServer(auth)
@@ -69,7 +68,7 @@ func startCallbackServer(auth *core.Auth) (srv *http.Server, c chan *AuthResult,
 	c = make(chan *AuthResult, 1)
 	callbackUrl, err := url.Parse(auth.RedirectUri())
 	if err != nil {
-		return nil, nil, errors.New("invalid redirect_uri configuration")
+		return nil, nil, fmt.Errorf("invalid redirect_uri configuration")
 	}
 
 	srvPort := ":" + callbackUrl.Port()
@@ -88,12 +87,21 @@ func newCallback(auth *core.Auth, c chan *AuthResult) func(http.ResponseWriter, 
 		authCode := req.URL.Query().Get("code")
 		err := auth.RequestAuthTokeWithAuthorizationCode(authCode)
 		if err != nil {
+			fmt.Println(err)
 			c <- &AuthResult{value: "", err: err}
+			return
 		}
 
 		fmt.Println("You are now authenticated.")
 		showSuccessPage(w)
-		c <- &AuthResult{value: auth.AccessToken(), err: nil}
+
+		token, err := auth.AccessToken()
+		if err != nil {
+			c <- &AuthResult{value: "", err: err}
+			return
+		}
+
+		c <- &AuthResult{value: token, err: nil}
 	}
 }
 

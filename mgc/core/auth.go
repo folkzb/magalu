@@ -3,11 +3,15 @@ package core
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type loginResult struct {
@@ -17,6 +21,12 @@ type loginResult struct {
 
 type validationResult struct {
 	Active bool `json:"active"`
+}
+
+type AuthConfigResult struct {
+	AccessToken  string `yaml:"access_token"`
+	RefreshToken string `yaml:"refresh_token"`
+	CurrentEnv   string `yaml:"current_environment"` // ignored - used just for compatibility
 }
 
 type AuthConfig struct {
@@ -32,6 +42,7 @@ type AuthConfig struct {
 type Auth struct {
 	httpClient   *http.Client
 	config       AuthConfig
+	configFile   string
 	accessToken  string
 	refreshToken string
 	codeVerifier *codeVerifier
@@ -48,19 +59,48 @@ func AuthFromContext(ctx context.Context) *Auth {
 }
 
 func NewAuth(config AuthConfig, client *http.Client) *Auth {
+	// For now we are following the IDM convention to allow the users to use IDM
+	// when authenticating.
+	filePath, err := authFilePath(".mgc.yaml")
+	if err != nil {
+		return nil
+	}
+
 	return &Auth{
 		httpClient:   client,
 		config:       config,
+		configFile:   filePath,
 		codeVerifier: nil,
 	}
 }
 
-func (o *Auth) AccessToken() string {
-	// TODO: remove GetEnv and read from file
-	if o.accessToken == "" {
-		return os.Getenv("MGC_SDK_ACCESS_TOKEN")
+/*
+Returns the current user access token.
+
+It will first look into the environment variable "MGC_SDK_ACCESS_TOKEN", if
+not set, it will try to read from the auth configuration file.
+
+If the token is set as an empty string in either of those it will be treated
+as an error
+*/
+func (o *Auth) AccessToken() (string, error) {
+	if o.accessToken != "" {
+		return o.accessToken, nil
 	}
-	return o.accessToken
+
+	if token := os.Getenv("MGC_SDK_ACCESS_TOKEN"); token != "" {
+		return token, nil
+	}
+
+	authResult, err := o.readConfigFile()
+	if err != nil {
+		return "", err
+	}
+	if authResult.AccessToken == "" {
+		return "", fmt.Errorf("unable to find an access token, please authenticate yourself first")
+	}
+
+	return authResult.AccessToken, nil
 }
 
 func (o *Auth) RedirectUri() string {
@@ -68,9 +108,27 @@ func (o *Auth) RedirectUri() string {
 }
 
 func (o *Auth) setToken(token *loginResult) error {
-	// TODO: Persist the token in the disk, return error if something happens
+	// Always update the tokens, this way the user can assume the Auth object is
+	// up-to-date after this function, even in case of a persistance error
 	o.accessToken = token.AccessToken
 	o.refreshToken = token.RefreshToken
+
+	authResult, err := o.readConfigFile()
+	// Ignore if config file doesn't exist
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if authResult == nil {
+		authResult = &AuthConfigResult{}
+	}
+
+	authResult.AccessToken = token.AccessToken
+	authResult.RefreshToken = token.RefreshToken
+
+	err = o.writeConfigFile(authResult)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -105,7 +163,7 @@ func (o *Auth) CodeChallengeToURL() (*url.URL, error) {
  * of `CodeChallengeToUrl` method. */
 func (o *Auth) RequestAuthTokeWithAuthorizationCode(authCode string) error {
 	if o.codeVerifier == nil {
-		return errors.New("no code verification provided, first execute a code challenge request")
+		return fmt.Errorf("no code verification provided, first execute a code challenge request")
 	}
 	config := o.config
 	data := url.Values{}
@@ -209,4 +267,50 @@ func (o *Auth) newRefreshAccessTokenRequest() (*http.Request, error) {
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	return r, err
+}
+
+func (o *Auth) readConfigFile() (*AuthConfigResult, error) {
+	var result AuthConfigResult
+
+	authFile, err := os.ReadFile(o.configFile)
+	if err != nil {
+		log.Println("unable to read from auth configuration file")
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(authFile, &result)
+	if err != nil {
+		log.Println("bad format auth configuration file")
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (o *Auth) writeConfigFile(result *AuthConfigResult) error {
+	yamlData, err := yaml.Marshal(result)
+	if err != nil {
+		log.Println("unable to persist auth data")
+		return err
+	}
+
+	err = os.WriteFile(o.configFile, yamlData, 0600)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func authFilePath(fName string) (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if homeDir == "" {
+		homeDir, err = os.Getwd()
+	}
+	if homeDir == "" {
+		log.Println("unable to locate auth configuration file")
+		return "", err
+	}
+
+	return path.Join(homeDir, fName), nil
 }
