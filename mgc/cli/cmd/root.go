@@ -86,7 +86,17 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 			}
 		}
 
-		flags.String(name, value, prop.Description)
+		propType := prop.Type
+		if propType == "array" && prop.Items != nil {
+			propType += fmt.Sprintf("(%v)", prop.Items.Value.Type)
+		}
+
+		flags.AddFlag(&flag.Flag{
+			Name:     name,
+			DefValue: value,
+			Usage:    prop.Description,
+			Value:    &AnyFlagValue{marshalledValue: value, typeName: propType},
+		})
 
 		if slices.Contains(schema.Required, name) {
 			if err := cobra.MarkFlagRequired(flags, name); err != nil {
