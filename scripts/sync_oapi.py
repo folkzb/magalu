@@ -5,28 +5,53 @@ import argparse
 import urllib.request
 import json
 
+SERVER_VARIABLES = {
+    "region": {
+        "description": "Region to reach the service",
+        "default": "br-ne-1",
+        "enum": [
+            "br-ne-1",
+            "br-ne-2",
+            "br-se-1",
+        ],
+    }
+}
+
 SERVER_URL_MAP = {
     # VM
-    "https://virtual-machine.br-ne-1.jaxyendy.com": (
-        "https://api-virtual-machine.br-ne-1.jaxyendy.com"
-    ),
-    "https://virtual-machine.br-ne1-prod.jaxyendy.com": (
-        "https://api-virtual-machine.br-ne-1.jaxyendy.com"
-    ),
+    "https://virtual-machine.br-ne-1.jaxyendy.com": {
+        "url": "https://api-virtual-machine.{region}.jaxyendy.com",
+        "variables": SERVER_VARIABLES,
+    },
+    "https://virtual-machine.br-ne1-prod.jaxyendy.com": {
+        "url": "https://api-virtual-machine.{region}.jaxyendy.com",
+        "variables": SERVER_VARIABLES,
+    },
     # Block Storage
-    "https://block-storage.br-ne-1.jaxyendy.com": (
-        "https://api-block-storage.br-ne-1.jaxyendy.com"
-    ),
+    "https://block-storage.br-ne-1.jaxyendy.com": {
+        "url": "https://api-block-storage.{region}.jaxyendy.com",
+        "variables": SERVER_VARIABLES,
+    },
     # VPC
-    "https://vpc.br-ne-1.jaxyendy.com": ("https://api-vpc.br-ne-1.jaxyendy.com"),
+    "https://vpc.br-ne-1.jaxyendy.com": {
+        "url": "https://api-vpc.{region}.jaxyendy.com",
+        "variables": SERVER_VARIABLES,
+    },
     # Object Storage
-    "https://object-storage.br-ne-1.jaxyendy.com": (
-        "https://api-object-storage.br-ne-1.jaxyendy.com"
-    ),
+    "https://object-storage.br-ne-1.jaxyendy.com": {
+        "url": "https://api-object-storage.{region}.jaxyendy.com",
+        "variables": SERVER_VARIABLES,
+    },
     # DBaaS
-    "https://dbaas.br-ne-1.jaxyendy.com": ("https://api-dbaas.br-ne-1.jaxyendy.com"),
+    "https://dbaas.br-ne-1.jaxyendy.com": {
+        "url": "https://api-dbaas.{region}.jaxyendy.com",
+        "variables": SERVER_VARIABLES,
+    },
     # K8S
-    "https://mke.br-ne-1.jaxyendy.com": ("https://api-mke.br-ne-1.jaxyendy.com"),
+    "https://mke.br-ne-1.jaxyendy.com": {
+        "url": "https://api-mke.{region}.jaxyendy.com",
+        "variables": SERVER_VARIABLES,
+    },
 }
 
 OAPISchema = Dict[str, Any]
@@ -63,12 +88,12 @@ def load_yaml(path: str) -> OAPISchema:
 def update_server_urls(spec: OAPISchema):
     assert "servers" in spec, "Servers key not present in external YAML"
     for server in spec["servers"]:
-        if server["url"] not in SERVER_URL_MAP:
-            warnings.warn(
-                f"Unrecognized url in external: {server['url']}", category=UserWarning
-            )
+        url = server["url"]
+        repl = SERVER_URL_MAP.get(url)
+        if repl is None:
+            warnings.warn(f"Unrecognized url in external: {url}", category=UserWarning)
         else:
-            server["url"] = SERVER_URL_MAP[server["url"]]
+            server.update(repl)
 
 
 def save_external(spec: OAPISchema, path: str):

@@ -1013,4 +1013,12 @@ tags:
 -   name: block-storage
     description: block storage
 servers:
--   url: https://api-block-storage.br-ne-1.jaxyendy.com
+-   url: https://api-block-storage.{region}.jaxyendy.com
+    variables:
+        region:
+            description: Region to reach the service
+            default: br-ne-1
+            enum:
+                - br-ne-1
+                - br-ne-2
+                - br-se-1
