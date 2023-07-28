@@ -113,6 +113,23 @@ func addParameters(schema *core.Schema, parameters openapi3.Parameters, extensio
 	}
 }
 
+func addServerVariables(schema *core.Schema, servers []*openapi3.Server, extensionPrefix *string) {
+	for _, server := range servers {
+		for name, spec := range server.Variables {
+			varSchema := openapi3.NewStringSchema()
+			varSchema.Default = spec.Default
+
+			name = getNameExtension(extensionPrefix, spec.Extensions, name)
+			varSchema.Description = getDescriptionExtension(extensionPrefix, spec.Extensions, spec.Description)
+			for _, e := range spec.Enum {
+				varSchema.Enum = append(varSchema.Enum, e)
+			}
+
+			schema.Properties[name] = &openapi3.SchemaRef{Value: varSchema}
+		}
+	}
+}
+
 func addRequestBodyParameters(schema *core.Schema, rbr *openapi3.RequestBodyRef, extensionPrefix *string) {
 	if rbr == nil {
 		return
@@ -174,6 +191,7 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 
 		addParameters(rootSchema, o.path.Parameters, o.extensionPrefix, configLocations)
 		addParameters(rootSchema, o.operation.Parameters, o.extensionPrefix, configLocations)
+		addServerVariables(rootSchema, o.servers, o.extensionPrefix)
 
 		o.configsSchema = rootSchema
 	}
@@ -181,7 +199,6 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 }
 
 func (o *Operation) getServerURL(configs map[string]core.Value) (string, error) {
-	// TODO: implement configs map[string]core.Value to replace variables in serverUrl
 	var s *openapi3.Server
 	if len(o.servers) > 0 {
 		s = o.servers[0]
@@ -190,7 +207,19 @@ func (o *Operation) getServerURL(configs map[string]core.Value) (string, error) 
 	if s == nil {
 		return "", fmt.Errorf("no available servers in spec")
 	}
-	return s.URL + o.key, nil
+
+	url := s.URL
+	for name, spec := range s.Variables {
+		name = getNameExtension(o.extensionPrefix, spec.Extensions, name)
+		val, ok := configs[name]
+		if !ok {
+			val = spec.Default
+		}
+		tmpl := "{" + name + "}"
+		url = strings.ReplaceAll(url, tmpl, fmt.Sprintf("%v", val))
+	}
+
+	return url + o.key, nil
 }
 
 func replaceInPath(path string, param *openapi3.Parameter, val core.Value) (string, error) {
