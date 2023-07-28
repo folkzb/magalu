@@ -78,25 +78,29 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 	for name, propRef := range schema.Properties {
 		prop := propRef.Value
 
-		value := ""
-		if prop.Default != nil {
-			str, err := json.Marshal(prop.Default)
-			if err == nil {
-				value = string(str)
-			}
-		}
-
 		propType := prop.Type
-		if propType == "array" && prop.Items != nil {
-			propType += fmt.Sprintf("(%v)", prop.Items.Value.Type)
-		}
+		if propType == "boolean" {
+			def, _ := prop.Default.(bool)
+			flags.Bool(name, def, prop.Description)
+		} else {
+			if propType == "array" && prop.Items != nil {
+				propType += fmt.Sprintf("(%v)", prop.Items.Value.Type)
+			}
 
-		flags.AddFlag(&flag.Flag{
-			Name:     name,
-			DefValue: value,
-			Usage:    prop.Description,
-			Value:    &AnyFlagValue{marshalledValue: value, typeName: propType},
-		})
+			value := ""
+			if prop.Default != nil {
+				str, err := json.Marshal(prop.Default)
+				if err == nil {
+					value = string(str)
+				}
+			}
+			flags.AddFlag(&flag.Flag{
+				Name:     name,
+				DefValue: value,
+				Usage:    prop.Description,
+				Value:    &AnyFlagValue{marshalledValue: value, typeName: propType},
+			})
+		}
 
 		if slices.Contains(schema.Required, name) {
 			if err := cobra.MarkFlagRequired(flags, name); err != nil {
