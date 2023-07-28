@@ -182,6 +182,12 @@ func AddAction(
 			if err != nil {
 				return err
 			}
+
+			err = exec.ResultSchema().VisitJSON(result)
+			if err != nil {
+				log.Printf("Warning: result validation failed: %v", err)
+			}
+
 			str, err := format(result)
 			if err != nil {
 				return err
