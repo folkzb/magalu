@@ -63,9 +63,8 @@ func newLogin() *core.StaticExecute {
 				return nil, result.err
 			}
 
-			output = &LoginResult{}
 			if parameters.Show {
-				output.AccessToken = result.value
+				output = &LoginResult{AccessToken: result.value}
 			}
 
 			return output, nil
