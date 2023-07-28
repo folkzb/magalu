@@ -10,7 +10,8 @@ func NewGroup() *core.StaticGroup {
 		"",
 		"",
 		[]core.Descriptor{
-			newLogin(), // cmd: auth login
+			newLogin(),       // cmd: auth login
+			newAccessToken(), // cmd: auth access_token
 		},
 	)
 }
