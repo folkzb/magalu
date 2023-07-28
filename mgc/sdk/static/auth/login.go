@@ -11,7 +11,7 @@ import (
 	"magalu.cloud/core"
 )
 
-type AuthResult struct {
+type authResult struct {
 	value string
 	err   error
 }
@@ -73,8 +73,8 @@ func newLogin() *core.StaticExecute {
 	)
 }
 
-func startCallbackServer(auth *core.Auth) (srv *http.Server, c chan *AuthResult, err error) {
-	c = make(chan *AuthResult, 1)
+func startCallbackServer(auth *core.Auth) (srv *http.Server, c chan *authResult, err error) {
+	c = make(chan *authResult, 1)
 	callbackUrl, err := url.Parse(auth.RedirectUri())
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid redirect_uri configuration")
@@ -91,13 +91,13 @@ func startCallbackServer(auth *core.Auth) (srv *http.Server, c chan *AuthResult,
 	return srv, c, nil
 }
 
-func newCallback(auth *core.Auth, c chan *AuthResult) func(http.ResponseWriter, *http.Request) {
+func newCallback(auth *core.Auth, c chan *authResult) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		authCode := req.URL.Query().Get("code")
 		err := auth.RequestAuthTokeWithAuthorizationCode(authCode)
 		if err != nil {
 			fmt.Println(err)
-			c <- &AuthResult{value: "", err: err}
+			c <- &authResult{value: "", err: err}
 			return
 		}
 
@@ -106,11 +106,11 @@ func newCallback(auth *core.Auth, c chan *AuthResult) func(http.ResponseWriter, 
 
 		token, err := auth.AccessToken()
 		if err != nil {
-			c <- &AuthResult{value: "", err: err}
+			c <- &authResult{value: "", err: err}
 			return
 		}
 
-		c <- &AuthResult{value: token, err: nil}
+		c <- &authResult{value: token, err: nil}
 	}
 }
 
