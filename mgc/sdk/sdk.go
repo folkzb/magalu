@@ -25,6 +25,7 @@ type Sdk struct {
 	group      *core.MergeGroup
 	auth       *core.Auth
 	httpClient *core.HttpClient
+	config     *core.Config
 }
 
 // TODO: Change config with build tags or from environment
@@ -66,6 +67,7 @@ func (o *Sdk) NewContext() context.Context {
 	ctx = core.NewGrouperContext(ctx, o.Group())
 	ctx = core.NewAuthContext(ctx, o.Auth())
 	ctx = core.NewHttpClientContext(ctx, o.HttpClient())
+	ctx = core.NewConfigContext(ctx, o.Config())
 	return ctx
 }
 
@@ -118,4 +120,11 @@ func (o *Sdk) HttpClient() *core.HttpClient {
 		})
 	}
 	return o.httpClient
+}
+
+func (o *Sdk) Config() *core.Config {
+	if o.config == nil {
+		o.config = core.NewConfig()
+	}
+	return o.config
 }
