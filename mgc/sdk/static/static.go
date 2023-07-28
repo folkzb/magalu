@@ -26,7 +26,7 @@ func newStatic() *core.StaticExecute {
 		"34.56",
 		"static first level",
 		func(ctx context.Context, params MyParams, configs MyConfigs) (result *MyResult, err error) {
-			fmt.Printf("TODO: static first level called. parameters=%q, configs=%q\n", params, configs)
+			fmt.Printf("TODO: static first level called. parameters=%+v, configs=%+v\n", params, configs)
 			if root := core.GrouperFromContext(ctx); root != nil {
 				_, _ = root.VisitChildren(func(child core.Descriptor) (run bool, err error) {
 					println(">>> root child: ", child.Name())
