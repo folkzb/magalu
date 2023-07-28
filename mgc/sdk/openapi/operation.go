@@ -22,14 +22,14 @@ import (
 // Operation
 
 type Operation struct {
-	key           string
-	method        string
-	path          *openapi3.PathItem
-	operation     *openapi3.Operation
-	doc           *openapi3.T
-	paramsSchema  *core.Schema
-	configsSchema *core.Schema
-	// TODO: configsMapping map[string]...
+	key             string
+	method          string
+	path            *openapi3.PathItem
+	operation       *openapi3.Operation
+	doc             *openapi3.T
+	paramsSchema    *core.Schema
+	configsSchema   *core.Schema
+	resultSchema    *core.Schema
 	extensionPrefix *string
 	servers         openapi3.Servers
 }
@@ -198,6 +198,33 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 		o.configsSchema = rootSchema
 	}
 	return o.configsSchema
+}
+
+func (o *Operation) ResultSchema() *core.Schema {
+	if o.resultSchema == nil {
+		rootSchema := core.NewAnyOfSchema()
+		responses := o.operation.Responses
+
+		for code, ref := range responses {
+			if !(len(code) == 3 && strings.HasPrefix(code, "2")) {
+				continue
+			}
+
+			response := ref.Value
+
+			// TODO: Handle other media types
+			content := response.Content.Get("application/json")
+			if content == nil {
+				continue
+			}
+
+			// TODO: Don't use 'AnyOf' when there's only one subschema
+			rootSchema.AnyOf = append(rootSchema.AnyOf, openapi3.NewSchemaRef(content.Schema.Ref, content.Schema.Value))
+		}
+
+		o.resultSchema = rootSchema
+	}
+	return o.resultSchema
 }
 
 func (o *Operation) getServerURL(configs map[string]core.Value) (string, error) {

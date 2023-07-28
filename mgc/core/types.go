@@ -60,6 +60,7 @@ type Executor interface {
 	Descriptor
 	ParametersSchema() *Schema
 	ConfigsSchema() *Schema
+	ResultSchema() *Schema
 	Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
 }
 

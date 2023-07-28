@@ -15,12 +15,13 @@ type StaticExecute struct {
 	description string
 	parameters  *Schema
 	config      *Schema
+	result      *Schema
 	execute     func(ctx context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
 }
 
 // Raw Parameter and Config JSON Schemas
-func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)) *StaticExecute {
-	return &StaticExecute{name, version, description, parameters, config, execute}
+func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, result *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)) *StaticExecute {
+	return &StaticExecute{name, version, description, parameters, config, result, execute}
 }
 
 // Go Parameter and Config structs
@@ -35,13 +36,15 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 ) *StaticExecute {
 	ps := schemaReflector.Reflect(new(ParamsT))
 	cs := schemaReflector.Reflect(new(ConfigsT))
+	rs := schemaReflector.Reflect(new(ResultT))
 
 	corePs, pErr := toCoreSchema(ps)
 	coreCs, cErr := toCoreSchema(cs)
+	coreRs, rErr := toCoreSchema(rs)
 
-	if pErr != nil || cErr != nil {
-		fmt.Println(pErr, cErr)
-		log.Fatalf("Unable to create JSON Schema for Params and Configs structs: %T, %T", ps, cs)
+	if pErr != nil || cErr != nil || rErr != nil {
+		fmt.Println(pErr, cErr, rErr)
+		log.Fatalf("Unable to create JSON Schema for Params/Configs/Result structs: %T, %T, %T", ps, cs, rs)
 	}
 
 	return NewRawStaticExecute(
@@ -50,6 +53,7 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 		description,
 		corePs,
 		coreCs,
+		coreRs,
 		func(ctx context.Context, parameters, configs map[string]any) (Value, error) {
 			var paramsStruct ParamsT
 			var configsStruct ConfigsT
@@ -129,6 +133,10 @@ func (o *StaticExecute) ParametersSchema() *Schema {
 
 func (o *StaticExecute) ConfigsSchema() *Schema {
 	return o.config
+}
+
+func (o *StaticExecute) ResultSchema() *Schema {
+	return o.result
 }
 
 func (o *StaticExecute) Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error) {

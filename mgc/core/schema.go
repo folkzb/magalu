@@ -43,6 +43,14 @@ func NewArraySchema(item *Schema) *Schema {
 	}
 }
 
+func NewAnyOfSchema(anyOfs ...*Schema) *Schema {
+	anyOfsCast := make([]*openapi3.Schema, len(anyOfs))
+	for _, v := range anyOfs {
+		anyOfsCast = append(anyOfsCast, (*openapi3.Schema)(v))
+	}
+	return (*Schema)(openapi3.NewAnyOfSchema(anyOfsCast...))
+}
+
 func SetDefault(schema *Schema, value any) *Schema {
 	schema.Default = value
 	return schema
