@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 
 	"github.com/invopop/jsonschema"
 	"github.com/mitchellh/mapstructure"
@@ -77,7 +78,7 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 				return m, nil
 			}
 
-			if any(result) == nil {
+			if v := reflect.ValueOf(result); v.IsNil() {
 				return result, err
 			}
 
