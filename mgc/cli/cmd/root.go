@@ -190,7 +190,6 @@ func AddAction(
 	addFlags(actionCmd.Flags(), exec.ParametersSchema())
 	addFlags(actionCmd.PersistentFlags(), exec.ConfigsSchema())
 
-	println("\033[1;36mACTION: ADDED CMD:\033[0m", actionCmd.Use)
 	parentCmd.AddCommand(actionCmd)
 	return actionCmd, nil, nil
 }
@@ -214,7 +213,6 @@ func AddGroup(
 
 	loader := createGroupLoader(sdk, group)
 
-	println("\033[1;34mGROUP: ADDED CMD:\033[0m", moduleCmd.Use)
 	parentCmd.AddCommand(moduleCmd)
 	return moduleCmd, loader, nil
 }
