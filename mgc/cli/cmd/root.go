@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strings"
 
 	mgcSdk "magalu.cloud/sdk"
@@ -181,6 +182,10 @@ func AddAction(
 			result, err := exec.Execute(ctx, parameters, configs)
 			if err != nil {
 				return err
+			}
+
+			if v := reflect.ValueOf(result); v.IsNil() {
+				return nil
 			}
 
 			err = exec.ResultSchema().VisitJSON(result)
