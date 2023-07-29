@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"magalu.cloud/cli/cmd"
 )
@@ -9,6 +10,7 @@ import (
 func main() {
 	err := cmd.Execute()
 	if err != nil {
-		fmt.Printf("Error running the CLI: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
 	}
 }
