@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 
+	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
 
 	"github.com/spf13/cobra"
@@ -146,6 +148,25 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 	return nil
 }
 
+func bindFlagsToConfig(ctx context.Context, flags *flag.FlagSet, schema *mgcSdk.Schema) error {
+	config := core.ConfigFromContext(ctx)
+	if config == nil {
+		return fmt.Errorf("Unable to retrieve system configuration")
+	}
+
+	for name := range schema.Properties {
+		flag := flags.Lookup(name)
+		if flag == nil {
+			continue
+		}
+
+		if err := config.BindPFlag(name, flag); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func AddAction(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
@@ -171,6 +192,11 @@ func AddAction(
 			}
 
 			ctx := sdk.NewContext()
+
+			if err := bindFlagsToConfig(ctx, cmd.PersistentFlags(), exec.ConfigsSchema()); err != nil {
+				return err
+			}
+
 			result, err := exec.Execute(ctx, parameters, configs)
 			if err != nil {
 				return err

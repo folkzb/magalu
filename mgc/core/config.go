@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -35,4 +36,8 @@ func NewConfig() *Config {
 		return &Config{}
 	}
 	return &Config{}
+}
+
+func (c *Config) BindPFlag(key string, flag *pflag.Flag) error {
+	return viper.BindPFlag(key, flag)
 }
