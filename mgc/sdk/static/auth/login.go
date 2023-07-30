@@ -61,16 +61,18 @@ func newLogin() *core.StaticExecute {
 				return nil, err
 			}
 
-			fmt.Println("Waiting authentication result. Press Ctrl+C if you want to cancel...")
+			fmt.Fprintf(os.Stderr, "Opening the browser at %s\n", codeUrl)
 			if err := browser.OpenURL(codeUrl.String()); err != nil {
-				return nil, err
+				fmt.Fprintf(os.Stderr, "Warning: could not open the browser, please open it manually. Reason: %s\n", err.Error())
 			}
 
+			fmt.Fprintf(os.Stderr, "Waiting authentication result at %s?code=XXX\nPress Ctrl+C if you want to cancel...\n", auth.RedirectUri())
 			result := <-resultChan
 			if result.err != nil {
 				return nil, result.err
 			}
 
+			fmt.Fprintf(os.Stderr, "Successfully logged in.\n")
 			if parameters.Show {
 				output = &LoginResult{AccessToken: result.value}
 			}
