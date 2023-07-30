@@ -3,9 +3,17 @@ package auth
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
+	"io"
+	"log"
+	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/pkg/browser"
 	"magalu.cloud/core"
@@ -24,6 +32,8 @@ type LoginResult struct {
 	AccessToken string `mapstructure:"accessToken,omitempty" json:"accessToken,omitempty"`
 }
 
+const serverShutdownTimeout = 500 * time.Millisecond
+
 var (
 	//go:embed success.html
 	successPage string
@@ -40,13 +50,11 @@ func newLogin() *core.StaticExecute {
 				return nil, fmt.Errorf("unable to retrieve authentication configuration")
 			}
 
-			srv, c, err := startCallbackServer(auth)
+			resultChan, cancel, err := startCallbackServer(auth)
 			if err != nil {
 				return nil, err
 			}
-			defer func() {
-				err = srv.Shutdown(context.Background())
-			}()
+			defer cancel()
 
 			codeUrl, err := auth.CodeChallengeToURL()
 			if err != nil {
@@ -58,7 +66,7 @@ func newLogin() *core.StaticExecute {
 				return nil, err
 			}
 
-			result := <-c
+			result := <-resultChan
 			if result.err != nil {
 				return nil, result.err
 			}
@@ -72,49 +80,138 @@ func newLogin() *core.StaticExecute {
 	)
 }
 
-func startCallbackServer(auth *core.Auth) (srv *http.Server, c chan *authResult, err error) {
-	c = make(chan *authResult, 1)
+func startCallbackServer(auth *core.Auth) (resultChan chan *authResult, cancel func(), err error) {
 	callbackUrl, err := url.Parse(auth.RedirectUri())
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid redirect_uri configuration")
 	}
 
-	srvPort := ":" + callbackUrl.Port()
-	srv = &http.Server{Addr: srvPort}
+	// Host includes the port, then listen to specific address + port, ex: "localhost:8095"
+	addr := callbackUrl.Host
 
-	http.HandleFunc(callbackUrl.Path, newCallback(auth, c))
-	go func() {
-		err = srv.ListenAndServe()
-	}()
+	// Listen so we can fail early on bad address, before starting goroutine
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	return srv, c, nil
+	resultChan = make(chan *authResult, 1)
+	callbackChan := make(chan *authResult, 1)
+	cancelChan := make(chan struct{}, 1)
+
+	handler := &callbackHandler{auth, callbackUrl.Path, callbackChan}
+	srv := &http.Server{Addr: addr, Handler: handler}
+
+	// serve HTTP until shutdown happened, then report result via channel
+	serveAndReportResult := func() {
+		serverErrorChan := make(chan error, 1)
+		signalChan := make(chan os.Signal, 1)
+		serverDoneChan := make(chan *authResult, 1)
+
+		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+		waitChannelsAndShutdownServer := func() {
+			var result *authResult
+
+			select {
+			case err := <-serverErrorChan:
+				result = &authResult{err: fmt.Errorf("Could not serve HTTP: %w", err)}
+
+			case sig := <-signalChan:
+				result = &authResult{err: fmt.Errorf("Canceled by signal: %v", sig)}
+
+			case <-cancelChan:
+				result = &authResult{err: fmt.Errorf("Canceled by user")}
+
+			case result = <-callbackChan:
+			}
+
+			signal.Stop(signalChan)
+
+			ctx, cancelShutdown := context.WithTimeout(context.Background(), serverShutdownTimeout)
+			defer cancelShutdown()
+
+			// sync: unblocks serveAndReportResult()/srv.Serve()
+			if err := srv.Shutdown(ctx); err != nil {
+				srv.Close() // aggressively try to close it
+			}
+
+			// sync: notify serveAndReportResult() we're done
+			serverDoneChan <- result
+		}
+		go waitChannelsAndShutdownServer()
+
+		if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
+			// sync: unblock waitChannelsAndShutdownServer()
+			serverErrorChan <- err
+		}
+
+		result := <-serverDoneChan // sync: wait server shutdown by waitChannelsAndShutdownServer()
+
+		close(callbackChan)
+		close(cancelChan)
+
+		close(serverErrorChan)
+		close(signalChan)
+		close(serverDoneChan)
+
+		resultChan <- result
+	}
+
+	cancel = func() {
+		defer func() {
+			// serveAndReportResult() will close channels when done.
+			// That means there is nothing to cancel and we should do nothing else, just ignore.
+			_ = recover()
+		}()
+
+		cancelChan <- struct{}{} // exit waitChannelsAndShutdownServer()
+		<-resultChan             // wait serveAndReportResult(), discard as results are not meaningful
+	}
+
+	go serveAndReportResult()
+
+	return resultChan, cancel, nil
 }
 
-func newCallback(auth *core.Auth, c chan *authResult) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, req *http.Request) {
-		authCode := req.URL.Query().Get("code")
-		err := auth.RequestAuthTokeWithAuthorizationCode(authCode)
-		if err != nil {
-			fmt.Println(err)
-			c <- &authResult{value: "", err: err}
-			return
-		}
+type callbackHandler struct {
+	auth *core.Auth
+	path string
+	done chan *authResult
+}
 
-		fmt.Println("You are now authenticated.")
-		showSuccessPage(w)
-
-		token, err := auth.AccessToken()
-		if err != nil {
-			c <- &authResult{value: "", err: err}
-			return
-		}
-
-		c <- &authResult{value: token, err: nil}
+func (h *callbackHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	url := req.URL
+	if url.Path != h.path {
+		err := fmt.Errorf("Unknown Path: %s", url)
+		showErrorPage(w, err, http.StatusNotFound)
+		return
 	}
+
+	authCode := url.Query().Get("code")
+	err := h.auth.RequestAuthTokeWithAuthorizationCode(authCode)
+	if err != nil {
+		showErrorPage(w, err, http.StatusInternalServerError)
+		h.done <- &authResult{err: fmt.Errorf("Could not request auth token with authorization code: %w", err)}
+		return
+	}
+
+	showSuccessPage(w)
+
+	token, _ := h.auth.AccessToken() // this is guaranteed if RequestAuthTokeWithAuthorizationCode succeeds
+	h.done <- &authResult{value: token}
 }
 
 func showSuccessPage(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, successPage)
+	if _, err := io.WriteString(w, successPage); err != nil {
+		log.Printf("Warning: could not send whole success page: %s\n", err.Error())
+	}
+}
+
+func showErrorPage(w http.ResponseWriter, err error, status int) {
+	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "text/plain")
+	fmt.Fprintf(w, "Error: %s", err.Error())
 }
