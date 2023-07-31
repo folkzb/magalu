@@ -41,3 +41,11 @@ func NewConfig() *Config {
 func (c *Config) BindPFlag(key string, flag *pflag.Flag) error {
 	return viper.BindPFlag(key, flag)
 }
+
+func (c *Config) IsSet(key string) bool {
+	return viper.IsSet(key)
+}
+
+func (c *Config) Get(key string) any {
+	return viper.Get(key)
+}
