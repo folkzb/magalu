@@ -146,14 +146,6 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 	return nil
 }
 
-func format(result any) (string, error) {
-	parsedResult, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("Error pretty printing response: %s", err)
-	}
-	return string(parsedResult), nil
-}
-
 func AddAction(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
@@ -193,12 +185,11 @@ func AddAction(
 				log.Printf("Warning: result validation failed: %v", err)
 			}
 
-			str, err := format(result)
+			formatter, options, err := getFormatter(cmd)
 			if err != nil {
 				return err
 			}
-			fmt.Println(str)
-			return err
+			return formatter.Format(result, options)
 		},
 	}
 
@@ -347,6 +338,7 @@ can generate a command line on-demand for Rest manipulation`,
 	})
 	rootCmd.SetHelpCommandGroupID("other")
 	rootCmd.SetCompletionCommandGroupID("other")
+	addFormatterFlag(rootCmd)
 
 	sdk := &mgcSdk.Sdk{}
 
