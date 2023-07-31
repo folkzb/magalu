@@ -38,17 +38,21 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 	description string,
 	execute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
 ) *StaticExecute {
-	ps := schemaReflector.Reflect(new(ParamsT))
-	cs := schemaReflector.Reflect(new(ConfigsT))
-	rs := schemaReflector.Reflect(new(ResultT))
+	p := new(ParamsT)
+	c := new(ConfigsT)
+	r := new(ResultT)
 
-	corePs, pErr := toCoreSchema(ps)
-	coreCs, cErr := toCoreSchema(cs)
-	coreRs, rErr := toCoreSchema(rs)
-
-	if pErr != nil || cErr != nil || rErr != nil {
-		fmt.Println(pErr, cErr, rErr)
-		log.Fatalf("Unable to create JSON Schema for Params/Configs/Result structs: %T, %T, %T", ps, cs, rs)
+	corePs, err := toCoreSchema(schemaReflector.Reflect(p))
+	if err != nil {
+		log.Fatalf("Unable to create JSON Schema for parameter struct '%T': %v", p, err)
+	}
+	coreCs, err := toCoreSchema(schemaReflector.Reflect(c))
+	if err != nil {
+		log.Fatalf("Unable to create JSON Schema for config struct '%T': %v", c, err)
+	}
+	coreRs, err := toCoreSchema(schemaReflector.Reflect(r))
+	if err != nil {
+		log.Fatalf("Unable to create JSON Schema for result struct '%T': %v", r, err)
 	}
 
 	return NewRawStaticExecute(
