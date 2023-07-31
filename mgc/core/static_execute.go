@@ -29,6 +29,9 @@ func NewRawStaticExecute(name string, version string, description string, parame
 // Note: we use both 'jsonschema' and 'mapstructure' for this helper. Be careful
 // when using struct tags in your Params and Configs structs, as the tags from those
 // libraries can't be out of sync when it comes to field names/json names
+// See:
+// - https://pkg.go.dev/github.com/invopop/jsonschema
+// - https://pkg.go.dev/github.com/mitchellh/mapstructure
 func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 	name string,
 	version string,

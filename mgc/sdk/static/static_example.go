@@ -8,8 +8,12 @@ import (
 )
 
 type myParams struct {
-	SomeStringFlag string
-	OtherIntFlag   int
+	// see https://pkg.go.dev/github.com/invopop/jsonschema
+	// json:",omitempty" tag avoids marking field as required
+	SomeStringFlag string `json:",omitempty" jsonschema_description:"Optional field because of omitempty"`
+	// see https://pkg.go.dev/github.com/mitchellh/mapstructure
+	// renaming flags: json + mapstructure MUST MATCH!
+	OtherIntFlag int `json:"int-flag" mapstructure:"int-flag" jsonschema_description:"Renamed flag"`
 }
 
 type myConfigs struct {
