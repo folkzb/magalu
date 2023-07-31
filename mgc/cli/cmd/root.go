@@ -77,19 +77,27 @@ func createGroupLoader(sdk *mgcSdk.Sdk, group mgcSdk.Grouper) DynamicArgLoader {
 	)
 }
 
+func getPropType(prop *mgcSdk.Schema) string {
+	result := prop.Type
+
+	if prop.Type == "array" && prop.Items != nil {
+		result += fmt.Sprintf("(%v)", getPropType((*mgcSdk.Schema)(prop.Items.Value)))
+	} else if len(prop.Enum) != 0 {
+		result = "enum"
+	}
+
+	return result
+}
+
 func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 	for name, propRef := range schema.Properties {
 		prop := propRef.Value
 
-		propType := prop.Type
+		propType := getPropType((*mgcSdk.Schema)(prop))
 		if propType == "boolean" {
 			def, _ := prop.Default.(bool)
 			flags.Bool(name, def, prop.Description)
 		} else {
-			if propType == "array" && prop.Items != nil {
-				propType += fmt.Sprintf("(%v)", prop.Items.Value.Type)
-			}
-
 			value := ""
 			if prop.Default != nil {
 				str, err := json.Marshal(prop.Default)
