@@ -7,11 +7,11 @@ import (
 	"magalu.cloud/core"
 )
 
-type AccessTokenParameters struct {
+type accessTokenParameters struct {
 	Validate bool `json:",omitempty" jsonschema_description:"Validate the token, refreshing if needed"`
 }
 
-type AccessTokenResult struct {
+type accessTokenResult struct {
 	AccessToken string `mapstructure:"accessToken,omitempty" json:"accessToken,omitempty"`
 }
 
@@ -20,7 +20,7 @@ func newAccessToken() *core.StaticExecute {
 		"access_token",
 		"",
 		"Retrieve the access token to use the APIs",
-		func(ctx context.Context, parameters AccessTokenParameters, _ struct{}) (output *AccessTokenResult, err error) {
+		func(ctx context.Context, parameters accessTokenParameters, _ struct{}) (output *accessTokenResult, err error) {
 			auth := core.AuthFromContext(ctx)
 			if auth == nil {
 				return nil, fmt.Errorf("unable to retrieve authentication configuration")
@@ -38,7 +38,7 @@ func newAccessToken() *core.StaticExecute {
 				return nil, err
 			}
 
-			return &AccessTokenResult{AccessToken: token}, nil
+			return &accessTokenResult{AccessToken: token}, nil
 		},
 	)
 }

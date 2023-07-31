@@ -7,16 +7,16 @@ import (
 	"magalu.cloud/core"
 )
 
-type MyParams struct {
+type myParams struct {
 	SomeStringFlag string
 	OtherIntFlag   int
 }
 
-type MyConfigs struct {
+type myConfigs struct {
 	SomeStringConfig string
 }
 
-type MyResult struct {
+type myResult struct {
 	SomeResultField string
 }
 
@@ -25,7 +25,7 @@ func newStatic() *core.StaticExecute {
 		"static",
 		"34.56",
 		"static first level",
-		func(ctx context.Context, params MyParams, configs MyConfigs) (result *MyResult, err error) {
+		func(ctx context.Context, params myParams, configs myConfigs) (result *myResult, err error) {
 			fmt.Printf("TODO: static first level called. parameters=%+v, configs=%+v\n", params, configs)
 			if root := core.GrouperFromContext(ctx); root != nil {
 				_, _ = root.VisitChildren(func(child core.Descriptor) (run bool, err error) {
@@ -35,9 +35,9 @@ func newStatic() *core.StaticExecute {
 			}
 			if auth := core.AuthFromContext(ctx); auth != nil {
 				println("I have auth from context", auth)
-				return &MyResult{SomeResultField: "some value"}, nil
+				return &myResult{SomeResultField: "some value"}, nil
 			}
-			return &MyResult{SomeResultField: "some value"}, nil
+			return &myResult{SomeResultField: "some value"}, nil
 		},
 	)
 }

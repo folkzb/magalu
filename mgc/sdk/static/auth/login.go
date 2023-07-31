@@ -24,11 +24,11 @@ type authResult struct {
 	err   error
 }
 
-type LoginParameters struct {
+type loginParameters struct {
 	Show bool `json:"show,omitempty" jsonschema_description:"Show the access token after the login completes"`
 }
 
-type LoginResult struct {
+type loginResult struct {
 	AccessToken string `mapstructure:"accessToken,omitempty" json:"accessToken,omitempty"`
 }
 
@@ -44,7 +44,7 @@ func newLogin() *core.StaticExecute {
 		"login",
 		"",
 		"authenticate with magalu cloud",
-		func(ctx context.Context, parameters LoginParameters, _ struct{}) (output *LoginResult, err error) {
+		func(ctx context.Context, parameters loginParameters, _ struct{}) (output *loginResult, err error) {
 			auth := core.AuthFromContext(ctx)
 			if auth == nil {
 				return nil, fmt.Errorf("unable to retrieve authentication configuration")
@@ -74,7 +74,7 @@ func newLogin() *core.StaticExecute {
 
 			fmt.Fprintf(os.Stderr, "Successfully logged in.\n")
 			if parameters.Show {
-				output = &LoginResult{AccessToken: result.value}
+				output = &loginResult{AccessToken: result.value}
 			}
 
 			return output, nil
