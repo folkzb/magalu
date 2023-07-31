@@ -105,10 +105,21 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 					value = string(str)
 				}
 			}
+
+			constraints := fmt.Sprintf("(%s)", schemaValueConstraints((*mgcSdk.Schema)(prop)))
+			description := prop.Description
+			if constraints != "()" {
+				if description == "" {
+					description += constraints
+				} else {
+					description += fmt.Sprintf(" %s", constraints)
+				}
+			}
+
 			flags.AddFlag(&flag.Flag{
 				Name:     name,
 				DefValue: value,
-				Usage:    prop.Description,
+				Usage:    description,
 				Value:    &AnyFlagValue{marshalledValue: value, typeName: propType},
 			})
 		}
