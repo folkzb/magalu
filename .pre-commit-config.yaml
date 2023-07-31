@@ -37,6 +37,12 @@ repos:
         # https://github.com/golangci/golangci-lint/issues/2654
         entry: bash -c "go list -f '{{.Dir}}/...' -m | xargs golangci-lint run --fix"
 
+-   repo: https://github.com/TekWizely/pre-commit-golang
+    rev: v1.0.0-rc.1
+    hooks:
+    -   id: go-mod-tidy
+        stages: [pre-commit]
+
 -   repo: https://github.com/commitizen-tools/commitizen
     rev: v3.5.2
     hooks:
