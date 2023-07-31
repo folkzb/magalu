@@ -6,13 +6,13 @@ import (
 	"magalu.cloud/core"
 )
 
-func newStatic() *core.StaticExecute {
+func newStaticExample() *core.StaticExecute {
 	return core.NewStaticExecuteSimple(
-		"static",
+		"static_example",
 		"",
 		"static second level",
 		func(ctx context.Context) (result core.Value, err error) {
-			println("TODO: vpc static (second level) called")
+			println("TODO: vpc static_example (second level) called")
 			return nil, nil
 		},
 	)

@@ -20,13 +20,13 @@ type myResult struct {
 	SomeResultField string
 }
 
-func newStatic() *core.StaticExecute {
+func newStaticExample() *core.StaticExecute {
 	return core.NewStaticExecute(
-		"static",
+		"static_example",
 		"34.56",
 		"static first level",
 		func(ctx context.Context, params myParams, configs myConfigs) (result *myResult, err error) {
-			fmt.Printf("TODO: static first level called. parameters=%+v, configs=%+v\n", params, configs)
+			fmt.Printf("TODO: static_example first level called. parameters=%+v, configs=%+v\n", params, configs)
 			if root := core.GrouperFromContext(ctx); root != nil {
 				_, _ = root.VisitChildren(func(child core.Descriptor) (run bool, err error) {
 					println(">>> root child: ", child.Name())

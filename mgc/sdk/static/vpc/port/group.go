@@ -8,7 +8,7 @@ func NewGroup() *core.StaticGroup {
 		"",
 		"",
 		[]core.Descriptor{
-			newStatic(), // cmd: vpc port static
+			newStaticExample(), // cmd: vpc port static_example
 		},
 	)
 }

@@ -13,10 +13,10 @@ func NewGroup() *core.StaticGroup {
 		"",
 		"",
 		[]core.Descriptor{
-			newStatic(),       // cmd: "static"
-			auth.NewGroup(),   // cmd: "auth"
-			vpc.NewGroup(),    // cmd: "vpc"
-			config.NewGroup(), // cmd: "config"
+			newStaticExample(), // cmd: "static_example"
+			auth.NewGroup(),    // cmd: "auth"
+			vpc.NewGroup(),     // cmd: "vpc"
+			config.NewGroup(),  // cmd: "config"
 		},
 	)
 }
