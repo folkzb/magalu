@@ -12,6 +12,7 @@ require (
 require (
 	github.com/stoewer/go-strcase v1.3.0
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -41,7 +42,6 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace magalu.cloud/core => ../core
