@@ -14,13 +14,13 @@ func NewGroup() *core.StaticGroup {
 		"",
 		"config related commands",
 		[]core.Descriptor{
-			newList(),      // cmd: config list
-			newConfigGet(), // cmd: config get
+			newConfigList(), // cmd: config list
+			newConfigGet(),  // cmd: config get
 		},
 	)
 }
 
-func newList() *core.StaticExecute {
+func newConfigList() *core.StaticExecute {
 	return core.NewStaticExecuteSimple(
 		"list",
 		"",
