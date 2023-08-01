@@ -25,6 +25,63 @@ func NewRawStaticExecute(name string, version string, description string, parame
 	return &StaticExecute{name, version, description, parameters, config, result, execute}
 }
 
+func convertValue(value Value) (converted Value, err error) {
+	if value == nil {
+		return nil, nil
+	}
+
+	v := reflect.ValueOf(value)
+
+	switch v.Kind() {
+	case reflect.Bool,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.String:
+		return value, nil
+
+	case reflect.Invalid,
+		reflect.Chan,
+		reflect.Complex64, reflect.Complex128,
+		reflect.Func,
+		reflect.UnsafePointer,
+		reflect.Interface:
+		return nil, fmt.Errorf("Forbidden value type %s", v)
+
+	case reflect.Pointer:
+		if v.IsNil() {
+			return nil, nil
+		}
+		return convertValue(v.Elem().Interface())
+
+	case reflect.Array, reflect.Slice:
+		if result, ok := value.([]Value); ok {
+			return result, nil
+		}
+		// convert whatever map to []Value
+		result := make([]Value, 0, v.Len())
+		err = mapstructure.Decode(value, &result)
+		return result, err
+
+	case reflect.Map:
+		if resultMap, ok := value.(map[string]Value); ok {
+			return resultMap, nil
+		}
+		// convert whatever map to map[string]Value
+		resultMap := make(map[string]Value, v.Len())
+		err = mapstructure.Decode(value, &resultMap)
+		return resultMap, err
+
+	case reflect.Struct:
+		resultMap := map[string]Value{}
+		err = mapstructure.Decode(value, &resultMap)
+		return resultMap, err
+
+	default:
+		return nil, fmt.Errorf("Unhandled value type: %s", v)
+	}
+}
+
 // Go Parameter and Config structs
 // Note: we use both 'jsonschema' and 'mapstructure' for this helper. Be careful
 // when using struct tags in your Params and Configs structs, as the tags from those
@@ -81,21 +138,7 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 				return nil, err
 			}
 
-			if m, ok := any(result).(map[string]Value); ok {
-				return m, nil
-			}
-
-			if v := reflect.ValueOf(result); v.IsNil() {
-				return result, err
-			}
-
-			resultMap := map[string]Value{}
-			err = mapstructure.Decode(result, &resultMap)
-			if err != nil {
-				return nil, err
-			}
-
-			return resultMap, nil
+			return convertValue(result)
 		},
 	)
 }

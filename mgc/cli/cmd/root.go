@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"strings"
 
 	"magalu.cloud/core"
@@ -221,7 +220,7 @@ func AddAction(
 				return err
 			}
 
-			if v := reflect.ValueOf(result); v.IsNil() {
+			if result == nil {
 				return nil
 			}
 
