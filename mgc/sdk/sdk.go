@@ -83,7 +83,9 @@ func (o *Sdk) newOpenApiSource() *openapi.Source {
 	}
 
 	return &openapi.Source{
-		Dir:             openApiDir,
+		Loader: openapi.FileLoader{
+			Dir: openApiDir,
+		},
 		ExtensionPrefix: &extensionPrefix,
 	}
 }

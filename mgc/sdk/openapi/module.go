@@ -18,6 +18,7 @@ type Module struct {
 	path            string
 	extensionPrefix *string
 	doc             *openapi3.T
+	loader          Loader
 }
 
 // BEGIN: Descriptor interface:
@@ -41,8 +42,13 @@ func (m *Module) Description() string {
 func (m *Module) getDoc() (*openapi3.T, error) {
 	if m.doc == nil {
 		ctx := context.Background()
-		loader := openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
-		doc, err := loader.LoadFromFile(m.path)
+		mData, err := m.loader.Load(m.path)
+		if err != nil {
+			return nil, err
+		}
+
+		oapiLoader := openapi3.Loader{Context: ctx, IsExternalRefsAllowed: false}
+		doc, err := oapiLoader.LoadFromData(mData)
 		if err != nil {
 			return nil, err
 		}

@@ -2,19 +2,26 @@ package openapi
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"regexp"
 
+	"gopkg.in/yaml.v3"
 	"magalu.cloud/core"
 )
+
+type IndexModule struct {
+	Name        string
+	Path        string
+	Version     string
+	Description string
+}
+
+const indexFile = "index.yaml"
 
 // Source -> Module -> Resource -> Operation
 
 // -- ROOT: Source
 
 type Source struct {
-	Dir             string
+	Loader          Loader
 	ExtensionPrefix *string
 }
 
@@ -29,43 +36,31 @@ func (o *Source) Version() string {
 }
 
 func (o *Source) Description() string {
-	return fmt.Sprintf("OpenApis loaded from %v", o.Dir)
+	return fmt.Sprintf("OpenApis loaded using %v", o.Loader)
 }
 
 // END: Descriptor interface
 
 // BEGIN: Grouper interface:
 
-var openAPIFileNameRe = regexp.MustCompile("^(?P<name>[^.]+)(?:|[.]openapi)[.](?P<ext>json|yaml|yml)$")
-
 func (o *Source) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {
-	// TODO: load from an index with description + version information
-
-	items, err := os.ReadDir(o.Dir)
+	index, err := o.Loader.Load(indexFile)
 	if err != nil {
-		return false, fmt.Errorf("Unable to read OpenAPI files at %s: %w", o.Dir, err)
+		return false, err
 	}
 
-	for _, item := range items {
-		info, err := item.Info()
-		if err != nil {
-			continue
-		}
+	var modules []IndexModule
+	err = yaml.Unmarshal(index, &modules)
+	if err != nil {
+		return false, err
+	}
 
-		if info.IsDir() {
-			continue
-		}
-
-		matches := openAPIFileNameRe.FindStringSubmatch(item.Name())
-
-		if len(matches) == 0 {
-			continue
-		}
-
+	for _, item := range modules {
 		module := &Module{
-			name:            matches[1],
-			path:            filepath.Join(o.Dir, item.Name()),
+			name:            item.Name,
+			path:            item.Path,
 			extensionPrefix: o.ExtensionPrefix,
+			loader:          o.Loader,
 		}
 
 		run, err := visitor(module)
