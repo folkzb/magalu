@@ -2,6 +2,7 @@ openapi: 3.0.2
 info:
     title: Virtual Machine Api Product
     description: Virtual Machine Api Product
+    x-cli-description: APIs referentes ao produto de Virtual Machine
     contact:
         name: Tribo IAAS Cloud
         url: https://github.com/luizalabs

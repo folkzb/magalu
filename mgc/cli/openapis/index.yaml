@@ -1,0 +1,12 @@
+-   description: APIs referentes ao produto de Virtual Machine
+    name: virtual-machine
+    path: virtual-machine.openapi.yaml
+    version: 1.60.0
+-   description: APIs referentes ao produto de VPC
+    name: vpc
+    path: vpc.openapi.yaml
+    version: 1.59.0
+-   description: Block Storage API Product Documentation
+    name: block-storage
+    path: block-storage.openapi.yaml
+    version: 1.52.0
