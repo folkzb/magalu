@@ -136,9 +136,7 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 		return fmt.Errorf("invalid command or parameter schema")
 	}
 
-	for name, ref := range schema.Properties {
-		parameter := ref.Value
-
+	for name := range schema.Properties {
 		flag := flags.Lookup(name)
 		if flag == nil {
 			continue
@@ -151,13 +149,9 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 
 		var value any
 
-		if parameter.Type == "string" && !strings.HasPrefix(str, "\"") {
+		err := json.Unmarshal([]byte(str), &value)
+		if err != nil {
 			value = str
-		} else {
-			err := json.Unmarshal([]byte(str), &value)
-			if err != nil {
-				return fmt.Errorf("Could not parse JSON %q: %w", str, err)
-			}
 		}
 
 		dst[name] = value
