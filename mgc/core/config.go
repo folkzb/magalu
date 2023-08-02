@@ -1,8 +1,8 @@
 package core
 
 import (
-	"bytes"
 	"context"
+	"os"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -16,6 +16,8 @@ const (
 	CONFIG_TYPE = "yaml"
 	CONFIG_PATH = "$HOME/.mgc"
 )
+
+const FILE_PERMISSION = 0644
 
 var configKey contextKey = "magalu.cloud/core/Config"
 
@@ -52,8 +54,15 @@ func (c *Config) Get(key string) any {
 	return viper.Get(key)
 }
 
-func (c *Config) Set(key string, value interface{}) {
-	viper.Set(key, value)
+func (c *Config) Set(key string, value interface{}) error {
+	configMap := viper.AllSettings()
+	configMap[key] = value
+
+	if err := saveToConfigFile(configMap); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Config) Delete(key string) error {
@@ -71,6 +80,24 @@ func (c *Config) Delete(key string) error {
 	}
 
 	if err = viper.WriteConfig(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func saveToConfigFile(configMap map[string]interface{}) error {
+	encodedConfig, err := yaml.Marshal(configMap)
+	if err != nil {
+		return err
+	}
+
+	f := viper.ConfigFileUsed()
+	if err = os.WriteFile(f, encodedConfig, FILE_PERMISSION); err != nil {
+		return err
+	}
+
+	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
 

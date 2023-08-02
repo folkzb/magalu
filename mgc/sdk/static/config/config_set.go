@@ -36,7 +36,11 @@ func newConfigSet() *core.StaticExecute {
 						if err := schema.VisitJSON(parameter.Value); err != nil {
 							return false, err
 						}
-						config.Set(parameter.Key, parameter.Value)
+
+						if err := config.Set(parameter.Key, parameter.Value); err != nil {
+							return false, err
+						}
+
 						return false, nil
 					}
 				}
