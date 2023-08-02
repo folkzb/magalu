@@ -29,20 +29,28 @@ func addFormatterFlag(cmd *cobra.Command) {
 	cmd.Root().PersistentFlags().StringP(
 		outputFlag,
 		"o",
-		defaultFormatter,
+		"",
 		fmt.Sprintf("Output format. One of %s.", strings.Join(getOutputFormats(), "|")))
 }
 
-func getFormatter(cmd *cobra.Command) (formatter OutputFormatter, options string, err error) {
+func getFormatterFlag(cmd *cobra.Command) (name, options string) {
 	spec := cmd.Root().PersistentFlags().Lookup(outputFlag).Value.String()
 	parts := strings.SplitN(spec, "=", 2)
-	name := parts[0]
+	name = parts[0]
 	if len(parts) == 2 {
 		options = parts[1]
 	}
+	return name, options
+}
+
+// NOTE: use getFormatterFlag() to get both name and options
+func getFormatter(name, options string) (formatter OutputFormatter, err error) {
+	if name == "" {
+		name = defaultFormatter
+	}
 
 	if formatter, ok := outputFormatters[name]; ok {
-		return formatter, options, nil
+		return formatter, nil
 	}
-	return nil, "", fmt.Errorf("unknown formatter %q", name)
+	return nil, fmt.Errorf("unknown formatter %q", name)
 }

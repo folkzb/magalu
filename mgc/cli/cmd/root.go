@@ -229,7 +229,15 @@ func AddAction(
 				log.Printf("Warning: result validation failed: %v", err)
 			}
 
-			formatter, options, err := getFormatter(cmd)
+			formatterName, options := getFormatterFlag(cmd)
+			if formatterName == "" {
+				if formatter, ok := exec.(core.ExecutorResultFormatter); ok {
+					fmt.Println(formatter.DefaultFormatResult(result))
+					return nil
+				}
+			}
+
+			formatter, err := getFormatter(formatterName, options)
 			if err != nil {
 				return err
 			}

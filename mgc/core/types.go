@@ -80,3 +80,32 @@ func VisitAllExecutors(child Descriptor, path []string, visitExecutor func(execu
 		return false, fmt.Errorf("child %v not group/executor", child)
 	}
 }
+
+// Implement this interface in Executor()s that want to provide customized formatting of output.
+// It's used by the command line interface (CLI) and possible other tools.
+// This is only called if no other explicit formatting is desired
+type ExecutorResultFormatter interface {
+	Executor
+	// NOTE: result is the converted value, such as primitives, map[string]any, []any...
+	// Whenever using StaticExecute, it's *NOT* the ResultT (ie: struct)
+	DefaultFormatResult(result Value) string
+}
+
+type executeFormat struct {
+	Executor
+	formatter func(result Value) string
+}
+
+func (o *executeFormat) DefaultFormatResult(result Value) string {
+	return o.formatter(result)
+}
+
+var _ ExecutorResultFormatter = (*executeFormat)(nil)
+
+// Wraps (embeds) an executor and add specific result formatting.
+func NewExecuteFormat(
+	executor Executor,
+	formatter func(result Value) string,
+) ExecutorResultFormatter {
+	return &executeFormat{executor, formatter}
+}

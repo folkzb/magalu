@@ -1,9 +1,11 @@
 package config
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"reflect"
+	"text/tabwriter"
 
 	"magalu.cloud/core"
 )
@@ -20,8 +22,27 @@ func NewGroup() *core.StaticGroup {
 	)
 }
 
-func newConfigList() *core.StaticExecute {
-	return core.NewStaticExecuteSimple(
+func configListFormatter(result core.Value) string {
+	configMap := result.(map[string]any) // it must be this, assert
+
+	// TODO: find a better table formatter library
+	b := &bytes.Buffer{}
+	w := tabwriter.NewWriter(b, 8, 8, 1, ' ', tabwriter.Debug)
+
+	fmt.Fprintf(w, "Config\tType\tDescription\n")
+	fmt.Fprintf(w, "---\t---\t---\n")
+	for name, schema := range configMap {
+		schema := schema.(*core.Schema)
+		t := schema.Type // TODO: handle complex types such as enum, array, object...
+		fmt.Fprintf(w, "%s\t%s\t%s\n", name, t, schema.Description)
+	}
+	w.Flush()
+
+	return b.String()
+}
+
+func newConfigList() core.Executor {
+	executor := core.NewStaticExecuteSimple(
 		"list",
 		"",
 		"list all possible configs",
@@ -56,4 +77,6 @@ func newConfigList() *core.StaticExecute {
 			return configMap, nil
 		},
 	)
+
+	return core.NewExecuteFormat(executor, configListFormatter)
 }
