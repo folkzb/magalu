@@ -67,19 +67,9 @@ func (c *Config) Set(key string, value interface{}) error {
 
 func (c *Config) Delete(key string) error {
 	configMap := viper.AllSettings()
-
 	delete(configMap, key)
-	encodedConfig, err := yaml.Marshal(configMap)
-	if err != nil {
-		return err
-	}
 
-	err = viper.ReadConfig(bytes.NewReader(encodedConfig))
-	if err != nil {
-		return err
-	}
-
-	if err = viper.WriteConfig(); err != nil {
+	if err := saveToConfigFile(configMap); err != nil {
 		return err
 	}
 
