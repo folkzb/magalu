@@ -6,6 +6,7 @@ require (
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
+	gopkg.in/yaml.v3 v3.0.1
 	magalu.cloud/core v0.0.0-unversioned
 )
 
@@ -34,7 +35,6 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace magalu.cloud/core => ../core
