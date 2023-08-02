@@ -16,6 +16,8 @@ import (
 type Module struct {
 	name            string
 	path            string
+	version         string
+	description     string
 	extensionPrefix *string
 	doc             *openapi3.T
 	loader          Loader
@@ -28,11 +30,11 @@ func (m *Module) Name() string {
 }
 
 func (m *Module) Version() string {
-	return "TODO: load version from index"
+	return m.version
 }
 
 func (m *Module) Description() string {
-	return "TODO: load description from index"
+	return m.description
 }
 
 // END: Descriptor interface

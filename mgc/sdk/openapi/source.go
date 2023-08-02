@@ -59,6 +59,8 @@ func (o *Source) VisitChildren(visitor core.DescriptorVisitor) (finished bool, e
 		module := &Module{
 			name:            item.Name,
 			path:            item.Path,
+			version:         item.Version,
+			description:     item.Description,
 			extensionPrefix: o.ExtensionPrefix,
 			loader:          o.Loader,
 		}
