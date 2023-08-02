@@ -49,3 +49,7 @@ func (c *Config) IsSet(key string) bool {
 func (c *Config) Get(key string) any {
 	return viper.Get(key)
 }
+
+func (c *Config) Set(key string, value interface{}) {
+	viper.Set(key, value)
+}

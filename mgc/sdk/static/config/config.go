@@ -18,6 +18,7 @@ func NewGroup() *core.StaticGroup {
 		[]core.Descriptor{
 			newConfigList(), // cmd: config list
 			newConfigGet(),  // cmd: config get
+			newConfigSet(),  // cmd: config set
 		},
 	)
 }
