@@ -1,10 +1,12 @@
 package core
 
 import (
+	"bytes"
 	"context"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct{}
@@ -42,10 +44,35 @@ func (c *Config) BindPFlag(key string, flag *pflag.Flag) error {
 	return viper.BindPFlag(key, flag)
 }
 
+func (c *Config) IsSet(key string) bool {
+	return viper.IsSet(key)
+}
+
 func (c *Config) Get(key string) any {
 	return viper.Get(key)
 }
 
 func (c *Config) Set(key string, value interface{}) {
 	viper.Set(key, value)
+}
+
+func (c *Config) Delete(key string) error {
+	configMap := viper.AllSettings()
+
+	delete(configMap, key)
+	encodedConfig, err := yaml.Marshal(configMap)
+	if err != nil {
+		return err
+	}
+
+	err = viper.ReadConfig(bytes.NewReader(encodedConfig))
+	if err != nil {
+		return err
+	}
+
+	if err = viper.WriteConfig(); err != nil {
+		return err
+	}
+
+	return nil
 }

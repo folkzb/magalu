@@ -16,9 +16,10 @@ func NewGroup() *core.StaticGroup {
 		"",
 		"config related commands",
 		[]core.Descriptor{
-			newConfigList(), // cmd: config list
-			newConfigGet(),  // cmd: config get
-			newConfigSet(),  // cmd: config set
+			newConfigList(),   // cmd: config list
+			newConfigGet(),    // cmd: config get
+			newConfigSet(),    // cmd: config set
+			newConfigDelete(), //cmd config delete
 		},
 	)
 }
