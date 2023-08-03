@@ -34,6 +34,9 @@ class YamlDumper(yaml.Dumper):
         return super(YamlDumper, self).increase_indent(flow, False)
 
 
+OPERATION_KEYS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
+
+
 def load_yaml(path: str) -> OAPISchema:
     with open(path, "r") as fd:
         return yaml.load(fd, Loader=yaml.CLoader)
@@ -89,7 +92,8 @@ def fill_req_body_stats(ctx: OperationContext, r: OAPISchema, dst: OAPIStats):
 
 def fill_operation_stats(ctx: OperationContext, o: OAPISchema, dst: OAPIStats):
     responses = o.get("responses")
-    fill_responses_stats(ctx, responses, dst)
+    if responses:
+        fill_responses_stats(ctx, responses, dst)
 
     req_body = o.get("requestBody")
     if req_body:
@@ -100,7 +104,7 @@ def fill_operation_stats(ctx: OperationContext, o: OAPISchema, dst: OAPIStats):
 
 def fill_path_stats(ctx: PathContext, p: OAPISchema, dst: OAPIStats):
     for method, o in p.items():
-        if isinstance(o, dict) and "operationId" in o:
+        if isinstance(o, dict) and method in OPERATION_KEYS:
             op_ctx = OperationContext(path=ctx.name, method=method)
             fill_operation_stats(op_ctx, o, dst)
     return
