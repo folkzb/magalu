@@ -23,6 +23,9 @@ class OperationContext(NamedTuple):
     path: str
     method: str
 
+    def key(self) -> str:
+        return self.method.upper() + " " + self.path
+
 
 class PathContext(NamedTuple):
     name: str
@@ -64,8 +67,7 @@ def append(dst: OAPIStats, key: str, val: Any):
 
 
 def fill_responses_stats(ctx: OperationContext, responses: OAPISchema, dst: OAPIStats):
-    key = ctx.method + " " + ctx.path
-    obj = {key: []}
+    obj = {ctx.key(): []}
 
     for code, r in responses.items():
         content = r.get("content")
@@ -75,9 +77,9 @@ def fill_responses_stats(ctx: OperationContext, responses: OAPISchema, dst: OAPI
 
         for t, _ in content.items():
             if t != "application/json":
-                obj[key].append({code: t})
+                obj[ctx.key()].append({code: t})
 
-    if obj[key]:
+    if obj[ctx.key()]:
         append(dst, "non-json-responses", obj)
 
 
@@ -86,8 +88,7 @@ def fill_req_body_stats(ctx: OperationContext, r: OAPISchema, dst: OAPIStats):
     if content:
         for t, _ in content.items():
             if t != "application/json":
-                key = ctx.method + " " + ctx.path
-                append(dst, "non-json-requests", {key: t})
+                append(dst, "non-json-requests", {ctx.key(): t})
 
 
 def fill_operation_stats(ctx: OperationContext, o: OAPISchema, dst: OAPIStats):
