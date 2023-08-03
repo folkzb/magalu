@@ -60,7 +60,7 @@ def load_oapis(d: str) -> [OAPI]:
 
 
 def append(dst: OAPIStats, key: str, val: Any):
-    if not dst.get(key):
+    if not dst.get(key, {}):
         dst[key] = []
 
     dst[key].append(val)
@@ -70,7 +70,7 @@ def fill_responses_stats(ctx: OperationContext, responses: OAPISchema, dst: OAPI
     obj = {ctx.key(): []}
 
     for code, r in responses.items():
-        content = r.get("content")
+        content = r.get("content", {})
         if not content:
             # Return for now. In the future check for the code?
             return
@@ -84,7 +84,7 @@ def fill_responses_stats(ctx: OperationContext, responses: OAPISchema, dst: OAPI
 
 
 def fill_req_body_stats(ctx: OperationContext, r: OAPISchema, dst: OAPIStats):
-    content = r.get("content")
+    content = r.get("content", {})
     if content:
         for t, _ in content.items():
             if t != "application/json":
@@ -92,11 +92,11 @@ def fill_req_body_stats(ctx: OperationContext, r: OAPISchema, dst: OAPIStats):
 
 
 def fill_operation_stats(ctx: OperationContext, o: OAPISchema, dst: OAPIStats):
-    responses = o.get("responses")
+    responses = o.get("responses", {})
     if responses:
         fill_responses_stats(ctx, responses, dst)
 
-    req_body = o.get("requestBody")
+    req_body = o.get("requestBody", {})
     if req_body:
         fill_req_body_stats(ctx, req_body, dst)
 
