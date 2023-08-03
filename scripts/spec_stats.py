@@ -100,6 +100,9 @@ def fill_operation_stats(ctx: OperationContext, o: OAPISchema, dst: OAPIStats):
     if req_body:
         fill_req_body_stats(ctx, req_body, dst)
 
+    if "operationId" not in o:
+        append(dst, "missing_operation_id", ctx.key())
+
     return
 
 
