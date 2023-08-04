@@ -218,8 +218,11 @@ func (o *Operation) ResultSchema() *core.Schema {
 				continue
 			}
 
-			// TODO: Don't use 'AnyOf' when there's only one subschema
 			rootSchema.AnyOf = append(rootSchema.AnyOf, openapi3.NewSchemaRef(content.Schema.Ref, content.Schema.Value))
+		}
+
+		if len(rootSchema.AnyOf) == 1 {
+			rootSchema = (*core.Schema)(rootSchema.AnyOf[0].Value)
 		}
 
 		o.resultSchema = rootSchema
