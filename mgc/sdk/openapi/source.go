@@ -3,6 +3,7 @@ package openapi
 import (
 	"fmt"
 
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"magalu.cloud/core"
 )
@@ -21,6 +22,15 @@ type IndexFile struct {
 
 const indexFile = "index.yaml"
 const indexVersion = "1.0.0"
+
+var sourceLoggerInstance *zap.SugaredLogger
+
+func sourceLogger() *zap.SugaredLogger {
+	if sourceLoggerInstance == nil {
+		sourceLoggerInstance = initPkgLogger().Named("sources")
+	}
+	return sourceLoggerInstance
+}
 
 // Source -> Module -> Resource -> Operation
 
@@ -81,6 +91,7 @@ func (o *Source) getModules() (modules []*Module, byName map[string]*Module, err
 			description:     item.Description,
 			extensionPrefix: o.ExtensionPrefix,
 			loader:          o.Loader,
+			logger:          sourceLogger().Named(item.Name),
 		}
 		o.modules[i] = module
 		o.byName[module.Name()] = module

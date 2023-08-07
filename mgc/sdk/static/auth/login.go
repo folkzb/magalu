@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
+	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/sdk/static/auth/tenant"
 )
@@ -37,8 +37,16 @@ const serverShutdownTimeout = 500 * time.Millisecond
 
 var (
 	//go:embed success.html
-	successPage string
+	successPage         string
+	loginLoggerInstance *zap.SugaredLogger
 )
+
+func loginLogger() *zap.SugaredLogger {
+	if loginLoggerInstance == nil {
+		loginLoggerInstance = initPkgLogger().Named("login")
+	}
+	return loginLoggerInstance
+}
 
 func newLogin() *core.StaticExecute {
 	return core.NewStaticExecute(
@@ -62,12 +70,12 @@ func newLogin() *core.StaticExecute {
 				return nil, err
 			}
 
-			fmt.Fprintf(os.Stderr, "Opening the browser at %s\n", codeUrl)
+			loginLogger().Infow("opening browser", "codeUrl", codeUrl)
 			if err := browser.OpenURL(codeUrl.String()); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: could not open the browser, please open it manually. Reason: %s\n", err.Error())
+				loginLogger().Warnw("could not open browser, please open it manually", "error", err)
 			}
 
-			fmt.Fprintf(os.Stderr, "Waiting authentication result at %s?code=XXX\nPress Ctrl+C if you want to cancel...\n", auth.RedirectUri())
+			loginLogger().Infow("waiting authentication result", "redirectUri", auth.RedirectUri())
 			result := <-resultChan
 			if result.err != nil {
 				return nil, result.err
@@ -84,6 +92,7 @@ func newLogin() *core.StaticExecute {
 			}
 
 			fmt.Fprintf(os.Stderr, "Successfully logged in.\n")
+			loginLogger().Infow("sucessfully logged in")
 			if parameters.Show {
 				output = &loginResult{AccessToken: result.value}
 			}
@@ -112,7 +121,11 @@ func startCallbackServer(auth *core.Auth) (resultChan chan *authResult, cancel f
 	callbackChan := make(chan *authResult, 1)
 	cancelChan := make(chan struct{}, 1)
 
-	handler := &callbackHandler{auth, callbackUrl.Path, callbackChan}
+	handler := &callbackHandler{
+		auth,
+		callbackUrl.Path,
+		callbackChan,
+	}
 	srv := &http.Server{Addr: addr, Handler: handler}
 
 	// serve HTTP until shutdown happened, then report result via channel
@@ -209,18 +222,22 @@ func (h *callbackHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	showSuccessPage(w)
+	if err := showSuccessPage(w); err != nil {
+		loginLogger().Warnw("could not show whole Succes Page", "error", err)
+	}
 
 	token, _ := h.auth.AccessToken() // this is guaranteed if RequestAuthTokeWithAuthorizationCode succeeds
 	h.done <- &authResult{value: token}
 }
 
-func showSuccessPage(w http.ResponseWriter) {
+func showSuccessPage(w http.ResponseWriter) error {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "text/html")
 	if _, err := io.WriteString(w, successPage); err != nil {
-		log.Printf("Warning: could not send whole success page: %s\n", err.Error())
+		return err
 	}
+
+	return nil
 }
 
 func showErrorPage(w http.ResponseWriter, err error, status int) {

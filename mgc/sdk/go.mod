@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	go.uber.org/zap v1.25.0
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	gopkg.in/yaml.v3 v3.0.1
 	magalu.cloud/core v0.0.0-unversioned
@@ -32,7 +33,6 @@ require (
 	github.com/spf13/viper v1.16.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.25.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect

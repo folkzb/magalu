@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
 	"magalu.cloud/core"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -21,6 +22,7 @@ type Module struct {
 	extensionPrefix *string
 	doc             *openapi3.T
 	loader          Loader
+	logger          *zap.SugaredLogger
 }
 
 // BEGIN: Descriptor interface:
@@ -76,6 +78,7 @@ func (m *Module) VisitChildren(visitor core.DescriptorVisitor) (finished bool, e
 			doc:             doc,
 			extensionPrefix: m.extensionPrefix,
 			servers:         doc.Servers,
+			logger:          m.logger.Named(tag.Name),
 		}
 
 		run, err := visitor(resource)

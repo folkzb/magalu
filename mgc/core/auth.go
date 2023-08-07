@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
 	"gopkg.in/yaml.v3"
 )
@@ -63,6 +63,14 @@ type Auth struct {
 }
 
 var authKey contextKey = "magalu.cloud/core/Authentication"
+var authLoggerInstance *zap.SugaredLogger
+
+func authLogger() *zap.SugaredLogger {
+	if authLoggerInstance == nil {
+		authLoggerInstance = initPkgLogger().Named("auth")
+	}
+	return authLoggerInstance
+}
 
 func NewAuthContext(parentCtx context.Context, auth *Auth) context.Context {
 	return context.WithValue(parentCtx, authKey, auth)
@@ -77,6 +85,7 @@ func NewAuth(config AuthConfig, client *http.Client) *Auth {
 	// when authenticating.
 	filePath, err := authFilePath(".mgc.yaml")
 	if err != nil {
+		authLogger().Warnw("unable to locate auth configuration file", "error", err)
 		return nil
 	}
 
@@ -203,6 +212,7 @@ func (o *Auth) CodeChallengeToURL() (*url.URL, error) {
  * of `CodeChallengeToUrl` method. */
 func (o *Auth) RequestAuthTokeWithAuthorizationCode(authCode string) error {
 	if o.codeVerifier == nil {
+		authLogger().Errorw("no code verification provided")
 		return fmt.Errorf("no code verification provided, first execute a code challenge request")
 	}
 	config := o.config
@@ -219,6 +229,7 @@ func (o *Auth) RequestAuthTokeWithAuthorizationCode(authCode string) error {
 		return err
 	}
 
+	authLogger().Infow("Will send request for Auth Code", "authCode", authCode)
 	resp, err := o.httpClient.Do(r)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return err
@@ -343,13 +354,13 @@ func (o *Auth) readConfigFile() (*AuthConfigResult, error) {
 
 	authFile, err := os.ReadFile(o.configFile)
 	if err != nil {
-		log.Println("unable to read from auth configuration file")
+		authLogger().Warnw("unable to read from auth configuration file", "error", err)
 		return nil, err
 	}
 
 	err = yaml.Unmarshal(authFile, &result)
 	if err != nil {
-		log.Println("bad format auth configuration file")
+		authLogger().Warnw("bad format auth configuration file", "error", err)
 		return nil, err
 	}
 
@@ -359,7 +370,7 @@ func (o *Auth) readConfigFile() (*AuthConfigResult, error) {
 func (o *Auth) writeConfigFile(result *AuthConfigResult) error {
 	yamlData, err := yaml.Marshal(result)
 	if err != nil {
-		log.Println("unable to persist auth data")
+		authLogger().Warn("unable to persist auth data", "error", err)
 		return err
 	}
 
@@ -377,7 +388,6 @@ func authFilePath(fName string) (string, error) {
 		homeDir, err = os.Getwd()
 	}
 	if homeDir == "" {
-		log.Println("unable to locate auth configuration file")
 		return "", err
 	}
 

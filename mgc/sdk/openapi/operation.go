@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -17,6 +16,7 @@ import (
 	"path"
 	"strings"
 
+	"go.uber.org/zap"
 	"magalu.cloud/core"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -48,6 +48,7 @@ type Operation struct {
 	extensionPrefix *string
 	servers         openapi3.Servers
 	parameters      *[]*parameterWithName
+	logger          *zap.SugaredLogger
 }
 
 // BEGIN: Descriptor interface:
@@ -193,8 +194,7 @@ func (o *Operation) addParameters(schema *core.Schema, locations []string) {
 	})
 
 	if err != nil {
-		// Log, but otherwise ignore the issue
-		log.Printf("%s\n", err.Error())
+		o.logger.Warnw("failed to add parameters", "error", err)
 	}
 }
 
@@ -421,7 +421,7 @@ func (o *Operation) createRequestBodyUploadMultipart(
 			}
 			_, cerr = io.Copy(part, e.file)
 			if cerr != nil {
-				log.Printf("Warning: could not upload file %q: %v\n", e.name, cerr)
+				o.logger.Warnw("could not upload file", "name", e.name, "file", e.filename, "error", cerr)
 			}
 		}
 	}()
@@ -464,7 +464,7 @@ func (o *Operation) addRequestBodyUploadSimpleParameters(content openapi3.Conten
 			//					type: string
 			//					contentMediaType: image/png
 			//					contentEncoding: base64
-			log.Printf("content-type %q with schema is not supported: %+v\n", k, mediaType.Schema.Value)
+			o.logger.Infow("content-type with schema is not supported", "content-type", k, "schema", mediaType.Schema.Value)
 		}
 	}
 
@@ -564,8 +564,7 @@ func (o *Operation) addRequestBodyParameters(schema *core.Schema) {
 	}
 
 	if err != nil {
-		// Log, but otherwise ignore the issue
-		log.Printf("%s\n", err.Error())
+		o.logger.Warnw("error while adding request body", "error", err)
 	}
 }
 
@@ -670,8 +669,7 @@ func (o *Operation) addServerVariables(schema *core.Schema) {
 	})
 
 	if err != nil {
-		// Log, but otherwise ignore the issue
-		log.Printf("%s\n", err.Error())
+		o.logger.Warnw("error while adding server variables", "error", err)
 	}
 }
 
@@ -914,7 +912,7 @@ func (o *Operation) forEachSecurityRequirement(cb func(scheme string, scopes []s
 						return false, nil
 					}
 				} else {
-					log.Printf("ignored unsupported security scheme: %q %+v\n", scheme, scopes)
+					o.logger.Infow("ignored unsupported security scheme", "scheme", scheme, "scopes", scopes)
 				}
 			}
 		}

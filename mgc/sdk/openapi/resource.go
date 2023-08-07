@@ -2,10 +2,10 @@ package openapi
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
+	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 
@@ -22,6 +22,7 @@ type Resource struct {
 	extensionPrefix *string
 	servers         openapi3.Servers
 	operations      *map[string]*Operation
+	logger          *zap.SugaredLogger
 }
 
 // BEGIN: Descriptor interface:
@@ -215,7 +216,7 @@ func (o *Resource) collectOperations() *operationTree {
 
 			name := getFullOperationName(method, key)
 			if err := tree.Add(name, &operationDesc{path, op, method, key}); err != nil {
-				log.Printf("Failed to add %s %s: %s", method, key, err)
+				o.logger.Warnw("failed to add operation", "method", method, "key", key, "error", err)
 			}
 		}
 	}
@@ -250,6 +251,7 @@ func (o *Resource) getOperations() map[string]*Operation {
 				doc:             o.doc,
 				extensionPrefix: o.extensionPrefix,
 				servers:         servers,
+				logger:          o.logger.Named(opName),
 			}
 
 			return true
