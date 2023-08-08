@@ -117,19 +117,19 @@ func (c *colorStrings) toColors() text.Colors {
 }
 
 type columnConfig struct {
-	Align        alignString
-	AlignFooter  alignString
-	AlignHeader  alignString
-	AutoMerge    bool
-	Colors       colorStrings
-	ColorsFooter colorStrings
-	ColorsHeader colorStrings
-	Hidden       bool
-	VAlign       valignString
-	VAlignFooter valignString
-	VAlignHeader valignString
-	WidthMax     int
-	WidthMin     int
+	Align        alignString  `yaml:"align"`
+	AlignFooter  alignString  `yaml:"alignFooter"`
+	AlignHeader  alignString  `yaml:"alignHeader"`
+	AutoMerge    bool         `yaml:"autoMerge"`
+	Colors       colorStrings `yaml:"colors"`
+	ColorsFooter colorStrings `yaml:"colorsFooter"`
+	ColorsHeader colorStrings `yaml:"colorsHeader"`
+	Hidden       bool         `yaml:"hidden"`
+	VAlign       valignString `yaml:"valign"`
+	VAlignFooter valignString `yaml:"valignFooter"`
+	VAlignHeader valignString `yaml:"valignHeader"`
+	WidthMax     int          `yaml:"widthMax"`
+	WidthMin     int          `yaml:"widthMin"`
 }
 
 type column struct {
