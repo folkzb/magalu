@@ -14,7 +14,7 @@ func NewGroup() *core.StaticGroup {
 	return core.NewStaticGroup(
 		"config",
 		"",
-		"config related commands",
+		"Config related commands",
 		[]core.Descriptor{
 			newConfigList(),   // cmd: config list
 			newConfigGet(),    // cmd: config get
