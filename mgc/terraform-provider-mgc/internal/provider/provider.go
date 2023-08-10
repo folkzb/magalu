@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -13,26 +12,46 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
 )
 
 var _ provider.Provider = (*MgcProvider)(nil)
+
+const providerTypeName = "magalu"
+
+type apiSpec struct {
+	name    string
+	version string
+}
+
+func (a apiSpec) String() string {
+	return fmt.Sprintf("%s@%s", a.name, a.version)
+}
+
+func parseApiSpec(spec string) *apiSpec {
+	parts := strings.Split(spec, "@")
+	name := parts[0]
+	version := parts[1]
+	return &apiSpec{name, version}
+}
 
 type MgcProvider struct {
 	version string
 	commit  string
 	date    string
 	sdk     *mgcSdk.Sdk
+	apis    []*apiSpec
 }
 
 type MgcProviderModel struct {
-	ApiToken types.String   `tfsdk:"api_token"`
-	Apis     []types.String `tfsdk:"apis"`
+	ApiKey types.String   `tfsdk:"api_key"`
+	Apis   []types.String `tfsdk:"apis"`
 }
 
 func (p *MgcProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	tflog.Debug(ctx, "setting provider metadata")
-	resp.TypeName = "magalu"
+	resp.TypeName = providerTypeName
 	resp.Version = p.version
 }
 
@@ -40,13 +59,13 @@ func (p *MgcProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 	tflog.Debug(ctx, "setting provider schema")
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"api_token": schema.StringAttribute{
+			"api_key": schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Token used to authenticate with the MagaluID platform.",
 			},
 			"apis": schema.ListAttribute{
-				Optional:    true,
+				Required:    true,
 				ElementType: types.StringType,
 				Description: "Which MagaluCloud products need to be supported by the provider.",
 				// Should we use validators to know if the apis exist? Or return an error later
@@ -57,40 +76,135 @@ func (p *MgcProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 }
 
 func (p *MgcProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	tflog.Debug(ctx, "configuring MGC provider")
+	tflog.Info(ctx, "configuring MGC provider")
 	var config MgcProviderModel
 
 	// Load all configurations
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 
-	apiToken := config.ApiToken.ValueString()
-	if apiToken == "" {
-		p.attrErr(resp, "access_token", "set MGC_TF_API_TOKEN environment variable")
+	apiKey := config.ApiKey.ValueString()
+	if apiKey == "" {
+		p.attrErr(resp, "api_key")
 		return
 	}
+	_ = p.sdk.Auth().SetTokens(&core.LoginResult{AccessToken: apiKey})
 
-	apis := strings.Split(os.Getenv("MGC_TF_PRODUCT_APIS"), ",")
-	if config.Apis != nil && len(config.Apis) != 0 {
-		apis = make([]string, len(config.Apis))
-		for i, v := range config.Apis {
-			apis[i] = v.ValueString()
-		}
-		tflog.Debug(ctx, "using `apis` property from tf file")
-	}
-	if len(apis) == 0 {
-		p.attrErr(resp, "apis", "set MGC_TF_PRODUCT_APIS environment variable")
+	if len(config.Apis) == 0 {
+		p.attrErr(resp, "apis")
 		return
 	}
-
-	p.sdk.Auth().ApiToken = apiToken
+	p.apis = make([]*apiSpec, len(config.Apis))
+	for i, spec := range config.Apis {
+		p.apis[i] = parseApiSpec(spec.ValueString())
+	}
+	tflog.Debug(ctx, "using `apis` property from tf file")
 
 	resp.DataSourceData = p.sdk
 	resp.ResourceData = p.sdk
 }
 
 func (p *MgcProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return nil
+	tflog.Info(ctx, "configuring MGC provider resources")
+
+	resources := make([]func() resource.Resource, 0)
+	root := p.sdk.Group()
+	_, err := root.VisitChildren(func(child core.Descriptor) (run bool, err error) {
+		// TODO: We Should we check if the version is correct in the Configuration call or Resource
+		childName := fmt.Sprintf("%q@%q", child.Name(), child.Version())
+		if group, ok := child.(mgcSdk.Grouper); !ok {
+			// Warning since we don't want to stop the discovery process
+			tflog.Warn(ctx, fmt.Sprintf("Invalid API %q: invalid format", childName))
+			return true, nil
+		} else if groupResources, err := collectGroupResources(ctx, p.sdk, group, []string{providerTypeName, group.Name()}); err != nil {
+			// Warning since we don't want to stop the discovery process
+			tflog.Warn(ctx, fmt.Sprintf("Could not add API %q: %v", childName, err))
+			return true, nil
+		} else {
+			tflog.Info(ctx, fmt.Sprintf("Resources %v", groupResources))
+			resources = append(resources, groupResources...)
+			return true, nil
+		}
+	})
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("An error occurred while generating the provider resource list: %v", err))
+	}
+
+	return resources
+}
+
+func collectGroupResources(
+	ctx context.Context,
+	sdk *mgcSdk.Sdk,
+	group mgcSdk.Grouper,
+	path []string,
+) (resources []func() resource.Resource, err error) {
+	resources = make([]func() resource.Resource, 0)
+	var create, read, update, delete mgcSdk.Executor
+	_, err = group.VisitChildren(func(child mgcSdk.Descriptor) (run bool, err error) {
+		if childGroup, ok := child.(mgcSdk.Grouper); ok {
+			oldLen := len(path)
+			path = append(path, childGroup.Name())
+			childResources, err := collectGroupResources(ctx, sdk, childGroup, path)
+			resources = append(resources, childResources...)
+			path = path[:oldLen]
+			return true, err
+		} else if exec, ok := child.(mgcSdk.Executor); ok {
+			// TODO: see how this stands in practice
+			// some resources have more than one action and we're de-duplicating them,
+			// resulting in get-X + get-Y...
+			// maybe something to check with scripts/spec_stats.py
+			switch exec.Name() {
+			case "create":
+				create = exec
+			case "get":
+				read = exec
+			case "update":
+				update = exec
+			case "delete":
+				delete = exec
+			default:
+				tflog.Warn(ctx, fmt.Sprintf("TODO: uncovered action %s", exec.Name()))
+			}
+			return true, nil
+		} else {
+			return false, fmt.Errorf("unsupported grouper child type %T", child)
+		}
+	})
+	if err != nil {
+		return resources, err
+	}
+
+	if create != nil {
+		name := strings.Join(path, "_")
+		if read == nil {
+			tflog.Warn(ctx, fmt.Sprintf("Resource %s misses read", name))
+			return resources, nil
+		}
+		if update == nil {
+			tflog.Warn(ctx, fmt.Sprintf("Resource %s misses update", name))
+			return resources, nil
+		}
+		if delete == nil {
+			tflog.Warn(ctx, fmt.Sprintf("Resource %s misses delete", name))
+			return resources, nil
+		}
+		res := &MgcResource{
+			sdk:    sdk,
+			name:   name,
+			group:  group,
+			create: create,
+			read:   read,
+			update: update,
+			delete: delete,
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Export resource %q", name))
+
+		resources = append(resources, func() resource.Resource { return res })
+	}
+
+	return resources, err
 }
 
 func (p *MgcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
@@ -107,7 +221,7 @@ func (p *MgcProvider) attrErr(resp *provider.ConfigureResponse, attr string, def
 	resp.Diagnostics.AddAttributeError(
 		path.Root(attr),
 		fmt.Sprintf("missing %s", attr),
-		fmt.Sprintf("unable to create MagaluCloud provider due to missing attributes.\n%s", exArg),
+		fmt.Sprintf("unable to create %s provider due to missing attributes.\n%s", providerTypeName, exArg),
 	)
 }
 
