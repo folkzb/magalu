@@ -12,7 +12,11 @@
 # Builds
 mgc/cli/cli
 mgc/cli/mgc
+mgc/terraform-provider-mgc/terraform-provider-mgc
 /build
+
+# Terraform
+*.tfstate*
 
 # Go workspace
 go.work.sum

@@ -4,4 +4,5 @@ use (
 	./mgc/cli
 	./mgc/core
 	./mgc/sdk
+	./mgc/terraform-provider-mgc
 )
