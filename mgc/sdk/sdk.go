@@ -28,6 +28,10 @@ type Sdk struct {
 	config     *core.Config
 }
 
+type contextKey string
+
+var ctxWrappedKey contextKey = "magalu.cloud/sdk/SdkWrapped"
+
 // TODO: Change config with build tags or from environment
 var config core.AuthConfig = core.AuthConfig{
 	ClientId:      "cw9qpaUl2nBiC8PVjNFN5jZeb2vTd_1S5cYs1FhEXh0",
@@ -62,13 +66,31 @@ func NewSdk() *Sdk {
 
 // The Context is created with the following values:
 // - use GrouperFromContext() to retrieve Sdk.Group() (root group)
+// - use AuthFromContext() to retrieve Sdk.Auth()
+// - use HttpClientFromContext() to retrieve Sdk.HttpClient()
+// - use ConfigFromContext() to retrieve Sdk.Config()
 func (o *Sdk) NewContext() context.Context {
 	var ctx = context.Background()
+	return o.WrapContext(ctx)
+}
+
+// The following values are added to the context:
+// - use GrouperFromContext() to retrieve Sdk.Group() (root group)
+// - use AuthFromContext() to retrieve Sdk.Auth()
+// - use HttpClientFromContext() to retrieve Sdk.HttpClient()
+// - use ConfigFromContext() to retrieve Sdk.Config()
+func (o *Sdk) WrapContext(ctx context.Context) context.Context {
+	if wrap := ctx.Value(ctxWrappedKey); wrap != nil {
+		return ctx
+	}
+
 	ctx = core.NewGrouperContext(ctx, o.Group())
 	ctx = core.NewAuthContext(ctx, o.Auth())
 	// Needs to be called after Auth, because we need the refresh token callback for the interceptor
 	ctx = core.NewHttpClientContext(ctx, o.HttpClient())
 	ctx = core.NewConfigContext(ctx, o.Config())
+
+	ctx = context.WithValue(ctx, ctxWrappedKey, true)
 	return ctx
 }
 

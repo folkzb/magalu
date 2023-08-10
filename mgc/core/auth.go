@@ -23,7 +23,7 @@ const (
 	refreshGroupKey = "refreshToken"
 )
 
-type loginResult struct {
+type LoginResult struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -105,7 +105,7 @@ func (o *Auth) RedirectUri() string {
 	return o.config.RedirectUri
 }
 
-func (o *Auth) setToken(token *loginResult) error {
+func (o *Auth) SetTokens(token *LoginResult) error {
 	// Always update the tokens, this way the user can assume the Auth object is
 	// up-to-date after this function, even in case of a persistance error
 	o.accessToken = token.AccessToken
@@ -194,13 +194,13 @@ func (o *Auth) RequestAuthTokeWithAuthorizationCode(authCode string) error {
 		return err
 	}
 
-	var result loginResult
+	var result LoginResult
 	defer resp.Body.Close()
 	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return err
 	}
 
-	if err = o.setToken(&result); err != nil {
+	if err = o.SetTokens(&result); err != nil {
 		return err
 	}
 
@@ -276,12 +276,12 @@ func (o *Auth) doRefreshAccessToken() (Value, error) {
 			return "", NewHttpErrorFromResponse(resp)
 		}
 
-		var result loginResult
+		var result LoginResult
 		defer resp.Body.Close()
 		if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
 			return "", err
 		}
-		if err = o.setToken(&result); err != nil {
+		if err = o.SetTokens(&result); err != nil {
 			return "", err
 		} else {
 			return o.accessToken, nil
@@ -292,6 +292,10 @@ func (o *Auth) doRefreshAccessToken() (Value, error) {
 }
 
 func (o *Auth) newRefreshAccessTokenRequest() (*http.Request, error) {
+	if o.refreshToken == "" {
+		return nil, fmt.Errorf("RefreshToken is not set")
+	}
+
 	config := o.config
 	data := url.Values{}
 	data.Set("client_id", config.ClientId)
