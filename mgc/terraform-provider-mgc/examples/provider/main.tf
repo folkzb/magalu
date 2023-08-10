@@ -26,6 +26,7 @@ resource "magalu_virtual-machine_instances" "myvm" {
   type = "cloud-bs1.xsmall"
   image = "cloud-ubuntu-22.04 LTS"
   key_name = "luizalabs-key"
+  status = "active"
 }
 
 // This part is to test the resource Read function, replace id with existing
@@ -39,4 +40,5 @@ resource "magalu_virtual-machine_instances" "read_res_vm" {
   type = "cloud-bs1.xsmall"
   image = "cloud-ubuntu-22.04 LTS"
   key_name = "luizalabs-key"
+  status = "shutoff"
 }

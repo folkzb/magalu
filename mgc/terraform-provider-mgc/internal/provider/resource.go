@@ -3,11 +3,15 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"magalu.cloud/core"
@@ -36,6 +40,7 @@ type VirtualMachineResourceModel struct {
 	Type   types.String `tfsdk:"type"`     // json:"type"`
 	Image  types.String `tfsdk:"image"`    // json:"image"`
 	SSHKey types.String `tfsdk:"key_name"` // json:"key_name"`
+	Status types.String `tfsdk:"status"`   // json:"status"`
 }
 
 func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -52,22 +57,43 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Instance id",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Instance name",
 				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"type": schema.StringAttribute{
 				MarkdownDescription: "Instance type",
 				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"image": schema.StringAttribute{
 				MarkdownDescription: "OS image",
 				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"key_name": schema.StringAttribute{
 				MarkdownDescription: "SSH key",
 				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"status": schema.StringAttribute{
+				MarkdownDescription: "Instance status",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("active"),
 			},
 		},
 	}
@@ -183,6 +209,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	data.Name = types.StringValue(resultData["name"].(string))
 	data.SSHKey = types.StringValue(resultData["key_name"].(string))
 	data.Type = types.StringValue(resultData["instance_type"].(map[string]any)["name"].(string))
+	data.Status = types.StringValue(strings.ToLower(resultData["status"].(string)))
 
 	// TODO: set resp.State directly from resultMap, without going to `data`(Model)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -193,8 +220,20 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	params := map[string]any{
+		"id":     data.Id.ValueString(),
+		"status": data.Status.ValueString(),
+	}
+	_, err := r.update.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to get instance",
+			fmt.Sprintf("Fetching information for instance %v returned with error: %v", data.Id, err),
+		)
 		return
 	}
 
@@ -206,8 +245,19 @@ func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	params := map[string]any{
+		"id": data.Id.ValueString(),
+	}
+	_, err := r.delete.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to get instance",
+			fmt.Sprintf("Fetching information for instance %v returned with error: %v", data.Id, err),
+		)
 		return
 	}
 }
