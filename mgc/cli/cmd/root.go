@@ -9,8 +9,11 @@ import (
 	"os"
 	"strings"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
+	"moul.io/zapfilter"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -419,6 +422,14 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.SetHelpCommandGroupID("other")
 	rootCmd.SetCompletionCommandGroupID("other")
 	addOutputFlag(rootCmd)
+	addLogFilterFlag(rootCmd)
+
+	filterRules := getLogFilterFlag(rootCmd)
+
+	filterOpt := zap.WrapCore(func(c zapcore.Core) zapcore.Core {
+		return zapfilter.NewFilteringCore(c, zapfilter.MustParseRules(filterRules))
+	})
+	core.InitLoggerFilter(filterOpt)
 
 	sdk := &mgcSdk.Sdk{}
 
