@@ -40,6 +40,23 @@ class YamlDumper(yaml.Dumper):
 OPERATION_KEYS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
 
 
+class Filterer:
+    filters: List[str]
+    filter_out: List[str]
+
+    def should_include(self, key: str) -> bool:
+        if self.filters and key not in self.filters:
+            return False
+
+        if self.filter_out and key in self.filter_out:
+            return False
+
+        return True
+
+
+filterer = Filterer()
+
+
 def load_yaml(path: str) -> OAPISchema:
     with open(path, "r") as fd:
         return yaml.load(fd, Loader=yaml.CLoader)
@@ -72,7 +89,7 @@ def fill_responses_stats(ctx: OperationContext, responses: OAPISchema, dst: OAPI
             if t != "application/json":
                 obj[ctx.key()].append({code: t})
 
-    if obj[ctx.key()]:
+    if obj[ctx.key()] and filterer.should_include("non-json-responses"):
         dst.setdefault("non-json-responses", []).append(obj)
 
 
@@ -80,7 +97,7 @@ def fill_req_body_stats(ctx: OperationContext, r: OAPISchema, dst: OAPIStats):
     content = r.get("content", {})
     if content:
         for t, _ in content.items():
-            if t != "application/json":
+            if t != "application/json" and filterer.should_include("non-json-requests"):
                 dst.setdefault("non-json-requests", []).append({ctx.key(): t})
 
 
@@ -93,7 +110,7 @@ def fill_operation_stats(ctx: OperationContext, o: OAPISchema, dst: OAPIStats):
     if req_body:
         fill_req_body_stats(ctx, req_body, dst)
 
-    if "operationId" not in o:
+    if "operationId" not in o and filterer.should_include("missing_operation_id"):
         dst.setdefault("missing_operation_id", []).append(ctx.key())
 
     return
@@ -125,7 +142,21 @@ if __name__ == "__main__":
         "files in directory"
     )
     parser.add_argument("dir", type=str, help="Directory of OpenAPI files")
+    parser.add_argument(
+        "--filter", type=str, action="append", default=[], help="Only show these stats"
+    )
+    parser.add_argument(
+        "--filter-out",
+        type=str,
+        action="append",
+        default=[],
+        help="Don't show these stats",
+    )
+
     args = parser.parse_args()
+
+    filterer.filters = args.filter
+    filterer.filter_out = args.filter_out
 
     oapis = load_oapis(args.dir)
     for o in oapis:
