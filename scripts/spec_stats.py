@@ -125,7 +125,8 @@ def fill_resource_stats(r: OAPIResource, dst: OAPIStats):
         fill_operation_stats(op, dst)
 
 
-def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]):
+def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]) -> List[OAPIOperation]:
+    tagless_ops = []
     for pn, p in o.schema.get("paths", {}).items():
         for path_field, sub_fields in p.items():
             if not isinstance(sub_fields, dict) or path_field not in OPERATION_KEYS:
@@ -139,15 +140,24 @@ def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]):
                 dst.setdefault(
                     res_name, OAPIResource(name=res_name, operations=[])
                 ).operations.append(op)
+            else:
+                tagless_ops.append(op)
+
+    return tagless_ops
 
 
 def get_oapi_stats(o: OAPI) -> OAPIStats:
     result = {}
     resources = {}
-    fill_resources(o, resources)
+    tagless_ops = fill_resources(o, resources)
 
     for res in resources.values():
         fill_resource_stats(res, result)
+
+    for op in tagless_ops:
+        fill_operation_stats(op, result)
+        if filterer.should_include("tagless_operations"):
+            result.setdefault("tagless_operations", []).append(op.key())
 
     # TODO: Add stats for other fields
 
