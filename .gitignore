@@ -11,6 +11,7 @@
 
 # Builds
 mgc/cli/cli
+mgc/cli/mgc
 /build
 
 # Go workspace
