@@ -59,13 +59,6 @@ def load_oapis(d: str) -> [OAPI]:
     return schemas
 
 
-def append(dst: OAPIStats, key: str, val: Any):
-    if not dst.get(key, {}):
-        dst[key] = []
-
-    dst[key].append(val)
-
-
 def fill_responses_stats(ctx: OperationContext, responses: OAPISchema, dst: OAPIStats):
     obj = {ctx.key(): []}
 
@@ -80,7 +73,7 @@ def fill_responses_stats(ctx: OperationContext, responses: OAPISchema, dst: OAPI
                 obj[ctx.key()].append({code: t})
 
     if obj[ctx.key()]:
-        append(dst, "non-json-responses", obj)
+        dst.setdefault("non-json-responses", []).append(obj)
 
 
 def fill_req_body_stats(ctx: OperationContext, r: OAPISchema, dst: OAPIStats):
@@ -88,7 +81,7 @@ def fill_req_body_stats(ctx: OperationContext, r: OAPISchema, dst: OAPIStats):
     if content:
         for t, _ in content.items():
             if t != "application/json":
-                append(dst, "non-json-requests", {ctx.key(): t})
+                dst.setdefault("non-json-requests", []).append({ctx.key(): t})
 
 
 def fill_operation_stats(ctx: OperationContext, o: OAPISchema, dst: OAPIStats):
@@ -101,7 +94,7 @@ def fill_operation_stats(ctx: OperationContext, o: OAPISchema, dst: OAPIStats):
         fill_req_body_stats(ctx, req_body, dst)
 
     if "operationId" not in o:
-        append(dst, "missing_operation_id", ctx.key())
+        dst.setdefault("missing_operation_id", []).append(ctx.key())
 
     return
 
