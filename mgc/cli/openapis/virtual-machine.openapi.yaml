@@ -213,6 +213,8 @@ paths:
             -   OAuth2:
                 - virtual-machine.read
             x-cli-description: List Virtual Machine instances
+            x-cli-output-options: table=NAME:$.instances[*].name,ID:$.instances[*].id
+            x-cli-output-flag: table=NAME:$.instances[*].name,ID:$.instances[*].id
         post:
             tags:
             - instances

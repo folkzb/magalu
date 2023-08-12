@@ -245,6 +245,13 @@ func handleJsonResult(exec mgcSdk.Executor, result core.Value, output string) (e
 	return formatter.Format(result, options)
 }
 
+func getOutputFor(cmd *cobra.Command, exec core.Executor, result core.Value) string {
+	if outputOptions, ok := exec.(core.ExecutorResultOutputOptions); ok {
+		return outputOptions.DefaultOutputOptions(result)
+	}
+	return getOutputFlag(cmd)
+}
+
 func AddAction(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
@@ -284,7 +291,7 @@ func AddAction(
 				return nil
 			}
 
-			output := getOutputFlag(cmd)
+			output := getOutputFor(cmd, exec, result)
 
 			if reader, ok := result.(io.Reader); ok {
 				return handleReaderResult(reader, output)

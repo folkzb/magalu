@@ -21,7 +21,7 @@ type Resource struct {
 	doc             *openapi3.T
 	extensionPrefix *string
 	servers         openapi3.Servers
-	operations      *map[string]*Operation
+	operations      *map[string]core.Executor
 	logger          *zap.SugaredLogger
 }
 
@@ -224,9 +224,9 @@ func (o *Resource) collectOperations() *operationTree {
 	return tree
 }
 
-func (o *Resource) getOperations() map[string]*Operation {
+func (o *Resource) getOperations() map[string]core.Executor {
 	if o.operations == nil {
-		opMap := map[string]*Operation{}
+		opMap := map[string]core.Executor{}
 		opTree := o.collectOperations()
 		opTree.VisitDesc([]operationTreePath{}, func(path []operationTreePath, desc *operationDesc) bool {
 			opName := getNameExtension(o.extensionPrefix, desc.op.Extensions, "")
@@ -242,7 +242,7 @@ func (o *Resource) getOperations() map[string]*Operation {
 				servers = o.servers
 			}
 
-			opMap[opName] = &Operation{
+			var operation core.Executor = &Operation{
 				name:            opName,
 				key:             desc.key,
 				method:          strings.ToUpper(desc.method),
@@ -253,6 +253,14 @@ func (o *Resource) getOperations() map[string]*Operation {
 				servers:         servers,
 				logger:          o.logger.Named(opName),
 			}
+
+			if output, ok := getExtensionString(o.extensionPrefix, "output-flag", desc.op.Extensions, ""); ok && output != "" {
+				operation = core.NewExecuteResultOutputOptions(operation, func(exec core.Executor, result core.Value) string {
+					return output
+				})
+			}
+
+			opMap[opName] = operation
 
 			return true
 		})

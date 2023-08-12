@@ -25,6 +25,7 @@ paths:
     /v0/instances:
         get:
             x-cli-description: List Virtual Machine instances
+            x-cli-output-flag: table=NAME:$.instances[*].name,ID:$.instances[*].id
         post:
             x-cli-description: Create a Virtual Machine instance
     /v0/instances/{id}:

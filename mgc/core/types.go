@@ -109,3 +109,32 @@ func NewExecuteFormat(
 ) ExecutorResultFormatter {
 	return &executeFormat{executor, formatter}
 }
+
+// Implement this interface in Executor()s that want to provide default output options.
+// It's used by the command line interface (CLI) and possible other tools.
+// This is only called if no other explicit options are desired
+type ExecutorResultOutputOptions interface {
+	Executor
+	// The return should be in the same format as CLI -o "VALUE"
+	// example: "yaml" or "table=COL:$.path.to[*].element,OTHERCOL:$.path.to[*].other"
+	DefaultOutputOptions(result Value) string
+}
+
+type executeResultOutputOptions struct {
+	Executor
+	getOutputOptions func(exec Executor, result Value) string
+}
+
+func (o *executeResultOutputOptions) DefaultOutputOptions(result Value) string {
+	return o.getOutputOptions(o.Executor, result)
+}
+
+var _ ExecutorResultOutputOptions = (*executeResultOutputOptions)(nil)
+
+// Wraps (embeds) an executor and add specific result default output options getter.
+func NewExecuteResultOutputOptions(
+	executor Executor,
+	getOutputOptions func(exec Executor, result Value) string,
+) ExecutorResultOutputOptions {
+	return &executeResultOutputOptions{executor, getOutputOptions}
+}
