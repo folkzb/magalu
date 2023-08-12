@@ -135,6 +135,20 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 	}
 }
 
+func loadFromFile(filename string) (value any, err error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: eventually we want to load raw... could we determine from schema?
+	err = json.Unmarshal(data, &value)
+	if err != nil {
+		value = string(data)
+	}
+	return value, nil
+}
+
 func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[string]mgcSdk.Value) error {
 	if flags == nil || schema == nil || dst == nil {
 		return fmt.Errorf("invalid command or parameter schema")
@@ -155,7 +169,11 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 
 		err := json.Unmarshal([]byte(str), &value)
 		if err != nil {
-			value = str
+			if !strings.HasPrefix(str, "@") {
+				value = str
+			} else if value, err = loadFromFile(str[1:]); err != nil {
+				return err
+			}
 		}
 
 		dst[name] = value
