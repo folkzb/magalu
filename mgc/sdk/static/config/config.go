@@ -1,12 +1,11 @@
 package config
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"reflect"
-	"text/tabwriter"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"magalu.cloud/core"
 )
 
@@ -27,20 +26,16 @@ func NewGroup() *core.StaticGroup {
 func configListFormatter(result core.Value) string {
 	configMap := result.(map[string]any) // it must be this, assert
 
-	// TODO: find a better table formatter library
-	b := &bytes.Buffer{}
-	w := tabwriter.NewWriter(b, 8, 8, 1, ' ', tabwriter.Debug)
+	writer := table.NewWriter()
+	writer.AppendHeader(table.Row{"Config", "Type", "Description"})
 
-	fmt.Fprintf(w, "Config\tType\tDescription\n")
-	fmt.Fprintf(w, "---\t---\t---\n")
 	for name, schema := range configMap {
 		schema := schema.(*core.Schema)
 		t := schema.Type // TODO: handle complex types such as enum, array, object...
-		fmt.Fprintf(w, "%s\t%s\t%s\n", name, t, schema.Description)
+		writer.AppendRow(table.Row{name, t, schema.Description})
 	}
-	w.Flush()
 
-	return b.String()
+	return writer.Render()
 }
 
 func newConfigList() core.Executor {

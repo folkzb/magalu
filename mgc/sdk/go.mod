@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/getkin/kin-openapi v0.118.0
+	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	go.uber.org/zap v1.25.0
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
@@ -22,10 +23,12 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
