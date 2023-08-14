@@ -2,6 +2,7 @@ import os
 from typing import Dict, Any, List, NamedTuple, Optional
 import argparse
 import yaml
+import jsonschema
 
 OAPISchema = Dict[str, Any]
 OAPIStats = Dict[str, List[Any]]
@@ -11,6 +12,10 @@ class OAPI(NamedTuple):
     path: str
     name: str
     schema: OAPISchema
+    ref_resolver: jsonschema.RefResolver
+
+    def resolve(self, ref: str) -> Any:
+        return self.ref_resolver.resolve(ref)[1]
 
 
 class OAPIOperation(NamedTuple):
@@ -75,7 +80,7 @@ def load_yaml(path: str) -> OAPISchema:
 
 
 def load_oapis(d: str) -> [OAPI]:
-    schemas = []
+    result = []
     for f in os.listdir(d):
         name, ext = os.path.splitext(f)
         if name == "index" or ext != ".yaml":
@@ -83,9 +88,13 @@ def load_oapis(d: str) -> [OAPI]:
             continue
 
         path = os.path.join(d, f)
-        schemas.append(OAPI(name=name, path=path, schema=load_yaml(path)))
+        schema = load_yaml(path)
+        ref_resolver = jsonschema.RefResolver(path, schema)
+        result.append(
+            OAPI(name=name, path=path, schema=schema, ref_resolver=ref_resolver)
+        )
 
-    return schemas
+    return result
 
 
 def is_tag_crud(tag: Optional[OAPITag]) -> bool:
