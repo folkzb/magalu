@@ -460,6 +460,8 @@ can generate a command line on-demand for Rest manipulation`,
 
 	sdk := &mgcSdk.Sdk{}
 
+	rootCmd.AddCommand(newDumpTreeCmd(sdk))
+
 	err := DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(sdk, sdk.Group()))
 	if err != nil {
 		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
