@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, List, NamedTuple, Optional
+from typing import Callable, Dict, Any, List, Set, NamedTuple, Optional
 import argparse
 import yaml
 import jsonschema
@@ -107,6 +107,110 @@ def is_tag_crud(tag: Optional[OAPITag]) -> bool:
     return True
 
 
+def get_schema(
+    schema_or_ref: OAPISchema,
+    resolve: Callable[[str], Any],
+) -> OAPISchema:
+    if "$ref" in schema_or_ref:
+        return resolve(schema_or_ref["$ref"])
+    return schema_or_ref
+
+
+def get_schema_field_names(
+    schema: OAPISchema, resolve: Callable[[str], Any]
+) -> Set[str]:
+    result = set()
+    t = schema.get("type")
+    if t == "object":
+        for pn, p in schema.get("properties", {}).items():
+            ps = get_schema(p, resolve)
+            pt = ps.get("type")
+            if pt == "object":
+                # Flatten out all sub fields as if top-level
+                result.update(get_schema_field_names(ps, resolve))
+            else:
+                result.add(pn)
+
+    elif schema.get("title") is not None:
+        result.add(schema["title"])
+
+    return result
+
+
+def fill_req_body_response_diff_stats(
+    key: str,
+    rb: OAPISchema,
+    parameters: List[OAPISchema],
+    response: OAPISchema,
+    dst: OAPIStats,
+    resolve: Callable[[str], Any],
+):
+    def collect_content_fields(contents: Dict[str, Any]) -> Set[str]:
+        for c in contents.values():
+            schema = get_schema(c["schema"], resolve)
+            if schema:
+                return get_schema_field_names(schema, resolve)
+        return set()
+
+    all_params = set()
+    if rb and rb.get("content"):
+        all_params.update(collect_content_fields(rb["content"]))
+
+    for p in parameters:
+        if p.get("name"):
+            all_params.update({p["name"]})
+        else:
+            ps = get_schema(p.get("schema", {}))
+            all_params.update(get_schema_field_names(ps, resolve))
+
+    all_response_fields = set()
+    if response and response.get("content"):
+        all_response_fields.update(collect_content_fields(response["content"]))
+
+    computed = all_response_fields.difference(all_params)
+    if not computed:
+        return
+
+    values = {"computed": list(computed)}
+    if all_params:
+        values.setdefault("non-computed", list(all_params))
+
+    dst.setdefault(key, values)
+
+
+def fill_req_body_responses_diff_stats(
+    key: str,
+    rb: OAPISchema,
+    parameters: List[OAPISchema],
+    responses: OAPISchema,
+    dst: OAPIStats,
+    resolve: Callable[[str], Any],
+):
+    if not filterer.should_include("computed_variables"):
+        return
+    if not responses:
+        return
+
+    computed_vars = {key: []}
+    for codename, response in responses.items():
+        code = int(codename)
+        if not 200 <= code < 300:
+            continue
+        if not key.startswith("POST"):
+            continue
+
+        response_computed = {}
+        fill_req_body_response_diff_stats(
+            codename, rb, parameters, response, response_computed, resolve
+        )
+
+        if response_computed.get(codename):
+            computed_vars[key].append(response_computed)
+
+    if computed_vars[key]:
+        dst.setdefault("computed_variables", []).append(computed_vars)
+
+
 def fill_responses_stats(op: OAPIOperation, responses: OAPISchema, dst: OAPIStats):
     obj = {op.key(): []}
 
@@ -132,7 +236,9 @@ def fill_req_body_stats(op: OAPIOperation, r: OAPISchema, dst: OAPIStats):
                 dst.setdefault("non-json-requests", []).append({op.key(): t})
 
 
-def fill_operation_stats(op: OAPIOperation, dst: OAPIStats):
+def fill_operation_stats(
+    op: OAPIOperation, dst: OAPIStats, resolve: Callable[[str], Any]
+):
     responses = op.fields.get("responses", {})
     if responses:
         fill_responses_stats(op, responses, dst)
@@ -140,6 +246,10 @@ def fill_operation_stats(op: OAPIOperation, dst: OAPIStats):
     req_body = op.fields.get("requestBody", {})
     if req_body:
         fill_req_body_stats(op, req_body, dst)
+
+    fill_req_body_responses_diff_stats(
+        op.key(), req_body, op.fields.get("parameters", []), responses, dst, resolve
+    )
 
     if "operationId" not in op.fields and filterer.should_include(
         "missing_operation_id"
@@ -162,11 +272,11 @@ def fill_missing_crud_stats(r: OAPIResource, crud_entries: List[str], dst: OAPIS
         dst.setdefault("missing_crud", []).append(missing_crud)
 
 
-def fill_resource_stats(r: OAPIResource, dst: OAPIStats):
+def fill_resource_stats(r: OAPIResource, dst: OAPIStats, resolve: Callable[[str], Any]):
     crud_entries = []
 
     for op in r.operations:
-        fill_operation_stats(op, dst)
+        fill_operation_stats(op, dst, resolve)
 
         if op.method in CRUD_OP_KEYS:
             crud_entries.append(op.method)
@@ -228,10 +338,10 @@ def get_oapi_stats(o: OAPI) -> OAPIStats:
     tagless_ops = fill_resources(o, resources)
 
     for res in resources.values():
-        fill_resource_stats(res, result)
+        fill_resource_stats(res, result, o.resolve)
 
     for op in tagless_ops:
-        fill_operation_stats(op, result)
+        fill_operation_stats(op, result, o.resolve)
         if filterer.should_include("tagless_operations"):
             result.setdefault("tagless_operations", []).append(op.key())
 
