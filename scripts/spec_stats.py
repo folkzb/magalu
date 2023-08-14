@@ -47,6 +47,9 @@ class YamlDumper(yaml.Dumper):
 
 
 OPERATION_KEYS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
+CRUD_OP_KEYS = ["get", "put", "patch", "post", "delete"]
+# Patch and Post are optional, as they can be mimicked with a Delete->Create op
+REQUIRED_CRUD_OP_KEYS = ["get", "post", "delete"]
 
 
 class Filterer:
@@ -83,6 +86,16 @@ def load_oapis(d: str) -> [OAPI]:
         schemas.append(OAPI(name=name, path=path, schema=load_yaml(path)))
 
     return schemas
+
+
+def is_tag_crud(tag: Optional[OAPITag]) -> bool:
+    if not tag:
+        return False
+
+    if tag.extensions.get("x-cli-hidden"):
+        return False
+
+    return True
 
 
 def fill_responses_stats(op: OAPIOperation, responses: OAPISchema, dst: OAPIStats):
@@ -127,9 +140,29 @@ def fill_operation_stats(op: OAPIOperation, dst: OAPIStats):
     return
 
 
+def fill_missing_crud_stats(r: OAPIResource, crud_entries: List[str], dst: OAPIStats):
+    if not is_tag_crud(r.tag) or not filterer.should_include("missing_crud"):
+        return
+
+    missing_crud = {}
+    for crud in REQUIRED_CRUD_OP_KEYS:
+        if crud not in crud_entries:
+            missing_crud.setdefault(r.name, []).append(crud)
+
+    if missing_crud:
+        dst.setdefault("missing_crud", []).append(missing_crud)
+
+
 def fill_resource_stats(r: OAPIResource, dst: OAPIStats):
+    crud_entries = []
+
     for op in r.operations:
         fill_operation_stats(op, dst)
+
+        if op.method in CRUD_OP_KEYS:
+            crud_entries.append(op.method)
+
+    fill_missing_crud_stats(r, crud_entries, dst)
 
 
 def get_oapi_tags(o: OAPI) -> Dict[str, OAPITag]:
