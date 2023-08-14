@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/hashicorp/terraform-plugin-framework v1.3.4
 	github.com/hashicorp/terraform-plugin-log v0.9.0
+	github.com/stoewer/go-strcase v1.3.0
 	magalu.cloud/core v0.0.0-unversioned
 	magalu.cloud/sdk v0.0.0-unversioned
 )
