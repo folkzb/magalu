@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, List, NamedTuple
+from typing import Dict, Any, List, NamedTuple, Optional
 import argparse
 import yaml
 
@@ -22,9 +22,16 @@ class OAPIOperation(NamedTuple):
         return self.method.upper() + " " + self.path
 
 
+class OAPITag(NamedTuple):
+    name: str
+    description: str
+    extensions: OAPISchema
+
+
 class OAPIResource(NamedTuple):
     name: str
     operations: List[OAPIOperation]
+    tag: Optional[OAPITag]
 
 
 class ResponseContext(NamedTuple):
@@ -125,7 +132,33 @@ def fill_resource_stats(r: OAPIResource, dst: OAPIStats):
         fill_operation_stats(op, dst)
 
 
+def get_oapi_tags(o: OAPI) -> Dict[str, OAPITag]:
+    result = {}
+    for tag in o.schema.get("tags", []):
+        name = ""
+        description = ""
+        extensions = {}
+
+        for field_name, field in tag.items():
+            if field_name == "name":
+                name = field
+            elif field_name == "description":
+                description = field
+            else:
+                extensions[field_name] = field
+
+        if not name:
+            continue
+
+        result[name] = OAPITag(
+            name=name, description=description, extensions=extensions
+        )
+
+    return result
+
+
 def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]) -> List[OAPIOperation]:
+    all_tags = get_oapi_tags(o)
     tagless_ops = []
     for pn, p in o.schema.get("paths", {}).items():
         for path_field, sub_fields in p.items():
@@ -137,8 +170,9 @@ def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]) -> List[OAPIOperation]
 
             if tags:
                 res_name = tags[0]
+                tag = all_tags.get(res_name, None)
                 dst.setdefault(
-                    res_name, OAPIResource(name=res_name, operations=[])
+                    res_name, OAPIResource(name=res_name, operations=[], tag=tag)
                 ).operations.append(op)
             else:
                 tagless_ops.append(op)
