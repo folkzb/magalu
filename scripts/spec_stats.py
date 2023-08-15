@@ -1,42 +1,373 @@
 import os
-from typing import Callable, Dict, Any, List, Set, NamedTuple, Optional
+from typing import (
+    cast,
+    Callable,
+    Dict,
+    Any,
+    List,
+    Literal,
+    Mapping,
+    NotRequired,
+    Sequence,
+    Set,
+    TypeAlias,
+    TypedDict,
+    Union,
+    NamedTuple,
+    Optional,
+)
 import argparse
 import yaml
 import jsonschema
 
-OAPISchema = Dict[str, Any]
 OAPIStats = Dict[str, List[Any]]
+
+ArgumentLocation: TypeAlias = Literal["query", "header", "path", "cookie"]
+ArgumentStyle: TypeAlias = Literal[
+    "matrix",
+    "label",
+    "form",
+    "simple",
+    "spaceDelimited",
+    "pipeDelimited",
+    "deepObject",
+]
+
+HttpMethod: TypeAlias = Literal["get", "put", "post", "delete", "patch"]
+
+JSONSchema: TypeAlias = Mapping[str, Any]  # TODO
+
+
+class OAPIExample(NamedTuple):
+    summary: str | None
+    description: str | None
+    value: Any
+
+
+class OAPIArgumentSchema(NamedTuple):
+    location: ArgumentLocation
+    required: bool
+    deprecated: bool
+    description: str | None
+    schema: JSONSchema
+    examples: Sequence[OAPIExample]
+    style: ArgumentStyle
+    explode: bool
+    allow_empty_value: bool
+    allow_reserved: bool
+
+
+class OAPIHeaderSchema(NamedTuple):
+    required: bool
+    deprecated: bool
+    description: str | None
+    schema: JSONSchema
+    style: ArgumentStyle
+    examples: Sequence[OAPIExample]
+    explode: bool
+
+
+class OAPILinkSchema(NamedTuple):
+    # TODO: once actions are created, materialize with action: Action
+    operation_id: str | None
+    operation_ref: str | None
+    parameters: Mapping[str, Any]
+    request_body: Any
+    description: str | None
+    server: str | None
+
+
+class OAPIContentSchema(NamedTuple):
+    schema: JSONSchema
+    examples: Sequence[OAPIExample]
+
+
+class OAPIResponseSchema(NamedTuple):
+    description: str
+    headers: Mapping[str, OAPIHeaderSchema]
+    content: Mapping[str, OAPIContentSchema]
+    links: Mapping[str, OAPILinkSchema]
+
+
+class OAPIRequestSchema(NamedTuple):
+    description: str | None
+    required: bool
+    content: Mapping[str, OAPIContentSchema]
+
+
+class OAPISecurityRequirement(NamedTuple):
+    name: str
+    scopes: Sequence[str]
+
+
+# --- OAPI Specification (input)
+
+
+OAPIReferenceObject = TypedDict(
+    "OAPIReferenceObject",
+    {
+        "$ref": str,
+        "summary": NotRequired[str],
+        "description": NotRequired[str],
+    },
+)
+
+
+class OAPIServerVariableObject(TypedDict):
+    default: str
+    description: NotRequired[str]
+    enum: NotRequired[Sequence[str]]
+
+
+class OAPIServerObject(TypedDict):
+    url: str
+    description: NotRequired[str]
+    variables: NotRequired[Mapping[str, OAPIServerVariableObject]]
+
+
+OAPITagObject = Dict[str, Any]
+
+
+class OAPIExampleObject(TypedDict):
+    summary: NotRequired[str]
+    description: NotRequired[str]
+    value: NotRequired[Any]
+    externalValue: NotRequired[str]
+
+
+class OAPIHeaderObject(TypedDict):
+    description: NotRequired[str]
+    required: NotRequired[bool]
+    deprecated: NotRequired[bool]
+    style: NotRequired[ArgumentStyle]
+    explode: NotRequired[bool]
+    schema: NotRequired[JSONSchema]
+    example: NotRequired[Any]
+    examples: NotRequired[Mapping[str, OAPIExampleObject | OAPIReferenceObject]]
+    content: NotRequired[Mapping[str, "OAPIMediaTypeObject"]]
+
+
+class OAPIEncodingObject(TypedDict):
+    contentType: NotRequired[str]
+    headers: NotRequired[Mapping[str, OAPIHeaderObject | OAPIReferenceObject]]
+    style: NotRequired[str]
+    explode: NotRequired[bool]
+    allowReserved: NotRequired[bool]
+
+
+class OAPIMediaTypeObject(TypedDict):
+    schema: NotRequired[JSONSchema]
+    example: NotRequired[Any]
+    examples: NotRequired[Mapping[str, OAPIExampleObject | OAPIReferenceObject]]
+    encoding: NotRequired[Mapping[str, OAPIEncodingObject]]
+
+
+OAPIParameterObject = TypedDict(
+    "OAPIParameterObject",
+    {
+        "name": str,
+        "in": ArgumentLocation,  # NOTE: reserved keyword :-(
+        "description": NotRequired[str],
+        "required": NotRequired[bool],
+        "deprecated": NotRequired[bool],
+        "allowEmptyValue": NotRequired[bool],
+        "style": NotRequired[str],
+        "explode": NotRequired[bool],
+        "allowReserved": NotRequired[bool],
+        "schema": NotRequired[JSONSchema],
+        "example": NotRequired[Any],
+        "examples": NotRequired[Mapping[str, OAPIExampleObject]],
+        "content": NotRequired[Mapping[str, OAPIMediaTypeObject]],
+    },
+)
+
+
+class OAPIExternalDocumentationObject(TypedDict):
+    url: str
+    description: NotRequired[str]
+
+
+class OAPIRequestBodyObject(TypedDict):
+    description: NotRequired[str]
+    content: Mapping[str, OAPIMediaTypeObject]
+    required: NotRequired[bool]
+
+
+class OAPILinkObject(TypedDict):
+    operationRef: NotRequired[str]
+    operationId: NotRequired[str]
+    parameters: NotRequired[Mapping[str, Any]]
+    requestBody: NotRequired[Any]
+    description: NotRequired[str]
+    server: NotRequired[OAPIServerObject]
+
+
+class OAPIResponseObject(TypedDict):
+    description: str
+    headers: NotRequired[Mapping[str, OAPIHeaderObject | OAPIReferenceObject]]
+    content: NotRequired[Mapping[str, OAPIMediaTypeObject]]
+    links: NotRequired[Mapping[str, OAPILinkObject | OAPIReferenceObject]]
+
+
+OAPIResponsesObject: TypeAlias = Mapping[str, OAPIResponseObject | OAPIReferenceObject]
+
+OAPISecurityRequirementObject: TypeAlias = Mapping[str, Sequence[str]]
+OAPICallbackObject: TypeAlias = Mapping[
+    str, Union["OAPIPathItemObject", OAPIReferenceObject]
+]
+
+
+class OAPIOperationObject(TypedDict):
+    tags: NotRequired[Sequence[str]]
+    summary: NotRequired[str]
+    description: NotRequired[str]
+    externalDocs: NotRequired[OAPIExternalDocumentationObject]
+    operationId: NotRequired[str]
+    parameters: NotRequired[Sequence[OAPIParameterObject | OAPIReferenceObject]]
+    requestBody: NotRequired[OAPIRequestBodyObject | OAPIReferenceObject]
+    responses: NotRequired[OAPIResponsesObject]
+    callbacks: NotRequired[Mapping[str, OAPICallbackObject]]
+    deprecated: NotRequired[bool]
+    security: NotRequired[Sequence[OAPISecurityRequirementObject]]
+    servers: NotRequired[Sequence[OAPIServerObject]]
+
+
+OAPIPathItemObject = TypedDict(
+    "OAPIPathItemObject",
+    {
+        "$ref": NotRequired[str],
+        "summary": NotRequired[str],
+        "description": NotRequired[str],
+        "get": NotRequired[OAPIOperationObject],
+        "put": NotRequired[OAPIOperationObject],
+        "post": NotRequired[OAPIOperationObject],
+        "delete": NotRequired[OAPIOperationObject],
+        "options": NotRequired[OAPIOperationObject],
+        "head": NotRequired[OAPIOperationObject],
+        "patch": NotRequired[OAPIOperationObject],
+        "trace": NotRequired[OAPIOperationObject],
+        "servers": NotRequired[Sequence[OAPIServerObject]],
+        "parameters": NotRequired[Sequence[OAPIParameterObject | OAPIReferenceObject]],
+    },
+)
+
+
+class OAPIInfoObject(TypedDict):
+    title: str
+    version: str
+    summary: NotRequired[str]
+    description: NotRequired[str]
+
+
+OAPISecuritySchemeApiKeyObject = TypedDict(
+    "OAPISecuritySchemeApiKeyObject",
+    {
+        "type": Literal["apiKey"],
+        "description": NotRequired[str],
+        "name": str,
+        "in": str,  # NOTE: reserved keyword :-(
+    },
+)
+
+
+class OAPISecuritySchemeHttpObject(TypedDict):
+    type: Literal["http"]  # noqa A003
+    description: NotRequired[str]
+    scheme: str
+    bearerFormat: str
+
+
+class OAPIOAuthFlowObject(TypedDict):
+    authorizationUrl: str
+    tokenUrl: str
+    refreshUrl: NotRequired[str]
+    scopes: Mapping[str, str]
+
+
+class OAPIOAuthFlowsObject(TypedDict):
+    implicit: NotRequired[OAPIOAuthFlowObject]
+    password: NotRequired[OAPIOAuthFlowObject]
+    clientCredentials: NotRequired[OAPIOAuthFlowObject]
+    authorizationCode: NotRequired[OAPIOAuthFlowObject]
+
+
+class OAPISecuritySchemeOAuth2Object(TypedDict):
+    type: Literal["oauth2"]  # noqa A003
+    description: NotRequired[str]
+    flows: OAPIOAuthFlowsObject
+
+
+class OAPISecuritySchemeOpenIdConnectObject(TypedDict):
+    type: Literal["openIdConnect"]  # noqa A003
+    description: NotRequired[str]
+    openIdConnectUrl: str
+
+
+OAPISecuritySchemeObject: TypeAlias = (
+    OAPISecuritySchemeApiKeyObject
+    | OAPISecuritySchemeHttpObject
+    | OAPISecuritySchemeOAuth2Object
+    | OAPISecuritySchemeOpenIdConnectObject
+)
+
+
+class OAPIComponentsObject(TypedDict):
+    schemas: NotRequired[Mapping[str, JSONSchema]]
+    responses: NotRequired[Mapping[str, OAPIResponseObject | OAPIReferenceObject]]
+    parameters: NotRequired[Mapping[str, OAPIParameterObject | OAPIReferenceObject]]
+    examples: NotRequired[Mapping[str, OAPIExampleObject | OAPIReferenceObject]]
+    requestBodies: NotRequired[
+        Mapping[str, OAPIRequestBodyObject | OAPIReferenceObject]
+    ]
+    headers: NotRequired[Mapping[str, OAPIHeaderObject | OAPIReferenceObject]]
+    securitySchemes: NotRequired[
+        Mapping[str, OAPISecuritySchemeObject | OAPIReferenceObject]
+    ]
+    links: NotRequired[Mapping[str, OAPILinkObject | OAPIReferenceObject]]
+    callbacks: NotRequired[Mapping[str, OAPICallbackObject | OAPIReferenceObject]]
+    pathItems: NotRequired[Mapping[str, OAPIPathItemObject | OAPIReferenceObject]]
+
+
+class OAPIObject(TypedDict):
+    openapi: str
+    info: OAPIInfoObject
+    servers: NotRequired[Sequence[OAPIServerObject]]
+    paths: NotRequired[Mapping[str, OAPIPathItemObject]]
+    components: NotRequired[OAPIComponentsObject]
+    security: NotRequired[Sequence[OAPISecurityRequirementObject]]
+    tags: NotRequired[Sequence[OAPITagObject]]
+    externalDocs: NotRequired[OAPIExternalDocumentationObject]
 
 
 class OAPI(NamedTuple):
     path: str
     name: str
-    schema: OAPISchema
+    obj: OAPIObject
     ref_resolver: jsonschema.RefResolver
 
     def resolve(self, ref: str) -> Any:
         return self.ref_resolver.resolve(ref)[1]
 
 
-class OAPIOperation(NamedTuple):
+class OAPIOperationInfo(NamedTuple):
     path: str
     method: str
-    fields: OAPISchema
+    op: OAPIOperationObject
 
     def key(self) -> str:
         return self.method.upper() + " " + self.path
 
 
-class OAPITag(NamedTuple):
+class OAPITagInfo(NamedTuple):
     name: str
     description: str
-    extensions: OAPISchema
+    extensions: JSONSchema
 
 
 class OAPIResource(NamedTuple):
     name: str
-    operations: List[OAPIOperation]
-    tag: Optional[OAPITag]
+    operations: List[OAPIOperationInfo]
+    tag: Optional[OAPITagInfo]
 
 
 class ResponseContext(NamedTuple):
@@ -74,7 +405,7 @@ class Filterer:
 filterer = Filterer()
 
 
-def load_yaml(path: str) -> OAPISchema:
+def load_yaml(path: str) -> OAPIObject:
     with open(path, "r") as fd:
         return yaml.load(fd, Loader=yaml.CLoader)
 
@@ -86,12 +417,13 @@ def load_oapi(path: str) -> Optional[OAPI]:
         print("ignored file:", f)
         return None
 
-    schema = load_yaml(path)
-    ref_resolver = jsonschema.RefResolver(path, schema)
-    return OAPI(name=name, path=path, schema=schema, ref_resolver=ref_resolver)
+    obj = load_yaml(path)
+    as_dict = cast(Dict[str, Any], obj)
+    ref_resolver = jsonschema.RefResolver(path, as_dict)
+    return OAPI(name=name, path=path, obj=obj, ref_resolver=ref_resolver)
 
 
-def load_oapis(dir_or_path: str) -> [OAPI]:
+def load_oapis(dir_or_path: str) -> List[OAPI]:
     if os.path.isdir(dir_or_path):
         d = dir_or_path
         result = []
@@ -113,7 +445,7 @@ def load_oapis(dir_or_path: str) -> [OAPI]:
             return []
 
 
-def is_tag_crud(tag: Optional[OAPITag]) -> bool:
+def is_tag_crud(tag: Optional[OAPITagInfo]) -> bool:
     if not tag:
         return False
 
@@ -123,23 +455,21 @@ def is_tag_crud(tag: Optional[OAPITag]) -> bool:
     return True
 
 
-def get_schema(
-    schema_or_ref: OAPISchema,
-    resolve: Callable[[str], Any],
-) -> OAPISchema:
-    if "$ref" in schema_or_ref:
-        return resolve(schema_or_ref["$ref"])
-    return schema_or_ref
+def get(obj_or_ref: Any | OAPIReferenceObject, resolve: Callable[[str], Any]) -> Any:
+    if "$ref" in obj_or_ref:
+        return resolve(obj_or_ref["$ref"])
+    else:
+        return obj_or_ref
 
 
 def get_schema_field_names(
-    schema: OAPISchema, resolve: Callable[[str], Any]
+    schema: JSONSchema, resolve: Callable[[str], Any]
 ) -> Set[str]:
     result = set()
     t = schema.get("type")
     if t == "object":
         for pn, p in schema.get("properties", {}).items():
-            ps = get_schema(p, resolve)
+            ps = get(p, resolve)
             pt = ps.get("type")
             if pt == "object":
                 # Flatten out all sub fields as if top-level
@@ -155,32 +485,35 @@ def get_schema_field_names(
 
 def fill_req_body_response_diff_stats(
     key: str,
-    rb: OAPISchema,
-    parameters: List[OAPISchema],
-    response: OAPISchema,
-    dst: OAPIStats,
+    rb_or_ref: Optional[OAPIRequestBodyObject | OAPIReferenceObject],
+    parameters: Sequence[OAPIParameterObject | OAPIReferenceObject],
+    resp_or_ref: OAPIResponseObject | OAPIReferenceObject,
+    dst: Dict[str, Any],
     resolve: Callable[[str], Any],
 ):
-    def collect_content_fields(contents: Dict[str, Any]) -> Set[str]:
+    def collect_content_fields(contents: Mapping[str, OAPIMediaTypeObject]) -> Set[str]:
         for c in contents.values():
-            schema = get_schema(c["schema"], resolve)
+            schema = get(c["schema"], resolve)
             if schema:
                 return get_schema_field_names(schema, resolve)
         return set()
 
     all_params = set()
-    if rb and rb.get("content"):
+    if rb_or_ref and rb_or_ref.get("content"):
+        rb = get(rb_or_ref, resolve)
         all_params.update(collect_content_fields(rb["content"]))
 
-    for p in parameters:
+    for p_or_ref in parameters:
+        p = get(p_or_ref, resolve)
         if p.get("name"):
             all_params.update({p["name"]})
         else:
-            ps = get_schema(p.get("schema", {}))
+            ps = get(p.get("schema", {}), resolve)
             all_params.update(get_schema_field_names(ps, resolve))
 
     all_response_fields = set()
-    if response and response.get("content"):
+    if resp_or_ref and resp_or_ref.get("content"):
+        response = get(resp_or_ref, resolve)
         all_response_fields.update(collect_content_fields(response["content"]))
 
     computed = all_response_fields.difference(all_params)
@@ -196,9 +529,9 @@ def fill_req_body_response_diff_stats(
 
 def fill_req_body_responses_diff_stats(
     key: str,
-    rb: OAPISchema,
-    parameters: List[OAPISchema],
-    responses: OAPISchema,
+    rb: Optional[OAPIRequestBodyObject | OAPIReferenceObject],
+    parameters: Sequence[OAPIParameterObject | OAPIReferenceObject],
+    responses: OAPIResponsesObject,
     dst: OAPIStats,
     resolve: Callable[[str], Any],
 ):
@@ -207,17 +540,17 @@ def fill_req_body_responses_diff_stats(
     if not responses:
         return
 
-    computed_vars = {key: []}
-    for codename, response in responses.items():
+    computed_vars: Dict[str, Any] = {key: []}
+    for codename, resp_or_ref in responses.items():
         code = int(codename)
         if not 200 <= code < 300:
             continue
         if not key.startswith("POST"):
             continue
 
-        response_computed = {}
+        response_computed: Dict[str, Any] = {}
         fill_req_body_response_diff_stats(
-            codename, rb, parameters, response, response_computed, resolve
+            codename, rb, parameters, resp_or_ref, response_computed, resolve
         )
 
         if response_computed.get(codename):
@@ -227,8 +560,8 @@ def fill_req_body_responses_diff_stats(
         dst.setdefault("computed_variables", []).append(computed_vars)
 
 
-def fill_responses_stats(op: OAPIOperation, responses: OAPISchema, dst: OAPIStats):
-    obj = {op.key(): []}
+def fill_responses_stats(op: OAPIOperationInfo, responses: JSONSchema, dst: OAPIStats):
+    obj: Dict[str, List[Any]] = {op.key(): []}
 
     for code, r in responses.items():
         content = r.get("content", {})
@@ -244,32 +577,36 @@ def fill_responses_stats(op: OAPIOperation, responses: OAPISchema, dst: OAPIStat
         dst.setdefault("non-json-responses", []).append(obj)
 
 
-def fill_req_body_stats(op: OAPIOperation, r: OAPISchema, dst: OAPIStats):
+def fill_req_body_stats(
+    op: OAPIOperationInfo,
+    rb_or_ref: OAPIRequestBodyObject | OAPIReferenceObject,
+    dst: OAPIStats,
+    resolve: Callable[[str], Any],
+):
+    r = get(rb_or_ref, resolve)
     content = r.get("content", {})
     if content:
-        for t, _ in content.items():
+        for t in content.keys():
             if t != "application/json" and filterer.should_include("non-json-requests"):
                 dst.setdefault("non-json-requests", []).append({op.key(): t})
 
 
 def fill_operation_stats(
-    op: OAPIOperation, dst: OAPIStats, resolve: Callable[[str], Any]
+    op: OAPIOperationInfo, dst: OAPIStats, resolve: Callable[[str], Any]
 ):
-    responses = op.fields.get("responses", {})
+    responses = op.op.get("responses", {})
     if responses:
         fill_responses_stats(op, responses, dst)
 
-    req_body = op.fields.get("requestBody", {})
-    if req_body:
-        fill_req_body_stats(op, req_body, dst)
+    req_body_or_ref = op.op.get("requestBody")
+    if req_body_or_ref:
+        fill_req_body_stats(op, req_body_or_ref, dst, resolve)
 
     fill_req_body_responses_diff_stats(
-        op.key(), req_body, op.fields.get("parameters", []), responses, dst, resolve
+        op.key(), req_body_or_ref, op.op.get("parameters", []), responses, dst, resolve
     )
 
-    if "operationId" not in op.fields and filterer.should_include(
-        "missing_operation_id"
-    ):
+    if "operationId" not in op.op and filterer.should_include("missing_operation_id"):
         dst.setdefault("missing_operation_id", []).append(op.key())
 
     return
@@ -279,7 +616,7 @@ def fill_missing_crud_stats(r: OAPIResource, crud_entries: List[str], dst: OAPIS
     if not is_tag_crud(r.tag) or not filterer.should_include("missing_crud"):
         return
 
-    missing_crud = {}
+    missing_crud: Dict[str, List[str]] = {}
     for crud in REQUIRED_CRUD_OP_KEYS:
         if crud not in crud_entries:
             missing_crud.setdefault(r.name, []).append(crud)
@@ -300,40 +637,41 @@ def fill_resource_stats(r: OAPIResource, dst: OAPIStats, resolve: Callable[[str]
     fill_missing_crud_stats(r, crud_entries, dst)
 
 
-def get_oapi_tags(o: OAPI) -> Dict[str, OAPITag]:
+def get_oapi_tags(o: OAPI) -> Dict[str, OAPITagInfo]:
     result = {}
-    for tag in o.schema.get("tags", []):
+    for tag in o.obj.get("tags", {}):
         name = ""
         description = ""
         extensions = {}
 
         for field_name, field in tag.items():
             if field_name == "name":
-                name = field
+                name = str(field)
             elif field_name == "description":
-                description = field
+                description = str(field)
             else:
                 extensions[field_name] = field
 
         if not name:
             continue
 
-        result[name] = OAPITag(
+        result[name] = OAPITagInfo(
             name=name, description=description, extensions=extensions
         )
 
     return result
 
 
-def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]) -> List[OAPIOperation]:
+def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]) -> List[OAPIOperationInfo]:
     all_tags = get_oapi_tags(o)
     tagless_ops = []
-    for pn, p in o.schema.get("paths", {}).items():
+    for pn, p in o.obj.get("paths", {}).items():
         for path_field, sub_fields in p.items():
             if not isinstance(sub_fields, dict) or path_field not in OPERATION_KEYS:
                 continue
 
-            op = OAPIOperation(path=pn, method=path_field, fields=sub_fields)
+            op_obj = cast(OAPIOperationObject, sub_fields)
+            op = OAPIOperationInfo(path=pn, method=path_field, op=op_obj)
             tags = sub_fields.get("tags")
 
             if tags:
@@ -349,8 +687,8 @@ def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]) -> List[OAPIOperation]
 
 
 def get_oapi_stats(o: OAPI) -> OAPIStats:
-    result = {}
-    resources = {}
+    result: OAPIStats = {}
+    resources: Dict[str, OAPIResource] = {}
     tagless_ops = fill_resources(o, resources)
 
     for res in resources.values():
