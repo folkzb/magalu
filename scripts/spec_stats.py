@@ -79,22 +79,38 @@ def load_yaml(path: str) -> OAPISchema:
         return yaml.load(fd, Loader=yaml.CLoader)
 
 
-def load_oapis(d: str) -> [OAPI]:
-    result = []
-    for f in os.listdir(d):
-        name, ext = os.path.splitext(f)
-        if name == "index" or ext != ".yaml":
-            print("ignored file:", f)
-            continue
+def load_oapi(path: str) -> Optional[OAPI]:
+    f = os.path.basename(path)
+    name, ext = os.path.splitext(f)
+    if name == "index" or ext != ".yaml":
+        print("ignored file:", f)
+        return None
 
-        path = os.path.join(d, f)
-        schema = load_yaml(path)
-        ref_resolver = jsonschema.RefResolver(path, schema)
-        result.append(
-            OAPI(name=name, path=path, schema=schema, ref_resolver=ref_resolver)
-        )
+    schema = load_yaml(path)
+    ref_resolver = jsonschema.RefResolver(path, schema)
+    return OAPI(name=name, path=path, schema=schema, ref_resolver=ref_resolver)
 
-    return result
+
+def load_oapis(dir_or_path: str) -> [OAPI]:
+    if os.path.isdir(dir_or_path):
+        d = dir_or_path
+        result = []
+        for f in os.listdir(d):
+            path = os.path.join(d, f)
+            oapi = load_oapi(path)
+            if not oapi:
+                continue
+
+            result.append(oapi)
+
+        return result
+    else:
+        p = dir_or_path
+        oapi = load_oapi(p)
+        if oapi:
+            return [oapi]
+        else:
+            return []
 
 
 def is_tag_crud(tag: Optional[OAPITag]) -> bool:
@@ -355,7 +371,9 @@ if __name__ == "__main__":
         description="Validate response and request bodies for all OAPI YAML"
         "files in directory"
     )
-    parser.add_argument("dir", type=str, help="Directory of OpenAPI files")
+    parser.add_argument(
+        "dir_or_file", type=str, help="Directory of OpenAPI files or OpenAPI file path"
+    )
     parser.add_argument(
         "--filter", type=str, action="append", default=[], help="Only show these stats"
     )
@@ -372,7 +390,7 @@ if __name__ == "__main__":
     filterer.filters = args.filter
     filterer.filter_out = args.filter_out
 
-    oapis = load_oapis(args.dir)
+    oapis = load_oapis(args.dir_or_file)
     for o in oapis:
         stats = get_oapi_stats(o)
         if stats:
