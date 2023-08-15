@@ -305,6 +305,7 @@ func AddAction(
 	addFlags(actionCmd.PersistentFlags(), exec.ConfigsSchema())
 
 	parentCmd.AddCommand(actionCmd)
+	logger().Debugw("Executor added to command tree", "name", exec.Name())
 	return actionCmd, nil, nil
 }
 
@@ -328,6 +329,7 @@ func AddGroup(
 	loader := createGroupLoader(sdk, group)
 
 	parentCmd.AddCommand(moduleCmd)
+	logger().Debugw("Groupper added to command tree", "name", group.Name())
 	return moduleCmd, loader, nil
 }
 
