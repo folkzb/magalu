@@ -13,7 +13,7 @@ func addLogFilterFlag(cmd *cobra.Command) {
 		logFilterFlag,
 		"l",
 		"",
-		"Filter log domains",
+		"Use \"*:*\" to show all logs. See more details about the filter syntax at https://github.com/moul/zapfilter",
 	)
 }
 
