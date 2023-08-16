@@ -704,6 +704,15 @@ def get_oapi_stats(o: OAPI) -> OAPIStats:
     return result
 
 
+def dump_stats(stats: Dict[str, OAPIStats], output: str):
+    dump = yaml.dump(stats, sort_keys=True, indent=2, allow_unicode=True)
+    if output:
+        with open(output, "w") as fd:
+            fd.write(dump)
+    else:
+        print(dump)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Validate response and request bodies for all OAPI YAML"
@@ -722,6 +731,13 @@ if __name__ == "__main__":
         default=[],
         help="Don't show these stats",
     )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="",
+        help="Output target file to dump results",
+    )
 
     args = parser.parse_args()
 
@@ -729,11 +745,10 @@ if __name__ == "__main__":
     filterer.filter_out = args.filter_out
 
     oapis = load_oapis(args.dir_or_file)
+    all_stats: Dict[str, OAPIStats] = {}
     for o in oapis:
         stats = get_oapi_stats(o)
         if stats:
-            print(
-                yaml.dump(
-                    {o.name: stats}, Dumper=YamlDumper, indent=2, allow_unicode=True
-                )
-            )
+            all_stats[o.name] = stats
+
+    dump_stats(all_stats, args.output)
