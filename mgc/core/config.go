@@ -19,9 +19,9 @@ type Config struct {
 }
 
 const (
-	CONFIG_NAME     = "mgc"
+	CONFIG_NAME     = "cli"
 	CONFIG_TYPE     = "yaml"
-	CONFIG_FOLDER   = ".config"
+	CONFIG_FOLDER   = ".config/mgc"
 	CONFIG_FILE     = CONFIG_NAME + "." + CONFIG_TYPE
 	FILE_PERMISSION = 0777 // TODO: investigate how to lower permission
 )
