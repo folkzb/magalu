@@ -146,9 +146,7 @@ func newHttpTransport() http.RoundTripper {
 		IdleConnTimeout:    30 * time.Second,
 		DisableCompression: true,
 	}
-	if os.Getenv("MGC_SDK_HTTP_LOG") == "1" {
-		transport = core.NewDefaultHttpClientLogger(transport)
-	}
+	transport = core.NewDefaultHttpClientLogger(transport)
 	return transport
 }
 

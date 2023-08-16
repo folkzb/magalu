@@ -3,35 +3,34 @@ package core
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
 )
 
+func logger() *zap.SugaredLogger {
+	if pkgLogger == nil {
+		pkgLogger = initPkgLogger().Named("http")
+	}
+	return pkgLogger
+}
+
 type HttpClientLogger struct {
-	Transport         http.RoundTripper
-	LogRequest        func(logger *HttpClientLogger, req *http.Request)
-	LogResponse       func(logger *HttpClientLogger, req *http.Request, resp *http.Response, err error)
-	LogRequestPrefix  string
-	LogResponsePrefix string
-	RedactHeader      func(logger *HttpClientLogger, req *http.Request, key string, value string) string
+	Transport    http.RoundTripper
+	RedactHeader func(req *http.Request, key string, value string) string
 }
 
 func NewDefaultHttpClientLogger(transport http.RoundTripper) *HttpClientLogger {
 	return &HttpClientLogger{
-		Transport:         transport,
-		LogRequest:        DefaultHttpClientLogRequest,
-		LogResponse:       DefaultHttpClientLogResponse,
-		LogRequestPrefix:  "HTTP >",
-		LogResponsePrefix: "HTTP <",
-		RedactHeader:      DefaultHttpClientRedactHeader,
+		Transport:    transport,
+		RedactHeader: DefaultHttpClientRedactHeader,
 	}
 }
 
 func (t *HttpClientLogger) RoundTrip(req *http.Request) (*http.Response, error) {
-	if t.LogRequest != nil {
-		t.LogRequest(t, req)
-	}
+	log := logger().With("method", req.Method, "url", req.URL, "protocol", req.Proto)
+	t.logRequest(log, req)
 
 	transport := t.Transport
 	if transport == nil {
@@ -39,50 +38,52 @@ func (t *HttpClientLogger) RoundTrip(req *http.Request) (*http.Response, error) 
 	}
 	resp, err := transport.RoundTrip(req)
 
-	if t.LogResponse != nil {
-		t.LogResponse(t, req, resp, err)
-	}
+	t.logResponse(log, req, resp, err)
 
 	return resp, err
 }
 
-func DefaultHttpClientLogRequest(logger *HttpClientLogger, req *http.Request) {
-	log.Printf("%s %s %s %s\n", logger.LogRequestPrefix, req.Method, req.URL, req.Proto)
+func (t *HttpClientLogger) logRequest(log *zap.SugaredLogger, req *http.Request) {
+	log.Debugw("will send HTTP request")
 	for k, lst := range req.Header {
 		for _, v := range lst {
-			if logger.RedactHeader != nil {
-				v = logger.RedactHeader(logger, req, k, v)
+			if t.RedactHeader != nil {
+				v = t.RedactHeader(req, k, v)
 			}
-			log.Printf("%s %s: %s\n", logger.LogRequestPrefix, k, v)
+			// TODO: log all header information using Infow(..., "headers", LogHttpHeaders(req.Header))
+			logger().Debugw("request header info", "key", k, "value", v)
 		}
 	}
-	log.Printf("%s\n", logger.LogRequestPrefix)
 }
 
-func DefaultHttpClientLogResponse(logger *HttpClientLogger, req *http.Request, resp *http.Response, err error) {
+func (t *HttpClientLogger) logResponse(log *zap.SugaredLogger, req *http.Request, resp *http.Response, err error) {
 	if resp == nil {
 		if err == nil {
 			err = errors.New("Unknown Error")
 		}
-		log.Printf("%s %s %s error=%s\n", logger.LogResponsePrefix, req.Method, req.URL, err.Error())
+		log.Debugw("requested ended with error", "error", err.Error())
 		return
 	}
 	errMsg := ""
 	if err != nil {
 		errMsg = fmt.Sprintf("; error: %s", err.Error())
+		log.Debugw("received HTTP response with error", "status", resp.Status, "error", errMsg)
+	} else {
+		log.Debugw("received HTTP response", "status", resp.Status)
 	}
-	log.Printf("%s %s%s\n", logger.LogResponsePrefix, resp.Status, errMsg)
+
 	for k, lst := range resp.Header {
 		for _, v := range lst {
-			if logger.RedactHeader != nil {
-				v = logger.RedactHeader(logger, req, k, v)
+			if t.RedactHeader != nil {
+				v = t.RedactHeader(req, k, v)
 			}
-			log.Printf("%s %s: %s\n", logger.LogResponsePrefix, k, v)
+			// TODO: log all header information using Infow(..., "headers", LogHttpHeaders(resp.Header))
+			logger().Debugw("response header info", "key", k, "value", v)
 		}
 	}
 }
 
-func DefaultHttpClientRedactHeader(logger *HttpClientLogger, req *http.Request, key string, value string) string {
+func DefaultHttpClientRedactHeader(req *http.Request, key string, value string) string {
 	if strings.ToLower(key) == "authorization" {
 		parts := strings.SplitN(value, " ", 2)
 		if len(parts) > 1 {
