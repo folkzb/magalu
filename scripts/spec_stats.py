@@ -423,14 +423,14 @@ def load_oapi(path: str) -> Optional[OAPI]:
     return OAPI(name=name, path=path, obj=obj, ref_resolver=ref_resolver)
 
 
-def load_oapis(dir_or_path: str) -> List[OAPI]:
+def load_oapis(dir_or_path: str, ignore_disabled: bool) -> List[OAPI]:
     if os.path.isdir(dir_or_path):
         d = dir_or_path
         result = []
         for f in os.listdir(d):
             path = os.path.join(d, f)
             oapi = load_oapi(path)
-            if not oapi:
+            if not oapi or (ignore_disabled and ".disabled" in path):
                 continue
 
             result.append(oapi)
@@ -738,13 +738,19 @@ if __name__ == "__main__":
         default="",
         help="Output target file to dump results",
     )
+    parser.add_argument(
+        "--ignore-disabled",
+        type=bool,
+        default=True,
+        help="Don't load OpenAPI files that have '.disabled' in their name",
+    )
 
     args = parser.parse_args()
 
     filterer.filters = args.filter
     filterer.filter_out = args.filter_out
 
-    oapis = load_oapis(args.dir_or_file)
+    oapis = load_oapis(args.dir_or_file, args.ignore_disabled)
     all_stats: Dict[str, OAPIStats] = {}
     for o in oapis:
         stats = get_oapi_stats(o)
