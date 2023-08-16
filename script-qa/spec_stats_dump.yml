@@ -1,0 +1,456 @@
+block-storage.openapi:
+  computed_variables:
+  - POST /v0/volume_types:
+    - '201':
+        computed:
+        - id
+        non-computed:
+        - internal
+        - name
+        - sku
+  - POST /v0/snapshots:
+    - '202':
+        computed:
+        - id
+        non-computed:
+        - description
+        - name
+        - volume_id
+  - POST /v0/snapshots/{snapshot_id}:
+    - '202':
+        computed:
+        - id
+        non-computed:
+        - description
+        - name
+        - snapshot_id
+  - POST /v0/volumes:
+    - '201':
+        computed:
+        - id
+        non-computed:
+        - description
+        - name
+        - size
+        - volume_type
+  - POST /v0/volumes/{id}/attach/{virtual_machine_id}:
+    - '200':
+        computed:
+        - attachments
+        - created_at
+        - description
+        - error
+        - name
+        - size
+        - sku
+        - status
+        - updated_at
+        - volume_id
+        non-computed:
+        - id
+        - virtual_machine_id
+  - POST /v0/volumes/{id}/detach/{virtual_machine_id}:
+    - '200':
+        computed:
+        - attachments
+        - created_at
+        - description
+        - error
+        - name
+        - size
+        - sku
+        - status
+        - updated_at
+        - volume_id
+        non-computed:
+        - force
+        - id
+        - virtual_machine_id
+  missing_crud:
+  - volume-types:
+    - delete
+  - usage:
+    - post
+    - delete
+dbaas.openapi:
+  computed_variables:
+  - POST /v1/instances/{instance_id}/backups:
+    - '202':
+        computed:
+        - id
+        non-computed:
+        - instance_id
+        - mode
+  - POST /v1/instances:
+    - '202':
+        computed:
+        - id
+        non-computed:
+        - backup_retention_days
+        - backup_start_at
+        - datastore_id
+        - flavor_id
+        - name
+        - password
+        - size
+        - type
+        - user
+  - POST /v1/instances/{instance_id}/resize:
+    - '200':
+        computed:
+        - addresses
+        - backup_retention_days
+        - backup_start_at
+        - created_at
+        - datastore_id
+        - id
+        - name
+        - replicas
+        - status
+        - updated_at
+        non-computed:
+        - flavor_id
+        - instance_id
+        - size
+        - type
+  - POST /v1/instances/{instance_id}/start:
+    - '200':
+        computed:
+        - addresses
+        - backup_retention_days
+        - backup_start_at
+        - created_at
+        - datastore_id
+        - flavor_id
+        - id
+        - name
+        - replicas
+        - size
+        - status
+        - type
+        - updated_at
+        non-computed:
+        - instance_id
+  - POST /v1/instances/{instance_id}/stop:
+    - '200':
+        computed:
+        - addresses
+        - backup_retention_days
+        - backup_start_at
+        - created_at
+        - datastore_id
+        - flavor_id
+        - id
+        - name
+        - replicas
+        - size
+        - status
+        - type
+        - updated_at
+        non-computed:
+        - instance_id
+  - POST /v1/replicas:
+    - '202':
+        computed:
+        - id
+        non-computed:
+        - flavor_id
+        - name
+        - source_id
+  - POST /v1/replicas/{replica_id}/resize:
+    - '200':
+        computed:
+        - addresses
+        - created_at
+        - datastore_id
+        - id
+        - name
+        - size
+        - source_id
+        - status
+        - type
+        - updated_at
+        non-computed:
+        - flavor_id
+        - replica_id
+  - POST /v1/replicas/{replica_id}/start:
+    - '200':
+        computed:
+        - addresses
+        - created_at
+        - datastore_id
+        - flavor_id
+        - id
+        - name
+        - size
+        - source_id
+        - status
+        - type
+        - updated_at
+        non-computed:
+        - replica_id
+  - POST /v1/replicas/{replica_id}/stop:
+    - '200':
+        computed:
+        - addresses
+        - created_at
+        - datastore_id
+        - flavor_id
+        - id
+        - name
+        - size
+        - source_id
+        - status
+        - type
+        - updated_at
+        non-computed:
+        - replica_id
+  missing_crud:
+  - datastores:
+    - post
+    - delete
+  - flavors:
+    - post
+    - delete
+  tagless_operations:
+  - GET /v1/healthcheck
+mke.openapi:
+  computed_variables:
+  - POST /v0/clusters:
+    - '201':
+        computed:
+        - id
+        - message
+        - state
+        non-computed:
+        - description
+        - enabled_bastion
+        - enabled_server_group
+        - name
+        - node_pools
+        - version
+  - POST /v0/clusters/{cluster_id}/node_pools:
+    - '201':
+        computed:
+        - created_at
+        - disk_size
+        - disk_type
+        - id
+        - messages
+        - node_image
+        - ram
+        - securityGroups
+        - size
+        - state
+        - updated_at
+        - vcpu
+        - zone
+        non-computed:
+        - cluster_id
+        - enabled
+        - flavor
+        - max_replicas
+        - min_replicas
+        - name
+        - replicas
+        - tags
+        - taints
+  missing_crud:
+  - info:
+    - post
+    - delete
+  non-json-responses:
+  - GET /v0/clusters/{cluster_id}/kubeconfig:
+    - '200': application/yaml
+virtual-machine.openapi:
+  computed_variables:
+  - POST /v0/images:
+    - '201':
+        computed:
+        - name
+        - os_distribution
+        - size
+        - version
+        non-computed:
+        - id
+        - internal
+        - sku
+  - POST /v0/instance_types:
+    - '201':
+        computed:
+        - disk
+        - name
+        - ram
+        - vcpus
+        non-computed:
+        - id
+        - internal
+        - sku
+  - POST /v0/instances:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - allocate_fip
+        - availability_zone
+        - image
+        - key_name
+        - name
+        - network_interfaces
+        - type
+        - user_data
+  - POST /v0/keypairs/{keypair_name}:
+    - '201':
+        computed:
+        - name
+        - private_key
+        - public_key
+        non-computed:
+        - keypair_name
+  missing_crud:
+  - usage:
+    - post
+    - delete
+  missing_operation_id:
+  - DELETE /v0/instances
+  tagless_operations:
+  - DELETE /v0/instances
+vpc.openapi:
+  computed_variables:
+  - POST /v0/xaas/vpcs/{vpc_id}/ports:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - has_pip
+        - name
+        - project_type
+        - subnet_id
+        - vpc_id
+  - POST /v0/vpcs/{vpc_id}/ports:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - has_pip
+        - name
+        - subnet_id
+        - vpc_id
+  - POST /v0/vpcs/{vpc_id}/public_ips:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - description
+        - vpc_id
+  - POST /v0/security_groups/{security_group_id}/rules:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - direction
+        - ethertype
+        - port_range_max
+        - port_range_min
+        - protocol
+        - remote_group_id
+        - remote_ip_prefix
+        - security_group_id
+  - POST /v0/xaas/security_groups/{security_group_id}/rules:
+    - '201':
+        computed:
+        - id
+        non-computed:
+        - direction
+        - ethertype
+        - port_range_max
+        - port_range_min
+        - project_type
+        - protocol
+        - remote_group_id
+        - remote_ip_prefix
+        - security_group_id
+  - POST /v0/vpcs/{vpc_id}/security_groups:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - description
+        - name
+        - vpc_id
+  - POST /v0/xaas/vpcs/{vpc_id}/security_groups:
+    - '201':
+        computed:
+        - id
+        non-computed:
+        - description
+        - name
+        - project_type
+        - vpc_id
+  - POST /v0/xaas/vpcs/{vpc_id}/subnetpools:
+    - '201':
+        computed:
+        - external_id
+        - id
+        - tenant_id
+        non-computed:
+        - address_scope_id
+        - default_prefix_length
+        - description
+        - max_prefix_length
+        - min_prefix_length
+        - name
+        - pool_prefix
+        - project_type
+        - vpc_id
+  - POST /v0/vpcs/{vpc_id}/subnets:
+    - '201':
+        computed:
+        - id
+        non-computed:
+        - cidr_block
+        - description
+        - ip_version
+        - name
+        - vpc_id
+  - POST /v0/vpcs/default:
+    - '200':
+        computed:
+        - id
+  - POST /v0/vpcs:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - description
+        - name
+  - POST /v0/xaas/vpcs/default:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - project_type
+  - POST /v0/xaas/vpcs:
+    - '200':
+        computed:
+        - id
+        non-computed:
+        - cidr
+        - description
+        - name
+        - project_type
+        - subnetpool_id
+  - POST /v0/xaas/vpcs/{vpc_id}/add_interface:
+    - '200':
+        computed:
+        - created_at
+        - id
+        - ip_address
+        non-computed:
+        - nic_vpc_id
+        - project_type
+        - vpc_id
+  missing_crud:
+  - quotas:
+    - post
+    - delete
