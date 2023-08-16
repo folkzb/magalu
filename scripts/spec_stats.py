@@ -520,9 +520,9 @@ def fill_req_body_response_diff_stats(
     if not computed:
         return
 
-    values = {"computed": list(computed)}
+    values = {"computed": sorted(computed)}
     if all_params:
-        values.setdefault("non-computed", list(all_params))
+        values.setdefault("non-computed", sorted(all_params))
 
     dst.setdefault(key, values)
 
