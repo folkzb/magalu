@@ -12,22 +12,22 @@ type tenantSetParams struct {
 }
 
 func newTenantSelect() core.Executor {
-	return core.NewStaticExecute(
+	executor := core.NewStaticExecute(
 		"select",
 		"",
 		"Set the active Tenant to be used for all subsequential requests",
 		selectTenant,
 	)
+
+	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Value) string {
+		return "template=Success! Current tenant changed to {{.id}}\n"
+	})
 }
 
-func selectTenant(ctx context.Context, params tenantSetParams, _ struct{}) (string, error) {
+func selectTenant(ctx context.Context, params tenantSetParams, _ struct{}) (*core.TenantAuth, error) {
 	auth := core.AuthFromContext(ctx)
 	if auth == nil {
-		return "", fmt.Errorf("Unable to get auth from context")
+		return nil, fmt.Errorf("Unable to get auth from context")
 	}
-	err := auth.SelectTenant(params.ID)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("Success! Current tenant changed to %s\n", params.ID), nil
+	return auth.SelectTenant(params.ID)
 }

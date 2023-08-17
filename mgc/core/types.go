@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -13,6 +14,10 @@ type Schema openapi3.Schema
 func (s *Schema) VisitJSON(value any, opts ...openapi3.SchemaValidationOption) error {
 	return (*openapi3.Schema)(s).VisitJSON(value, opts...)
 }
+
+// NOTE: This is so 'jsonschema' doesn't generate a schema with type string and format
+// 'date-time'. We want the raw object schema for later validation
+type Time time.Time
 
 // General interface that describes both Executor and Grouper
 type Descriptor interface {

@@ -71,7 +71,7 @@ type Tenant struct {
 	IsDelegated bool   `json:"is_delegated"`
 }
 
-type TenantResult struct {
+type tenantResult struct {
 	AccessToken  string `json:"access_token"`
 	CreatedAt    int    `json:"created_at"`
 	ExpiresIn    int    `json:"expires_in"`
@@ -79,6 +79,14 @@ type TenantResult struct {
 	RefreshToken string `json:"refresh_token"`
 	Scope        string `json:"scope"`
 	TokenType    string `json:"scope_type"`
+}
+
+type TenantAuth struct {
+	ID           string   `json:"id"`
+	CreatedAt    Time     `json:"created_at"`
+	AccessToken  string   `json:"access_token"`
+	RefreshToken string   `json:"refresh_token"`
+	Scope        []string `json:"scope"`
 }
 
 var authKey contextKey = "magalu.cloud/core/Authentication"
@@ -430,16 +438,16 @@ func (o *Auth) ListTenants() ([]*Tenant, error) {
 	return result, nil
 }
 
-func (o *Auth) SelectTenant(id string) error {
+func (o *Auth) SelectTenant(id string) (*TenantAuth, error) {
 	at, err := o.AccessToken()
 	if err != nil {
-		return fmt.Errorf("unable to get current access token. Did you forget to log in?")
+		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
 	}
 
 	data := map[string]any{"tenant": id}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	bodyReader := bytes.NewReader(jsonData)
@@ -448,23 +456,23 @@ func (o *Auth) SelectTenant(id string) error {
 	r.Header.Set("Content-Type", "application/json")
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	resp, err := o.httpClient.Do(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer r.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return NewHttpErrorFromResponse(resp)
+		return nil, NewHttpErrorFromResponse(resp)
 	}
 
-	payload := &TenantResult{}
+	payload := &tenantResult{}
 	if err = json.NewDecoder(resp.Body).Decode(payload); err != nil {
-		return err
+		return nil, err
 	}
 
 	err = o.SetTokens(&LoginResult{
@@ -472,12 +480,20 @@ func (o *Auth) SelectTenant(id string) error {
 		RefreshToken: payload.RefreshToken,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := o.SetCurrentTenantID(id); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	createdAt := Time(time.Unix(int64(payload.CreatedAt), 0))
+
+	return &TenantAuth{
+		AccessToken:  payload.AccessToken,
+		CreatedAt:    createdAt,
+		ID:           id,
+		RefreshToken: payload.RefreshToken,
+		Scope:        strings.Split(payload.Scope, " "),
+	}, nil
 }

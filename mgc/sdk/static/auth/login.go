@@ -85,7 +85,7 @@ func newLogin() *core.StaticExecute {
 				return nil, fmt.Errorf("error when trying to list tenants for selection: %w", err)
 			}
 
-			err = auth.SelectTenant(tenants[0].UUID)
+			_, err = auth.SelectTenant(tenants[0].UUID)
 			if err != nil {
 				return nil, fmt.Errorf("error when trying to select default tenant: %w", err)
 			}
