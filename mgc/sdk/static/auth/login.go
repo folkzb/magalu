@@ -29,7 +29,7 @@ type loginParameters struct {
 }
 
 type loginResult struct {
-	AccessToken string `json:"accessToken,omitempty"`
+	AccessToken string `json:"access_token,omitempty"`
 }
 
 const serverShutdownTimeout = 500 * time.Millisecond
