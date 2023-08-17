@@ -20,7 +20,7 @@ import argparse
 import yaml
 import jsonschema
 
-OAPIStats = Dict[str, List[Any]]
+OAPIStats = Dict[str, Any]
 
 ArgumentLocation: TypeAlias = Literal["query", "header", "path", "cookie"]
 ArgumentStyle: TypeAlias = Literal[
@@ -566,21 +566,15 @@ def fill_responses_stats(
     dst: OAPIStats,
     resolve: Callable[[str], Any],
 ):
-    obj: Dict[str, List[Any]] = {op.key(): []}
-
     for code, r_or_ref in responses.items():
         r = get(r_or_ref, resolve)
-        content = r.get("content", {})
-        if not content:
-            # Return for now. In the future check for the code?
-            return
-
-        for t, _ in content.items():
-            if t != "application/json":
-                obj[op.key()].append({code: t})
-
-    if obj[op.key()] and filterer.should_include("non-json-responses"):
-        dst.setdefault("non-json-responses", []).append(obj)
+        for t, c in r.get("content", {}).items():
+            if t != "application/json" and filterer.should_include(
+                "non-json-responses"
+            ):
+                dst.setdefault("non-json-responses", {}).setdefault(
+                    op.key(), []
+                ).append({code: t})
 
 
 def fill_req_body_stats(
