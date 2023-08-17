@@ -483,6 +483,62 @@ def get_schema_field_names(
     return result
 
 
+def traverse_all_subschemas(
+    path: str,
+    schema: JSONSchema,
+    resolve: Callable[[str], Any],
+    visit: Callable[[str, JSONSchema], None],
+):
+    if not path:
+        path = schema.get("title") or "$"
+
+    visit(path, get(schema, resolve))
+
+    for pn, p_or_ref in schema.get("properties", {}).items():
+        p = get(p_or_ref, resolve)
+        traverse_all_subschemas(path + "." + pn, p, resolve, visit)
+
+    if schema.get("additionalProperties"):
+        s = get(schema["additionalProperties"], resolve)
+        traverse_all_subschemas(path + "|additionalProperties|", s, resolve, visit)
+
+    for s_or_ref in schema.get("oneOf", []):
+        s = get(s_or_ref, resolve)
+        traverse_all_subschemas(path, s, resolve, visit)
+
+    for s_or_ref in schema.get("anyOf", []):
+        s = get(s_or_ref, resolve)
+        traverse_all_subschemas(path, s, resolve, visit)
+
+    for s_or_ref in schema.get("allOf", []):
+        s = get(s_or_ref, resolve)
+        traverse_all_subschemas(path, s, resolve, visit)
+
+
+def get_schema_mixed_enums(
+    name: str,
+    schema: JSONSchema,
+    resolve: Callable[[str], Any],
+) -> Dict[str, List[Any]]:
+    result = {}
+
+    def visit(path: str, s: JSONSchema):
+        enum = s.get("enum")
+        if not enum:
+            return
+
+        types = set()
+        for v in enum:
+            types.add(type(v))
+
+            if len(types) != 1:
+                result[path] = enum
+                break
+
+    traverse_all_subschemas(name, schema, resolve, visit)
+    return result
+
+
 def fill_req_body_response_diff_stats(
     key: str,
     rb_or_ref: Optional[OAPIRequestBodyObject | OAPIReferenceObject],
@@ -576,6 +632,17 @@ def fill_responses_stats(
                     op.key(), []
                 ).append({code: t})
 
+            if filterer.should_include("mixed-enums"):
+                s = get(c.get("schema", {}), resolve)
+                if s:
+                    mixed = get_schema_mixed_enums("", s, resolve)
+                    if mixed:
+                        dst.setdefault("mixed-enums", {}).setdefault(
+                            op.key(), {}
+                        ).setdefault("responses", {}).setdefault("content", {})[
+                            t
+                        ] = mixed
+
 
 def fill_req_body_stats(
     op: OAPIOperationInfo,
@@ -585,10 +652,39 @@ def fill_req_body_stats(
 ):
     r = get(rb_or_ref, resolve)
     content = r.get("content", {})
+
     if content:
-        for t in content.keys():
+        for t, c in content.items():
             if t != "application/json" and filterer.should_include("non-json-requests"):
                 dst.setdefault("non-json-requests", []).append({op.key(): t})
+
+            if filterer.should_include("mixed-enums"):
+                s = get(c.get("schema", {}), resolve)
+                if s:
+                    mixed = get_schema_mixed_enums("", s, resolve)
+                    if mixed:
+                        dst.setdefault("mixed-enums", {}).setdefault(
+                            op.key(), {}
+                        ).setdefault("request-bodies", {})[t] = mixed
+
+
+def fill_parameters_stats(
+    op: OAPIOperationInfo,
+    parameters: Sequence[OAPIParameterObject | OAPIReferenceObject],
+    dst: OAPIStats,
+    resolve: Callable[[str], Any],
+):
+    for p_or_ref in parameters:
+        p = get(p_or_ref, resolve)
+        name = p.get("name", "")
+        s = get(p.get("schema", {}), resolve)
+        if s:
+            if filterer.should_include("mixed-enums"):
+                mixed = get_schema_mixed_enums(name, s, resolve)
+                if mixed:
+                    dst.setdefault("mixed-enums", {}).setdefault(
+                        op.key(), {}
+                    ).setdefault("parameters", []).append(mixed)
 
 
 def fill_operation_stats(
@@ -602,8 +698,12 @@ def fill_operation_stats(
     if req_body_or_ref:
         fill_req_body_stats(op, req_body_or_ref, dst, resolve)
 
+    parameters = op.op.get("parameters", [])
+    if parameters:
+        fill_parameters_stats(op, parameters, dst, resolve)
+
     fill_req_body_responses_diff_stats(
-        op.key(), req_body_or_ref, op.op.get("parameters", []), responses, dst, resolve
+        op.key(), req_body_or_ref, parameters, responses, dst, resolve
     )
 
     if "operationId" not in op.op and filterer.should_include("missing_operation_id"):
