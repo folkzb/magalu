@@ -85,7 +85,7 @@ func newLogin() *core.StaticExecute {
 				return nil, fmt.Errorf("error when trying to list tenants for selection: %w", err)
 			}
 
-			_, err = auth.SelectTenant(tenants[0].UUID)
+			tenantResult, err := auth.SelectTenant(tenants[0].UUID)
 			if err != nil {
 				return nil, fmt.Errorf("error when trying to select default tenant: %w", err)
 			}
@@ -93,7 +93,7 @@ func newLogin() *core.StaticExecute {
 			fmt.Fprintf(os.Stderr, "Successfully logged in.\n")
 			loginLogger().Infow("sucessfully logged in")
 			if parameters.Show {
-				output = &loginResult{AccessToken: result.value}
+				output = &loginResult{AccessToken: tenantResult.AccessToken}
 			}
 
 			return output, nil
