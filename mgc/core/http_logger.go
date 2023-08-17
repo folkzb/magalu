@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"go.uber.org/zap"
 )
@@ -17,14 +16,12 @@ func logger() *zap.SugaredLogger {
 }
 
 type HttpClientLogger struct {
-	Transport    http.RoundTripper
-	RedactHeader func(req *http.Request, key string, value string) string
+	Transport http.RoundTripper
 }
 
 func NewDefaultHttpClientLogger(transport http.RoundTripper) *HttpClientLogger {
 	return &HttpClientLogger{
-		Transport:    transport,
-		RedactHeader: DefaultHttpClientRedactHeader,
+		Transport: transport,
 	}
 }
 
@@ -45,15 +42,7 @@ func (t *HttpClientLogger) RoundTrip(req *http.Request) (*http.Response, error) 
 
 func (t *HttpClientLogger) logRequest(log *zap.SugaredLogger, req *http.Request) {
 	log.Debugw("will send HTTP request")
-	for k, lst := range req.Header {
-		for _, v := range lst {
-			if t.RedactHeader != nil {
-				v = t.RedactHeader(req, k, v)
-			}
-			// TODO: log all header information using Infow(..., "headers", LogHttpHeaders(req.Header))
-			logger().Debugw("request header info", "key", k, "value", v)
-		}
-	}
+	log.Debugw("request header info", "headers", LogHttpHeaders(req.Header))
 }
 
 func (t *HttpClientLogger) logResponse(log *zap.SugaredLogger, req *http.Request, resp *http.Response, err error) {
@@ -72,26 +61,5 @@ func (t *HttpClientLogger) logResponse(log *zap.SugaredLogger, req *http.Request
 		log.Debugw("received HTTP response", "status", resp.Status)
 	}
 
-	for k, lst := range resp.Header {
-		for _, v := range lst {
-			if t.RedactHeader != nil {
-				v = t.RedactHeader(req, k, v)
-			}
-			// TODO: log all header information using Infow(..., "headers", LogHttpHeaders(resp.Header))
-			logger().Debugw("response header info", "key", k, "value", v)
-		}
-	}
-}
-
-func DefaultHttpClientRedactHeader(req *http.Request, key string, value string) string {
-	if strings.ToLower(key) == "authorization" {
-		parts := strings.SplitN(value, " ", 2)
-		if len(parts) > 1 {
-			if strings.ToLower(parts[0]) == "bearer" {
-				parts[1] = fmt.Sprintf("<redacted %d chars>", len(parts[1]))
-			}
-		}
-		return strings.Join(parts, " ")
-	}
-	return value
+	log.Debugw("response header info", "headers", LogHttpHeaders(resp.Header))
 }
