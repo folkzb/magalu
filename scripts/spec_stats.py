@@ -560,10 +560,16 @@ def fill_req_body_responses_diff_stats(
         dst.setdefault("computed_variables", []).append(computed_vars)
 
 
-def fill_responses_stats(op: OAPIOperationInfo, responses: JSONSchema, dst: OAPIStats):
+def fill_responses_stats(
+    op: OAPIOperationInfo,
+    responses: OAPIResponsesObject,
+    dst: OAPIStats,
+    resolve: Callable[[str], Any],
+):
     obj: Dict[str, List[Any]] = {op.key(): []}
 
-    for code, r in responses.items():
+    for code, r_or_ref in responses.items():
+        r = get(r_or_ref, resolve)
         content = r.get("content", {})
         if not content:
             # Return for now. In the future check for the code?
@@ -596,7 +602,7 @@ def fill_operation_stats(
 ):
     responses = op.op.get("responses", {})
     if responses:
-        fill_responses_stats(op, responses, dst)
+        fill_responses_stats(op, responses, dst, resolve)
 
     req_body_or_ref = op.op.get("requestBody")
     if req_body_or_ref:
