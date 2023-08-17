@@ -705,7 +705,9 @@ def get_oapi_stats(o: OAPI) -> OAPIStats:
 
 
 def dump_stats(stats: Dict[str, OAPIStats], output: str):
-    dump = yaml.dump(stats, sort_keys=True, indent=2, allow_unicode=True)
+    dump = yaml.dump(
+        stats, Dumper=YamlDumper, sort_keys=True, indent=2, allow_unicode=True
+    )
     if output:
         with open(output, "w") as fd:
             fd.write(dump)
