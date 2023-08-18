@@ -11,7 +11,7 @@ type configDeleteParams struct {
 	Key string `jsonschema_description:"Name of the config to be deleted"`
 }
 
-func newConfigDelete() *core.StaticExecute {
+func newDelete() *core.StaticExecute {
 	return core.NewStaticExecute(
 		"delete",
 		"",

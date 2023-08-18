@@ -12,7 +12,7 @@ type configSetParams struct {
 	Value any    `jsonschema_description:"New flag value"`
 }
 
-func newConfigSet() *core.StaticExecute {
+func newSet() *core.StaticExecute {
 	return core.NewStaticExecute(
 		"set",
 		"",

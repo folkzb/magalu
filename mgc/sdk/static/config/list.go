@@ -9,20 +9,6 @@ import (
 	"magalu.cloud/core"
 )
 
-func NewGroup() *core.StaticGroup {
-	return core.NewStaticGroup(
-		"config",
-		"",
-		"Config related commands",
-		[]core.Descriptor{
-			newConfigList(),   // cmd: config list
-			newConfigGet(),    // cmd: config get
-			newConfigSet(),    // cmd: config set
-			newConfigDelete(), //cmd config delete
-		},
-	)
-}
-
 func configListFormatter(result core.Value) string {
 	configMap := result.(map[string]any) // it must be this, assert
 
@@ -38,7 +24,7 @@ func configListFormatter(result core.Value) string {
 	return writer.Render()
 }
 
-func newConfigList() core.Executor {
+func newList() core.Executor {
 	executor := core.NewStaticExecuteSimple(
 		"list",
 		"",
