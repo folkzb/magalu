@@ -16,9 +16,8 @@ func configListFormatter(result core.Value) string {
 	writer.AppendHeader(table.Row{"Config", "Type", "Description"})
 
 	for name, schema := range configMap {
-		schema := schema.(*core.Schema)
-		t := schema.Type // TODO: handle complex types such as enum, array, object...
-		writer.AppendRow(table.Row{name, t, schema.Description})
+		schema := schema.(map[string]any)
+		writer.AppendRow(table.Row{name, schema["type"], schema["description"]})
 	}
 
 	return writer.Render()

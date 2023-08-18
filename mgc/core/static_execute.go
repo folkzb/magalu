@@ -73,13 +73,26 @@ func convertValue(value Value) (converted Value, err error) {
 		return result, err
 
 	case reflect.Map:
-		if resultMap, ok := value.(map[string]Value); ok {
-			return resultMap, nil
+		result := make(map[string]any, v.Len())
+		keys := v.MapKeys()
+		for _, key := range keys {
+			sub := v.MapIndex(key)
+			subConverted, err := convertValue(sub.Interface())
+			if err != nil {
+				return nil, err
+			}
+			keyConverted, err := convertValue(key.Interface())
+			if err != nil {
+				return nil, err
+			}
+			keyStr := new(string)
+			err = decode(keyConverted, keyStr)
+			if err != nil {
+				return nil, err
+			}
+			result[*keyStr] = subConverted
 		}
-		// convert whatever map to map[string]Value
-		resultMap := make(map[string]Value, v.Len())
-		err = decode(value, &resultMap)
-		return resultMap, err
+		return result, nil
 
 	case reflect.Struct:
 		resultMap := map[string]Value{}
@@ -93,8 +106,10 @@ func convertValue(value Value) (converted Value, err error) {
 
 func decode[T any, U any](value T, result *U) error {
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:  result,
-		TagName: "json",
+		Result:           result,
+		TagName:          "json",
+		WeaklyTypedInput: true,
+		DecodeHook:       mapstructure.RecursiveStructToMapHookFunc(),
 	})
 	if err != nil {
 		return err
