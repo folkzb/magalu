@@ -225,5 +225,7 @@ var _ Executor = (*StaticExecute)(nil)
 var schemaReflector *jsonschema.Reflector
 
 func init() {
-	schemaReflector = new(jsonschema.Reflector)
+	schemaReflector = &jsonschema.Reflector{
+		DoNotReference: true,
+	}
 }
