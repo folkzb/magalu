@@ -21,44 +21,40 @@ var _ resource.ResourceWithImportState = &MgcResource{}
 
 // MgcResource defines the resource implementation.
 type MgcResource struct {
-	sdk      *mgcSdk.Sdk
-	name     string
-	group    mgcSdk.Grouper // TODO: is this needed?
-	create   mgcSdk.Executor
-	read     mgcSdk.Executor
-	update   mgcSdk.Executor
-	delete   mgcSdk.Executor
-	atc      *map[string]attrConstraints
-	tfschema *schema.Schema
-}
-
-type attrConstraints struct {
-	isRequired                 bool
-	isOptional                 bool
-	isComputed                 bool
-	useStateForUnknown         bool
-	requiresReplaceWhenChanged bool
-}
-
-type attrValues struct {
-	readResult   *mgcSdk.Schema
-	create       *mgcSdk.Schema
-	createResult *mgcSdk.Schema
-	update       *mgcSdk.Schema
+	sdk        *mgcSdk.Sdk
+	name       string
+	group      mgcSdk.Grouper // TODO: is this needed?
+	create     mgcSdk.Executor
+	read       mgcSdk.Executor
+	update     mgcSdk.Executor
+	delete     mgcSdk.Executor
+	inputAttr  map[string]*attribute
+	outputAttr map[string]*attribute
+	tfschema   *schema.Schema
 }
 
 // TODO: remove once we translate directly from mgcSdk.Schema
 type VirtualMachineResourceModel struct {
-	Id       types.String `tfsdk:"id"`           // json:"id,omitempty"`
-	Name     types.String `tfsdk:"name"`         // json:"name"`
-	Type     types.String `tfsdk:"type"`         // json:"type"`
-	Image    types.String `tfsdk:"image"`        // json:"image"`
-	SSHKey   types.String `tfsdk:"key_name"`     // json:"key_name"`
-	AllocFip types.Bool   `tfsdk:"allocate_fip"` // json:"allocate_fip"
-	UserData types.String `tfsdk:"user_data"`    // json:"user_data"
-	// Net      types.List   `tfsdk:"network_interfaces"` // json:"network_interfaces"
-	Zone   types.String `tfsdk:"availability_zone"` // json:"availability_zone"
-	Status types.String `tfsdk:"status"`            // json:"status"`
+	Id              types.String `tfsdk:"id"`
+	InstanceID      types.String `tfsdk:"instance_id"`
+	Name            types.String `tfsdk:"name"`
+	Type            types.String `tfsdk:"type"`
+	DesiredImage    types.String `tfsdk:"desired_image"`
+	SSHKey          types.String `tfsdk:"key_name"`
+	AllocFip        types.Bool   `tfsdk:"allocate_fip"`
+	VCPUs           types.Int64  `tfsdk:"vcpus"`
+	Memory          types.Int64  `tfsdk:"memory"`
+	RootStorage     types.Int64  `tfsdk:"root_storage"`
+	UserData        types.String `tfsdk:"user_data"`
+	Zone            types.String `tfsdk:"availability_zone"`
+	CurrentStatus   types.String `tfsdk:"current_status"`
+	DesiredStatus   types.String `tfsdk:"desired_status"`
+	PowerState      types.Int64  `tfsdk:"power_state"`
+	PowerStateLabel types.String `tfsdk:"power_state_label"`
+	CreatedAt       types.String `tfsdk:"created_at"`
+	UpdatedAt       types.String `tfsdk:"updated_at"`
+	Error           types.String `tfsdk:"error"`
+	// Net      types.List   `tfsdk:"network_interfaces"`
 }
 
 func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -67,110 +63,19 @@ func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest
 
 func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	// TODO: Handle nullable values
-	// TODO: Move similar logic to another function
+	tflog.Debug(ctx, fmt.Sprintf("[resource] generating schema for `%s`", r.name))
+
 	if r.tfschema != nil {
 		resp.Schema = *r.tfschema
 		return
 	}
-	atc := map[string]attrConstraints{}
 
-	rrrs := r.read.ResultSchema()
-	rcps := r.create.ParametersSchema()
-	rcrs := r.create.ResultSchema()
-	rups := r.update.ParametersSchema()
-
-	// Those structures work as a set, except for creationAttr which defined if
-	// the attr is required or not
-	allAttr := map[string]*attrValues{}
-
-	tflog.Debug(ctx, fmt.Sprintf("[resource] generating schema for `%s`", r.name))
-
-	createAttrValues := map[string](*mgcSdk.Schema){}
-	createAttr := getRequiredOperationAttrs(ctx, r.name, rcps, &createAttrValues)
-
-	createResultAttrValues := map[string](*mgcSdk.Schema){}
-	createResultAttr := getOperationAttrs(ctx, r.name, rcrs, &createResultAttrValues)
-
-	readResultAttrValues := map[string](*mgcSdk.Schema){}
-	readResultAttr := getOperationAttrs(ctx, r.name, rrrs, &readResultAttrValues)
-
-	updateAttrValues := map[string](*mgcSdk.Schema){}
-	updateAttr := getOperationAttrs(ctx, r.name, rups, &updateAttrValues)
-
-	// Attribute constraints rules:
-	// - If on creation and update the user can update in-place
-	// - If only on creation result it is computed
-	// - If only in creation it can be optional or required and the user must replace when updating
-	// - If not on creation, but on creation result and update it is optional and computed
-	// - If only on update, it is optional and computed
-	for k := range allAttr {
-		_, rr := (*readResultAttr)[k]
-		_, cr := (*createResultAttr)[k]
-		req, c := (*createAttr)[k]
-		_, up := (*updateAttr)[k]
-
-		if c {
-			atc[k] = attrConstraints{
-				isRequired:                 req,
-				isOptional:                 !req,
-				isComputed:                 !req && rr, // If not required and present in read it can be computed
-				useStateForUnknown:         false,
-				requiresReplaceWhenChanged: !up,
-			}
-		} else if cr {
-			// Here the order matters since for example ID exists in the Update but
-			// we should only consider it if there is no return in the create
-			// function
-			atc[k] = attrConstraints{
-				isRequired:                 false,
-				isOptional:                 false,
-				isComputed:                 true,
-				useStateForUnknown:         true,
-				requiresReplaceWhenChanged: false, // This one is useless in this case
-			}
-		} else if up {
-			atc[k] = attrConstraints{
-				isRequired:                 false,
-				isOptional:                 true,
-				isComputed:                 true,
-				useStateForUnknown:         true,
-				requiresReplaceWhenChanged: false,
-			}
-		} else if rr {
-			atc[k] = attrConstraints{
-				isRequired:                 false,
-				isOptional:                 false,
-				isComputed:                 true,
-				useStateForUnknown:         true,
-				requiresReplaceWhenChanged: false, // This one is useless in this case
-			}
-		} else {
-			// TODO: Validate if there is other cases
-			resp.Diagnostics.AddError(
-				"[resource] unknown attribute constraints",
-				fmt.Sprintf("attribute `%s` - read result: %t - create: %t - create result: %t - update: %t", k, rr, c, cr, up),
-			)
-			return
-		}
-
-		at := atc[k]
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, k, at))
-	}
-	r.atc = &atc
+	tfsa, d := r.generateTFAttributes(ctx)
+	resp.Diagnostics.Append(d...)
 
 	tfs := schema.Schema{}
 	tfs.MarkdownDescription = r.name
-	tfs.Attributes = map[string]schema.Attribute{}
-	for k, v := range atc {
-		attr := sdkToTerraformAttribute(ctx, *allAttr[k], v, resp.Diagnostics)
-		if attr == nil {
-			// TODO: Error
-			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: unable to identify attribute `%s`", r.name, k))
-			continue
-		}
-		tfs.Attributes[k] = attr
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: inserted attribute `%s` to the schema", r.name, k))
-	}
+	tfs.Attributes = *tfsa
 
 	r.tfschema = &tfs
 	resp.Schema = tfs
@@ -190,7 +95,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	params := map[string]any{
 		"name":     data.Name.ValueString(),
 		"type":     data.Type.ValueString(),
-		"image":    data.Image.ValueString(),
+		"image":    data.DesiredImage.ValueString(),
 		"key_name": data.SSHKey.ValueString(),
 	}
 	// TODO: read from req.Config
@@ -282,12 +187,12 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	data.Id = types.StringValue(resultData["id"].(string))
-	data.Image = types.StringValue(resultData["image"].(map[string]any)["name"].(string))
+	data.InstanceID = types.StringValue(resultData["instance_id"].(string))
 	data.Name = types.StringValue(resultData["name"].(string))
-	data.SSHKey = types.StringValue(resultData["key_name"].(string))
 	data.Type = types.StringValue(resultData["instance_type"].(map[string]any)["name"].(string))
+	data.SSHKey = types.StringValue(resultData["key_name"].(string))
 	data.Zone = types.StringValue(resultData["availability_zone"].(string))
-	data.Status = types.StringValue(strings.ToLower(resultData["status"].(string)))
+	data.CurrentStatus = types.StringValue(strings.ToLower(resultData["status"].(string)))
 
 	// TODO: set resp.State directly from resultMap, without going to `data`(Model)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -304,7 +209,7 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	params := map[string]any{
 		"id":     data.Id.ValueString(),
-		"status": data.Status.ValueString(),
+		"status": data.DesiredStatus.ValueString(),
 	}
 	_, err := r.update.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
 	if err != nil {

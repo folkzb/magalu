@@ -6,6 +6,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework v1.3.4
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/stoewer/go-strcase v1.3.0
+	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	magalu.cloud/core v0.0.0-unversioned
 	magalu.cloud/sdk v0.0.0-unversioned
 )
@@ -55,7 +56,6 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.25.0 // indirect
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
 	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect

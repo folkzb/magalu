@@ -3,110 +3,238 @@ package provider
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/stoewer/go-strcase"
-	"magalu.cloud/core"
+	"golang.org/x/exp/slices"
 	mgcSdk "magalu.cloud/sdk"
 )
 
-func getRequiredOperationAttrs(ctx context.Context, r string, s *mgcSdk.Schema, attrValues *map[string]*mgcSdk.Schema) *map[string]bool {
-	attrReqMap := map[string]bool{}
-
-	// Check required values
-	for _, rqv := range s.Required {
-		rqvEsc := kebabToSnakeCase(rqv)
-		attrReqMap[rqvEsc] = true
-	}
-
-	// Check for optional attributes
-	for k, ref := range s.Properties {
-		kEsc := kebabToSnakeCase(k)
-		if attrValues != nil {
-			(*attrValues)[k] = (*mgcSdk.Schema)(ref.Value)
-		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` schema value added to create schema", r, k))
-
-		if ok := attrReqMap[kEsc]; !ok {
-			attrReqMap[kEsc] = false
-		}
-	}
-
-	return &attrReqMap
+type attribute struct {
+	name                       string
+	schema                     *mgcSdk.Schema
+	isID                       bool
+	isRequired                 bool
+	isOptional                 bool
+	isComputed                 bool
+	useStateForUnknown         bool
+	requiresReplaceWhenChanged bool
 }
 
-func getOperationAttrs(ctx context.Context, r string, s *mgcSdk.Schema, attrValues *map[string]*mgcSdk.Schema) *map[string]struct{} {
-	attrMap := map[string]struct{}{}
+var idRexp = regexp.MustCompile(`(^id$|_id$)`)
 
-	for k, ref := range s.Properties {
-		kEsc := kebabToSnakeCase(k)
-		if attrValues != nil {
-			(*attrValues)[k] = (*mgcSdk.Schema)(ref.Value)
-		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` schema value added to create result schema", r, k))
-		attrMap[kEsc] = struct{}{}
+func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics {
+	d := diag.Diagnostics{}
+	if len(r.inputAttr) != 0 {
+		return d
 	}
-	return &attrMap
+	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading input attributes", r.name))
+
+	input := map[string]*attribute{}
+	cschema := r.create.ParametersSchema()
+	for attr, ref := range cschema.Properties {
+		required := slices.Contains(cschema.Required, attr)
+		input[attr] = &attribute{
+			name:                       kebabToSnakeCase(attr),
+			schema:                     (*mgcSdk.Schema)(ref.Value),
+			isID:                       false,
+			isRequired:                 required,
+			isOptional:                 !required,
+			isComputed:                 !required && r.read.ResultSchema().Properties[attr] != nil, // If not required and present in read it can be computed
+			useStateForUnknown:         false,
+			requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[attr] == nil,
+		}
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[attr]))
+	}
+
+	uschema := r.update.ParametersSchema()
+	hasID := uschema.Properties["id"]
+	for attr, ref := range uschema.Properties {
+		if ca, ok := input[attr]; ok {
+			us := ref.Value
+			if !reflect.DeepEqual(ca.schema, (*mgcSdk.Schema)(us)) {
+				// Ignore update value in favor of create value (This is probably a bug with the API)
+				// TODO: Ignore default values when verifying equality
+				// TODO: Don't forget to add the path when using recursion
+				err := fmt.Sprintf("[resource] schema for `%s`: input attribute `%s` is different between create and update - create: %+v - update: %+v ", r.name, attr, ca.schema, us)
+				d.AddError("Attribute schema is different between create and update schemas", err)
+			}
+			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring already computed attribute `%s` ", r.name, attr))
+			continue
+		}
+
+		// TODO: Better handle ID attributions
+		// Consider other ID elements as ID if "id" doesn't exist
+		isID := false
+		if hasID != nil {
+			isID = attr == "id"
+		} else {
+			isID = idRexp.MatchString(attr)
+		}
+
+		required := slices.Contains(uschema.Required, attr)
+		input[attr] = &attribute{
+			name:                       kebabToSnakeCase(attr),
+			schema:                     (*mgcSdk.Schema)(ref.Value),
+			isID:                       isID,
+			isRequired:                 required && !isID,
+			isOptional:                 !required && !isID,
+			isComputed:                 !required || isID,
+			useStateForUnknown:         true,
+			requiresReplaceWhenChanged: false,
+		}
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[attr]))
+	}
+
+	r.inputAttr = input
+	return d
 }
 
-func getTerraformAttributeType(v *mgcSdk.Schema) attr.Type {
+func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics {
+	d := diag.Diagnostics{}
+	if len(r.outputAttr) != 0 {
+		return d
+	}
+	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading output attributes", r.name))
+
+	output := map[string]*attribute{}
+	crschema := r.create.ResultSchema()
+	hasID := crschema.Properties["id"]
+	for attr, ref := range crschema.Properties {
+		isID := false
+		if hasID != nil {
+			isID = attr == "id"
+		} else {
+			isID = idRexp.MatchString(attr)
+		}
+		output[attr] = &attribute{
+			name:                       kebabToSnakeCase(attr),
+			schema:                     (*mgcSdk.Schema)(ref.Value),
+			isID:                       isID,
+			isRequired:                 false,
+			isOptional:                 false,
+			isComputed:                 true,
+			useStateForUnknown:         true,
+			requiresReplaceWhenChanged: false, // This one is useless in this case
+		}
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[attr]))
+	}
+
+	for attr, ref := range r.read.ResultSchema().Properties {
+		if ra, ok := output[attr]; ok {
+			rs := ref.Value
+			if !reflect.DeepEqual(ra.schema, (*mgcSdk.Schema)(rs)) {
+				// Ignore read value in favor of create result value (This is probably a bug with the API)
+				err := fmt.Sprintf("[resource] schema for `%s`: output attribute `%s` is different between create result and read - create result: %+v - read: %+v ", r.name, attr, ra.schema, rs)
+				d.AddError("Attribute schema is different between create result and read schemas", err)
+			}
+			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring already computed attribute `%s` ", r.name, attr))
+			continue
+		}
+
+		output[attr] = &attribute{
+			name:                       kebabToSnakeCase(attr),
+			schema:                     (*mgcSdk.Schema)(ref.Value),
+			isID:                       false,
+			isRequired:                 false,
+			isOptional:                 false,
+			isComputed:                 true,
+			useStateForUnknown:         true,
+			requiresReplaceWhenChanged: false, // This one is useless in this case
+		}
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[attr]))
+	}
+
+	r.outputAttr = output
+	return d
+}
+
+func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]schema.Attribute, diag.Diagnostics) {
+	d := diag.Diagnostics{}
+	d.Append(r.readInputAttributes(ctx)...)
+	d.Append(r.readOutputAttributes(ctx)...)
+
+	tfa := map[string]schema.Attribute{}
+	for name, iattr := range r.inputAttr {
+		// Split attributes that differ between input/output
+		if oattr := r.outputAttr[name]; oattr != nil && !iattr.isID {
+			if !reflect.DeepEqual(oattr.schema, iattr.schema) {
+				os, _ := oattr.schema.MarshalJSON()
+				is, _ := iattr.schema.MarshalJSON()
+				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", r.name, name, is, os))
+				iattr.name = kebabToSnakeCase("desired_" + iattr.name)
+				oattr.name = kebabToSnakeCase("current_" + oattr.name)
+			}
+		}
+
+		at := sdkToTerraformAttribute(ctx, iattr, diag.Diagnostics{})
+		// TODO: This shouldn't happen after we handle complex types like slices and objects
+		// TODO: Remove debug log
+		if at == nil {
+			err := fmt.Sprintf("[resource] schema for `%s`: unable to create terraform attribute `%s` - data: %+v", r.name, iattr.name, iattr)
+			tflog.Debug(ctx, err)
+			d.AddError("Unknown attribute type", err)
+			continue
+		}
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: terraform input attribute `%s` created", r.name, iattr.name))
+		tfa[iattr.name] = at
+	}
+
+	for _, oattr := range r.outputAttr {
+		// If they don't differ and it's already created skip
+		if _, ok := tfa[oattr.name]; ok {
+			continue
+		}
+
+		at := sdkToTerraformAttribute(ctx, oattr, diag.Diagnostics{})
+		if at == nil {
+			// TODO: This shouldn't happen after we handle complex types like slices and objects
+			// TODO: Remove debug log
+			err := fmt.Sprintf("[resource] schema for `%s`: unable to create terraform attribute `%s` - data: %+v", r.name, oattr.name, oattr)
+			tflog.Debug(ctx, err)
+			d.AddError("Unknown attribute type", err)
+			continue
+		}
+		tfa[oattr.name] = at
+	}
+
+	return &tfa, d
+}
+
+func getAttributeType(v *mgcSdk.Schema) (string, diag.Diagnostics) {
+	d := diag.Diagnostics{}
 	// TODO: Do we need to handle enum values that are not string?
-	if v.Type == "" && len(v.Enum) != 0 {
-		return types.ListType{
-			ElemType: types.StringType,
+	if v.Type == "" {
+		if len(v.Enum) != 0 {
+			// TODO: How to handle different types? TF doesn't accept it
+			return "enum", d
 		}
 	}
 
-	switch t := v.Type; t {
-	case "string":
-		return types.StringType
-	case "number":
-		return types.Float64Type
-	case "integer":
-		return types.Int64Type
-	case "boolean":
-		return types.BoolType
-	case "array":
-		return types.ListType{
-			ElemType: getTerraformAttributeType((*core.Schema)(v.Items.Value)),
-		}
-	case "object":
-		// TODO: How to handle object?
-		return nil
-	default:
-		// TODO: This should never happen
-		return nil
-	}
+	return v.Type, d
 }
 
-func sdkToTerraformAttribute(ctx context.Context, values attrValues, c attrConstraints, diag diag.Diagnostics) schema.Attribute {
-	var value *mgcSdk.Schema = nil
-	if values.create != nil {
-		value = values.create
-	} else if values.createResult != nil {
-		value = values.createResult
-	} else if values.update != nil {
-		value = values.update
-	} else {
-		value = values.readResult
-	}
-	if value == nil {
-		tflog.Debug(ctx, "[resource] attribute not found in any schema")
+func sdkToTerraformAttribute(ctx context.Context, c *attribute, di diag.Diagnostics) schema.Attribute {
+	if c.schema == nil || c == nil {
+		di.AddError("Invalid attribute pointer", fmt.Sprintf("ERROR invalid pointer, attribute pointer is nil %v %v", c.schema, c))
 		return nil
 	}
 
-	switch t := getTerraformAttributeType(value); t {
-	case types.StringType:
+	value := c.schema
+	// TODO: Handle default values
+	t, d := getAttributeType(value)
+	di.Append(d...)
+	switch t {
+	case "string":
 		// I wanted to use an interface to define the modifiers regardless of the attr type
 		// but couldn't find the interface, it seems everything is redefined for each type
 		// https://github.com/hashicorp/terraform-plugin-framework/blob/main/internal/fwschema/fwxschema/attribute_plan_modification.go
@@ -124,7 +252,7 @@ func sdkToTerraformAttribute(ctx context.Context, values attrValues, c attrConst
 			Computed:      c.isComputed,
 			PlanModifiers: mod,
 		}
-	case types.NumberType:
+	case "number":
 		mod := []planmodifier.Number{}
 		if c.useStateForUnknown {
 			mod = append(mod, numberplanmodifier.UseStateForUnknown())
@@ -139,7 +267,7 @@ func sdkToTerraformAttribute(ctx context.Context, values attrValues, c attrConst
 			Computed:      c.isComputed,
 			PlanModifiers: mod,
 		}
-	case types.Int64Type:
+	case "integer":
 		mod := []planmodifier.Int64{}
 		if c.useStateForUnknown {
 			mod = append(mod, int64planmodifier.UseStateForUnknown())
@@ -154,7 +282,7 @@ func sdkToTerraformAttribute(ctx context.Context, values attrValues, c attrConst
 			Computed:      c.isComputed,
 			PlanModifiers: mod,
 		}
-	case types.BoolType:
+	case "boolean":
 		mod := []planmodifier.Bool{}
 		if c.useStateForUnknown {
 			mod = append(mod, boolplanmodifier.UseStateForUnknown())
@@ -169,27 +297,10 @@ func sdkToTerraformAttribute(ctx context.Context, values attrValues, c attrConst
 			Computed:      c.isComputed,
 			PlanModifiers: mod,
 		}
-	case types.ListType{}:
-		mod := []planmodifier.List{}
-		if c.useStateForUnknown {
-			mod = append(mod, listplanmodifier.UseStateForUnknown())
-		}
-		if c.requiresReplaceWhenChanged {
-			mod = append(mod, listplanmodifier.RequiresReplace())
-		}
-		et := getTerraformAttributeType((*mgcSdk.Schema)(value.Items.Value))
-		if et == nil {
-			// TODO: Error
-			return nil
-		}
-		return schema.ListAttribute{
-			Description:   value.Description,
-			Required:      c.isRequired,
-			Optional:      c.isOptional,
-			Computed:      c.isComputed,
-			PlanModifiers: mod,
-			ElementType:   et,
-		}
+	case "array":
+		return nil
+	case "object":
+		return nil
 	default:
 		return nil
 	}
