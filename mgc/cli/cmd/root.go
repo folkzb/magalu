@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -20,6 +21,8 @@ import (
 
 	flag "github.com/spf13/pflag"
 )
+
+const loggerConfigKey = "logging"
 
 // -- BEGIN: create Dynamic Argument Loaders --
 
@@ -411,6 +414,42 @@ func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	return pflag.NormalizedName(name)
 }
 
+func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
+	var zapConfig zap.Config
+
+	if loggerConfig := sdk.Config().Get(loggerConfigKey); loggerConfig != nil {
+		// TODO: test with config passed by CLI
+		if _, ok := loggerConfig.(map[string]any); !ok {
+			return fmt.Errorf("invalid logger config. Expected map and got %T", loggerConfig)
+		}
+
+		b, err := json.Marshal(loggerConfig)
+		if err != nil {
+			return fmt.Errorf("unable to marhsall logger config: %w", err)
+		}
+
+		if err := json.Unmarshal(b, &zapConfig); err != nil {
+			return fmt.Errorf("unable to unmarhsall logger config: %w", err)
+		}
+	} else {
+		zapConfig = zap.NewProductionConfig()
+	}
+
+	logger, err := zapConfig.Build()
+	if err != nil {
+		return fmt.Errorf("unable to build logger. Make sure a valid configuration was provided: %w", err)
+	}
+
+	filterOpt := zap.WrapCore(func(c zapcore.Core) zapcore.Core {
+		return zapfilter.NewFilteringCore(c, zapfilter.MustParseRules(filterRules))
+	})
+
+	logger = logger.WithOptions(filterOpt)
+	core.SetRootLogger(logger.Sugar())
+
+	return nil
+}
+
 func Execute() error {
 	rootCmd := &cobra.Command{
 		Use:     "cloud",
@@ -430,14 +469,10 @@ can generate a command line on-demand for Rest manipulation`,
 	addOutputFlag(rootCmd)
 	addLogFilterFlag(rootCmd)
 
-	filterRules := getLogFilterFlag(rootCmd)
-
-	filterOpt := zap.WrapCore(func(c zapcore.Core) zapcore.Core {
-		return zapfilter.NewFilteringCore(c, zapfilter.MustParseRules(filterRules))
-	})
-	core.InitLoggerFilter(filterOpt)
-
 	sdk := &mgcSdk.Sdk{}
+	if err := initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {
+		return err
+	}
 
 	rootCmd.AddCommand(newDumpTreeCmd(sdk))
 

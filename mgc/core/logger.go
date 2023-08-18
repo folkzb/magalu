@@ -14,23 +14,11 @@ func NewLogger[T any]() *zap.SugaredLogger {
 
 func RootLogger() *zap.SugaredLogger {
 	if rootLogger == nil {
-		initLoggerFromConfig(nil)
+		rootLogger = zap.Must(zap.NewProduction()).Sugar()
 	}
 	return rootLogger
 }
 
-func initLoggerFromConfig(config *zap.Config) {
-	// TODO: set Development/Production config based on env var
-	var logger *zap.Logger
-	if config == nil {
-		logger = zap.Must(zap.NewDevelopment())
-	} else {
-		logger = zap.Must(config.Build())
-	}
-
-	rootLogger = logger.Sugar().Named("mgc")
-}
-
-func InitLoggerFilter(opts ...zap.Option) {
-	rootLogger = RootLogger().WithOptions(opts...)
+func SetRootLogger(logger *zap.SugaredLogger) {
+	rootLogger = logger
 }
