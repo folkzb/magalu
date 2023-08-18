@@ -64,7 +64,7 @@ func convertValue(value Value) (converted Value, err error) {
 		for i := 0; i < count; i++ {
 			subVal := v.Index(i).Interface()
 			decoded := map[string]any{}
-			err := mapstructure.Decode(subVal, &decoded)
+			err := decode(subVal, &decoded)
 			if err != nil {
 				return nil, err
 			}
@@ -78,17 +78,28 @@ func convertValue(value Value) (converted Value, err error) {
 		}
 		// convert whatever map to map[string]Value
 		resultMap := make(map[string]Value, v.Len())
-		err = mapstructure.Decode(value, &resultMap)
+		err = decode(value, &resultMap)
 		return resultMap, err
 
 	case reflect.Struct:
 		resultMap := map[string]Value{}
-		err = mapstructure.Decode(value, &resultMap)
+		err = decode(value, &resultMap)
 		return resultMap, err
 
 	default:
 		return nil, fmt.Errorf("Unhandled value type: %s", v)
 	}
+}
+
+func decode[T any, U any](value T, result *U) error {
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Result:  result,
+		TagName: "json",
+	})
+	if err != nil {
+		return err
+	}
+	return decoder.Decode(value)
 }
 
 func schemaFromType[T any]() (*Schema, error) {
@@ -147,12 +158,12 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 			var paramsStruct ParamsT
 			var configsStruct ConfigsT
 
-			err := mapstructure.Decode(parameters, &paramsStruct)
+			err := decode(parameters, &paramsStruct)
 			if err != nil {
 				return nil, fmt.Errorf("error when decoding parameters. Did you forget to set 'mapstructure' struct flags?: %w", err)
 			}
 
-			err = mapstructure.Decode(configs, &configsStruct)
+			err = decode(configs, &configsStruct)
 			if err != nil {
 				return nil, fmt.Errorf("error when decoding configs. Did you forget to set 'mapstructure' struct flags?: %w", err)
 			}

@@ -64,11 +64,11 @@ type Auth struct {
 }
 
 type Tenant struct {
-	UUID        string `json:"uuid" mapstructure:"uuid"`
-	Name        string `json:"legal_name" mapstructure:"legal_name"`
-	Email       string `json:"email" mapstructure:"email"`
-	IsManaged   bool   `json:"is_managed" mapstructure:"is_managed"`
-	IsDelegated bool   `json:"is_delegated" mapstructure:"is_delegated"`
+	UUID        string `json:"uuid"`
+	Name        string `json:"legal_name"`
+	Email       string `json:"email"`
+	IsManaged   bool   `json:"is_managed"`
+	IsDelegated bool   `json:"is_delegated"`
 }
 
 type TenantResult struct {

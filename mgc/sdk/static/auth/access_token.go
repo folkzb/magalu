@@ -12,7 +12,7 @@ type accessTokenParameters struct {
 }
 
 type accessTokenResult struct {
-	AccessToken string `mapstructure:"accessToken,omitempty" json:"accessToken,omitempty"`
+	AccessToken string `json:"accessToken,omitempty"`
 }
 
 func newAccessToken() *core.StaticExecute {
