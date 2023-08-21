@@ -11,7 +11,7 @@ type tenantCurrentResult struct {
 	ID string
 }
 
-func newTenantCurrent() core.Executor {
+func newCurrent() core.Executor {
 	return core.NewStaticExecuteSimple(
 		"current",
 		"",

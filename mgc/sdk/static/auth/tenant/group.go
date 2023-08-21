@@ -2,15 +2,15 @@ package tenant
 
 import "magalu.cloud/core"
 
-func NewTenant() core.Grouper {
+func NewGroup() core.Grouper {
 	return core.NewStaticGroup(
 		"tenant",
 		"",
 		"Tenant-related operations",
 		[]core.Descriptor{
-			newTenantList(),
-			newTenantSelect(),
-			newTenantCurrent(),
+			newList(),
+			newSelect(),
+			newCurrent(),
 		},
 	)
 }

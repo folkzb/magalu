@@ -7,7 +7,7 @@ import (
 	"magalu.cloud/core"
 )
 
-func newTenantList() core.Executor {
+func newList() core.Executor {
 	return core.NewStaticExecuteSimple(
 		"list",
 		"",

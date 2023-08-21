@@ -11,7 +11,7 @@ type tenantSetParams struct {
 	ID string `jsonschema_description:"The UUID of the desired Tenant. To list all possible IDs, run auth tenant list"`
 }
 
-func newTenantSelect() core.Executor {
+func newSelect() core.Executor {
 	executor := core.NewStaticExecute(
 		"select",
 		"",
