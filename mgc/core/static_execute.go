@@ -55,44 +55,9 @@ func convertValue(value Value) (converted Value, err error) {
 		return convertValue(v.Elem().Interface())
 
 	case reflect.Array, reflect.Slice:
-		if result, ok := value.([]Value); ok {
-			return result, nil
-		}
-		// convert whatever map to []Value
-		count := v.Len()
-		result := make([]Value, count)
-		for i := 0; i < count; i++ {
-			subVal := v.Index(i)
-			subDecoded, err := convertValue(subVal.Interface())
-			if err != nil {
-				return nil, err
-			}
-			result[i] = subDecoded
-		}
-		return result, err
-
+		return convertArray(v)
 	case reflect.Map:
-		result := make(map[string]any, v.Len())
-		keys := v.MapKeys()
-		for _, key := range keys {
-			sub := v.MapIndex(key)
-			subConverted, err := convertValue(sub.Interface())
-			if err != nil {
-				return nil, err
-			}
-			keyConverted, err := convertValue(key.Interface())
-			if err != nil {
-				return nil, err
-			}
-			keyStr := new(string)
-			err = decode(keyConverted, keyStr)
-			if err != nil {
-				return nil, err
-			}
-			result[*keyStr] = subConverted
-		}
-		return result, nil
-
+		return convertMap(v)
 	case reflect.Struct:
 		resultMap := map[string]Value{}
 		err = decode(value, &resultMap)
@@ -101,6 +66,44 @@ func convertValue(value Value) (converted Value, err error) {
 	default:
 		return nil, fmt.Errorf("Unhandled value type: %s", v)
 	}
+}
+
+func convertArray(v reflect.Value) (Value, error) {
+	// convert whatever map to []Value
+	count := v.Len()
+	result := make([]Value, count)
+	for i := 0; i < count; i++ {
+		subVal := v.Index(i)
+		subConverted, err := convertValue(subVal.Interface())
+		if err != nil {
+			return nil, err
+		}
+		result[i] = subConverted
+	}
+	return result, nil
+}
+
+func convertMap(v reflect.Value) (Value, error) {
+	result := make(map[string]any, v.Len())
+	keys := v.MapKeys()
+	for _, key := range keys {
+		sub := v.MapIndex(key)
+		subConverted, err := convertValue(sub.Interface())
+		if err != nil {
+			return nil, err
+		}
+		keyConverted, err := convertValue(key.Interface())
+		if err != nil {
+			return nil, err
+		}
+		keyStr := new(string)
+		err = decode(keyConverted, keyStr)
+		if err != nil {
+			return nil, err
+		}
+		result[*keyStr] = subConverted
+	}
+	return result, nil
 }
 
 func decode[T any, U any](value T, result *U) error {
