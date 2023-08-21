@@ -61,7 +61,10 @@ func convertValue(value Value) (converted Value, err error) {
 	case reflect.Struct:
 		resultMap := map[string]Value{}
 		err = decode(value, &resultMap)
-		return resultMap, err
+		if err != nil {
+			return nil, err
+		}
+		return convertMap(reflect.ValueOf(resultMap))
 
 	default:
 		return nil, fmt.Errorf("Unhandled value type: %s", v)
