@@ -24,7 +24,7 @@ provider "magalu" {
 resource "magalu_virtual-machine_instances" "myvm" {
   name = "my-tf-vm"
   type = "cloud-bs1.xsmall"
-  image = "cloud-ubuntu-22.04 LTS"
+  desired_image = "cloud-ubuntu-22.04 LTS"
   key_name = "luizalabs-key"
   status = "active"
 }
