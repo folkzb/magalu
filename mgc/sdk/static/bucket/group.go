@@ -54,9 +54,9 @@ func NewGroup() core.Grouper {
 		"",
 		"Bucket operations for Object Storage API",
 		[]core.Descriptor{
-			newCreate(), // cmd: "create"
-			newDelete(), // cmd: "delete"
-			newList(),   // cmd: "list"
+			newCreate(),
+			newDelete(),
+			newList(),
 		},
 	)
 }
