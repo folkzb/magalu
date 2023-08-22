@@ -7,7 +7,7 @@ repos:
         name: spec-stats
         language: python
         entry: bash -c 'python3 ./scripts/spec_stats.py ./mgc/cli/openapis -o ./script-qa/spec_stats_dump.yml'
-        types: [python, yaml]
+        types_or: [python, yaml]
         stages: [pre-push]
         additional_dependencies: [jsonschema, PyYAML, typing, argparse]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
