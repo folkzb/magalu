@@ -62,13 +62,12 @@ func convertValue(value Value) (converted Value, err error) {
 		count := v.Len()
 		result := make([]Value, count)
 		for i := 0; i < count; i++ {
-			subVal := v.Index(i).Interface()
-			decoded := map[string]any{}
-			err := decode(subVal, &decoded)
+			subVal := v.Index(i)
+			subDecoded, err := convertValue(subVal.Interface())
 			if err != nil {
 				return nil, err
 			}
-			result[i] = decoded
+			result[i] = subDecoded
 		}
 		return result, err
 
