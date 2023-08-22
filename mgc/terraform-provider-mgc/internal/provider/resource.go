@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -142,30 +141,25 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Info(ctx, "reading vm instance resource information")
-	var data *VirtualMachineResourceModel
+	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s`", r.name))
 
-	// TODO: remove once we translate directly from mgcSdk.Schema
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	conv := converter{
+		ctx:  ctx,
+		diag: resp.Diagnostics,
+	}
 
+	// Make request
+	params := conv.convertTFMap(r.read.ParametersSchema(), r.inputAttr, req.State.Raw)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TODO: generate params from State, must ensure names match between ResultSchema + ParametersSchema
-
-	// Make request
-	tflog.Info(ctx, fmt.Sprintf("retrieving `instance` information for ID %s", data.Id.ValueString()))
-	params := map[string]any{
-		"id": data.Id.ValueString(),
-	}
-
+	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s` - request info with params: %+v", r.name, params))
 	result, err := r.read.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to get instance",
-			fmt.Sprintf("Fetching information for instance %v returned with error: %v", data.Id, err),
+			"Unable to get resource",
+			fmt.Sprintf("[resource] information for `%s` returned with error: %v", r.name, err),
 		)
 		return
 	}
@@ -177,25 +171,15 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	*/
 	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
 
-	resultData, ok := result.(map[string]any)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("Unable to convert %v to map.", result),
-		)
-		return
-	}
-
-	data.Id = types.StringValue(resultData["id"].(string))
-	data.InstanceID = types.StringValue(resultData["instance_id"].(string))
-	data.Name = types.StringValue(resultData["name"].(string))
-	data.Type = types.StringValue(resultData["instance_type"].(map[string]any)["name"].(string))
-	data.SSHKey = types.StringValue(resultData["key_name"].(string))
-	data.Zone = types.StringValue(resultData["availability_zone"].(string))
-	data.CurrentStatus = types.StringValue(strings.ToLower(resultData["status"].(string)))
-
-	// TODO: set resp.State directly from resultMap, without going to `data`(Model)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// resultMap, ok := result.(map[string]any)
+	// if !ok {
+	// 	resp.Diagnostics.AddError(
+	// 		"Operation output mismatch",
+	// 		fmt.Sprintf("Unable to convert %v to map.", result),
+	// 	)
+	// 	return
+	// }
+	// TODO: Handle Go to TF state merge
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

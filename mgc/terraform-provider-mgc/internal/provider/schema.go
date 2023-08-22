@@ -22,6 +22,7 @@ import (
 type attribute struct {
 	name                       string
 	schema                     *mgcSdk.Schema
+	attributes                 map[string]*attribute
 	isID                       bool
 	isRequired                 bool
 	isOptional                 bool
@@ -210,29 +211,25 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 	return &tfa, d
 }
 
-func getAttributeType(v *mgcSdk.Schema) (string, diag.Diagnostics) {
-	d := diag.Diagnostics{}
-	// TODO: Do we need to handle enum values that are not string?
-	if v.Type == "" {
-		if len(v.Enum) != 0 {
-			// TODO: How to handle different types? TF doesn't accept it
-			return "enum", d
-		}
-	}
-
-	return v.Type, d
-}
-
 func sdkToTerraformAttribute(ctx context.Context, c *attribute, di diag.Diagnostics) schema.Attribute {
 	if c.schema == nil || c == nil {
 		di.AddError("Invalid attribute pointer", fmt.Sprintf("ERROR invalid pointer, attribute pointer is nil %v %v", c.schema, c))
 		return nil
 	}
 
-	value := c.schema
+	conv := converter{
+		ctx:  ctx,
+		diag: di,
+	}
+
 	// TODO: Handle default values
-	t, d := getAttributeType(value)
-	di.Append(d...)
+
+	value := c.schema
+	t := conv.getAttributeType(value)
+	if di.HasError() {
+		return nil
+	}
+
 	switch t {
 	case "string":
 		// I wanted to use an interface to define the modifiers regardless of the attr type

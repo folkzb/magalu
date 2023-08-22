@@ -41,5 +41,6 @@ resource "magalu_virtual-machine_instances" "read_res_vm" {
   type = "cloud-bs1.xsmall"
   desired_image = "cloud-ubuntu-22.04 LTS"
   key_name = "luizalabs-key"
+  availability_zone = "br-ne-1a"
   desired_status = "shutoff"
 }
