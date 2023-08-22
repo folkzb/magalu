@@ -1,5 +1,5 @@
 block-storage.openapi:
-  computed_variables:
+  computed-variables:
     - POST /v0/volume_types:
         - '201':
             computed:
@@ -66,14 +66,14 @@ block-storage.openapi:
               - force
               - id
               - virtual_machine_id
-  missing_crud:
+  missing-crud:
     - volume-types:
         - delete
     - usage:
         - post
         - delete
 dbaas.openapi:
-  computed_variables:
+  computed-variables:
     - POST /v1/instances/{instance_id}/backups:
         - '202':
             computed:
@@ -205,17 +205,17 @@ dbaas.openapi:
               - updated_at
             non-computed:
               - replica_id
-  missing_crud:
+  missing-crud:
     - datastores:
         - post
         - delete
     - flavors:
         - post
         - delete
-  tagless_operations:
+  tagless-operations:
     - GET /v1/healthcheck
 mke.openapi:
-  computed_variables:
+  computed-variables:
     - POST /v0/clusters:
         - '201':
             computed:
@@ -255,7 +255,7 @@ mke.openapi:
               - replicas
               - tags
               - taints
-  missing_crud:
+  missing-crud:
     - info:
         - post
         - delete
@@ -263,7 +263,7 @@ mke.openapi:
     GET /v0/clusters/{cluster_id}/kubeconfig:
       - '200': application/yaml
 virtual-machine.openapi:
-  computed_variables:
+  computed-variables:
     - POST /v0/images:
         - '201':
             computed:
@@ -307,16 +307,16 @@ virtual-machine.openapi:
               - public_key
             non-computed:
               - keypair_name
-  missing_crud:
+  missing-crud:
     - usage:
         - post
         - delete
-  missing_operation_id:
+  missing-operation-id:
     - DELETE /v0/instances
-  tagless_operations:
+  tagless-operations:
     - DELETE /v0/instances
 vpc.openapi:
-  computed_variables:
+  computed-variables:
     - POST /v0/xaas/vpcs/{vpc_id}/ports:
         - '200':
             computed:
@@ -450,7 +450,7 @@ vpc.openapi:
               - nic_vpc_id
               - project_type
               - vpc_id
-  missing_crud:
+  missing-crud:
     - quotas:
         - post
         - delete

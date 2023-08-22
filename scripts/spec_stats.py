@@ -591,7 +591,7 @@ def fill_req_body_responses_diff_stats(
     dst: OAPIStats,
     resolve: Callable[[str], Any],
 ):
-    if not filterer.should_include("computed_variables"):
+    if not filterer.should_include("computed-variables"):
         return
     if not responses:
         return
@@ -613,7 +613,7 @@ def fill_req_body_responses_diff_stats(
             computed_vars[key].append(response_computed)
 
     if computed_vars[key]:
-        dst.setdefault("computed_variables", []).append(computed_vars)
+        dst.setdefault("computed-variables", []).append(computed_vars)
 
 
 def fill_responses_stats(
@@ -706,14 +706,14 @@ def fill_operation_stats(
         op.key(), req_body_or_ref, parameters, responses, dst, resolve
     )
 
-    if "operationId" not in op.op and filterer.should_include("missing_operation_id"):
-        dst.setdefault("missing_operation_id", []).append(op.key())
+    if "operationId" not in op.op and filterer.should_include("missing-operation-id"):
+        dst.setdefault("missing-operation-id", []).append(op.key())
 
     return
 
 
 def fill_missing_crud_stats(r: OAPIResource, crud_entries: List[str], dst: OAPIStats):
-    if not is_tag_crud(r.tag) or not filterer.should_include("missing_crud"):
+    if not is_tag_crud(r.tag) or not filterer.should_include("missing-crud"):
         return
 
     missing_crud: Dict[str, List[str]] = {}
@@ -722,7 +722,7 @@ def fill_missing_crud_stats(r: OAPIResource, crud_entries: List[str], dst: OAPIS
             missing_crud.setdefault(r.name, []).append(crud)
 
     if missing_crud:
-        dst.setdefault("missing_crud", []).append(missing_crud)
+        dst.setdefault("missing-crud", []).append(missing_crud)
 
 
 def fill_resource_stats(r: OAPIResource, dst: OAPIStats, resolve: Callable[[str], Any]):
@@ -796,8 +796,8 @@ def get_oapi_stats(o: OAPI) -> OAPIStats:
 
     for op in tagless_ops:
         fill_operation_stats(op, result, o.resolve)
-        if filterer.should_include("tagless_operations"):
-            result.setdefault("tagless_operations", []).append(op.key())
+        if filterer.should_include("tagless-operations"):
+            result.setdefault("tagless-operations", []).append(op.key())
 
     # TODO: Add stats for other fields
 
