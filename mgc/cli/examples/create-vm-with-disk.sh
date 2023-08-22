@@ -1,6 +1,9 @@
 #!/bin/bash
 set -xe
 
+# Customize trace output for commands to stand out
+PS4='\[\e[36m\]RAN COMMAND: \[\e[m\]'
+
 MGC_CLI=${MGC_CLI:-./mgc}
 
 # 1. Login

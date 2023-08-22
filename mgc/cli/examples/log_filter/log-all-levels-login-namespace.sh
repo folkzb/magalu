@@ -1,8 +1,8 @@
 #!/bin/bash
 set -xe
 
-# Color trace output for commands to stand out
-PS4='\[\e[36m\]\+ \[\e[m\]'
+# Customize trace output for commands to stand out
+PS4='\[\e[36m\]RAN COMMAND: \[\e[m\]'
 
 ALL_LEVELS_LOGIN_NAMESPACE="*:mgc.magalu.cloud/cli/auth.login"
 
