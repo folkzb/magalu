@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build newest provider
-go build
+go build || exit
 
 case $2 in
     plan)
