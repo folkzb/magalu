@@ -39,8 +39,17 @@ func getAllConfigs(ctx context.Context) (map[string]any, error) {
 		return nil, fmt.Errorf("Couldn't get Group from context")
 	}
 
-	configMap := map[string]any{}
-	_, err := core.VisitAllExecutors(root, []string{}, func(executor core.Executor, path []string) (bool, error) {
+	config := core.ConfigFromContext(ctx)
+	if root == nil {
+		return nil, fmt.Errorf("Couldn't get Config from context")
+	}
+
+	configMap, err := config.BuiltInConfigs()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get built in configs: %w", err)
+	}
+
+	_, err = core.VisitAllExecutors(root, []string{}, func(executor core.Executor, path []string) (bool, error) {
 		for name, ref := range executor.ConfigsSchema().Properties {
 			current := (*core.Schema)(ref.Value)
 

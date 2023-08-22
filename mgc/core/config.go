@@ -53,6 +53,19 @@ func NewConfig() *Config {
 	return &Config{path: path, fileName: CONFIG_FILE}
 }
 
+func (c *Config) BuiltInConfigs() (map[string]any, error) {
+	loggerConfigSchema, err := LoggerConfigSchema()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get logger config schema: %w", err)
+	}
+
+	configMap := map[string]any{
+		"logging": loggerConfigSchema,
+	}
+
+	return configMap, nil
+}
+
 func (c *Config) Get(key string) any {
 	return viper.Get(key)
 }
