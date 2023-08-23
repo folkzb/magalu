@@ -497,7 +497,7 @@ def traverse_all_subschemas(
 
     if schema.get("additionalProperties"):
         s: JSONSchema = get(schema["additionalProperties"], resolve)
-        traverse_all_subschemas(path + "|additionalProperties|", s, resolve, visit)
+        traverse_all_subschemas(path + "|additional_properties|", s, resolve, visit)
 
     for s_or_ref in schema.get("oneOf", []):
         s = get(s_or_ref, resolve)
