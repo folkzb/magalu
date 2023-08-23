@@ -455,6 +455,13 @@ def is_tag_crud(tag: Optional[OAPITagInfo]) -> bool:
     return True
 
 
+def is_snake_case(s: str) -> bool:
+    if any(char.isupper() for char in s):
+        return False
+
+    return "-" not in s
+
+
 def get(obj_or_ref: Any | OAPIReferenceObject, resolve: Callable[[str], Any]) -> Any:
     if "$ref" in obj_or_ref:
         return resolve(obj_or_ref["$ref"])
@@ -629,8 +636,19 @@ def fill_responses_stats(
                     op.key(), []
                 ).append({code: t})
 
+            s: JSONSchema = get(c.get("schema", {}), resolve)
+
+            if filterer.should_include("non-snakecase-values"):
+
+                def visit_schema(path: str, schema: JSONSchema):
+                    if not is_snake_case(path):
+                        dst.setdefault("non-snakecase-values", {}).setdefault(
+                            op.key(), {}
+                        ).setdefault("responses", {}).setdefault(t, []).append(path)
+
+                traverse_all_subschemas("", s, resolve, visit_schema)
+
             if filterer.should_include("mixed-enums"):
-                s: JSONSchema = get(c.get("schema", {}), resolve)
                 if s:
                     mixed = get_schema_mixed_enums("", s, resolve)
                     if mixed:
@@ -655,8 +673,21 @@ def fill_req_body_stats(
             if t != "application/json" and filterer.should_include("non-json-requests"):
                 dst.setdefault("non-json-requests", []).append({op.key(): t})
 
+            s: JSONSchema = get(c.get("schema", {}), resolve)
+
+            if filterer.should_include("non-snakecase-values"):
+
+                def visit_schema(path: str, schema: JSONSchema):
+                    if not is_snake_case(path):
+                        dst.setdefault("non-snakecase-values", {}).setdefault(
+                            op.key(), {}
+                        ).setdefault("request-bodies", {}).setdefault(t, []).append(
+                            path
+                        )
+
+                traverse_all_subschemas("", s, resolve, visit_schema)
+
             if filterer.should_include("mixed-enums"):
-                s: JSONSchema = get(c.get("schema", {}), resolve)
                 if s:
                     mixed = get_schema_mixed_enums("", s, resolve)
                     if mixed:
@@ -674,6 +705,12 @@ def fill_parameters_stats(
     for p_or_ref in parameters:
         p: OAPIParameterObject = get(p_or_ref, resolve)
         name = p.get("name", "")
+        if filterer.should_include("non-snakecase-values"):
+            if not is_snake_case(name):
+                dst.setdefault("non-snakecase-values", {}).setdefault(
+                    op.key(), {}
+                ).setdefault("parameters", []).append(name)
+
         s: JSONSchema = get(p.get("schema", {}), resolve)
         if s:
             if filterer.should_include("mixed-enums"):
@@ -682,6 +719,16 @@ def fill_parameters_stats(
                     dst.setdefault("mixed-enums", {}).setdefault(
                         op.key(), {}
                     ).setdefault("parameters", []).append(mixed)
+
+            if filterer.should_include("non-snakecase-values"):
+
+                def visit_schema(path: str, schema: JSONSchema):
+                    if not is_snake_case(path):
+                        dst.setdefault("non-snakecase-values", {}).setdefault(
+                            op.key(), {}
+                        ).setdefault("parameters", []).append(path)
+
+                traverse_all_subschemas("", s, resolve, visit_schema)
 
 
 def fill_operation_stats(
@@ -783,6 +830,17 @@ def fill_resources(o: OAPI, dst: Dict[str, OAPIResource]) -> List[OAPIOperationI
     return tagless_ops
 
 
+def fill_server_stats(
+    sv: OAPIServerObject, dst: OAPIStats, resolve: Callable[[str], Any]
+):
+    for name, v in sv.get("variables", {}).items():
+        if filterer.should_include("non-snakecase-values"):
+            if not is_snake_case(name):
+                dst.setdefault("non-snakecase-values", {}).setdefault(
+                    sv.get("url", ""), {}
+                ).setdefault("variables", []).append(name)
+
+
 def get_oapi_stats(o: OAPI) -> OAPIStats:
     result: OAPIStats = {}
     resources: Dict[str, OAPIResource] = {}
@@ -795,6 +853,9 @@ def get_oapi_stats(o: OAPI) -> OAPIStats:
         fill_operation_stats(op, result, o.resolve)
         if filterer.should_include("tagless-operations"):
             result.setdefault("tagless-operations", []).append(op.key())
+
+    for sv in o.obj.get("servers", []):
+        fill_server_stats(sv, result, o.resolve)
 
     # TODO: Add stats for other fields
 

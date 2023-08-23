@@ -262,6 +262,27 @@ mke.openapi:
   non-json-responses:
     GET /v0/clusters/{cluster_id}/kubeconfig:
       - '200': application/yaml
+  non-snakecase-values:
+    GET /v0/clusters/{cluster_id}:
+      responses:
+        application/json:
+          - .controlplane.securityGroups
+    GET /v0/clusters/{cluster_id}/kubeconfig:
+      responses:
+        application/yaml:
+          - .fileName
+    GET /v0/clusters/{cluster_id}/node_pools/{node_pool_id}:
+      responses:
+        application/json:
+          - .securityGroups
+    PATCH /v0/clusters/{cluster_id}/node_pools/{node_pool_id}:
+      responses:
+        application/json:
+          - .securityGroups
+    POST /v0/clusters/{cluster_id}/node_pools:
+      responses:
+        application/json:
+          - .securityGroups
 virtual-machine.openapi:
   computed-variables:
     - POST /v0/images:
