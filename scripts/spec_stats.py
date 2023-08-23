@@ -469,7 +469,7 @@ def get_schema_field_names(
     t = schema.get("type")
     if t == "object":
         for pn, p in schema.get("properties", {}).items():
-            ps = get(p, resolve)
+            ps: JSONSchema = get(p, resolve)
             pt = ps.get("type")
             if pt == "object":
                 # Flatten out all sub fields as if top-level
@@ -495,11 +495,11 @@ def traverse_all_subschemas(
     visit(path, get(schema, resolve))
 
     for pn, p_or_ref in schema.get("properties", {}).items():
-        p = get(p_or_ref, resolve)
+        p: JSONSchema = get(p_or_ref, resolve)
         traverse_all_subschemas(path + "." + pn, p, resolve, visit)
 
     if schema.get("additionalProperties"):
-        s = get(schema["additionalProperties"], resolve)
+        s: JSONSchema = get(schema["additionalProperties"], resolve)
         traverse_all_subschemas(path + "|additionalProperties|", s, resolve, visit)
 
     for s_or_ref in schema.get("oneOf", []):
@@ -549,27 +549,27 @@ def fill_req_body_response_diff_stats(
 ):
     def collect_content_fields(contents: Mapping[str, OAPIMediaTypeObject]) -> Set[str]:
         for c in contents.values():
-            schema = get(c["schema"], resolve)
+            schema: JSONSchema = get(c["schema"], resolve)
             if schema:
                 return get_schema_field_names(schema, resolve)
         return set()
 
     all_params = set()
     if rb_or_ref and rb_or_ref.get("content"):
-        rb = get(rb_or_ref, resolve)
+        rb: OAPIRequestBodyObject = get(rb_or_ref, resolve)
         all_params.update(collect_content_fields(rb["content"]))
 
     for p_or_ref in parameters:
-        p = get(p_or_ref, resolve)
+        p: OAPIParameterObject = get(p_or_ref, resolve)
         if p.get("name"):
             all_params.update({p["name"]})
         else:
-            ps = get(p.get("schema", {}), resolve)
+            ps: JSONSchema = get(p.get("schema", {}), resolve)
             all_params.update(get_schema_field_names(ps, resolve))
 
     all_response_fields = set()
     if resp_or_ref and resp_or_ref.get("content"):
-        response = get(resp_or_ref, resolve)
+        response: OAPIResponseObject = get(resp_or_ref, resolve)
         all_response_fields.update(collect_content_fields(response["content"]))
 
     computed = all_response_fields.difference(all_params)
@@ -623,7 +623,7 @@ def fill_responses_stats(
     resolve: Callable[[str], Any],
 ):
     for code, r_or_ref in responses.items():
-        r = get(r_or_ref, resolve)
+        r: OAPIResponseObject = get(r_or_ref, resolve)
         for t, c in r.get("content", {}).items():
             if t != "application/json" and filterer.should_include(
                 "non-json-responses"
@@ -633,7 +633,7 @@ def fill_responses_stats(
                 ).append({code: t})
 
             if filterer.should_include("mixed-enums"):
-                s = get(c.get("schema", {}), resolve)
+                s: JSONSchema = get(c.get("schema", {}), resolve)
                 if s:
                     mixed = get_schema_mixed_enums("", s, resolve)
                     if mixed:
@@ -650,7 +650,7 @@ def fill_req_body_stats(
     dst: OAPIStats,
     resolve: Callable[[str], Any],
 ):
-    r = get(rb_or_ref, resolve)
+    r: OAPIRequestBodyObject = get(rb_or_ref, resolve)
     content = r.get("content", {})
 
     if content:
@@ -659,7 +659,7 @@ def fill_req_body_stats(
                 dst.setdefault("non-json-requests", []).append({op.key(): t})
 
             if filterer.should_include("mixed-enums"):
-                s = get(c.get("schema", {}), resolve)
+                s: JSONSchema = get(c.get("schema", {}), resolve)
                 if s:
                     mixed = get_schema_mixed_enums("", s, resolve)
                     if mixed:
@@ -675,9 +675,9 @@ def fill_parameters_stats(
     resolve: Callable[[str], Any],
 ):
     for p_or_ref in parameters:
-        p = get(p_or_ref, resolve)
+        p: OAPIParameterObject = get(p_or_ref, resolve)
         name = p.get("name", "")
-        s = get(p.get("schema", {}), resolve)
+        s: JSONSchema = get(p.get("schema", {}), resolve)
         if s:
             if filterer.should_include("mixed-enums"):
                 mixed = get_schema_mixed_enums(name, s, resolve)
