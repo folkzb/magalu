@@ -489,9 +489,6 @@ def traverse_all_subschemas(
     resolve: Callable[[str], Any],
     visit: Callable[[str, JSONSchema], None],
 ):
-    if not path:
-        path = schema.get("title") or "$"
-
     visit(path, get(schema, resolve))
 
     for pn, p_or_ref in schema.get("properties", {}).items():
