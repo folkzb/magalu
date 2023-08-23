@@ -17,46 +17,38 @@ func newSet() *core.StaticExecute {
 		"set",
 		"",
 		"Sets a specific config value",
-		func(ctx context.Context, parameter configSetParams, _ struct{}) (result core.Value, err error) {
+		func(ctx context.Context, parameter configSetParams, _ struct{}) (core.Value, error) {
 			config := core.ConfigFromContext(ctx)
 			if config == nil {
 				return nil, fmt.Errorf("unable to retrieve system configuration")
 			}
 
-			root := core.GrouperFromContext(ctx)
-			if root == nil {
-				return nil, fmt.Errorf("unable to retrieve Group from context")
+			allConfigs, err := getAllConfigs(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("error when getting possible configs: %w", err)
 			}
 
-			finished, err := core.VisitAllExecutors(root, []string{}, func(executor core.Executor, path []string) (bool, error) {
-				for name, ref := range executor.ConfigsSchema().Properties {
-					if name == parameter.Key {
-						schema := ref.Value
-
-						if err := schema.VisitJSON(parameter.Value); err != nil {
-							return false, err
-						}
-
-						if err := config.Set(parameter.Key, parameter.Value); err != nil {
-							return false, err
-						}
-
-						return false, nil
-					}
-				}
-
-				return true, nil
-			})
-
-			if finished {
+			schema, ok := allConfigs[parameter.Key]
+			if !ok {
 				return nil, fmt.Errorf("no config %s found", parameter.Key)
 			}
 
-			if err != nil {
+			s, ok := schema.(*core.Schema)
+			if !ok {
+				// Should never happen
+				return nil, fmt.Errorf("no config %s found", parameter.Key)
+			}
+
+			if err := s.VisitJSON(parameter.Value); err != nil {
+				return nil, err
+			}
+
+			if err := config.Set(parameter.Key, parameter.Value); err != nil {
 				return nil, err
 			}
 
 			return parameter.Value, nil
+
 		},
 	)
 }

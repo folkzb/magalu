@@ -28,37 +28,38 @@ func newList() core.Executor {
 		"list",
 		"",
 		"list all possible configs",
-		func(ctx context.Context) (result map[string]any, err error) {
-			root := core.GrouperFromContext(ctx)
-			if root == nil {
-				return nil, fmt.Errorf("Couldn't get Group from context")
-			}
+		getAllConfigs,
+	)
+	return core.NewExecuteFormat(executor, configListFormatter)
+}
 
-			configMap := map[string]any{}
-			_, err = core.VisitAllExecutors(root, []string{}, func(executor core.Executor, path []string) (bool, error) {
-				for name, ref := range executor.ConfigsSchema().Properties {
-					current := (*core.Schema)(ref.Value)
+func getAllConfigs(ctx context.Context) (map[string]any, error) {
+	root := core.GrouperFromContext(ctx)
+	if root == nil {
+		return nil, fmt.Errorf("Couldn't get Group from context")
+	}
 
-					if existing, ok := configMap[name]; ok {
-						if !reflect.DeepEqual(existing, current) {
-							fmt.Printf("WARNING: unhandled diverging config at %v %v: %v != %v\n", path, name, existing, current)
-						}
+	configMap := map[string]any{}
+	_, err := core.VisitAllExecutors(root, []string{}, func(executor core.Executor, path []string) (bool, error) {
+		for name, ref := range executor.ConfigsSchema().Properties {
+			current := (*core.Schema)(ref.Value)
 
-						continue
-					}
-					configMap[name] = current
+			if existing, ok := configMap[name]; ok {
+				if !reflect.DeepEqual(existing, current) {
+					fmt.Printf("WARNING: unhandled diverging config at %v %v: %v != %v\n", path, name, existing, current)
 				}
 
-				return true, nil
-			})
-
-			if err != nil {
-				return nil, err
+				continue
 			}
+			configMap[name] = current
+		}
 
-			return configMap, nil
-		},
-	)
+		return true, nil
+	})
 
-	return core.NewExecuteFormat(executor, configListFormatter)
+	if err != nil {
+		return nil, err
+	}
+
+	return configMap, nil
 }
