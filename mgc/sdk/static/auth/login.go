@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/browser"
 	"go.uber.org/zap"
 	"magalu.cloud/core"
+	"magalu.cloud/core/auth"
 )
 
 type authResult struct {
@@ -53,7 +54,7 @@ func newLogin() *core.StaticExecute {
 		"",
 		"authenticate with magalu cloud",
 		func(ctx context.Context, parameters loginParameters, _ struct{}) (output *loginResult, err error) {
-			auth := core.AuthFromContext(ctx)
+			auth := auth.FromContext(ctx)
 			if auth == nil {
 				return nil, fmt.Errorf("unable to retrieve authentication configuration")
 			}
@@ -101,7 +102,7 @@ func newLogin() *core.StaticExecute {
 	)
 }
 
-func startCallbackServer(auth *core.Auth) (resultChan chan *authResult, cancel func(), err error) {
+func startCallbackServer(auth *auth.Auth) (resultChan chan *authResult, cancel func(), err error) {
 	callbackUrl, err := url.Parse(auth.RedirectUri())
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid redirect_uri configuration")
@@ -200,7 +201,7 @@ func startCallbackServer(auth *core.Auth) (resultChan chan *authResult, cancel f
 }
 
 type callbackHandler struct {
-	auth *core.Auth
+	auth *auth.Auth
 	path string
 	done chan *authResult
 }

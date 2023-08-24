@@ -124,7 +124,7 @@ func decode[T any, U any](value T, result *U) error {
 
 func schemaFromType[T any]() (*Schema, error) {
 	t := new(T)
-	s, err := toCoreSchema(schemaReflector.Reflect(t))
+	s, err := ToCoreSchema(schemaReflector.Reflect(t))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create JSON Schema for type '%T': %w", t, err)
 	}

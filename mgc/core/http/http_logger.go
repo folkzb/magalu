@@ -1,4 +1,4 @@
-package core
+package http
 
 import (
 	"errors"
@@ -8,24 +8,17 @@ import (
 	"go.uber.org/zap"
 )
 
-func logger() *zap.SugaredLogger {
-	if pkgLogger == nil {
-		pkgLogger = initPkgLogger().Named("http")
-	}
-	return pkgLogger
-}
-
-type HttpClientLogger struct {
+type ClientLogger struct {
 	Transport http.RoundTripper
 }
 
-func NewDefaultHttpClientLogger(transport http.RoundTripper) *HttpClientLogger {
-	return &HttpClientLogger{
+func NewDefaultClientLogger(transport http.RoundTripper) *ClientLogger {
+	return &ClientLogger{
 		Transport: transport,
 	}
 }
 
-func (t *HttpClientLogger) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *ClientLogger) RoundTrip(req *http.Request) (*http.Response, error) {
 	log := logger().With("method", req.Method, "url", req.URL, "protocol", req.Proto)
 	t.logRequest(log, req)
 
@@ -40,12 +33,12 @@ func (t *HttpClientLogger) RoundTrip(req *http.Request) (*http.Response, error) 
 	return resp, err
 }
 
-func (t *HttpClientLogger) logRequest(log *zap.SugaredLogger, req *http.Request) {
+func (t *ClientLogger) logRequest(log *zap.SugaredLogger, req *http.Request) {
 	log.Debugw("will send HTTP request")
 	log.Debugw("request header info", "headers", LogHttpHeaders(req.Header))
 }
 
-func (t *HttpClientLogger) logResponse(log *zap.SugaredLogger, req *http.Request, resp *http.Response, err error) {
+func (t *ClientLogger) logResponse(log *zap.SugaredLogger, req *http.Request, resp *http.Response, err error) {
 	if resp == nil {
 		if err == nil {
 			err = errors.New("Unknown Error")

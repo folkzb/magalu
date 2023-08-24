@@ -1,4 +1,4 @@
-package core
+package config
 
 import (
 	"context"
@@ -8,9 +8,15 @@ import (
 	"os"
 	"path"
 
+	"magalu.cloud/core/logger"
+
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
+
+// contextKey is an unexported type for keys defined in this package.
+// This prevents collisions with keys defined in other packages.
+type contextKey string
 
 type Config struct {
 	path     string
@@ -27,16 +33,16 @@ const (
 
 var configKey contextKey = "magalu.cloud/core/Config"
 
-func NewConfigContext(parent context.Context, config *Config) context.Context {
+func NewContext(parent context.Context, config *Config) context.Context {
 	return context.WithValue(parent, configKey, config)
 }
 
-func ConfigFromContext(ctx context.Context) *Config {
+func FromContext(ctx context.Context) *Config {
 	c, _ := ctx.Value(configKey).(*Config)
 	return c
 }
 
-func NewConfig() *Config {
+func New() *Config {
 	path, err := configFilePath()
 	if err != nil {
 		// TODO: when it's done, use logger instead
@@ -54,7 +60,7 @@ func NewConfig() *Config {
 }
 
 func (c *Config) BuiltInConfigs() (map[string]any, error) {
-	loggerConfigSchema, err := LoggerConfigSchema()
+	loggerConfigSchema, err := logger.ConfigSchema()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger config schema: %w", err)
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/invopop/jsonschema"
 )
 
-func toCoreSchema(s *jsonschema.Schema) (*Schema, error) {
+func ToCoreSchema(s *jsonschema.Schema) (*Schema, error) {
 	if s == nil {
 		return nil, fmt.Errorf("invalid jsonschema.Schema passed to 'toCoreSchema' function")
 	}

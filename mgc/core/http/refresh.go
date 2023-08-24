@@ -1,4 +1,4 @@
-package core
+package http
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 
 type refreshTokenFn func() (string, error)
 
-type HttpRefreshLogger struct {
+type RefreshLogger struct {
 	Transport http.RoundTripper
 	RefreshFn refreshTokenFn
 }
 
-func NewDefaultHttpRefreshLogger(t http.RoundTripper, rFn refreshTokenFn) *HttpRefreshLogger {
-	return &HttpRefreshLogger{
+func NewDefaultRefreshLogger(t http.RoundTripper, rFn refreshTokenFn) *RefreshLogger {
+	return &RefreshLogger{
 		Transport: t,
 		RefreshFn: rFn,
 	}
@@ -48,7 +48,7 @@ func DefaultBackoff(min, max time.Duration, attemptNum int, resp *http.Response)
 	return sleep
 }
 
-func (t *HttpRefreshLogger) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *RefreshLogger) RoundTrip(req *http.Request) (*http.Response, error) {
 	transport := t.Transport
 	if transport == nil {
 		transport = http.DefaultTransport

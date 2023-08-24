@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/auth"
 )
 
 type tenantSetParams struct {
@@ -24,8 +25,8 @@ func newSelect() core.Executor {
 	})
 }
 
-func selectTenant(ctx context.Context, params tenantSetParams, _ struct{}) (*core.TenantAuth, error) {
-	auth := core.AuthFromContext(ctx)
+func selectTenant(ctx context.Context, params tenantSetParams, _ struct{}) (*auth.TenantAuth, error) {
+	auth := auth.FromContext(ctx)
 	if auth == nil {
 		return nil, fmt.Errorf("Unable to get auth from context")
 	}

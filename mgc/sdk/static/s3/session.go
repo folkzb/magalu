@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"magalu.cloud/core"
+	corehttp "magalu.cloud/core/http"
 )
 
 var excludedHeaders = HeaderMap{
@@ -25,7 +26,7 @@ func BuildHost(region string) string {
 }
 
 func SendRequest(ctx context.Context, req *http.Request, accessKey, secretKey string, out core.Value) (core.Value, error) {
-	httpClient := core.HttpClientFromContext(ctx)
+	httpClient := corehttp.ClientFromContext(ctx)
 	if httpClient == nil {
 		return nil, fmt.Errorf("couldn't get http client from context")
 	}
@@ -39,5 +40,5 @@ func SendRequest(ctx context.Context, req *http.Request, accessKey, secretKey st
 		return nil, fmt.Errorf("error to send HTTP request: %w", err)
 	}
 
-	return core.UnwrapResponse(res, out)
+	return corehttp.UnwrapResponse(res, out)
 }

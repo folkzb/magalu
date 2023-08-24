@@ -1,9 +1,11 @@
-package core
+package auth
 
 import (
 	"fmt"
 	"os"
 	"path"
+
+	"magalu.cloud/core/config"
 )
 
 func buildMGCFilePath(filename string) (string, error) {
@@ -16,7 +18,7 @@ func buildMGCFilePath(filename string) (string, error) {
 		dir = path.Join(dir, ".config")
 	}
 	mgcDir := path.Join(dir, "mgc")
-	if err := os.MkdirAll(mgcDir, FILE_PERMISSION); err != nil {
+	if err := os.MkdirAll(mgcDir, config.FILE_PERMISSION); err != nil {
 		return "", fmt.Errorf("Error creating mgc dir at %s: %w", mgcDir, err)
 	}
 

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"go.uber.org/zap"
-	"magalu.cloud/core"
+	coreLogger "magalu.cloud/core/logger"
 )
 
 type pkgSymbol struct{}
@@ -11,7 +11,7 @@ var loggerInstance *zap.SugaredLogger
 
 func logger() *zap.SugaredLogger {
 	if loggerInstance == nil {
-		loggerInstance = core.NewLogger[pkgSymbol]()
+		loggerInstance = coreLogger.New[pkgSymbol]()
 	}
 	return loggerInstance
 }

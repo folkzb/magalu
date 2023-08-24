@@ -1,4 +1,4 @@
-package core
+package http
 
 import (
 	"context"
@@ -11,24 +11,38 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
+	"magalu.cloud/core"
 )
+
+// contextKey is an unexported type for keys defined in this package.
+// This prevents collisions with keys defined in other packages.
+type contextKey string
 
 var httpClientKey contextKey = "magalu.cloud/core/Transport"
 
-type HttpClient struct {
+func logger() *zap.SugaredLogger {
+	if pkgLogger == nil {
+		pkgLogger = initPkgLogger().Named("http")
+	}
+	return pkgLogger
+}
+
+type Client struct {
 	http.Client
 }
 
-func NewHttpClient(transport http.RoundTripper) *HttpClient {
-	return &HttpClient{http.Client{Transport: transport}}
+func NewClient(transport http.RoundTripper) *Client {
+	return &Client{http.Client{Transport: transport}}
 }
 
-func NewHttpClientContext(parent context.Context, client *HttpClient) context.Context {
+func NewClientContext(parent context.Context, client *Client) context.Context {
 	return context.WithValue(parent, httpClientKey, client)
 }
 
-func HttpClientFromContext(context context.Context) *HttpClient {
-	client, ok := context.Value(httpClientKey).(*HttpClient)
+func ClientFromContext(context context.Context) *Client {
+	client, ok := context.Value(httpClientKey).(*Client)
 	if !ok {
 		log.Printf("Error casting ctx %s to *HttpClient", httpClientKey)
 		return nil
@@ -36,7 +50,7 @@ func HttpClientFromContext(context context.Context) *HttpClient {
 	return client
 }
 
-func DecodeJSON(resp *http.Response, data Value) error {
+func DecodeJSON(resp *http.Response, data core.Value) error {
 	defer resp.Body.Close()
 	err := json.NewDecoder(resp.Body).Decode(data)
 	if err != nil {
@@ -45,7 +59,7 @@ func DecodeJSON(resp *http.Response, data Value) error {
 	return nil
 }
 
-func DecodeXML(resp *http.Response, data Value) error {
+func DecodeXML(resp *http.Response, data core.Value) error {
 	defer resp.Body.Close()
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -112,7 +126,7 @@ func NewHttpErrorFromResponse(resp *http.Response) error {
 	}
 }
 
-func UnwrapResponse(resp *http.Response, data Value) (Value, error) {
+func UnwrapResponse(resp *http.Response, data core.Value) (core.Value, error) {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, NewHttpErrorFromResponse(resp)
 	}

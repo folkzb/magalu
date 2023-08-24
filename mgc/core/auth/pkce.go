@@ -1,4 +1,4 @@
-package core
+package auth
 
 import (
 	"crypto/sha256"

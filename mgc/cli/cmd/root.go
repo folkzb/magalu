@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"magalu.cloud/core"
+	mgcLogger "magalu.cloud/core/logger"
 	mgcSdk "magalu.cloud/sdk"
 	"moul.io/zapfilter"
 
@@ -128,7 +128,7 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 
 		if slices.Contains(schema.Required, name) {
 			if err := cobra.MarkFlagRequired(flags, name); err != nil {
-				log.Printf("Error marking %s as required: %s\n", name, err)
+				logger().Warnf("Error marking %s as required: %s\n", name, err)
 			}
 		}
 	}
@@ -215,7 +215,7 @@ func handleReaderResult(reader io.Reader, outFile string) (err error) {
 func handleJsonResult(exec mgcSdk.Executor, result core.Value, output string) (err error) {
 	err = exec.ResultSchema().VisitJSON(result)
 	if err != nil {
-		log.Printf("Warning: result validation failed: %v", err)
+		logger().Warnf("Warning: result validation failed: %v", err)
 	}
 
 	name, options := parseOutputFormatter(output)
@@ -445,7 +445,7 @@ func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
 	})
 
 	logger = logger.WithOptions(filterOpt)
-	core.SetRootLogger(logger.Sugar())
+	mgcLogger.SetRoot(logger.Sugar())
 
 	return nil
 }

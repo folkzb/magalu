@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/auth"
 )
 
 type accessTokenParameters struct {
@@ -21,7 +22,7 @@ func newAccessToken() *core.StaticExecute {
 		"",
 		"Retrieve the access token to use the APIs",
 		func(ctx context.Context, parameters accessTokenParameters, _ struct{}) (output *accessTokenResult, err error) {
-			auth := core.AuthFromContext(ctx)
+			auth := auth.FromContext(ctx)
 			if auth == nil {
 				return nil, fmt.Errorf("unable to retrieve authentication configuration")
 			}

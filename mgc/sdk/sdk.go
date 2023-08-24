@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/auth"
+	"magalu.cloud/core/config"
+	coreHttp "magalu.cloud/core/http"
 	"magalu.cloud/sdk/openapi"
 	"magalu.cloud/sdk/static"
 )
@@ -20,21 +23,21 @@ type Executor = core.Executor
 type Grouper = core.Grouper
 type Schema = core.Schema
 type Value = core.Value
-type Config = core.Config
+type Config = config.Config
 
 type Sdk struct {
 	group      *core.MergeGroup
-	auth       *core.Auth
-	httpClient *core.HttpClient
-	config     *core.Config
+	auth       *auth.Auth
+	httpClient *coreHttp.Client
+	config     *config.Config
 }
 
 type contextKey string
 
 var ctxWrappedKey contextKey = "magalu.cloud/sdk/SdkWrapped"
 
-// TODO: Change config with build tags or from environment
-var config core.AuthConfig = core.AuthConfig{
+// TODO: Change authConfig with build tags or from environment
+var authConfig auth.Config = auth.Config{
 	ClientId:         "cw9qpaUl2nBiC8PVjNFN5jZeb2vTd_1S5cYs1FhEXh0",
 	RedirectUri:      "http://localhost:8095/callback",
 	LoginUrl:         "https://id.magalu.com/login",
@@ -91,10 +94,10 @@ func (o *Sdk) WrapContext(ctx context.Context) context.Context {
 	}
 
 	ctx = core.NewGrouperContext(ctx, o.Group())
-	ctx = core.NewAuthContext(ctx, o.Auth())
+	ctx = auth.NewContext(ctx, o.Auth())
 	// Needs to be called after Auth, because we need the refresh token callback for the interceptor
-	ctx = core.NewHttpClientContext(ctx, o.HttpClient())
-	ctx = core.NewConfigContext(ctx, o.Config())
+	ctx = coreHttp.NewClientContext(ctx, o.HttpClient())
+	ctx = config.NewContext(ctx, o.Config())
 
 	ctx = context.WithValue(ctx, ctxWrappedKey, true)
 	return ctx
@@ -150,33 +153,33 @@ func newHttpTransport() http.RoundTripper {
 		IdleConnTimeout:    30 * time.Second,
 		DisableCompression: true,
 	}
-	transport = core.NewDefaultHttpClientLogger(transport)
+	transport = coreHttp.NewDefaultClientLogger(transport)
 	return transport
 }
 
 func (o *Sdk) addHttpRefreshHandler(t http.RoundTripper) http.RoundTripper {
-	return core.NewDefaultHttpRefreshLogger(t, o.Auth().RefreshAccessToken)
+	return coreHttp.NewDefaultRefreshLogger(t, o.Auth().RefreshAccessToken)
 }
 
-func (o *Sdk) Auth() *core.Auth {
+func (o *Sdk) Auth() *auth.Auth {
 	if o.auth == nil {
 		client := &http.Client{Transport: newHttpTransport()}
-		o.auth = core.NewAuth(config, client)
+		o.auth = auth.New(authConfig, client)
 	}
 	return o.auth
 }
 
-func (o *Sdk) HttpClient() *core.HttpClient {
+func (o *Sdk) HttpClient() *coreHttp.Client {
 	if o.httpClient == nil {
 		transport := o.addHttpRefreshHandler(newHttpTransport())
-		o.httpClient = core.NewHttpClient(transport)
+		o.httpClient = coreHttp.NewClient(transport)
 	}
 	return o.httpClient
 }
 
-func (o *Sdk) Config() *core.Config {
+func (o *Sdk) Config() *config.Config {
 	if o.config == nil {
-		o.config = core.NewConfig()
+		o.config = config.New()
 	}
 	return o.config
 }

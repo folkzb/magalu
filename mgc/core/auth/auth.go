@@ -1,4 +1,4 @@
-package core
+package auth
 
 import (
 	"bytes"
@@ -10,6 +10,9 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"magalu.cloud/core"
+	coreHttp "magalu.cloud/core/http"
 
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
@@ -24,6 +27,10 @@ const (
 	authFilename    = "auth.yaml"
 )
 
+// contextKey is an unexported type for keys defined in this package.
+// This prevents collisions with keys defined in other packages.
+type contextKey string
+
 type LoginResult struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -33,14 +40,14 @@ type validationResult struct {
 	Active bool `json:"active"`
 }
 
-type AuthConfigResult struct {
+type ConfigResult struct {
 	AccessToken     string `yaml:"access_token"`
 	RefreshToken    string `yaml:"refresh_token"`
 	CurrentTenantID string `yaml:"current_tenant_id"`
 	CurrentEnv      string `yaml:"current_environment"` // ignored - used just for compatibility
 }
 
-type AuthConfig struct {
+type Config struct {
 	ClientId         string
 	RedirectUri      string
 	LoginUrl         string
@@ -54,7 +61,7 @@ type AuthConfig struct {
 
 type Auth struct {
 	httpClient      *http.Client
-	config          AuthConfig
+	config          Config
 	configFile      string
 	accessToken     string
 	refreshToken    string
@@ -82,11 +89,11 @@ type tenantResult struct {
 }
 
 type TenantAuth struct {
-	ID           string   `json:"id"`
-	CreatedAt    Time     `json:"created_at"`
-	AccessToken  string   `json:"access_token"`
-	RefreshToken string   `json:"refresh_token"`
-	Scope        []string `json:"scope"`
+	ID           string    `json:"id"`
+	CreatedAt    core.Time `json:"created_at"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	Scope        []string  `json:"scope"`
 }
 
 var authKey contextKey = "magalu.cloud/core/Authentication"
@@ -99,15 +106,15 @@ func authLogger() *zap.SugaredLogger {
 	return authLoggerInstance
 }
 
-func NewAuthContext(parentCtx context.Context, auth *Auth) context.Context {
+func NewContext(parentCtx context.Context, auth *Auth) context.Context {
 	return context.WithValue(parentCtx, authKey, auth)
 }
-func AuthFromContext(ctx context.Context) *Auth {
+func FromContext(ctx context.Context) *Auth {
 	a, _ := ctx.Value(authKey).(*Auth)
 	return a
 }
 
-func NewAuth(config AuthConfig, client *http.Client) *Auth {
+func New(config Config, client *http.Client) *Auth {
 	filePath, err := buildMGCFilePath(authFilename)
 	if err != nil {
 		authLogger().Warnw("unable to locate auth configuration file", "error", err)
@@ -167,7 +174,7 @@ func (o *Auth) SetTokens(token *LoginResult) error {
 		return err
 	}
 	if authResult == nil {
-		authResult = &AuthConfigResult{}
+		authResult = &ConfigResult{}
 	}
 
 	authResult.AccessToken = token.AccessToken
@@ -187,7 +194,7 @@ func (o *Auth) SetCurrentTenantID(id string) error {
 }
 
 func (o *Auth) writeCurrentConfig() error {
-	authResult := &AuthConfigResult{}
+	authResult := &ConfigResult{}
 	authResult.AccessToken = o.accessToken
 	authResult.RefreshToken = o.refreshToken
 	authResult.CurrentTenantID = o.currentTenantId
@@ -286,7 +293,7 @@ func (o *Auth) ValidateAccessToken() error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return NewHttpErrorFromResponse(resp)
+		return coreHttp.NewHttpErrorFromResponse(resp)
 	}
 
 	var result validationResult
@@ -324,7 +331,7 @@ func (o *Auth) RefreshAccessToken() (string, error) {
 	return o.accessToken, nil
 }
 
-func (o *Auth) doRefreshAccessToken() (Value, error) {
+func (o *Auth) doRefreshAccessToken() (core.Value, error) {
 	r, err := o.newRefreshAccessTokenRequest()
 	if err != nil {
 		return "", err
@@ -333,14 +340,14 @@ func (o *Auth) doRefreshAccessToken() (Value, error) {
 	for i := 0; i < maxRetryCount; i++ {
 		resp, err := o.httpClient.Do(r)
 		if err != nil {
-			wait := DefaultBackoff(minRetryWait, maxRetryCount, i, resp)
+			wait := coreHttp.DefaultBackoff(minRetryWait, maxRetryCount, i, resp)
 			fmt.Printf("Refresh access token failed, retrying in %s\n", wait)
 			time.Sleep(wait)
 			continue
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			return "", NewHttpErrorFromResponse(resp)
+			return "", coreHttp.NewHttpErrorFromResponse(resp)
 		}
 
 		var result LoginResult
@@ -375,8 +382,8 @@ func (o *Auth) newRefreshAccessTokenRequest() (*http.Request, error) {
 	return r, err
 }
 
-func (o *Auth) readConfigFile() (*AuthConfigResult, error) {
-	var result AuthConfigResult
+func (o *Auth) readConfigFile() (*ConfigResult, error) {
+	var result ConfigResult
 
 	authFile, err := os.ReadFile(o.configFile)
 	if err != nil {
@@ -393,7 +400,7 @@ func (o *Auth) readConfigFile() (*AuthConfigResult, error) {
 	return &result, nil
 }
 
-func (o *Auth) writeConfigFile(result *AuthConfigResult) error {
+func (o *Auth) writeConfigFile(result *ConfigResult) error {
 	yamlData, err := yaml.Marshal(result)
 	if err != nil {
 		authLogger().Warn("unable to persist auth data", "error", err)
@@ -426,7 +433,7 @@ func (o *Auth) ListTenants() ([]*Tenant, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, NewHttpErrorFromResponse(resp)
+		return nil, coreHttp.NewHttpErrorFromResponse(resp)
 	}
 
 	defer resp.Body.Close()
@@ -467,7 +474,7 @@ func (o *Auth) SelectTenant(id string) (*TenantAuth, error) {
 	defer r.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, NewHttpErrorFromResponse(resp)
+		return nil, coreHttp.NewHttpErrorFromResponse(resp)
 	}
 
 	payload := &tenantResult{}
@@ -487,7 +494,7 @@ func (o *Auth) SelectTenant(id string) (*TenantAuth, error) {
 		return nil, err
 	}
 
-	createdAt := Time(time.Unix(int64(payload.CreatedAt), 0))
+	createdAt := core.Time(time.Unix(int64(payload.CreatedAt), 0))
 
 	return &TenantAuth{
 		AccessToken:  payload.AccessToken,

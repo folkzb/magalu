@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/config"
 )
 
 type configDeleteParams struct {
@@ -17,7 +18,7 @@ func newDelete() *core.StaticExecute {
 		"",
 		"Deletes a key from config file",
 		func(ctx context.Context, parameter configDeleteParams, _ struct{}) (result core.Value, err error) {
-			config := core.ConfigFromContext(ctx)
+			config := config.FromContext(ctx)
 			if config == nil {
 				return nil, fmt.Errorf("unable to retrieve system configuration")
 			}

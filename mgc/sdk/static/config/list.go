@@ -7,6 +7,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"magalu.cloud/core"
+	"magalu.cloud/core/config"
 )
 
 func configListFormatter(result core.Value) string {
@@ -39,7 +40,7 @@ func getAllConfigs(ctx context.Context) (map[string]any, error) {
 		return nil, fmt.Errorf("Couldn't get Group from context")
 	}
 
-	config := core.ConfigFromContext(ctx)
+	config := config.FromContext(ctx)
 	if root == nil {
 		return nil, fmt.Errorf("Couldn't get Config from context")
 	}

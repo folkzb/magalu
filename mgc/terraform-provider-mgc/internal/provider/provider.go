@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"magalu.cloud/core"
+	"magalu.cloud/core/auth"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -88,7 +89,7 @@ func (p *MgcProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		p.attrErr(resp, "api_key")
 		return
 	}
-	_ = p.sdk.Auth().SetTokens(&core.LoginResult{AccessToken: apiKey})
+	_ = p.sdk.Auth().SetTokens(&auth.LoginResult{AccessToken: apiKey})
 
 	if len(config.Apis) == 0 {
 		p.attrErr(resp, "apis")

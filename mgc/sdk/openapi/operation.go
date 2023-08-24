@@ -18,6 +18,8 @@ import (
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
+	"magalu.cloud/core/auth"
+	coreHttp "magalu.cloud/core/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"golang.org/x/exp/slices"
@@ -951,7 +953,7 @@ func isAuthForced(parameters map[string]core.Value) bool {
 	return b
 }
 
-func (o *Operation) setSecurityHeader(paramValues map[string]core.Value, req *http.Request, auth *core.Auth) (err error) {
+func (o *Operation) setSecurityHeader(paramValues map[string]core.Value, req *http.Request, auth *auth.Auth) (err error) {
 	if isAuthForced(paramValues) || o.needsAuth() {
 		// TODO: review needsAuth() usage if more security schemes are used. Assuming oauth2 + bearer
 		// If others are to be used, loop using forEachSecurityRequirement()
@@ -968,7 +970,7 @@ func (o *Operation) setSecurityHeader(paramValues map[string]core.Value, req *ht
 
 // TODO: refactor this closer to the client that comes from a context
 func (o *Operation) createHttpRequest(
-	auth *core.Auth,
+	auth *auth.Auth,
 	paramValues map[string]core.Value,
 	configs map[string]core.Value,
 ) (*http.Request, error) {
@@ -991,7 +993,7 @@ func (o *Operation) createHttpRequest(
 
 func (o *Operation) getResponseValue(resp *http.Response) (core.Value, error) {
 	var data core.Value
-	return core.UnwrapResponse(resp, data)
+	return coreHttp.UnwrapResponse(resp, data)
 }
 
 func (o *Operation) Execute(
@@ -1003,12 +1005,12 @@ func (o *Operation) Execute(
 	parametersSchema := o.ParametersSchema()
 	configsSchema := o.ConfigsSchema()
 
-	client := core.HttpClientFromContext(ctx)
+	client := coreHttp.ClientFromContext(ctx)
 	if client == nil {
 		return nil, fmt.Errorf("No HTTP client configured")
 	}
 
-	auth := core.AuthFromContext(ctx)
+	auth := auth.FromContext(ctx)
 	if auth == nil {
 		return nil, fmt.Errorf("No Auth configured")
 	}
@@ -1032,7 +1034,7 @@ func (o *Operation) Execute(
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, core.NewHttpErrorFromResponse(resp)
+		return nil, coreHttp.NewHttpErrorFromResponse(resp)
 	}
 
 	return o.getResponseValue(resp)

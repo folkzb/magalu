@@ -1,9 +1,11 @@
-package core
+package logger
 
 import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"magalu.cloud/core"
 
 	"github.com/invopop/jsonschema"
 	"go.uber.org/zap"
@@ -12,24 +14,24 @@ import (
 
 var rootLogger *zap.SugaredLogger
 
-func NewLogger[T any]() *zap.SugaredLogger {
-	return RootLogger().Named(reflect.TypeOf(new(T)).Elem().PkgPath())
+func New[T any]() *zap.SugaredLogger {
+	return Root().Named(reflect.TypeOf(new(T)).Elem().PkgPath())
 }
 
-func RootLogger() *zap.SugaredLogger {
+func Root() *zap.SugaredLogger {
 	if rootLogger == nil {
 		rootLogger = zap.Must(zap.NewProduction()).Sugar()
 	}
 	return rootLogger
 }
 
-func SetRootLogger(logger *zap.SugaredLogger) {
+func SetRoot(logger *zap.SugaredLogger) {
 	rootLogger = logger
 }
 
-func LoggerConfigSchema() (*Schema, error) {
+func ConfigSchema() (*core.Schema, error) {
 	reflector := jsonschema.Reflector{DoNotReference: true, Mapper: zapMapper}
-	s, err := toCoreSchema(reflector.Reflect(zap.Config{}))
+	s, err := core.ToCoreSchema(reflector.Reflect(zap.Config{}))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create JSON Schema for type '%T': %w", zap.Config{}, err)
 	}

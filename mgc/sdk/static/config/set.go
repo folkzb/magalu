@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/config"
 )
 
 type configSetParams struct {
@@ -18,7 +19,7 @@ func newSet() *core.StaticExecute {
 		"",
 		"Sets a specific config value",
 		func(ctx context.Context, parameter configSetParams, _ struct{}) (core.Value, error) {
-			config := core.ConfigFromContext(ctx)
+			config := config.FromContext(ctx)
 			if config == nil {
 				return nil, fmt.Errorf("unable to retrieve system configuration")
 			}

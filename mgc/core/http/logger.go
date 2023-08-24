@@ -1,8 +1,8 @@
-package auth
+package http
 
 import (
 	"go.uber.org/zap"
-	"magalu.cloud/core/logger"
+	logger1 "magalu.cloud/core/logger"
 )
 
 type pkgSymbol struct{}
@@ -11,7 +11,7 @@ var pkgLogger *zap.SugaredLogger
 
 func initPkgLogger() *zap.SugaredLogger {
 	if pkgLogger == nil {
-		pkgLogger = logger.New[pkgSymbol]()
+		pkgLogger = logger1.New[pkgSymbol]()
 	}
 	return pkgLogger
 }
