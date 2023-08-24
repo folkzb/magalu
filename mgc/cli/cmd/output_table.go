@@ -307,8 +307,8 @@ func columnsFromMap(v reflect.Value, prefix string) ([]*column, error) {
 			JSONPath: fmt.Sprintf("%s[%q]", prefix, keyStr),
 		}
 	}
-	slices.SortFunc(result, func(l *column, r *column) bool {
-		return l.Name < r.Name
+	slices.SortFunc(result, func(l *column, r *column) int {
+		return strings.Compare(l.Name, r.Name)
 	})
 	return result, nil
 }
