@@ -10,6 +10,11 @@ repos:
         types_or: [python, yaml]
         stages: [pre-push]
         additional_dependencies: [jsonschema, PyYAML, typing, argparse]
+    -   id: go-test
+        name: go-test
+        language: golang
+        entry: bash -c 'find . -name go.mod -execdir go test ./... \; | grep -zqv FAIL'
+        stages: [pre-push]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
