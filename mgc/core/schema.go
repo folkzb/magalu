@@ -26,6 +26,10 @@ func NewNumberSchema() *Schema {
 	return (*Schema)(openapi3.NewFloat64Schema())
 }
 
+func NewIntegerSchema() *Schema {
+	return (*Schema)(openapi3.NewInt64Schema())
+}
+
 func NewBooleanSchema() *Schema {
 	return (*Schema)(openapi3.NewBoolSchema())
 }
