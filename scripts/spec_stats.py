@@ -387,6 +387,15 @@ CRUD_OP_KEYS = ["get", "put", "patch", "post", "delete"]
 # Patch and Post are optional, as they can be mimicked with a Delete->Create op
 REQUIRED_CRUD_OP_KEYS = ["get", "post", "delete"]
 
+COMPUTED_VARIABLES = "computed-variables"
+MISSING_CRUD = "missing-crud"
+MISSING_OPERATION_ID = "missing-operation-id"
+MIXED_ENUMS = "mixed-enums"
+NON_JSON_REQUESTS = "non-json-requests"
+NON_JSON_RESPONSES = "non-json-responses"
+NON_SNAKECASE_VALUES = "non-snakecase-values"
+TAGLESS_OPERATIONS = "tagless-operations"
+
 
 class Filterer:
     filters: List[str]
@@ -595,7 +604,7 @@ def fill_req_body_responses_diff_stats(
     dst: OAPIStats,
     resolve: Callable[[str], Any],
 ):
-    if not filterer.should_include("computed-variables"):
+    if not filterer.should_include(COMPUTED_VARIABLES):
         return
     if not responses:
         return
@@ -617,7 +626,7 @@ def fill_req_body_responses_diff_stats(
             computed_vars[key].append(response_computed)
 
     if computed_vars[key]:
-        dst.setdefault("computed-variables", []).append(computed_vars)
+        dst.setdefault(COMPUTED_VARIABLES, []).append(computed_vars)
 
 
 def fill_responses_stats(
@@ -629,30 +638,28 @@ def fill_responses_stats(
     for code, r_or_ref in responses.items():
         r: OAPIResponseObject = get(r_or_ref, resolve)
         for t, c in r.get("content", {}).items():
-            if t != "application/json" and filterer.should_include(
-                "non-json-responses"
-            ):
-                dst.setdefault("non-json-responses", {}).setdefault(
-                    op.key(), []
-                ).append({code: t})
+            if t != "application/json" and filterer.should_include(NON_JSON_RESPONSES):
+                dst.setdefault(NON_JSON_RESPONSES, {}).setdefault(op.key(), []).append(
+                    {code: t}
+                )
 
             s: JSONSchema = get(c.get("schema", {}), resolve)
 
-            if filterer.should_include("non-snakecase-values"):
+            if filterer.should_include(NON_SNAKECASE_VALUES):
 
                 def visit_schema(path: str, schema: JSONSchema):
                     if not is_snake_case(path):
-                        dst.setdefault("non-snakecase-values", {}).setdefault(
+                        dst.setdefault(NON_SNAKECASE_VALUES, {}).setdefault(
                             op.key(), {}
                         ).setdefault("responses", {}).setdefault(t, []).append(path)
 
                 traverse_all_subschemas("", s, resolve, visit_schema)
 
-            if filterer.should_include("mixed-enums"):
+            if filterer.should_include(MIXED_ENUMS):
                 if s:
                     mixed = get_schema_mixed_enums("", s, resolve)
                     if mixed:
-                        dst.setdefault("mixed-enums", {}).setdefault(
+                        dst.setdefault(MIXED_ENUMS, {}).setdefault(
                             op.key(), {}
                         ).setdefault("responses", {}).setdefault("content", {})[
                             t
@@ -670,16 +677,16 @@ def fill_req_body_stats(
 
     if content:
         for t, c in content.items():
-            if t != "application/json" and filterer.should_include("non-json-requests"):
-                dst.setdefault("non-json-requests", []).append({op.key(): t})
+            if t != "application/json" and filterer.should_include(NON_JSON_REQUESTS):
+                dst.setdefault(NON_JSON_REQUESTS, []).append({op.key(): t})
 
             s: JSONSchema = get(c.get("schema", {}), resolve)
 
-            if filterer.should_include("non-snakecase-values"):
+            if filterer.should_include(NON_SNAKECASE_VALUES):
 
                 def visit_schema(path: str, schema: JSONSchema):
                     if not is_snake_case(path):
-                        dst.setdefault("non-snakecase-values", {}).setdefault(
+                        dst.setdefault(NON_SNAKECASE_VALUES, {}).setdefault(
                             op.key(), {}
                         ).setdefault("request-bodies", {}).setdefault(t, []).append(
                             path
@@ -687,11 +694,11 @@ def fill_req_body_stats(
 
                 traverse_all_subschemas("", s, resolve, visit_schema)
 
-            if filterer.should_include("mixed-enums"):
+            if filterer.should_include(MIXED_ENUMS):
                 if s:
                     mixed = get_schema_mixed_enums("", s, resolve)
                     if mixed:
-                        dst.setdefault("mixed-enums", {}).setdefault(
+                        dst.setdefault(MIXED_ENUMS, {}).setdefault(
                             op.key(), {}
                         ).setdefault("request-bodies", {})[t] = mixed
 
@@ -705,26 +712,26 @@ def fill_parameters_stats(
     for p_or_ref in parameters:
         p: OAPIParameterObject = get(p_or_ref, resolve)
         name = p.get("name", "")
-        if filterer.should_include("non-snakecase-values"):
+        if filterer.should_include(NON_SNAKECASE_VALUES):
             if not is_snake_case(name):
-                dst.setdefault("non-snakecase-values", {}).setdefault(
+                dst.setdefault(NON_SNAKECASE_VALUES, {}).setdefault(
                     op.key(), {}
                 ).setdefault("parameters", []).append(name)
 
         s: JSONSchema = get(p.get("schema", {}), resolve)
         if s:
-            if filterer.should_include("mixed-enums"):
+            if filterer.should_include(MIXED_ENUMS):
                 mixed = get_schema_mixed_enums(name, s, resolve)
                 if mixed:
-                    dst.setdefault("mixed-enums", {}).setdefault(
-                        op.key(), {}
-                    ).setdefault("parameters", []).append(mixed)
+                    dst.setdefault(MIXED_ENUMS, {}).setdefault(op.key(), {}).setdefault(
+                        "parameters", []
+                    ).append(mixed)
 
-            if filterer.should_include("non-snakecase-values"):
+            if filterer.should_include(NON_SNAKECASE_VALUES):
 
                 def visit_schema(path: str, schema: JSONSchema):
                     if not is_snake_case(path):
-                        dst.setdefault("non-snakecase-values", {}).setdefault(
+                        dst.setdefault(NON_SNAKECASE_VALUES, {}).setdefault(
                             op.key(), {}
                         ).setdefault("parameters", []).append(path)
 
@@ -750,14 +757,14 @@ def fill_operation_stats(
         op.key(), req_body_or_ref, parameters, responses, dst, resolve
     )
 
-    if "operationId" not in op.op and filterer.should_include("missing-operation-id"):
-        dst.setdefault("missing-operation-id", []).append(op.key())
+    if "operationId" not in op.op and filterer.should_include(MISSING_OPERATION_ID):
+        dst.setdefault(MISSING_OPERATION_ID, []).append(op.key())
 
     return
 
 
 def fill_missing_crud_stats(r: OAPIResource, crud_entries: List[str], dst: OAPIStats):
-    if not is_tag_crud(r.tag) or not filterer.should_include("missing-crud"):
+    if not is_tag_crud(r.tag) or not filterer.should_include(MISSING_CRUD):
         return
 
     missing_crud: Dict[str, List[str]] = {}
@@ -766,7 +773,7 @@ def fill_missing_crud_stats(r: OAPIResource, crud_entries: List[str], dst: OAPIS
             missing_crud.setdefault(r.name, []).append(crud)
 
     if missing_crud:
-        dst.setdefault("missing-crud", []).append(missing_crud)
+        dst.setdefault(MISSING_CRUD, []).append(missing_crud)
 
 
 def fill_resource_stats(r: OAPIResource, dst: OAPIStats, resolve: Callable[[str], Any]):
@@ -834,9 +841,9 @@ def fill_server_stats(
     sv: OAPIServerObject, dst: OAPIStats, resolve: Callable[[str], Any]
 ):
     for name, v in sv.get("variables", {}).items():
-        if filterer.should_include("non-snakecase-values"):
+        if filterer.should_include(NON_SNAKECASE_VALUES):
             if not is_snake_case(name):
-                dst.setdefault("non-snakecase-values", {}).setdefault(
+                dst.setdefault(NON_SNAKECASE_VALUES, {}).setdefault(
                     sv.get("url", ""), {}
                 ).setdefault("variables", []).append(name)
 
@@ -851,8 +858,8 @@ def get_oapi_stats(o: OAPI) -> OAPIStats:
 
     for op in tagless_ops:
         fill_operation_stats(op, result, o.resolve)
-        if filterer.should_include("tagless-operations"):
-            result.setdefault("tagless-operations", []).append(op.key())
+        if filterer.should_include(TAGLESS_OPERATIONS):
+            result.setdefault(TAGLESS_OPERATIONS, []).append(op.key())
 
     for sv in o.obj.get("servers", []):
         fill_server_stats(sv, result, o.resolve)
