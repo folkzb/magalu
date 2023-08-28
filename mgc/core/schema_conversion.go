@@ -35,6 +35,7 @@ func ToCoreSchema(s *jsonschema.Schema) (*Schema, error) {
 		return nil, err
 	}
 
+	uninitializeExtensions(oapiSchema)
 	return (*Schema)(oapiSchema), nil
 }
 
@@ -78,6 +79,14 @@ func lookupDefByPath(defs jsonschema.Definitions, path []string) (*jsonschema.Sc
 	} else {
 		return def, true
 	}
+}
+
+func uninitializeExtensions(s *openapi3.Schema) {
+	s.Extensions = nil
+	_, _ = visitAllSubRefs(s, func(ref *openapi3.SchemaRef) error {
+		ref.Value.Extensions = nil
+		return nil
+	})
 }
 
 type subRefVisitor func(ref *openapi3.SchemaRef) error
