@@ -159,6 +159,6 @@ var schemaReflector *jsonschema.Reflector
 
 func init() {
 	schemaReflector = &jsonschema.Reflector{
-		DoNotReference: true,
+		DoNotReference: false,
 	}
 }
