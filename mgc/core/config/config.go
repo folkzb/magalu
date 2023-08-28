@@ -24,9 +24,11 @@ type Config struct {
 }
 
 const (
-	CONFIG_NAME = "cli"
-	CONFIG_TYPE = "yaml"
-	CONFIG_FILE = CONFIG_NAME + "." + CONFIG_TYPE
+	CONFIG_NAME   = "cli"
+	CONFIG_TYPE   = "yaml"
+	CONFIG_FOLDER = ".config/mgc"
+	CONFIG_FILE   = CONFIG_NAME + "." + CONFIG_TYPE
+	ENV_PREFIX    = "MGC"
 )
 
 var configKey contextKey = "magalu.cloud/core/Config"
@@ -52,6 +54,7 @@ func New() *Config {
 	viper.SetConfigType(CONFIG_TYPE)
 	viper.AddConfigPath(path)
 	viper.AutomaticEnv()
+	viper.SetEnvPrefix(ENV_PREFIX)
 
 	_ = viper.ReadInConfig()
 	return &Config{path: path, fileName: CONFIG_FILE}
