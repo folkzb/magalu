@@ -30,7 +30,7 @@ func SetRoot(logger *zap.SugaredLogger) {
 }
 
 func ConfigSchema() (*core.Schema, error) {
-	reflector := jsonschema.Reflector{DoNotReference: true, Mapper: zapMapper}
+	reflector := jsonschema.Reflector{Mapper: zapMapper}
 	s, err := core.ToCoreSchema(reflector.Reflect(zap.Config{}))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create JSON Schema for type '%T': %w", zap.Config{}, err)

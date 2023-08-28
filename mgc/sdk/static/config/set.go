@@ -29,14 +29,8 @@ func newSet() *core.StaticExecute {
 				return nil, fmt.Errorf("error when getting possible configs: %w", err)
 			}
 
-			schema, ok := allConfigs[parameter.Key]
+			s, ok := allConfigs[parameter.Key]
 			if !ok {
-				return nil, fmt.Errorf("no config %s found", parameter.Key)
-			}
-
-			s, ok := schema.(*core.Schema)
-			if !ok {
-				// Should never happen
 				return nil, fmt.Errorf("no config %s found", parameter.Key)
 			}
 

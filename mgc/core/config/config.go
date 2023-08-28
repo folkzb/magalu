@@ -57,13 +57,13 @@ func New() *Config {
 	return &Config{path: path, fileName: CONFIG_FILE}
 }
 
-func (c *Config) BuiltInConfigs() (map[string]any, error) {
+func (c *Config) BuiltInConfigs() (map[string]*core.Schema, error) {
 	loggerConfigSchema, err := logger.ConfigSchema()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger config schema: %w", err)
 	}
 
-	configMap := map[string]any{
+	configMap := map[string]*core.Schema{
 		"logging": loggerConfigSchema,
 	}
 

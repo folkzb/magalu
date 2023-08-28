@@ -34,7 +34,7 @@ func newList() core.Executor {
 	return core.NewExecuteFormat(executor, configListFormatter)
 }
 
-func getAllConfigs(ctx context.Context) (map[string]any, error) {
+func getAllConfigs(ctx context.Context) (map[string]*core.Schema, error) {
 	root := core.GrouperFromContext(ctx)
 	if root == nil {
 		return nil, fmt.Errorf("Couldn't get Group from context")
