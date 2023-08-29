@@ -415,7 +415,13 @@ func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
 }
 
 func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
-	var zapConfig zap.Config
+	zapConfig := zap.NewProductionConfig()
+	zapConfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)             // it's widely used, zapfilter will default to "warn+:*"
+	zapConfig.Encoding = "console"                                     // after all, it's a CLI
+	zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder  // INFO, DEBUG...
+	zapConfig.EncoderConfig.EncodeTime = zapcore.EpochNanosTimeEncoder // smaller yet high-resolution
+	zapConfig.EncoderConfig.CallerKey = ""                             // do not show file:line
+	zapConfig.EncoderConfig.TimeKey = ""                               // do not show timestamp by default
 
 	if loggerConfig := sdk.Config().Get(loggerConfigKey); loggerConfig != nil {
 		// TODO: test with config passed by CLI
@@ -431,8 +437,6 @@ func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
 		if err := json.Unmarshal(b, &zapConfig); err != nil {
 			return fmt.Errorf("unable to unmarhsall logger config: %w", err)
 		}
-	} else {
-		zapConfig = zap.NewProductionConfig()
 	}
 
 	logger, err := zapConfig.Build()

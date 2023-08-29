@@ -12,8 +12,8 @@ func addLogFilterFlag(cmd *cobra.Command) {
 	cmd.Root().PersistentFlags().StringP(
 		logFilterFlag,
 		"l",
-		"",
-		"Use \"*:*\" to show all logs. See more details about the filter syntax at https://github.com/moul/zapfilter",
+		"warn+:*",
+		"Format is \"levels:namespaces\". Use \"info+:*\" to show info for all levels, use \"*:*\" to show all logs. See more details about the filter syntax at https://github.com/moul/zapfilter",
 	)
 }
 
