@@ -25,10 +25,9 @@ func BuildMGCPath() (string, error) {
 		dir = os.Getenv("XDG_CONFIG_HOME")
 		if dir == "" {
 			dir = os.Getenv("HOME")
-			if dir == "" {
-				return "", errors.New("neither $XDG_CONFIG_HOME nor $HOME are defined")
-			}
-			dir = path.Join(dir, ".config")
+		}
+		if dir == "" {
+			return "", errors.New("neither $XDG_CONFIG_HOME nor $HOME are defined")
 		}
 	}
 	mgcDir := path.Join(dir, "mgc")
