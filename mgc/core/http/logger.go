@@ -9,7 +9,7 @@ type pkgSymbol struct{}
 
 var pkgLogger *zap.SugaredLogger
 
-func initPkgLogger() *zap.SugaredLogger {
+func logger() *zap.SugaredLogger {
 	if pkgLogger == nil {
 		pkgLogger = logger1.New[pkgSymbol]()
 	}

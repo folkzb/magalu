@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"strings"
 
-	"go.uber.org/zap"
 	"magalu.cloud/core"
 )
 
@@ -21,13 +20,6 @@ import (
 type contextKey string
 
 var httpClientKey contextKey = "magalu.cloud/core/Transport"
-
-func logger() *zap.SugaredLogger {
-	if pkgLogger == nil {
-		pkgLogger = initPkgLogger().Named("http")
-	}
-	return pkgLogger
-}
 
 type Client struct {
 	http.Client
