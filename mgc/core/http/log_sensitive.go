@@ -10,14 +10,14 @@ type LogSensitive string
 
 const logSensitiveEnvVar = "MGC_SDK_LOG_SENSITIVE"
 
-var shouldLogSensitveStatus *bool
+var shouldLogSensitiveStatus *bool
 
 func shouldLogSensitive() bool {
-	if shouldLogSensitveStatus == nil {
+	if shouldLogSensitiveStatus == nil {
 		b := os.Getenv(logSensitiveEnvVar) == "1"
-		shouldLogSensitveStatus = &b
+		shouldLogSensitiveStatus = &b
 	}
-	return *shouldLogSensitveStatus
+	return *shouldLogSensitiveStatus
 }
 
 func (s LogSensitive) MarshalJSON() ([]byte, error) {
