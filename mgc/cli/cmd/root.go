@@ -1,18 +1,14 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"magalu.cloud/core"
 	mgcLogger "magalu.cloud/core/logger"
 	mgcSdk "magalu.cloud/sdk"
-	"moul.io/zapfilter"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -412,46 +408,6 @@ func DynamicLoadCommand(cmd *cobra.Command, args []string, loader DynamicArgLoad
 func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	name = strcase.KebabCase(name)
 	return pflag.NormalizedName(name)
-}
-
-func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
-	zapConfig := zap.NewProductionConfig()
-	zapConfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)             // it's widely used, zapfilter will default to "warn+:*"
-	zapConfig.Encoding = "console"                                     // after all, it's a CLI
-	zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder  // INFO, DEBUG...
-	zapConfig.EncoderConfig.EncodeTime = zapcore.EpochNanosTimeEncoder // smaller yet high-resolution
-	zapConfig.EncoderConfig.CallerKey = ""                             // do not show file:line
-	zapConfig.EncoderConfig.TimeKey = ""                               // do not show timestamp by default
-
-	if loggerConfig := sdk.Config().Get(loggerConfigKey); loggerConfig != nil {
-		// TODO: test with config passed by CLI
-		if _, ok := loggerConfig.(map[string]any); !ok {
-			return fmt.Errorf("invalid logger config. Expected map and got %T", loggerConfig)
-		}
-
-		b, err := json.Marshal(loggerConfig)
-		if err != nil {
-			return fmt.Errorf("unable to marhsall logger config: %w", err)
-		}
-
-		if err := json.Unmarshal(b, &zapConfig); err != nil {
-			return fmt.Errorf("unable to unmarhsall logger config: %w", err)
-		}
-	}
-
-	logger, err := zapConfig.Build()
-	if err != nil {
-		return fmt.Errorf("unable to build logger. Make sure a valid configuration was provided: %w", err)
-	}
-
-	filterOpt := zap.WrapCore(func(c zapcore.Core) zapcore.Core {
-		return zapfilter.NewFilteringCore(c, zapfilter.MustParseRules(filterRules))
-	})
-
-	logger = logger.WithOptions(filterOpt)
-	mgcLogger.SetRoot(logger.Sugar())
-
-	return nil
 }
 
 func Execute() (err error) {
