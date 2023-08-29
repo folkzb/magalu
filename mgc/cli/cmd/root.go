@@ -450,7 +450,7 @@ func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
 	return nil
 }
 
-func Execute() error {
+func Execute() (err error) {
 	rootCmd := &cobra.Command{
 		Use:     "cloud",
 		Version: "TODO",
@@ -470,16 +470,23 @@ can generate a command line on-demand for Rest manipulation`,
 	addLogFilterFlag(rootCmd)
 
 	sdk := &mgcSdk.Sdk{}
-	if err := initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {
+	if err = initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {
 		return err
 	}
 
 	rootCmd.AddCommand(newDumpTreeCmd(sdk))
 
-	err := DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(sdk, sdk.Group()))
+	err = DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(sdk, sdk.Group()))
 	if err != nil {
 		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
 	}
+
+	defer func() {
+		syncErr := mgcLogger.Root().Sync()
+		if err == nil {
+			err = syncErr
+		}
+	}()
 
 	return rootCmd.Execute()
 }
