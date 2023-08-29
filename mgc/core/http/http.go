@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -36,7 +35,7 @@ func NewClientContext(parent context.Context, client *Client) context.Context {
 func ClientFromContext(context context.Context) *Client {
 	client, ok := context.Value(httpClientKey).(*Client)
 	if !ok {
-		log.Printf("Error casting ctx %s to *HttpClient", httpClientKey)
+		logger().Debugf("Error casting ctx %s to *HttpClient", httpClientKey)
 		return nil
 	}
 	return client
@@ -94,7 +93,7 @@ func NewHttpErrorFromResponse(resp *http.Response) error {
 
 	contentType, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 	if err != nil {
-		log.Printf("Ignored invalid response Content-Type %q: %s\n", resp.Header.Get("Content-Type"), err.Error())
+		logger().Debugf("Ignored invalid response Content-Type %q: %s\n", resp.Header.Get("Content-Type"), err.Error())
 	}
 	if contentType == "application/json" {
 		data := BaseApiError{}
