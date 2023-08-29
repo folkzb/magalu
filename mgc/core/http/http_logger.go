@@ -2,7 +2,6 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -34,8 +33,7 @@ func (t *ClientLogger) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func (t *ClientLogger) logRequest(log *zap.SugaredLogger, req *http.Request) {
-	log.Debugw("will send HTTP request")
-	log.Debugw("request header info", "headers", LogHttpHeaders(req.Header))
+	log.Debugw("request", "headers", LogHttpHeaders(req.Header))
 }
 
 func (t *ClientLogger) logResponse(log *zap.SugaredLogger, req *http.Request, resp *http.Response, err error) {
@@ -43,16 +41,13 @@ func (t *ClientLogger) logResponse(log *zap.SugaredLogger, req *http.Request, re
 		if err == nil {
 			err = errors.New("Unknown Error")
 		}
-		log.Debugw("requested ended with error", "error", err.Error())
+		log.Debugw("request error", "error", err)
 		return
 	}
-	errMsg := ""
+	log = log.With("headers", LogHttpHeaders(resp.Header))
 	if err != nil {
-		errMsg = fmt.Sprintf("; error: %s", err.Error())
-		log.Debugw("received HTTP response with error", "status", resp.Status, "error", errMsg)
+		log.Debugw("response with error", "status", resp.Status, "error", err)
 	} else {
-		log.Debugw("received HTTP response", "status", resp.Status)
+		log.Debugw("response", "status", resp.Status)
 	}
-
-	log.Debugw("response header info", "headers", LogHttpHeaders(resp.Header))
 }
