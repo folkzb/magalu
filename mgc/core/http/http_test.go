@@ -13,7 +13,7 @@ import (
 type dummyTransport struct{}
 
 func (o dummyTransport) RoundTrip(*http.Request) (*http.Response, error) {
-	return nil, nil
+	return &http.Response{}, nil
 }
 
 func TestClientCreation(t *testing.T) {
