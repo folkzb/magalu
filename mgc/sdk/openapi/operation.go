@@ -866,6 +866,7 @@ func (o *Operation) configureRequest(
 }
 
 func (o *Operation) buildRequestFromParams(
+	ctx context.Context,
 	paramValues map[string]core.Value,
 	configs map[string]core.Value,
 ) (*http.Request, error) {
@@ -880,7 +881,7 @@ func (o *Operation) buildRequestFromParams(
 	}
 	// NOTE: from here on, error handling MUST close body!
 
-	req, err := http.NewRequest(o.method, url, body)
+	req, err := http.NewRequestWithContext(ctx, o.method, url, body)
 	if err != nil {
 		closeIfCloser(body)
 		return nil, err
@@ -970,11 +971,12 @@ func (o *Operation) setSecurityHeader(paramValues map[string]core.Value, req *ht
 
 // TODO: refactor this closer to the client that comes from a context
 func (o *Operation) createHttpRequest(
+	ctx context.Context,
 	auth *auth.Auth,
 	paramValues map[string]core.Value,
 	configs map[string]core.Value,
 ) (*http.Request, error) {
-	req, err := o.buildRequestFromParams(paramValues, configs)
+	req, err := o.buildRequestFromParams(ctx, paramValues, configs)
 	if err != nil {
 		return nil, err
 	}
@@ -1022,7 +1024,7 @@ func (o *Operation) Execute(
 		return nil, err
 	}
 
-	req, err := o.createHttpRequest(auth, parameters, configs)
+	req, err := o.createHttpRequest(ctx, auth, parameters, configs)
 	if err != nil {
 		return nil, err
 	}
