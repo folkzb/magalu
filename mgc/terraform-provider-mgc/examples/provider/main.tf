@@ -29,18 +29,3 @@ resource "magalu_virtual-machine_instances" "myvm" {
   availability_zone = "br-ne-1c"
   desired_status = "active"
 }
-
-// This part is to test the resource Read function, replace id with existing
-// values
-import {
-    to = magalu_virtual-machine_instances.read_res_vm
-    id = "existing-vm-id"
-}
-resource "magalu_virtual-machine_instances" "read_res_vm" {
-  name = "existing_instance"
-  type = "cloud-bs1.xsmall"
-  desired_image = "cloud-ubuntu-22.04 LTS"
-  key_name = "luizalabs-key"
-  availability_zone = "br-ne-1a"
-  desired_status = "shutoff"
-}
