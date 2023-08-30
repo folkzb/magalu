@@ -905,7 +905,7 @@ func (o *Operation) forEachSecurityRequirement(cb func(scheme string, scopes []s
 		for _, reqRef := range *o.operation.Security {
 			for scheme, scopes := range reqRef {
 				scheme = strings.ToLower(scheme)
-				if scheme == "oauth2" {
+				if scheme == "oauth2" || scheme == "bearerauth" {
 					run, err := cb(scheme, scopes)
 					if err != nil {
 						return false, err
