@@ -29,12 +29,25 @@ func SetRoot(logger *zap.SugaredLogger) {
 	rootLogger = logger
 }
 
+func removeRequired(s *core.Schema) {
+	if len(s.Required) != 0 {
+		s.Required = []string{}
+	}
+	for _, ref := range s.Properties {
+		if ref.Value != nil {
+			removeRequired(((*core.Schema)(ref.Value)))
+		}
+	}
+}
+
 func ConfigSchema() (*core.Schema, error) {
 	reflector := jsonschema.Reflector{Mapper: zapMapper}
 	s, err := core.ToCoreSchema(reflector.Reflect(zap.Config{}))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create JSON Schema for type '%T': %w", zap.Config{}, err)
 	}
+
+	removeRequired(s)
 
 	s.Description = "Logger configuration. For more information see https://pkg.go.dev/go.uber.org/zap#Config"
 
