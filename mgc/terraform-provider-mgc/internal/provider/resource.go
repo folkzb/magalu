@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"golang.org/x/exp/maps"
 	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -81,24 +83,28 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 }
 
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data *VirtualMachineResourceModel
+	conv := converter{
+		ctx:  ctx,
+		diag: resp.Diagnostics,
+	}
 
-	// TODO: remove once we translate directly from mgcSdk.Schema
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Make request
+	configs := map[string]any{}
+	atinfo := attribute{
+		name:       "schema",
+		attributes: r.inputAttr,
+	}
+
+	params := conv.convertTFMap(r.create.ParametersSchema(), &atinfo, req.Plan.Raw, true)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Make request
-	params := map[string]any{
-		"name":     data.Name.ValueString(),
-		"type":     data.Type.ValueString(),
-		"image":    data.DesiredImage.ValueString(),
-		"key_name": data.SSHKey.ValueString(),
-	}
-	// TODO: read from req.Config
-	configs := map[string]any{}
+	// Create initial state from plan
+	stateMap := map[string]any{}
+	maps.Copy(stateMap, params)
+
+	tflog.Info(ctx, fmt.Sprintf("[resource] creating `%s` - request info with params: %+v", r.name, params))
 	result, err := r.create.Execute(r.sdk.WrapContext(ctx), params, configs)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -124,20 +130,51 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	id, ok := resultMap["id"].(string)
-	if !ok {
-		resp.Diagnostics.AddWarning(
-			"Operation output mismatch",
-			fmt.Sprintf("Unable to convert %v to string.", resultMap["id"]),
+	// Add create result information to state
+	maps.Copy(stateMap, resultMap)
+
+	tflog.Info(ctx, "created a virtual-machine resource with id %s")
+
+	// TODO: REMOVE ME
+	time.Sleep(time.Second * 20)
+
+	// Read param elements from StateMap
+	params = map[string]any{}
+	for k := range r.read.ParametersSchema().Properties {
+		params[k] = stateMap[k]
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s` - request info with params: %+v", r.name, params))
+	result, err = r.read.Execute(r.sdk.WrapContext(ctx), params, configs)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to create instance",
+			fmt.Sprintf("Service returned with error: %v", err),
 		)
+		return
+	}
+	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
+
+	resultMap, ok = result.(map[string]any)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Operation output mismatch",
+			fmt.Sprintf("Unable to convert %v to map.", result),
+		)
+		return
 	}
 
-	data.Id = types.StringValue(id)
-	tflog.Trace(ctx, "created a virtual-machine resource with id %s")
+	maps.Copy(stateMap, resultMap)
+	stateValue := conv.convertValueToTF(r.read.ResultSchema(), stateMap, path.Empty())
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// TODO: set resp.State directly from resultMap, without going to `data`(Model)
+	tflog.Trace(ctx, "reading created virtual-machine resource with id %s")
 	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &stateValue)...)
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -149,7 +186,11 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	// Make request
-	params := conv.convertTFMap(r.read.ParametersSchema(), r.inputAttr, req.State.Raw)
+	atinfo := attribute{
+		name:       "schema",
+		attributes: r.inputAttr,
+	}
+	params := conv.convertTFMap(r.read.ParametersSchema(), &atinfo, req.State.Raw, true)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -171,15 +212,20 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	*/
 	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
 
-	// resultMap, ok := result.(map[string]any)
-	// if !ok {
-	// 	resp.Diagnostics.AddError(
-	// 		"Operation output mismatch",
-	// 		fmt.Sprintf("Unable to convert %v to map.", result),
-	// 	)
-	// 	return
-	// }
-	// TODO: Handle Go to TF state merge
+	resultMap, ok := result.(map[string]any)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Operation output mismatch",
+			fmt.Sprintf("Unable to convert %v to map.", result),
+		)
+		return
+	}
+
+	stateValue := conv.convertValueToTF(r.read.ResultSchema(), resultMap, path.Empty())
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.State.Set(ctx, *stateValue)
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
