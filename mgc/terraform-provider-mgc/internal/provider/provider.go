@@ -46,8 +46,9 @@ type MgcProvider struct {
 }
 
 type MgcProviderModel struct {
-	ApiKey types.String   `tfsdk:"api_key"`
-	Apis   []types.String `tfsdk:"apis"`
+	RefreshToken types.String   `tfsdk:"refresh_token"`
+	AccessToken  types.String   `tfsdk:"access_token"`
+	Apis         []types.String `tfsdk:"apis"`
 }
 
 func (p *MgcProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -60,10 +61,15 @@ func (p *MgcProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 	tflog.Debug(ctx, "setting provider schema")
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"api_key": schema.StringAttribute{
+			"refresh_token": schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Token used to authenticate with the MagaluID platform.",
+				Description: "Refresh Token used to authenticate with the MagaluID platform.",
+			},
+			"access_token": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Access Token used to authenticate with the MagaluID platform.",
 			},
 			"apis": schema.ListAttribute{
 				Required:    true,
@@ -84,12 +90,11 @@ func (p *MgcProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 
-	apiKey := config.ApiKey.ValueString()
-	if apiKey == "" {
-		p.attrErr(resp, "api_key")
-		return
+	refreshToken := config.RefreshToken.ValueString()
+	accessToken := config.AccessToken.ValueString()
+	if accessToken != "" || refreshToken != "" {
+		_ = p.sdk.Auth().SetTokens(&auth.LoginResult{AccessToken: accessToken, RefreshToken: refreshToken})
 	}
-	_ = p.sdk.Auth().SetTokens(&auth.LoginResult{AccessToken: apiKey})
 
 	if len(config.Apis) == 0 {
 		p.attrErr(resp, "apis")
