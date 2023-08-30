@@ -9,6 +9,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"magalu.cloud/core"
@@ -117,13 +118,33 @@ func NewHttpErrorFromResponse(resp *http.Response) error {
 	}
 }
 
-func UnwrapResponse(resp *http.Response, data core.Value) (core.Value, error) {
+// Handles the response, whenever possible decodes (unmarshal) the data.
+//
+// If the Content-Type header starts with "multipart/", then a pointer to multipart.Part
+// is returned as data.
+//
+// If the Content-Type header is one of:
+//   - application/json
+//   - application/xml
+//
+// Then it will be decoded. If dataPtr is not nil, then it will be given to the decoder,
+// this allows a struct with Golang tags to be passed, controlling the JSON and XML decoders.
+// If dataPtr is nil, then it will be a pointer to "any".
+// The returned data is always the final value, not a pointer to it
+// (not dataPtr, but the value it points to).
+//
+// If the Content-Type is none of the above, then io.ReadCloser (resp.Body) is returned.
+func UnwrapResponse(resp *http.Response, dataPtr any) (data any, err error) {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, NewHttpErrorFromResponse(resp)
 	}
 
 	if resp.StatusCode == 204 {
 		return nil, nil
+	}
+
+	if dataPtr == nil {
+		dataPtr = &data
 	}
 
 	contentType, params, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
@@ -137,10 +158,11 @@ func UnwrapResponse(resp *http.Response, data core.Value) (core.Value, error) {
 		r := multipart.NewReader(resp.Body, params["boundary"])
 		return r.NextPart()
 	case contentType == "application/json":
-		err := DecodeJSON(resp, data)
-		return data, err
+		err = DecodeJSON(resp, dataPtr)
 	case contentType == "application/xml":
-		err := DecodeXML(resp, data)
-		return data, err
+		err = DecodeXML(resp, dataPtr)
 	}
+
+	data = reflect.ValueOf(dataPtr).Elem().Interface()
+	return
 }

@@ -992,8 +992,7 @@ func (o *Operation) createHttpRequest(
 }
 
 func (o *Operation) getResponseValue(resp *http.Response) (core.Value, error) {
-	var data core.Value
-	return coreHttp.UnwrapResponse(resp, data)
+	return coreHttp.UnwrapResponse(resp, nil)
 }
 
 func (o *Operation) Execute(
