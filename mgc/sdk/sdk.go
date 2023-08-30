@@ -62,10 +62,6 @@ var authConfig auth.Config = auth.Config{
 		"dbaas.write",
 		"cpo:read",
 		"cpo:write",
-		"api-consulta.read",
-		"pa:allow-lists:read",
-		"pa:clients:create",
-		"pa:payment-methods:read",
 	},
 }
 
