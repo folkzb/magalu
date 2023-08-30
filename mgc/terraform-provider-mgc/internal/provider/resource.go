@@ -85,7 +85,7 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conv := converter{
 		ctx:  ctx,
-		diag: resp.Diagnostics,
+		diag: &resp.Diagnostics,
 	}
 
 	// Make request
@@ -182,7 +182,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	conv := converter{
 		ctx:  ctx,
-		diag: resp.Diagnostics,
+		diag: &resp.Diagnostics,
 	}
 
 	// Make request

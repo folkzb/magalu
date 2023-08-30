@@ -313,7 +313,7 @@ var attrInfos = []map[string]*attribute{
 func TestConvertTFToValue(t *testing.T) {
 	conv := converter{
 		ctx:  context.Background(),
-		diag: diag.Diagnostics{},
+		diag: &diag.Diagnostics{},
 	}
 
 	for i := 0; i < len(states); i++ {

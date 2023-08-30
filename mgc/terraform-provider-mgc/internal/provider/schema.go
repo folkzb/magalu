@@ -223,7 +223,7 @@ func sdkToTerraformAttribute(ctx context.Context, c *attribute, di diag.Diagnost
 
 	conv := converter{
 		ctx:  ctx,
-		diag: di,
+		diag: &di,
 	}
 
 	// TODO: Handle default values

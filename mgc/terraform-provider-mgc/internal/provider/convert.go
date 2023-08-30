@@ -14,7 +14,7 @@ import (
 
 type converter struct {
 	ctx  context.Context
-	diag diag.Diagnostics
+	diag *diag.Diagnostics
 }
 
 func (c *converter) getEnumType(v *mgcSdk.Schema) string {
