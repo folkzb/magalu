@@ -37,18 +37,21 @@ func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
 	zapConfig := newLogConfig()
 
 	if loggerConfig := sdk.Config().Get(loggerConfigKey); loggerConfig != nil {
-		// TODO: test with config passed by CLI
-		if _, ok := loggerConfig.(map[string]any); !ok {
-			return fmt.Errorf("invalid logger config. Expected map and got %T", loggerConfig)
+		var data []byte
+		var err error
+
+		switch v := loggerConfig.(type) {
+		case string:
+			data = []byte(v)
+		default:
+			data, err = json.Marshal(v)
+			if err != nil {
+				return fmt.Errorf("unable to marhsall logger config: %w", err)
+			}
 		}
 
-		b, err := json.Marshal(loggerConfig)
-		if err != nil {
-			return fmt.Errorf("unable to marhsall logger config: %w", err)
-		}
-
-		if err := json.Unmarshal(b, &zapConfig); err != nil {
-			return fmt.Errorf("unable to unmarhsall logger config: %w", err)
+		if err := json.Unmarshal(data, &zapConfig); err != nil {
+			return fmt.Errorf("unable to unmarshal logger config: %w", err)
 		}
 	}
 
