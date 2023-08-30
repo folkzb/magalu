@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -264,7 +265,14 @@ func AddAction(
 				return err
 			}
 
-			result, err := exec.Execute(sdk.NewContext(), parameters, configs)
+			ctx := sdk.NewContext()
+			if t := getTimeoutFlag(cmd); t > 0 {
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithTimeout(ctx, t)
+				defer cancel()
+			}
+
+			result, err := exec.Execute(ctx, parameters, configs)
 			if err != nil {
 				return err
 			}
@@ -432,6 +440,7 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.SetCompletionCommandGroupID("other")
 	addOutputFlag(rootCmd)
 	addLogFilterFlag(rootCmd)
+	addTimeoutFlag(rootCmd)
 
 	sdk := &mgcSdk.Sdk{}
 	if err = initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {
