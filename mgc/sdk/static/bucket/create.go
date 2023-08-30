@@ -24,17 +24,17 @@ func newCreate() core.Executor {
 	)
 }
 
-func newCreateRequest(region, bucket string) (*http.Request, error) {
+func newCreateRequest(ctx context.Context, region, bucket string) (*http.Request, error) {
 	host := s3.BuildHost(region)
 	url, err := url.JoinPath(host, bucket)
 	if err != nil {
 		return nil, err
 	}
-	return http.NewRequest(http.MethodPut, url, nil)
+	return http.NewRequestWithContext(ctx, http.MethodPut, url, nil)
 }
 
 func create(ctx context.Context, params createParams, cfg s3.Config) (core.Value, error) {
-	req, err := newCreateRequest(cfg.Region, params.Name)
+	req, err := newCreateRequest(ctx, cfg.Region, params.Name)
 	if err != nil {
 		return nil, err
 	}

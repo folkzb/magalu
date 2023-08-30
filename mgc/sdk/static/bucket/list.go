@@ -24,8 +24,8 @@ type ListResponse struct {
 	Owner   *Owner            `xml:"Owner"`
 }
 
-func newListRequest(region string) (*http.Request, error) {
-	return http.NewRequest(http.MethodGet, s3.BuildHost(region), nil)
+func newListRequest(ctx context.Context, region string) (*http.Request, error) {
+	return http.NewRequestWithContext(ctx, http.MethodGet, s3.BuildHost(region), nil)
 }
 
 func newList() core.Executor {
@@ -38,7 +38,7 @@ func newList() core.Executor {
 }
 
 func list(ctx context.Context, _ struct{}, cfg s3.Config) (core.Value, error) {
-	req, err := newListRequest(cfg.Region)
+	req, err := newListRequest(ctx, cfg.Region)
 	if err != nil {
 		return nil, err
 	}
