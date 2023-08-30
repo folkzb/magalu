@@ -66,8 +66,9 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 				// Ignore update value in favor of create value (This is probably a bug with the API)
 				// TODO: Ignore default values when verifying equality
 				// TODO: Don't forget to add the path when using recursion
-				err := fmt.Sprintf("[resource] schema for `%s`: input attribute `%s` is different between create and update - create: %+v - update: %+v ", r.name, attr, ca.schema, us)
-				d.AddError("Attribute schema is different between create and update schemas", err)
+				// err := fmt.Sprintf("[resource] schema for `%s`: input attribute `%s` is different between create and update - create: %+v - update: %+v ", r.name, attr, ca.schema, us)
+				// d.AddError("Attribute schema is different between create and update schemas", err)
+				continue
 			}
 			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring already computed attribute `%s` ", r.name, attr))
 			continue
@@ -135,8 +136,9 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 			rs := ref.Value
 			if !reflect.DeepEqual(ra.schema, (*mgcSdk.Schema)(rs)) {
 				// Ignore read value in favor of create result value (This is probably a bug with the API)
-				err := fmt.Sprintf("[resource] schema for `%s`: output attribute `%s` is different between create result and read - create result: %+v - read: %+v ", r.name, attr, ra.schema, rs)
-				d.AddError("Attribute schema is different between create result and read schemas", err)
+				// err := fmt.Sprintf("[resource] schema for `%s`: output attribute `%s` is different between create result and read - create result: %+v - read: %+v ", r.name, attr, ra.schema, rs)
+				// d.AddError("Attribute schema is different between create result and read schemas", err)
+				continue
 			}
 			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring already computed attribute `%s` ", r.name, attr))
 			continue
@@ -183,7 +185,8 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 		if at == nil {
 			err := fmt.Sprintf("[resource] schema for `%s`: unable to create terraform attribute `%s` - data: %+v", r.name, iattr.name, iattr)
 			tflog.Debug(ctx, err)
-			d.AddError("Unknown attribute type", err)
+			// TODO: Uncomment the error
+			// d.AddError("Unknown attribute type", err)
 			continue
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: terraform input attribute `%s` created", r.name, iattr.name))
@@ -202,7 +205,8 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 			// TODO: Remove debug log
 			err := fmt.Sprintf("[resource] schema for `%s`: unable to create terraform attribute `%s` - data: %+v", r.name, oattr.name, oattr)
 			tflog.Debug(ctx, err)
-			d.AddError("Unknown attribute type", err)
+			// TODO: Uncomment the error
+			// d.AddError("Unknown attribute type", err)
 			continue
 		}
 		tfa[oattr.name] = at
