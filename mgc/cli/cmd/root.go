@@ -482,10 +482,7 @@ can generate a command line on-demand for Rest manipulation`,
 	}
 
 	defer func() {
-		syncErr := mgcLogger.Root().Sync()
-		if err == nil {
-			err = syncErr
-		}
+		_ = mgcLogger.Root().Sync()
 	}()
 
 	return rootCmd.Execute()
