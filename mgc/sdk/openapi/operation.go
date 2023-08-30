@@ -954,11 +954,11 @@ func isAuthForced(parameters map[string]core.Value) bool {
 	return b
 }
 
-func (o *Operation) setSecurityHeader(paramValues map[string]core.Value, req *http.Request, auth *auth.Auth) (err error) {
+func (o *Operation) setSecurityHeader(ctx context.Context, paramValues map[string]core.Value, req *http.Request, auth *auth.Auth) (err error) {
 	if isAuthForced(paramValues) || o.needsAuth() {
 		// TODO: review needsAuth() usage if more security schemes are used. Assuming oauth2 + bearer
 		// If others are to be used, loop using forEachSecurityRequirement()
-		accessToken, err := auth.AccessToken()
+		accessToken, err := auth.AccessToken(ctx)
 		if err != nil {
 			return err
 		}
@@ -986,7 +986,7 @@ func (o *Operation) createHttpRequest(
 	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Add("Connection", "keep-alive")
 
-	if err := o.setSecurityHeader(paramValues, req, auth); err != nil {
+	if err := o.setSecurityHeader(ctx, paramValues, req, auth); err != nil {
 		return nil, err
 	}
 

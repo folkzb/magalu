@@ -59,7 +59,7 @@ func newLogin() *core.StaticExecute {
 				return nil, fmt.Errorf("unable to retrieve authentication configuration")
 			}
 
-			resultChan, cancel, err := startCallbackServer(auth)
+			resultChan, cancel, err := startCallbackServer(ctx, auth)
 			if err != nil {
 				return nil, err
 			}
@@ -81,12 +81,12 @@ func newLogin() *core.StaticExecute {
 				return nil, result.err
 			}
 
-			tenants, err := auth.ListTenants()
+			tenants, err := auth.ListTenants(ctx)
 			if err != nil || len(tenants) == 0 {
 				return nil, fmt.Errorf("error when trying to list tenants for selection: %w", err)
 			}
 
-			tenantResult, err := auth.SelectTenant(tenants[0].UUID)
+			tenantResult, err := auth.SelectTenant(ctx, tenants[0].UUID)
 			if err != nil {
 				return nil, fmt.Errorf("error when trying to select default tenant: %w", err)
 			}
@@ -102,7 +102,7 @@ func newLogin() *core.StaticExecute {
 	)
 }
 
-func startCallbackServer(auth *auth.Auth) (resultChan chan *authResult, cancel func(), err error) {
+func startCallbackServer(ctx context.Context, auth *auth.Auth) (resultChan chan *authResult, cancel func(), err error) {
 	callbackUrl, err := url.Parse(auth.RedirectUri())
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid redirect_uri configuration")
@@ -125,6 +125,7 @@ func startCallbackServer(auth *auth.Auth) (resultChan chan *authResult, cancel f
 		auth,
 		callbackUrl.Path,
 		callbackChan,
+		ctx,
 	}
 	srv := &http.Server{Addr: addr, Handler: handler}
 
@@ -204,6 +205,7 @@ type callbackHandler struct {
 	auth *auth.Auth
 	path string
 	done chan *authResult
+	ctx  context.Context
 }
 
 func (h *callbackHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -215,7 +217,7 @@ func (h *callbackHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	authCode := url.Query().Get("code")
-	err := h.auth.RequestAuthTokeWithAuthorizationCode(authCode)
+	err := h.auth.RequestAuthTokeWithAuthorizationCode(h.ctx, authCode)
 	if err != nil {
 		showErrorPage(w, err, http.StatusInternalServerError)
 		h.done <- &authResult{err: fmt.Errorf("Could not request auth token with authorization code: %w", err)}
@@ -226,7 +228,7 @@ func (h *callbackHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		loginLogger().Warnw("could not show whole Succes Page", "error", err)
 	}
 
-	token, _ := h.auth.AccessToken() // this is guaranteed if RequestAuthTokeWithAuthorizationCode succeeds
+	token, _ := h.auth.AccessToken(h.ctx) // this is guaranteed if RequestAuthTokeWithAuthorizationCode succeeds
 	h.done <- &authResult{value: token}
 }
 

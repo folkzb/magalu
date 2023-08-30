@@ -28,13 +28,13 @@ func newAccessToken() *core.StaticExecute {
 			}
 
 			if parameters.Validate {
-				err := auth.ValidateAccessToken()
+				err := auth.ValidateAccessToken(ctx)
 				if err != nil {
 					return nil, fmt.Errorf("Could not validate the Access Token: %w", err)
 				}
 			}
 
-			token, err := auth.AccessToken()
+			token, err := auth.AccessToken(ctx)
 			if err != nil {
 				return nil, err
 			}

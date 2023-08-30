@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 	"time"
 )
 
-type refreshTokenFn func() (string, error)
+type refreshTokenFn func(ctx context.Context) (string, error)
 
 type RefreshLogger struct {
 	Transport http.RoundTripper
@@ -61,7 +62,7 @@ func (t *RefreshLogger) RoundTrip(req *http.Request) (*http.Response, error) {
 		return resp, err
 	}
 
-	token, rErr := t.RefreshFn()
+	token, rErr := t.RefreshFn(req.Context())
 	if rErr != nil {
 		return resp, fmt.Errorf("Unauthorized and failed to refresh token. Please, login again: %w", rErr)
 	}

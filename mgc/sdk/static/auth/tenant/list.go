@@ -22,5 +22,5 @@ func ListTenants(ctx context.Context) ([]*auth.Tenant, error) {
 	if auth == nil {
 		return nil, fmt.Errorf("unable to get auth from context")
 	}
-	return auth.ListTenants()
+	return auth.ListTenants(ctx)
 }

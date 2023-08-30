@@ -30,5 +30,5 @@ func selectTenant(ctx context.Context, params tenantSetParams, _ struct{}) (*aut
 	if auth == nil {
 		return nil, fmt.Errorf("Unable to get auth from context")
 	}
-	return auth.SelectTenant(params.ID)
+	return auth.SelectTenant(ctx, params.ID)
 }

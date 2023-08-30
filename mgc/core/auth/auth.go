@@ -128,9 +128,9 @@ Returns the current user access token.
 If token is empty, we might still have refresh token, try getting a new one.
 It will either fail with error or return a valid non-empty access token
 */
-func (o *Auth) AccessToken() (string, error) {
+func (o *Auth) AccessToken(ctx context.Context) (string, error) {
 	if o.accessToken == "" {
-		if _, err := o.RefreshAccessToken(); err != nil {
+		if _, err := o.RefreshAccessToken(ctx); err != nil {
 			return "", err
 		}
 	}
@@ -234,7 +234,7 @@ func (o *Auth) CodeChallengeToURL() (*url.URL, error) {
 /** Creates a new request access token from authorization code request, be
  * mindful that the code verifier used in this request come from the last call
  * of `CodeChallengeToUrl` method. */
-func (o *Auth) RequestAuthTokeWithAuthorizationCode(authCode string) error {
+func (o *Auth) RequestAuthTokeWithAuthorizationCode(ctx context.Context, authCode string) error {
 	if o.codeVerifier == nil {
 		logger().Errorw("no code verification provided")
 		return fmt.Errorf("no code verification provided, first execute a code challenge request")
@@ -247,7 +247,7 @@ func (o *Auth) RequestAuthTokeWithAuthorizationCode(authCode string) error {
 	data.Set("code", authCode)
 	data.Set("code_verifier", o.codeVerifier.value)
 
-	r, err := http.NewRequest(http.MethodPost, config.TokenUrl, strings.NewReader(data.Encode()))
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, config.TokenUrl, strings.NewReader(data.Encode()))
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	if err != nil {
 		return err
@@ -272,8 +272,8 @@ func (o *Auth) RequestAuthTokeWithAuthorizationCode(authCode string) error {
 	return nil
 }
 
-func (o *Auth) ValidateAccessToken() error {
-	r, err := o.newValidateAccessTokenRequest()
+func (o *Auth) ValidateAccessToken(ctx context.Context) error {
+	r, err := o.newValidateAccessTokenRequest(ctx)
 	if err != nil {
 		return err
 	}
@@ -294,36 +294,38 @@ func (o *Auth) ValidateAccessToken() error {
 	}
 
 	if !result.Active {
-		_, err := o.RefreshAccessToken()
+		_, err := o.RefreshAccessToken(ctx)
 		return err
 	}
 
 	return nil
 }
 
-func (o *Auth) newValidateAccessTokenRequest() (*http.Request, error) {
+func (o *Auth) newValidateAccessTokenRequest(ctx context.Context) (*http.Request, error) {
 	config := o.config
 	data := url.Values{}
 	data.Set("client_id", config.ClientId)
 	data.Set("token_hint", "access_token")
 	data.Set("token", o.accessToken)
 
-	r, err := http.NewRequest(http.MethodPost, config.ValidationUrl, strings.NewReader(data.Encode()))
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, config.ValidationUrl, strings.NewReader(data.Encode()))
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	return r, err
 }
 
-func (o *Auth) RefreshAccessToken() (string, error) {
-	_, err, _ := o.group.Do(refreshGroupKey, o.doRefreshAccessToken)
+func (o *Auth) RefreshAccessToken(ctx context.Context) (string, error) {
+	_, err, _ := o.group.Do(refreshGroupKey, func() (any, error) {
+		return o.doRefreshAccessToken(ctx)
+	})
 	if err != nil {
 		return "", err
 	}
 	return o.accessToken, nil
 }
 
-func (o *Auth) doRefreshAccessToken() (core.Value, error) {
-	r, err := o.newRefreshAccessTokenRequest()
+func (o *Auth) doRefreshAccessToken(ctx context.Context) (core.Value, error) {
+	r, err := o.newRefreshAccessTokenRequest(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -356,7 +358,7 @@ func (o *Auth) doRefreshAccessToken() (core.Value, error) {
 	return o.accessToken, err
 }
 
-func (o *Auth) newRefreshAccessTokenRequest() (*http.Request, error) {
+func (o *Auth) newRefreshAccessTokenRequest(ctx context.Context) (*http.Request, error) {
 	if o.refreshToken == "" {
 		return nil, fmt.Errorf("RefreshToken is not set")
 	}
@@ -367,7 +369,7 @@ func (o *Auth) newRefreshAccessTokenRequest() (*http.Request, error) {
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", o.refreshToken)
 
-	r, err := http.NewRequest(http.MethodPost, config.RefreshUrl, strings.NewReader(data.Encode()))
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, config.RefreshUrl, strings.NewReader(data.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return r, err
@@ -406,13 +408,13 @@ func (o *Auth) writeConfigFile(result *ConfigResult) error {
 	return nil
 }
 
-func (o *Auth) ListTenants() ([]*Tenant, error) {
-	at, err := o.AccessToken()
+func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
+	at, err := o.AccessToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
 	}
 
-	r, err := http.NewRequest(http.MethodGet, o.config.TenantsListUrl, nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, o.config.TenantsListUrl, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -436,8 +438,8 @@ func (o *Auth) ListTenants() ([]*Tenant, error) {
 	return result, nil
 }
 
-func (o *Auth) SelectTenant(id string) (*TenantAuth, error) {
-	at, err := o.AccessToken()
+func (o *Auth) SelectTenant(ctx context.Context, id string) (*TenantAuth, error) {
+	at, err := o.AccessToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
 	}
@@ -449,7 +451,7 @@ func (o *Auth) SelectTenant(id string) (*TenantAuth, error) {
 	}
 
 	bodyReader := bytes.NewReader(jsonData)
-	r, err := http.NewRequest(http.MethodPost, o.config.TenantsSelectUrl, bodyReader)
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, o.config.TenantsSelectUrl, bodyReader)
 	r.Header.Set("Authorization", "Bearer "+at)
 	r.Header.Set("Content-Type", "application/json")
 
