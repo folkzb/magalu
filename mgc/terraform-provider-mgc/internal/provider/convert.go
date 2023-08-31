@@ -241,16 +241,16 @@ func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, obj map[string]
 	}
 
 	// TODO: Make recursive
-	for key, value := range obj {
-		info, ok := atinfo.attributes[key]
+	for key, info := range atinfo.attributes {
+		value, ok := obj[key]
 		if !ok {
-			// We ignore already converted values.
-			// c.diag.AddError("Attribute information missing", fmt.Sprintf("[convert] attribute `%s` doesn't have attribute information %+v", key, obj))
-			return
+			// Ignore non existing values
+			continue
 		}
 
 		if key != info.tfName {
 			obj[info.tfName] = value
+			delete(obj, key)
 		}
 	}
 }
