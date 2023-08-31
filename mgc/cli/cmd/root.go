@@ -150,13 +150,17 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 		return fmt.Errorf("invalid command or parameter schema")
 	}
 
-	for name := range schema.Properties {
+	for name, propRef := range schema.Properties {
+		propSchema := propRef.Value
 		val, flag, err := getFlagValue(flags, name)
 		if flag == nil {
 			continue
 		}
 		if err != nil {
 			return err
+		}
+		if val == nil && !(propSchema.Nullable || propSchema.Type == "null") {
+			continue
 		}
 		dst[name] = val
 	}
