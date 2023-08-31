@@ -221,7 +221,7 @@ func sdkToTerraformAttribute(ctx context.Context, c *attribute, di diag.Diagnost
 		return nil
 	}
 
-	conv := converter{
+	conv := tfStateConverter{
 		ctx:  ctx,
 		diag: &di,
 	}

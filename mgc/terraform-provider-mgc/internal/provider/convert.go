@@ -6,18 +6,28 @@ import (
 	"math/big"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"golang.org/x/exp/slices"
 	mgcSdk "magalu.cloud/sdk"
 )
 
-type converter struct {
-	ctx  context.Context
-	diag *diag.Diagnostics
+type tfStateConverter struct {
+	ctx      context.Context
+	diag     *diag.Diagnostics
+	tfSchema *schema.Schema
 }
 
-func (c *converter) getEnumType(v *mgcSdk.Schema) string {
+func newTFStateConverter(ctx context.Context, diag *diag.Diagnostics, tfSchema *schema.Schema) tfStateConverter {
+	return tfStateConverter{
+		ctx:      ctx,
+		diag:     diag,
+		tfSchema: tfSchema,
+	}
+}
+
+func (c *tfStateConverter) getEnumType(v *mgcSdk.Schema) string {
 	types := []string{}
 	for _, v := range v.Enum {
 		var t string
@@ -46,8 +56,7 @@ func (c *converter) getEnumType(v *mgcSdk.Schema) string {
 	return types[0]
 }
 
-// ---- TF To Value ----
-func (c *converter) getAttributeType(v *mgcSdk.Schema) string {
+func (c *tfStateConverter) getAttributeType(v *mgcSdk.Schema) string {
 	if v.Type == "" {
 		if len(v.Enum) != 0 {
 			return c.getEnumType(v)
@@ -58,15 +67,15 @@ func (c *converter) getAttributeType(v *mgcSdk.Schema) string {
 	return v.Type
 }
 
-func (c *converter) convertTFToValue(schema *mgcSdk.Schema, atinfo *attribute, value tftypes.Value, ignoreUnknown bool) (converted any) {
-	if schema == nil {
+func (c *tfStateConverter) toMgcSchemaValue(mgcSchema *mgcSdk.Schema, atinfo *attribute, value tftypes.Value, ignoreUnknown bool, filterUnset bool) (converted any) {
+	if mgcSchema == nil {
 		c.diag.AddError("Invalid schema", "null schema provided to convert state to go values")
 		return nil
 	}
 
 	if !value.IsKnown() {
 		if !ignoreUnknown {
-			c.diag.AddError("Unable to convert unknown value", fmt.Sprintf("[convert] unable to convert since value is unknown: value %+v - schema: %+v", value, schema))
+			c.diag.AddError("Unable to convert unknown value", fmt.Sprintf("[convert] unable to convert since value is unknown: value %+v - schema: %+v", value, mgcSchema))
 			return nil
 		}
 		return nil
@@ -77,14 +86,14 @@ func (c *converter) convertTFToValue(schema *mgcSdk.Schema, atinfo *attribute, v
 			// Optional values that aren't computed will never be unknown
 			// this means they will be null in the state
 			return nil
-		} else if !schema.Nullable && schema.Type != "null" {
-			c.diag.AddError("Unable to convert non nullable value", fmt.Sprintf("[convert] unable to convert since value is null and not nullable by the schema: value %+v - schema: %+v", value, schema))
+		} else if !mgcSchema.Nullable && mgcSchema.Type != "null" {
+			c.diag.AddError("Unable to convert non nullable value", fmt.Sprintf("[convert] unable to convert since value is null and not nullable by the schema: value %+v - schema: %+v", value, mgcSchema))
 			return nil
 		}
 		return nil
 	}
 
-	t := c.getAttributeType(schema)
+	t := c.getAttributeType(mgcSchema)
 	if c.diag.HasError() {
 		return nil
 	}
@@ -94,7 +103,7 @@ func (c *converter) convertTFToValue(schema *mgcSdk.Schema, atinfo *attribute, v
 		var state string
 		err := value.As(&state)
 		if err != nil {
-			c.diag.AddError("Unable to convert value to string", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, schema, err.Error()))
+			c.diag.AddError("Unable to convert value to string", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, mgcSchema, err.Error()))
 			return nil
 		}
 		return state
@@ -102,7 +111,7 @@ func (c *converter) convertTFToValue(schema *mgcSdk.Schema, atinfo *attribute, v
 		var state big.Float
 		err := value.As(&state)
 		if err != nil {
-			c.diag.AddError("Unable to convert value to number", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, schema, err.Error()))
+			c.diag.AddError("Unable to convert value to number", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, mgcSchema, err.Error()))
 			return nil
 		}
 
@@ -116,7 +125,7 @@ func (c *converter) convertTFToValue(schema *mgcSdk.Schema, atinfo *attribute, v
 		var state big.Float
 		err := value.As(&state)
 		if err != nil {
-			c.diag.AddError("Unable to convert value to integer", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, schema, err.Error()))
+			c.diag.AddError("Unable to convert value to integer", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, mgcSchema, err.Error()))
 			return nil
 		}
 
@@ -130,27 +139,27 @@ func (c *converter) convertTFToValue(schema *mgcSdk.Schema, atinfo *attribute, v
 		var state bool
 		err := value.As(&state)
 		if err != nil {
-			c.diag.AddError("Unable to convert value to boolean", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, schema, err.Error()))
+			c.diag.AddError("Unable to convert value to boolean", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, mgcSchema, err.Error()))
 			return nil
 		}
 		return state
 	case "array":
-		state := c.convertTFArray(schema, atinfo, value, ignoreUnknown)
+		state := c.toMgcSchemaArray(mgcSchema, atinfo, value, ignoreUnknown, filterUnset)
 		return state
 	case "object":
-		state := c.convertTFMap(schema, atinfo, value, ignoreUnknown)
+		state := c.toMgcSchemaMap(mgcSchema, atinfo, value, ignoreUnknown, filterUnset)
 		return state
 	default:
-		c.diag.AddError("Unknown value", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v", value, schema))
+		c.diag.AddError("Unknown value", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v", value, mgcSchema))
 		return nil
 	}
 }
 
-func (c *converter) convertTFArray(schema *mgcSdk.Schema, atinfo *attribute, value tftypes.Value, ignoreUnknown bool) (converted []any) {
+func (c *tfStateConverter) toMgcSchemaArray(mgcSchema *mgcSdk.Schema, atinfo *attribute, value tftypes.Value, ignoreUnknown bool, filterUnset bool) (converted []any) {
 	var state []tftypes.Value
 	err := value.As(&state)
 	if err != nil {
-		c.diag.AddError("Unable to convert value to list", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, schema, err.Error()))
+		c.diag.AddError("Unable to convert value to list", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, mgcSchema, err.Error()))
 		return nil
 	}
 
@@ -158,7 +167,7 @@ func (c *converter) convertTFArray(schema *mgcSdk.Schema, atinfo *attribute, val
 	tfinfo := atinfo.attributes["0"]
 	converted = make([]any, len(state))
 	for i, value := range state {
-		lresult := c.convertTFToValue((*mgcSdk.Schema)(schema.Items.Value), tfinfo, value, ignoreUnknown)
+		lresult := c.toMgcSchemaValue((*mgcSdk.Schema)(mgcSchema.Items.Value), tfinfo, value, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
 			c.diag.AddError("Unable to convert array", fmt.Sprintf("unknown value inside array at %v", i))
 			return nil
@@ -168,21 +177,21 @@ func (c *converter) convertTFArray(schema *mgcSdk.Schema, atinfo *attribute, val
 	return converted
 }
 
-func (c *converter) convertTFMap(schema *mgcSdk.Schema, atinfo *attribute, value tftypes.Value, ignoreUnknown bool) (converted map[string]any) {
+func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attribute, value tftypes.Value, ignoreUnknown bool, filterUnset bool) (converted map[string]any) {
 	var state map[string]tftypes.Value
 	err := value.As(&state)
 	if err != nil {
-		c.diag.AddError("Unable to convert value to map", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, schema, err.Error()))
+		c.diag.AddError("Unable to convert value to map", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, mgcSchema, err.Error()))
 		return nil
 	}
 
 	converted = map[string]any{}
-	for schemaKey, propSchema := range schema.Properties {
-		tfinfo := atinfo.attributes[schemaKey]
+	for mgcSchemaKey, mgcPropSchema := range mgcSchema.Properties {
+		tfinfo := atinfo.attributes[mgcSchemaKey]
 		if tfinfo == nil {
 			c.diag.AddError(
 				"Schema attribute missing from attribute information",
-				fmt.Sprintf("[convert] schema attribute `%s` doesn't have attribute information", schemaKey),
+				fmt.Sprintf("[convert] schema attribute `%s` doesn't have attribute information", mgcSchemaKey),
 			)
 			continue
 		}
@@ -191,119 +200,81 @@ func (c *converter) convertTFMap(schema *mgcSdk.Schema, atinfo *attribute, value
 		v, ok := state[tfkey]
 		if !ok {
 			title := "Schema attribute missing from state value"
-			msg := fmt.Sprintf("[convert] schema attribute `%s` with info `%+v` missing from state %+v", schemaKey, atinfo, state)
+			msg := fmt.Sprintf("[convert] schema attribute `%s` with info `%+v` missing from state %+v", mgcSchemaKey, atinfo, state)
 			if tfinfo.isRequired {
 				c.diag.AddError(title, msg)
 				return
 			}
-
+			tflog.Debug(c.ctx, msg)
 			continue
 		}
 
-		propValue := c.convertTFToValue((*mgcSdk.Schema)(propSchema.Value), tfinfo, v, ignoreUnknown)
+		propValue := c.toMgcSchemaValue((*mgcSdk.Schema)(mgcPropSchema.Value), tfinfo, v, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
 			return nil
 		}
 
 		// We need to ignore nil values generated from unknown elements that didn't generate errors
 		if propValue == nil {
-			if propSchema.Value.Nullable || propSchema.Value.Type == "null" {
-				converted[schemaKey] = propValue
+			if tfinfo.isOptional && !tfinfo.isComputed && !filterUnset {
+				converted[mgcSchemaKey] = propValue
+			} else if mgcPropSchema.Value.Nullable || mgcPropSchema.Value.Type == "null" {
+				converted[mgcSchemaKey] = propValue
 			}
 		} else {
-			converted[schemaKey] = propValue
+			converted[mgcSchemaKey] = propValue
 		}
 	}
 	return converted
 }
 
-// ---- END: TF To Value ----
-
-// ---- Value To TF ----
-
-func (c *converter) convertValueToTF(schema *mgcSdk.Schema, result any, p path.Path) *tftypes.Value {
-	if schema == nil {
+// Convert MGC schema keys to the corresponding TF state keys.
+//
+// This is necessary to allow merging an object that has diverging input and output elements.
+// For example: "desired_status" and "current_status"
+//
+// Verify for errors in the converter diagnostics attribute.
+func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, obj map[string]any) {
+	if atinfo.schema == nil {
 		c.diag.AddError("Missing schema to conversion", "schema not provided")
-		return nil
+		return
 	}
 
-	t := c.getAttributeType(schema)
-	if c.diag.HasError() {
-		return nil
+	// TODO: Make recursive
+	for key, value := range obj {
+		info, ok := atinfo.attributes[key]
+		if !ok {
+			// We ignore already converted values.
+			// c.diag.AddError("Attribute information missing", fmt.Sprintf("[convert] attribute `%s` doesn't have attribute information %+v", key, obj))
+			return
+		}
+
+		if key != info.name {
+			obj[info.name] = value
+		}
 	}
-
-	var v tftypes.Value = tftypes.Value{}
-	switch t {
-	case "string":
-		if result == nil {
-			v = tftypes.NewValue(tftypes.String, nil)
-		} else {
-			v = tftypes.NewValue(tftypes.String, result.(string))
-		}
-	case "number", "integer":
-		if result == nil {
-			v = tftypes.NewValue(tftypes.Number, nil)
-		} else {
-			v = tftypes.NewValue(tftypes.Number, result.(float64))
-		}
-	case "boolean":
-		if result == nil {
-			v = tftypes.NewValue(tftypes.Bool, nil)
-		} else {
-			v = tftypes.NewValue(tftypes.Bool, result.(bool))
-		}
-	case "array":
-		// TODO: not ignore array attributes
-		return nil
-		// Implementation
-		// list := []tftypes.Value{}
-		// elemSchema := (*mgcSdk.Schema)(schema.Items.Value)
-		// for i, v := range result.([]any) {
-		// 	convElem := c.convertValueToTF(elemSchema, v, p.AtListIndex(i))
-		// 	if c.diag.HasError() {
-		// 		return nil
-		// 	}
-		// 	list = append(list, *convElem)
-		// }
-
-		// v = tftypes.NewValue(
-		// 	tftypes.List{
-		// 		ElementType: list[0].Type(),
-		// 	},
-		// 	list,
-		// )
-	case "object":
-		// TODO: not ignore nested object attributes
-		if !p.Equal(path.Empty()) {
-			return nil
-		}
-
-		m := map[string]tftypes.Value{}
-		mt := map[string]tftypes.Type{}
-		for key, value := range result.(map[string]any) { // TODO: Mudar para properties
-			mvalue := schema.Properties[key]
-			if mvalue == nil {
-				c.diag.AddWarning("Schema attribute missing", fmt.Sprintf("[convert] schema attribute `%s` missing from state %+v", key, result))
-				continue
-			}
-
-			tfpath := p.AtName(key)
-			attrValue := c.convertValueToTF((*mgcSdk.Schema)(mvalue.Value), value, tfpath)
-			if attrValue != nil {
-				m[key] = *attrValue
-				mt[key] = (*attrValue).Type()
-			}
-		}
-
-		v = tftypes.NewValue(tftypes.Object{
-			AttributeTypes: mt,
-		}, m)
-	default:
-		c.diag.AddError("Unknown value", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v", result, schema))
-		return nil
-	}
-
-	return &v
 }
 
-// ---- END: Value To TF ----
+func (c *tfStateConverter) fromMap(result map[string]any) *tftypes.Value {
+	if c.tfSchema == nil {
+		// TODO: Error
+		return nil
+	}
+
+	state := map[string]tftypes.Value{}
+
+	for k, tfAttr := range c.tfSchema.Attributes {
+		t := tfAttr.GetType().TerraformType(c.ctx)
+		if t.Is(tftypes.List{}) {
+			// TODO: Convert list
+		} else if t.Is(tftypes.Object{}) {
+			// TODO: Convert object
+		} else {
+			state[k] = tftypes.NewValue(t, result[k])
+		}
+
+	}
+
+	finalState := tftypes.NewValue(c.tfSchema.Type().TerraformType(c.ctx), state)
+	return &finalState
+}

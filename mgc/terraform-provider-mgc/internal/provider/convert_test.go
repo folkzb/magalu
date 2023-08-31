@@ -310,8 +310,8 @@ var attrInfos = []map[string]*attribute{
 	attrInfoTFInstanceCreate,
 }
 
-func TestConvertTFToValue(t *testing.T) {
-	conv := converter{
+func TestToMgcSchemaValue(t *testing.T) {
+	conv := tfStateConverter{
 		ctx:  context.Background(),
 		diag: &diag.Diagnostics{},
 	}
@@ -321,7 +321,7 @@ func TestConvertTFToValue(t *testing.T) {
 			name:       "schema",
 			attributes: attrInfos[i],
 		}
-		result := conv.convertTFToValue(schemas[i], &atinfo, states[i], true)
+		result := conv.toMgcSchemaValue(schemas[i], &atinfo, states[i], true, true)
 		if !reflect.DeepEqual(result, results[i]) {
 			t.Fatalf("result differs from expected: %T:%+v %T:%+v %+v", result, result, results[i], results[i], conv.diag)
 		}

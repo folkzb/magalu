@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"golang.org/x/exp/maps"
@@ -83,28 +84,34 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 }
 
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conv := converter{
-		ctx:  ctx,
-		diag: &resp.Diagnostics,
-	}
+	conv := newTFStateConverter(ctx, &resp.Diagnostics, r.tfschema)
 
 	// Make request
 	configs := map[string]any{}
-	atinfo := attribute{
-		name:       "schema",
+	iatinfo := attribute{
+		name:       "inputSchemasInfo",
+		schema:     r.create.ParametersSchema(),
 		attributes: r.inputAttr,
 	}
+	oatinfo := attribute{
+		name:       "outputSchemasInfo",
+		schema:     r.create.ResultSchema(),
+		attributes: r.outputAttr,
+	}
 
-	params := conv.convertTFMap(r.create.ParametersSchema(), &atinfo, req.Plan.Raw, true)
+	// Create initial state from create params and update params
+	// TODO: Find a better way to send the filter flags
+	stateMap := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
+	updateStateMap := conv.toMgcSchemaMap(r.update.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
+	maps.Copy(stateMap, updateStateMap)
+	// Convert state schema keys to input tfkeys
+	conv.mgcKeysToStateKeys(&iatinfo, stateMap)
+
+	params := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, true)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Create initial state from plan
-	stateMap := map[string]any{}
-	maps.Copy(stateMap, params)
-
-	tflog.Info(ctx, fmt.Sprintf("[resource] creating `%s` - request info with params: %+v", r.name, params))
+	tflog.Debug(ctx, fmt.Sprintf("[resource] creating `%s` - request info with params: %+v", r.name, params))
 	result, err := r.create.Execute(r.sdk.WrapContext(ctx), params, configs)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -132,21 +139,19 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	// Add create result information to state
 	maps.Copy(stateMap, resultMap)
+	conv.mgcKeysToStateKeys(&oatinfo, stateMap)
 
-	tflog.Info(ctx, "created a virtual-machine resource with id %s")
+	tflog.Info(ctx, "[resource] created a virtual-machine resource with id %s")
 
-	// TODO: REMOVE ME
+	// TODO: Wait until the desired status is achieved - Remove sleep timer
 	time.Sleep(time.Second * 20)
 
-	// Read param elements from StateMap
+	// Read param elements from create result
 	params = map[string]any{}
 	for k := range r.read.ParametersSchema().Properties {
-		params[k] = stateMap[k]
+		params[k] = resultMap[k]
 	}
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s` - request info with params: %+v", r.name, params))
+	tflog.Debug(ctx, "[resource] reading new virtual-machine resource with id %s")
 	result, err = r.read.Execute(r.sdk.WrapContext(ctx), params, configs)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -166,31 +171,35 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	// Update state with read result
 	maps.Copy(stateMap, resultMap)
-	stateValue := conv.convertValueToTF(r.read.ResultSchema(), stateMap, path.Empty())
+	conv.mgcKeysToStateKeys(&oatinfo, stateMap)
+
+	// Create a tf state value from the state map
+	stateValue := conv.fromMap(stateMap)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Trace(ctx, "reading created virtual-machine resource with id %s")
 	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &stateValue)...)
+	resp.State = tfsdk.State{
+		Raw:    *stateValue,
+		Schema: resp.State.Schema,
+	}
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s`", r.name))
 
-	conv := converter{
-		ctx:  ctx,
-		diag: &resp.Diagnostics,
-	}
+	conv := newTFStateConverter(ctx, &resp.Diagnostics, r.tfschema)
+	// TODO: Convert entire state to a map
 
 	// Make request
 	atinfo := attribute{
 		name:       "schema",
 		attributes: r.inputAttr,
 	}
-	params := conv.convertTFMap(r.read.ParametersSchema(), &atinfo, req.State.Raw, true)
+	params := conv.toMgcSchemaMap(r.read.ParametersSchema(), &atinfo, req.State.Raw, true, true)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -212,20 +221,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	*/
 	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
 
-	resultMap, ok := result.(map[string]any)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("Unable to convert %v to map.", result),
-		)
-		return
-	}
-
-	stateValue := conv.convertValueToTF(r.read.ResultSchema(), resultMap, path.Empty())
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.State.Set(ctx, *stateValue)
+	// TODO: Update current state
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
