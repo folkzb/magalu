@@ -81,7 +81,25 @@ is `magalu.cloud/sdk/openapi.mke.cluster.list` matches only that namespace,
 while `magalu.cloud/sdk/openapi.*` will match all the OpenAPI and
 `-magalu.cloud/sdk/openapi.mke.cluster.list` will **not** show that namespace.
 
-Examples:
+### Configure via environment variable
+
+It's also possible to configure the logger using the ```MGC_LOGGING``` environment variable. The code below shows the same logger configuration as before being set thorugh the environment variable:
+
+```shell
+export MGC_LOGGING='{
+  "encoderConfig": {
+    "levelEncoder": "color",
+    "timeEncoder": "nanos",
+    "timeKey": "ts",
+    "callerKey": "caller"
+  }
+}
+'
+```
+
+The environment variable configuration has precedence over other logger configurations. This means that even if one has set a previous logger configuration using ```./mgc config set --key=logging --value=[...]``` the CLI will look for the configuration in ```MGC_LOGGING``` first.
+
+### Examples:
 
 ```shell
 # logs everything (all levels, all namespaces)
