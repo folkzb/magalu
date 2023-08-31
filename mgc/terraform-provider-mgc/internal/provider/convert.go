@@ -196,7 +196,7 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 			continue
 		}
 
-		tfkey := tfinfo.name
+		tfkey := tfinfo.tfName
 		v, ok := state[tfkey]
 		if !ok {
 			title := "Schema attribute missing from state value"
@@ -235,7 +235,7 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 //
 // Verify for errors in the converter diagnostics attribute.
 func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, obj map[string]any) {
-	if atinfo.schema == nil {
+	if atinfo.mgcSchema == nil {
 		c.diag.AddError("Missing schema to conversion", "schema not provided")
 		return
 	}
@@ -249,8 +249,8 @@ func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, obj map[string]
 			return
 		}
 
-		if key != info.name {
-			obj[info.name] = value
+		if key != info.tfName {
+			obj[info.tfName] = value
 		}
 	}
 }

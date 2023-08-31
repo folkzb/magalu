@@ -20,8 +20,8 @@ import (
 )
 
 type attribute struct {
-	name                       string
-	schema                     *mgcSdk.Schema
+	tfName                     string
+	mgcSchema                  *mgcSdk.Schema
 	attributes                 map[string]*attribute
 	isID                       bool
 	isRequired                 bool
@@ -45,8 +45,8 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 	for attr, ref := range cschema.Properties {
 		required := slices.Contains(cschema.Required, attr)
 		input[attr] = &attribute{
-			name:                       kebabToSnakeCase(attr),
-			schema:                     (*mgcSdk.Schema)(ref.Value),
+			tfName:                     kebabToSnakeCase(attr),
+			mgcSchema:                  (*mgcSdk.Schema)(ref.Value),
 			isID:                       false,
 			isRequired:                 required,
 			isOptional:                 !required,
@@ -62,7 +62,7 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 	for attr, ref := range uschema.Properties {
 		if ca, ok := input[attr]; ok {
 			us := ref.Value
-			if !reflect.DeepEqual(ca.schema, (*mgcSdk.Schema)(us)) {
+			if !reflect.DeepEqual(ca.mgcSchema, (*mgcSdk.Schema)(us)) {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
 				// TODO: Ignore default values when verifying equality
 				// TODO: Don't forget to add the path when using recursion
@@ -85,8 +85,8 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 
 		required := slices.Contains(uschema.Required, attr)
 		input[attr] = &attribute{
-			name:                       kebabToSnakeCase(attr),
-			schema:                     (*mgcSdk.Schema)(ref.Value),
+			tfName:                     kebabToSnakeCase(attr),
+			mgcSchema:                  (*mgcSdk.Schema)(ref.Value),
 			isID:                       isID,
 			isRequired:                 required && !isID,
 			isOptional:                 !required && !isID,
@@ -119,8 +119,8 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 			isID = idRexp.MatchString(attr)
 		}
 		output[attr] = &attribute{
-			name:                       kebabToSnakeCase(attr),
-			schema:                     (*mgcSdk.Schema)(ref.Value),
+			tfName:                     kebabToSnakeCase(attr),
+			mgcSchema:                  (*mgcSdk.Schema)(ref.Value),
 			isID:                       isID,
 			isRequired:                 false,
 			isOptional:                 false,
@@ -134,7 +134,7 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 	for attr, ref := range r.read.ResultSchema().Properties {
 		if ra, ok := output[attr]; ok {
 			rs := ref.Value
-			if !reflect.DeepEqual(ra.schema, (*mgcSdk.Schema)(rs)) {
+			if !reflect.DeepEqual(ra.mgcSchema, (*mgcSdk.Schema)(rs)) {
 				// Ignore read value in favor of create result value (This is probably a bug with the API)
 				// err := fmt.Sprintf("[resource] schema for `%s`: output attribute `%s` is different between create result and read - create result: %+v - read: %+v ", r.name, attr, ra.schema, rs)
 				// d.AddError("Attribute schema is different between create result and read schemas", err)
@@ -145,8 +145,8 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 		}
 
 		output[attr] = &attribute{
-			name:                       kebabToSnakeCase(attr),
-			schema:                     (*mgcSdk.Schema)(ref.Value),
+			tfName:                     kebabToSnakeCase(attr),
+			mgcSchema:                  (*mgcSdk.Schema)(ref.Value),
 			isID:                       false,
 			isRequired:                 false,
 			isOptional:                 false,
@@ -170,12 +170,12 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 	for name, iattr := range r.inputAttr {
 		// Split attributes that differ between input/output
 		if oattr := r.outputAttr[name]; oattr != nil && !iattr.isID {
-			if !reflect.DeepEqual(oattr.schema, iattr.schema) {
-				os, _ := oattr.schema.MarshalJSON()
-				is, _ := iattr.schema.MarshalJSON()
+			if !reflect.DeepEqual(oattr.mgcSchema, iattr.mgcSchema) {
+				os, _ := oattr.mgcSchema.MarshalJSON()
+				is, _ := iattr.mgcSchema.MarshalJSON()
 				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", r.name, name, is, os))
-				iattr.name = kebabToSnakeCase("desired_" + iattr.name)
-				oattr.name = kebabToSnakeCase("current_" + oattr.name)
+				iattr.tfName = kebabToSnakeCase("desired_" + iattr.tfName)
+				oattr.tfName = kebabToSnakeCase("current_" + oattr.tfName)
 			}
 		}
 
@@ -183,19 +183,19 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 		// TODO: This shouldn't happen after we handle complex types like slices and objects
 		// TODO: Remove debug log
 		if at == nil {
-			err := fmt.Sprintf("[resource] schema for `%s`: unable to create terraform attribute `%s` - data: %+v", r.name, iattr.name, iattr)
+			err := fmt.Sprintf("[resource] schema for `%s`: unable to create terraform attribute `%s` - data: %+v", r.name, iattr.tfName, iattr)
 			tflog.Debug(ctx, err)
 			// TODO: Uncomment the error
 			// d.AddError("Unknown attribute type", err)
 			continue
 		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: terraform input attribute `%s` created", r.name, iattr.name))
-		tfa[iattr.name] = at
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: terraform input attribute `%s` created", r.name, iattr.tfName))
+		tfa[iattr.tfName] = at
 	}
 
 	for _, oattr := range r.outputAttr {
 		// If they don't differ and it's already created skip
-		if _, ok := tfa[oattr.name]; ok {
+		if _, ok := tfa[oattr.tfName]; ok {
 			continue
 		}
 
@@ -203,21 +203,21 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 		if at == nil {
 			// TODO: This shouldn't happen after we handle complex types like slices and objects
 			// TODO: Remove debug log
-			err := fmt.Sprintf("[resource] schema for `%s`: unable to create terraform attribute `%s` - data: %+v", r.name, oattr.name, oattr)
+			err := fmt.Sprintf("[resource] schema for `%s`: unable to create terraform attribute `%s` - data: %+v", r.name, oattr.tfName, oattr)
 			tflog.Debug(ctx, err)
 			// TODO: Uncomment the error
 			// d.AddError("Unknown attribute type", err)
 			continue
 		}
-		tfa[oattr.name] = at
+		tfa[oattr.tfName] = at
 	}
 
 	return &tfa, d
 }
 
 func sdkToTerraformAttribute(ctx context.Context, c *attribute, di diag.Diagnostics) schema.Attribute {
-	if c.schema == nil || c == nil {
-		di.AddError("Invalid attribute pointer", fmt.Sprintf("ERROR invalid pointer, attribute pointer is nil %v %v", c.schema, c))
+	if c.mgcSchema == nil || c == nil {
+		di.AddError("Invalid attribute pointer", fmt.Sprintf("ERROR invalid pointer, attribute pointer is nil %v %v", c.mgcSchema, c))
 		return nil
 	}
 
@@ -228,7 +228,7 @@ func sdkToTerraformAttribute(ctx context.Context, c *attribute, di diag.Diagnost
 
 	// TODO: Handle default values
 
-	value := c.schema
+	value := c.mgcSchema
 	t := conv.getAttributeType(value)
 	if di.HasError() {
 		return nil

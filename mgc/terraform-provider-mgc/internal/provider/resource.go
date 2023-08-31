@@ -89,13 +89,13 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	// Make request
 	configs := map[string]any{}
 	iatinfo := attribute{
-		name:       "inputSchemasInfo",
-		schema:     r.create.ParametersSchema(),
+		tfName:     "inputSchemasInfo",
+		mgcSchema:  r.create.ParametersSchema(),
 		attributes: r.inputAttr,
 	}
 	oatinfo := attribute{
-		name:       "outputSchemasInfo",
-		schema:     r.create.ResultSchema(),
+		tfName:     "outputSchemasInfo",
+		mgcSchema:  r.create.ResultSchema(),
 		attributes: r.outputAttr,
 	}
 
@@ -196,7 +196,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	// Make request
 	atinfo := attribute{
-		name:       "schema",
+		tfName:     "schema",
 		attributes: r.inputAttr,
 	}
 	params := conv.toMgcSchemaMap(r.read.ParametersSchema(), &atinfo, req.State.Raw, true, true)

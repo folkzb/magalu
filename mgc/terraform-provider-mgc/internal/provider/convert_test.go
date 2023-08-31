@@ -236,63 +236,63 @@ var results = []any{
 
 var attrInfo = map[string]*attribute{
 	"value": {
-		name: "value",
+		tfName: "value",
 		attributes: map[string]*attribute{
 			"value_nested": {
-				name: "value_nested",
+				tfName: "value_nested",
 			},
 		},
 	},
 }
 var attrInfoList = map[string]*attribute{
 	"0": {
-		name: "0",
+		tfName: "0",
 		attributes: map[string]*attribute{
 			"value": {
-				name: "value",
+				tfName: "value",
 			},
 		},
 	},
 }
 var attrInfoTFNameObjectNested = map[string]*attribute{
 	"value": {
-		name: "value",
+		tfName: "value",
 		attributes: map[string]*attribute{
 			"value_nested": {
-				name: "tf_value_nested",
+				tfName: "tf_value_nested",
 			},
 		},
 	},
 }
 var attrInfoTFNameObjectInList = map[string]*attribute{
 	"0": {
-		name: "0",
+		tfName: "0",
 		attributes: map[string]*attribute{
 			"value": {
-				name: "tf_value",
+				tfName: "tf_value",
 			},
 		},
 	},
 }
 var attrInfoTFInstanceCreate = map[string]*attribute{
-	"allocate_fip":      {name: "allocate_fip", isOptional: true, isComputed: false},
-	"availability_zone": {name: "availability_zone"},
-	"created_at":        {name: "created_at"},
-	"image":             {name: "desired_image"},
-	"status":            {name: "desired_status"},
-	"error":             {name: "error"},
-	"id":                {name: "id"},
-	"instance_id":       {name: "instance_id"},
-	"key_name":          {name: "key_name"},
-	"memory":            {name: "memory"},
-	"name":              {name: "name"},
-	"power_state":       {name: "power_state"},
-	"power_state_label": {name: "power_state_label"},
-	"root_storage":      {name: "root_storage"},
-	"type":              {name: "type"},
-	"updated_at":        {name: "updated_at"},
-	"user_data":         {name: "user_data", isOptional: true, isComputed: false},
-	"vcpus":             {name: "vcpus"},
+	"allocate_fip":      {tfName: "allocate_fip", isOptional: true, isComputed: false},
+	"availability_zone": {tfName: "availability_zone"},
+	"created_at":        {tfName: "created_at"},
+	"image":             {tfName: "desired_image"},
+	"status":            {tfName: "desired_status"},
+	"error":             {tfName: "error"},
+	"id":                {tfName: "id"},
+	"instance_id":       {tfName: "instance_id"},
+	"key_name":          {tfName: "key_name"},
+	"memory":            {tfName: "memory"},
+	"name":              {tfName: "name"},
+	"power_state":       {tfName: "power_state"},
+	"power_state_label": {tfName: "power_state_label"},
+	"root_storage":      {tfName: "root_storage"},
+	"type":              {tfName: "type"},
+	"updated_at":        {tfName: "updated_at"},
+	"user_data":         {tfName: "user_data", isOptional: true, isComputed: false},
+	"vcpus":             {tfName: "vcpus"},
 }
 
 var attrInfos = []map[string]*attribute{
@@ -318,7 +318,7 @@ func TestToMgcSchemaValue(t *testing.T) {
 
 	for i := 0; i < len(states); i++ {
 		atinfo := attribute{
-			name:       "schema",
+			tfName:     "schema",
 			attributes: attrInfos[i],
 		}
 		result := conv.toMgcSchemaValue(schemas[i], &atinfo, states[i], true, true)
