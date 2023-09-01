@@ -69,6 +69,30 @@ type Executor interface {
 	Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
 }
 
+type ExecutorWrapper interface {
+	Unwrap() Executor
+}
+
+func ExecutorAs[T Executor](exec Executor) (T, bool) {
+	var zeroT T
+
+	if u, ok := exec.(ExecutorWrapper); ok {
+		t, ok := u.(T)
+		if ok {
+			return t, true
+		}
+
+		x := u.Unwrap()
+		if x == nil {
+			return zeroT, false
+		}
+
+		return ExecutorAs[T](t)
+	}
+
+	return zeroT, false
+}
+
 func VisitAllExecutors(child Descriptor, path []string, visitExecutor func(executor Executor, path []string) (bool, error)) (bool, error) {
 	if executor, ok := child.(Executor); ok {
 		return visitExecutor(executor, path)
