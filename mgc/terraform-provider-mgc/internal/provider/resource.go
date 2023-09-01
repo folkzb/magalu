@@ -126,37 +126,43 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	tflog.Info(ctx, "[resource] created a virtual-machine resource with id %s")
 
-	// TODO: Wait until the desired status is achieved - Remove sleep timer
-	time.Sleep(time.Second * 20)
+	var resultMap map[string]any
+	if checkSimilarJsonSchemas(r.create.ResultSchema(), r.read.ResultSchema()) {
+		resultMap = mgcCreateResultMap
+	} else {
+		// TODO: Wait until the desired status is achieved - Remove sleep timer
+		time.Sleep(time.Second * 20)
 
-	// TODO: this is going away when we implement links
-	// see: https://github.com/profusion/magalu/issues/215
-	// Read param elements from create result
-	params = map[string]any{}
-	for k := range r.read.ParametersSchema().Properties {
-		params[k] = mgcCreateResultMap[k]
-	}
-	tflog.Debug(ctx, "[resource] reading new virtual-machine resource with id %s")
-	result, err = r.read.Execute(r.sdk.WrapContext(ctx), params, configs)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to create instance",
-			fmt.Sprintf("Service returned with error: %v", err),
-		)
-		return
-	}
-	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
+		// TODO: this is going away when we implement links
+		// see: https://github.com/profusion/magalu/issues/215
+		// Read param elements from create result
+		params = map[string]any{}
+		for k := range r.read.ParametersSchema().Properties {
+			params[k] = mgcCreateResultMap[k]
+		}
+		tflog.Debug(ctx, "[resource] reading new virtual-machine resource with id %s")
+		result, err = r.read.Execute(r.sdk.WrapContext(ctx), params, configs)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to create instance",
+				fmt.Sprintf("Service returned with error: %v", err),
+			)
+			return
+		}
+		_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
 
-	mgcReadResultMap, ok := result.(map[string]any)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("Unable to convert %v to map.", result),
-		)
-		return
+		mgcReadResultMap, ok := result.(map[string]any)
+		if !ok {
+			resp.Diagnostics.AddError(
+				"Operation output mismatch",
+				fmt.Sprintf("Unable to convert %v to map.", result),
+			)
+			return
+		}
+		resultMap = mgcReadResultMap
 	}
 
-	r.applyMgcMap(mgcReadResultMap, ctx, resp.State, &resp.Diagnostics)
+	r.applyMgcMap(resultMap, ctx, resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
