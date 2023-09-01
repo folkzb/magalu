@@ -274,25 +274,39 @@ var attrInfoTFNameObjectInList = mgcAttributes{
 		},
 	},
 }
+
+func tstCreateAttribute(mgcName mgcName, tfName tfName, mgcSchema *core.Schema, isRequired bool, isOptional bool, isComputed bool, useStateForUnknown bool, requiresReplaceWhenChanged bool) *attribute {
+	tfSchema, err := mgcToTFSchema(mgcSchema, isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged)
+	if err != nil {
+		panic("Could not create test TF Schema")
+	}
+	return &attribute{
+		mgcName:   mgcName,
+		tfName:    tfName,
+		mgcSchema: mgcSchema,
+		tfSchema:  tfSchema,
+	}
+}
+
 var attrInfoTFInstanceCreate = mgcAttributes{
-	"allocate_fip":      {tfName: "allocate_fip", isOptional: true, isComputed: false},
-	"availability_zone": {tfName: "availability_zone"},
-	"created_at":        {tfName: "created_at"},
-	"image":             {tfName: "desired_image"},
-	"status":            {tfName: "desired_status"},
-	"error":             {tfName: "error"},
-	"id":                {tfName: "id"},
-	"instance_id":       {tfName: "instance_id"},
-	"key_name":          {tfName: "key_name"},
-	"memory":            {tfName: "memory"},
-	"name":              {tfName: "name"},
-	"power_state":       {tfName: "power_state"},
-	"power_state_label": {tfName: "power_state_label"},
-	"root_storage":      {tfName: "root_storage"},
-	"type":              {tfName: "type"},
-	"updated_at":        {tfName: "updated_at"},
-	"user_data":         {tfName: "user_data", isOptional: true, isComputed: false},
-	"vcpus":             {tfName: "vcpus"},
+	"allocate_fip":      tstCreateAttribute("allocate_fip", "allocate_fip", core.NewBooleanSchema(), false, true, false, false, false),
+	"availability_zone": tstCreateAttribute("availability_zone", "availability_zone", core.NewStringSchema(), true, false, false, false, false),
+	"created_at":        tstCreateAttribute("created_at", "created_at", core.NewStringSchema(), true, false, false, false, false),
+	"image":             tstCreateAttribute("image", "desired_image", core.NewStringSchema(), true, false, false, false, false),
+	"status":            tstCreateAttribute("status", "desired_status", core.NewStringSchema(), true, false, false, false, false),
+	"error":             tstCreateAttribute("error", "error", core.NewStringSchema(), true, false, false, false, false),
+	"id":                tstCreateAttribute("id", "id", core.NewStringSchema(), true, false, false, false, false),
+	"instance_id":       tstCreateAttribute("instance_id", "instance_id", core.NewStringSchema(), true, false, false, false, false),
+	"key_name":          tstCreateAttribute("key_name", "key_name", core.NewStringSchema(), true, false, false, false, false),
+	"memory":            tstCreateAttribute("memory", "memory", core.NewNumberSchema(), true, false, false, false, false),
+	"name":              tstCreateAttribute("name", "name", core.NewStringSchema(), true, false, false, false, false),
+	"power_state":       tstCreateAttribute("power_state", "power_state", core.NewNumberSchema(), true, false, false, false, false),
+	"power_state_label": tstCreateAttribute("power_state_label", "power_state_label", core.NewStringSchema(), true, false, false, false, false),
+	"root_storage":      tstCreateAttribute("root_storage", "root_storage", core.NewNumberSchema(), true, false, false, false, false),
+	"type":              tstCreateAttribute("type", "type", core.NewStringSchema(), true, false, false, false, false),
+	"updated_at":        tstCreateAttribute("updated_at", "updated_at", core.NewStringSchema(), true, false, false, false, false),
+	"user_data":         tstCreateAttribute("user_data", "user_data", core.NewStringSchema(), false, true, false, false, false),
+	"vcpus":             tstCreateAttribute("vcpus", "vcpus", core.NewNumberSchema(), true, false, false, false, false),
 }
 
 var attrInfos = []mgcAttributes{

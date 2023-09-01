@@ -84,7 +84,7 @@ func (c *tfStateConverter) toMgcSchemaValue(mgcSchema *mgcSdk.Schema, atinfo *at
 	}
 
 	if tfValue.IsNull() {
-		if atinfo.isOptional && !atinfo.isComputed {
+		if atinfo.tfSchema.IsOptional() && !atinfo.tfSchema.IsComputed() {
 			// Optional values that aren't computed will never be unknown
 			// this means they will be null in the state
 			return nil, true
@@ -215,7 +215,7 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 		if !ok {
 			title := "Schema attribute missing from state value"
 			msg := fmt.Sprintf("[convert] schema attribute `%s` with info `%+v` missing from state %+v", mgcName, atinfo, tfMap)
-			if itemAttr.isRequired {
+			if itemAttr.tfSchema.IsRequired() {
 				c.diag.AddError(title, msg)
 				return
 			}

@@ -29,9 +29,6 @@ type attribute struct {
 	tfSchema   schema.Attribute
 	attributes mgcAttributes
 	isID       bool // TODO: remove this once we use links, see https://github.com/profusion/magalu/issues/215
-	isRequired bool
-	isOptional bool
-	isComputed bool
 }
 
 type mgcAttributes map[mgcName]*attribute
@@ -63,14 +60,11 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 		}
 
 		input[mgcName] = &attribute{
-			tfName:     tfNameFromMgc(mgcName),
-			mgcName:    mgcName,
-			mgcSchema:  mgcSchema,
-			tfSchema:   tfSchema,
-			isID:       false,
-			isRequired: isRequired,
-			isOptional: isOptional,
-			isComputed: isComputed,
+			tfName:    tfNameFromMgc(mgcName),
+			mgcName:   mgcName,
+			mgcSchema: mgcSchema,
+			tfSchema:  tfSchema,
+			isID:      false,
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[mgcName]))
 	}
@@ -115,14 +109,11 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 		}
 
 		input[mgcName] = &attribute{
-			tfName:     tfNameFromMgc(mgcName),
-			mgcName:    mgcName,
-			mgcSchema:  mgcSchema,
-			tfSchema:   tfSchema,
-			isID:       isID,
-			isRequired: isRequired,
-			isOptional: isOptional,
-			isComputed: isComputed,
+			tfName:    tfNameFromMgc(mgcName),
+			mgcName:   mgcName,
+			mgcSchema: mgcSchema,
+			tfSchema:  tfSchema,
+			isID:      isID,
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[mgcName]))
 	}
@@ -162,14 +153,11 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 		}
 
 		output[mgcName] = &attribute{
-			tfName:     tfNameFromMgc(mgcName),
-			mgcName:    mgcName,
-			mgcSchema:  mgcSchema,
-			tfSchema:   tfSchema,
-			isID:       isID,
-			isRequired: isRequired,
-			isOptional: isOptional,
-			isComputed: isComputed,
+			tfName:    tfNameFromMgc(mgcName),
+			mgcName:   mgcName,
+			mgcSchema: mgcSchema,
+			tfSchema:  tfSchema,
+			isID:      isID,
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[mgcName]))
 	}
@@ -199,14 +187,11 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 		}
 
 		output[mgcName] = &attribute{
-			tfName:     tfNameFromMgc(mgcName),
-			mgcName:    mgcName,
-			mgcSchema:  mgcSchema,
-			tfSchema:   tfSchema,
-			isID:       false,
-			isRequired: isRequired,
-			isOptional: isOptional,
-			isComputed: isComputed,
+			tfName:    tfNameFromMgc(mgcName),
+			mgcName:   mgcName,
+			mgcSchema: mgcSchema,
+			tfSchema:  tfSchema,
+			isID:      false,
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[mgcName]))
 	}
