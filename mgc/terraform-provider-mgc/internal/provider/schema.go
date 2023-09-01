@@ -78,6 +78,89 @@ func checkSimilarJsonSchemas(a, b *mgcSdk.Schema) bool {
 	}
 }
 
+type attributeModifiers struct {
+	isRequired                 bool
+	isOptional                 bool
+	isComputed                 bool
+	useStateForUnknown         bool
+	requiresReplaceWhenChanged bool
+}
+
+func addMgcSchemaAttributes(
+	attributes mgcAttributes,
+	mgcSchema *mgcSdk.Schema,
+	getModifiers func(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers,
+	resourceName string,
+	ctx context.Context,
+) error {
+	for k, ref := range mgcSchema.Properties {
+		mgcName := mgcName(k)
+		mgcSchema := (*mgcSdk.Schema)(ref.Value)
+		if ca, ok := attributes[mgcName]; ok {
+			if !checkSimilarJsonSchemas(ca.mgcSchema, mgcSchema) {
+				// Ignore update value in favor of create value (This is probably a bug with the API)
+				// TODO: Ignore default values when verifying equality
+				tflog.Error(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring DIFFERENT attribute `%s`:\nOLD=%+v\nNEW=%+v", resourceName, k, ca.mgcSchema, mgcSchema))
+				continue
+			}
+			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring already computed attribute `%s` ", resourceName, k))
+			continue
+		}
+
+		tfSchema, err := mgcToTFSchema(mgcSchema, getModifiers(mgcSchema, mgcName))
+		if err != nil {
+			tflog.Error(ctx, fmt.Sprintf("[resource] schema for %q attribute %q schema: %+v; error: %s", resourceName, k, mgcSchema, err))
+			return fmt.Errorf("attribute %q, error=%s", k, err)
+		}
+
+		attr := &attribute{
+			tfName:    tfNameFromMgc(mgcName),
+			mgcName:   mgcName,
+			mgcSchema: mgcSchema,
+			tfSchema:  tfSchema,
+		}
+		attributes[mgcName] = attr
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for %q attribute %q: %+v", resourceName, k, attr))
+	}
+
+	return nil
+}
+
+func (r *MgcResource) getCreateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	k := string(mgcName)
+	isRequired := slices.Contains(mgcSchema.Required, k)
+	return attributeModifiers{
+		isRequired:                 isRequired,
+		isOptional:                 !isRequired,
+		isComputed:                 !isRequired && r.read.ResultSchema().Properties[k] != nil, // If not required and present in read it can be compute
+		useStateForUnknown:         false,
+		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil,
+	}
+}
+
+func (r *MgcResource) getUpdateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	k := string(mgcName)
+	isCreated := r.create.ResultSchema().Properties[k] != nil
+	required := slices.Contains(mgcSchema.Required, k)
+	return attributeModifiers{
+		isRequired:                 required && !isCreated,
+		isOptional:                 !required && !isCreated,
+		isComputed:                 !required || isCreated,
+		useStateForUnknown:         true,
+		requiresReplaceWhenChanged: false,
+	}
+}
+
+func (r *MgcResource) getResultModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	return attributeModifiers{
+		isRequired:                 false,
+		isOptional:                 false,
+		isComputed:                 true,
+		useStateForUnknown:         true,
+		requiresReplaceWhenChanged: false,
+	}
+}
+
 func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics {
 	d := diag.Diagnostics{}
 	if len(r.inputAttr) != 0 {
@@ -86,68 +169,28 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading input attributes", r.name))
 
 	input := mgcAttributes{}
-	cschema := r.create.ParametersSchema()
-	for attr, ref := range cschema.Properties {
-		required := slices.Contains(cschema.Required, attr)
-		mgcName := mgcName(attr)
-		mgcSchema := (*mgcSdk.Schema)(ref.Value)
-		isRequired := required
-		isOptional := !required
-		isComputed := !required && r.read.ResultSchema().Properties[attr] != nil // If not required and present in read it can be computed
-		useStateForUnknown := false
-		requiresReplaceWhenChanged := r.update.ParametersSchema().Properties[attr] == nil
-		tfSchema, err := mgcToTFSchema(mgcSchema, isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged)
-		if err != nil {
-			d.AddError("could not create TF schema", fmt.Sprintf("attribute %q, error=%s", attr, err))
-			continue
-		}
-
-		input[mgcName] = &attribute{
-			tfName:    tfNameFromMgc(mgcName),
-			mgcName:   mgcName,
-			mgcSchema: mgcSchema,
-			tfSchema:  tfSchema,
-		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[mgcName]))
+	err := addMgcSchemaAttributes(
+		input,
+		r.create.ParametersSchema(),
+		r.getCreateParamsModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF input attributes", err.Error())
+		return d
 	}
 
-	uschema := r.update.ParametersSchema()
-	for attr, ref := range uschema.Properties {
-		mgcName := mgcName(attr)
-		mgcSchema := (*mgcSdk.Schema)(ref.Value)
-		if ca, ok := input[mgcName]; ok {
-			if !checkSimilarJsonSchemas(ca.mgcSchema, mgcSchema) {
-				// Ignore update value in favor of create value (This is probably a bug with the API)
-				// TODO: Ignore default values when verifying equality
-				// TODO: Don't forget to add the path when using recursion
-				// err := fmt.Sprintf("[resource] schema for `%s`: input attribute `%s` is different between create and update - create: %+v - update: %+v ", r.name, attr, ca.schema, us)
-				// d.AddError("Attribute schema is different between create and update schemas", err)
-				continue
-			}
-			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring already computed attribute `%s` ", r.name, attr))
-			continue
-		}
-
-		isCreated := r.create.ResultSchema().Properties[attr] != nil
-		required := slices.Contains(uschema.Required, attr)
-		isRequired := required && !isCreated
-		isOptional := !required && !isCreated
-		isComputed := !required || isCreated
-		useStateForUnknown := true
-		requiresReplaceWhenChanged := false
-		tfSchema, err := mgcToTFSchema(mgcSchema, isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged)
-		if err != nil {
-			d.AddError("could not create TF schema", fmt.Sprintf("attribute %q, error=%s", attr, err))
-			continue
-		}
-
-		input[mgcName] = &attribute{
-			tfName:    tfNameFromMgc(mgcName),
-			mgcName:   mgcName,
-			mgcSchema: mgcSchema,
-			tfSchema:  tfSchema,
-		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[mgcName]))
+	err = addMgcSchemaAttributes(
+		input,
+		r.update.ParametersSchema(),
+		r.getUpdateParamsModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF input attributes", err.Error())
+		return d
 	}
 
 	r.inputAttr = input
@@ -162,61 +205,27 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading output attributes", r.name))
 
 	output := mgcAttributes{}
-	crschema := r.create.ResultSchema()
-	for attr, ref := range crschema.Properties {
-		mgcName := mgcName(attr)
-		mgcSchema := (*mgcSdk.Schema)(ref.Value)
-		isRequired := false
-		isOptional := false
-		isComputed := true
-		useStateForUnknown := true
-		requiresReplaceWhenChanged := false // This one is useless in this case
-		tfSchema, err := mgcToTFSchema(mgcSchema, isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged)
-		if err != nil {
-			d.AddError("could not create TF schema", fmt.Sprintf("attribute %q, error=%s", attr, err))
-			continue
-		}
-
-		output[mgcName] = &attribute{
-			tfName:    tfNameFromMgc(mgcName),
-			mgcName:   mgcName,
-			mgcSchema: mgcSchema,
-			tfSchema:  tfSchema,
-		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[mgcName]))
+	err := addMgcSchemaAttributes(
+		output,
+		r.create.ResultSchema(),
+		r.getResultModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF output attributes", err.Error())
+		return d
 	}
-
-	for attr, ref := range r.read.ResultSchema().Properties {
-		mgcName := mgcName(attr)
-		mgcSchema := (*mgcSdk.Schema)(ref.Value)
-		if ra, ok := output[mgcName]; ok {
-			if !checkSimilarJsonSchemas(ra.mgcSchema, mgcSchema) {
-				// Ignore read value in favor of create result value (This is probably a bug with the API)
-				// err := fmt.Sprintf("[resource] schema for `%s`: output attribute `%s` is different between create result and read - create result: %+v - read: %+v ", r.name, attr, ra.schema, rs)
-				// d.AddError("Attribute schema is different between create result and read schemas", err)
-				continue
-			}
-			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring already computed attribute `%s` ", r.name, attr))
-			continue
-		}
-		isRequired := false
-		isOptional := false
-		isComputed := true
-		useStateForUnknown := true
-		requiresReplaceWhenChanged := false // This one is useless in this case
-		tfSchema, err := mgcToTFSchema(mgcSchema, isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged)
-		if err != nil {
-			d.AddError("could not create TF schema", fmt.Sprintf("attribute %q, error=%s", attr, err))
-			continue
-		}
-
-		output[mgcName] = &attribute{
-			tfName:    tfNameFromMgc(mgcName),
-			mgcName:   mgcName,
-			mgcSchema: mgcSchema,
-			tfSchema:  tfSchema,
-		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[mgcName]))
+	err = addMgcSchemaAttributes(
+		output,
+		r.read.ResultSchema(),
+		r.getResultModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF output attributes", err.Error())
+		return d
 	}
 
 	r.outputAttr = output
@@ -275,7 +284,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]
 	return
 }
 
-func mgcToTFSchema(mgcSchema *mgcSdk.Schema, isRequired bool, isOptional bool, isComputed bool, useStateForUnknown bool, requiresReplaceWhenChanged bool) (schema.Attribute, error) {
+func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, error) {
 	// TODO: Handle default values
 
 	t, err := getJsonType(mgcSchema)
@@ -290,62 +299,62 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, isRequired bool, isOptional bool, i
 		// but couldn't find the interface, it seems everything is redefined for each type
 		// https://github.com/hashicorp/terraform-plugin-framework/blob/main/internal/fwschema/fwxschema/attribute_plan_modification.go
 		mod := []planmodifier.String{}
-		if useStateForUnknown {
+		if m.useStateForUnknown {
 			mod = append(mod, stringplanmodifier.UseStateForUnknown())
 		}
-		if requiresReplaceWhenChanged {
+		if m.requiresReplaceWhenChanged {
 			mod = append(mod, stringplanmodifier.RequiresReplace())
 		}
 		return schema.StringAttribute{
 			Description:   description,
-			Required:      isRequired,
-			Optional:      isOptional,
-			Computed:      isComputed,
+			Required:      m.isRequired,
+			Optional:      m.isOptional,
+			Computed:      m.isComputed,
 			PlanModifiers: mod,
 		}, nil
 	case "number":
 		mod := []planmodifier.Number{}
-		if useStateForUnknown {
+		if m.useStateForUnknown {
 			mod = append(mod, numberplanmodifier.UseStateForUnknown())
 		}
-		if requiresReplaceWhenChanged {
+		if m.requiresReplaceWhenChanged {
 			mod = append(mod, numberplanmodifier.RequiresReplace())
 		}
 		return schema.NumberAttribute{
 			Description:   description,
-			Required:      isRequired,
-			Optional:      isOptional,
-			Computed:      isComputed,
+			Required:      m.isRequired,
+			Optional:      m.isOptional,
+			Computed:      m.isComputed,
 			PlanModifiers: mod,
 		}, nil
 	case "integer":
 		mod := []planmodifier.Int64{}
-		if useStateForUnknown {
+		if m.useStateForUnknown {
 			mod = append(mod, int64planmodifier.UseStateForUnknown())
 		}
-		if requiresReplaceWhenChanged {
+		if m.requiresReplaceWhenChanged {
 			mod = append(mod, int64planmodifier.RequiresReplace())
 		}
 		return schema.Int64Attribute{
 			Description:   description,
-			Required:      isRequired,
-			Optional:      isOptional,
-			Computed:      isComputed,
+			Required:      m.isRequired,
+			Optional:      m.isOptional,
+			Computed:      m.isComputed,
 			PlanModifiers: mod,
 		}, nil
 	case "boolean":
 		mod := []planmodifier.Bool{}
-		if useStateForUnknown {
+		if m.useStateForUnknown {
 			mod = append(mod, boolplanmodifier.UseStateForUnknown())
 		}
-		if requiresReplaceWhenChanged {
+		if m.requiresReplaceWhenChanged {
 			mod = append(mod, boolplanmodifier.RequiresReplace())
 		}
 		return schema.BoolAttribute{
 			Description:   description,
-			Required:      isRequired,
-			Optional:      isOptional,
-			Computed:      isComputed,
+			Required:      m.isRequired,
+			Optional:      m.isOptional,
+			Computed:      m.isComputed,
 			PlanModifiers: mod,
 		}, nil
 	case "array":
