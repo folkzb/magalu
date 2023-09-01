@@ -29,7 +29,7 @@ func newTFStateConverter(ctx context.Context, diag *diag.Diagnostics, tfSchema *
 	}
 }
 
-func (c *tfStateConverter) getEnumType(v *mgcSdk.Schema) string {
+func getJsonEnumType(v *mgcSdk.Schema) (string, error) {
 	types := []string{}
 	for _, v := range v.Enum {
 		var t string
@@ -43,30 +43,28 @@ func (c *tfStateConverter) getEnumType(v *mgcSdk.Schema) string {
 		case bool:
 			t = "boolean"
 		default:
-			c.diag.AddError("Unsupported enum value", fmt.Sprintf("unsupported enum value: %+v", v))
-			return ""
+			return "", fmt.Errorf("unsupported enum value: %+v", v)
 		}
 		if !slices.Contains(types, t) {
 			types = append(types, t)
 		}
 	}
 	if len(types) != 1 {
-		c.diag.AddError("Multiple types of value in enum", fmt.Sprintf("must provide values of a single type in a enum, got %+v", types))
-		return ""
+		return "", fmt.Errorf("must provide values of a single type in a enum, got %+v", types)
 	}
 
-	return types[0]
+	return types[0], nil
 }
 
-func (c *tfStateConverter) getAttributeType(v *mgcSdk.Schema) string {
+func getJsonType(v *mgcSdk.Schema) (string, error) {
 	if v.Type == "" {
 		if len(v.Enum) != 0 {
-			return c.getEnumType(v)
+			return getJsonEnumType(v)
 		}
 
-		c.diag.AddError("Unknown value", fmt.Sprintf("[convert] unable to find schema %+v type", v))
+		return "", fmt.Errorf("unable to find schema %+v type", v)
 	}
-	return v.Type
+	return v.Type, nil
 }
 
 // TODO: attr.mgcSchema must always exist, but now we're not creating it recursively.
@@ -97,8 +95,9 @@ func (c *tfStateConverter) toMgcSchemaValue(mgcSchema *mgcSdk.Schema, atinfo *at
 		return nil, true
 	}
 
-	t := c.getAttributeType(mgcSchema)
-	if c.diag.HasError() {
+	t, err := getJsonType(mgcSchema)
+	if err != nil {
+		c.diag.AddError("Unable to get schema type", err.Error())
 		return nil, false
 	}
 

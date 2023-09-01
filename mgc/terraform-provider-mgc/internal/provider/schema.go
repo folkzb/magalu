@@ -255,16 +255,12 @@ func sdkToTerraformAttribute(ctx context.Context, c *attribute, di *diag.Diagnos
 		return nil
 	}
 
-	conv := tfStateConverter{
-		ctx:  ctx,
-		diag: di,
-	}
-
 	// TODO: Handle default values
 
 	value := c.mgcSchema
-	t := conv.getAttributeType(value)
-	if di.HasError() {
+	t, err := getJsonType(value)
+	if err != nil {
+		di.AddError("Invalid attribute schema", err.Error())
 		return nil
 	}
 
