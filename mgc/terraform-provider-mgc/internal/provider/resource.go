@@ -80,33 +80,21 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 	resp.Schema = *r.tfschema
 }
 
-func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conv := newTFStateConverter(ctx, &resp.Diagnostics, r.tfschema)
+func (r *MgcResource) readMgcMap(mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
+	conv := newTFStateConverter(ctx, diag, r.tfschema)
+	return conv.readMgcMap(mgcSchema, r.inputAttr, tfState)
+}
 
+func (r *MgcResource) applyMgcMap(mgcMap map[string]any, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) {
+	conv := newTFStateConverter(ctx, diag, r.tfschema)
+	conv.applyMgcMap(mgcMap, r.outputAttr, ctx, tfState, path.Empty())
+}
+
+func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Make request
 	configs := map[string]any{}
-	iatinfo := attribute{
-		tfName:     "inputSchemasInfo",
-		mgcName:    "inputSchemasInfo",
-		mgcSchema:  r.create.ParametersSchema(),
-		attributes: r.inputAttr,
-	}
-	oatinfo := attribute{
-		tfName:     "outputSchemasInfo",
-		mgcName:    "outputSchemasInfo",
-		mgcSchema:  r.create.ResultSchema(),
-		attributes: r.outputAttr,
-	}
 
-	// Create initial state from create params and update params
-	// TODO: Find a better way to send the filter flags
-	tfStateMap := map[string]any{}
-	mgcCreateMap, _ := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
-	conv.mgcKeysToStateKeys(&iatinfo, mgcCreateMap, tfStateMap)
-	mgcUpdateStateMap, _ := conv.toMgcSchemaMap(r.update.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
-	conv.mgcKeysToStateKeys(&iatinfo, mgcUpdateStateMap, tfStateMap)
-
-	params, _ := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, true)
+	params := r.readMgcMap(r.create.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -136,14 +124,13 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	// Add create result information to state
-	conv.mgcKeysToStateKeys(&oatinfo, mgcCreateResultMap, tfStateMap)
-
 	tflog.Info(ctx, "[resource] created a virtual-machine resource with id %s")
 
 	// TODO: Wait until the desired status is achieved - Remove sleep timer
 	time.Sleep(time.Second * 20)
 
+	// TODO: this is going away when we implement links
+	// see: https://github.com/profusion/magalu/issues/215
 	// Read param elements from create result
 	params = map[string]any{}
 	for k := range r.read.ParametersSchema().Properties {
@@ -169,34 +156,14 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	// Update state with read result
-	conv.mgcKeysToStateKeys(&oatinfo, mgcReadResultMap, tfStateMap)
-
-	// Create a tf state value from the state map
-	tfStateValue := conv.fromMap(tfStateMap)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Save data into Terraform state
-	resp.State = tfsdk.State{
-		Raw:    *tfStateValue,
-		Schema: resp.State.Schema,
-	}
+	r.applyMgcMap(mgcReadResultMap, ctx, resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s`", r.name))
 
-	conv := newTFStateConverter(ctx, &resp.Diagnostics, r.tfschema)
-	// TODO: Convert entire state to a map
-
 	// Make request
-	atinfo := attribute{
-		tfName:     "schema",
-		attributes: r.inputAttr,
-	}
-	params, _ := conv.toMgcSchemaMap(r.read.ParametersSchema(), &atinfo, req.State.Raw, true, true)
+	params := r.readMgcMap(r.read.ParametersSchema(), ctx, req.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

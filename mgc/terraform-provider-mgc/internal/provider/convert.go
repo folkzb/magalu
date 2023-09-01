@@ -6,7 +6,9 @@ import (
 	"math/big"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"golang.org/x/exp/slices"
@@ -239,50 +241,31 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 	return
 }
 
-// Convert MGC schema keys to the corresponding TF state keys.
-//
-// This is necessary to allow merging an object that has diverging input and output elements.
-// For example: "desired_status" and "current_status"
-//
-// Verify for errors in the converter diagnostics attribute.
-func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, mgcState map[string]any, tfState map[string]any) {
-	if atinfo.mgcSchema == nil {
-		c.diag.AddError("Missing schema to conversion", "schema not provided")
-		return
+// Read values from tfValue into a map suitable to MGC
+func (c *tfStateConverter) readMgcMap(mgcSchema *mgcSdk.Schema, attributes mgcAttributes, tfState tfsdk.State) (mgcMap map[string]any) {
+	attr := &attribute{
+		tfName:     "inputSchemasInfo",
+		mgcName:    "inputSchemasInfo",
+		mgcSchema:  mgcSchema,
+		attributes: attributes,
 	}
 
+	m, _ := c.toMgcSchemaMap(mgcSchema, attr, tfState.Raw, true, true)
+	return m
+}
+
+func (c *tfStateConverter) applyMgcMap(mgcMap map[string]any, attributes mgcAttributes, ctx context.Context, tfState tfsdk.State, path path.Path) {
 	// TODO: Make recursive
-	for mgcName, info := range atinfo.attributes {
-		value, ok := mgcState[string(mgcName)]
+	for mgcName, attr := range attributes {
+		value, ok := mgcMap[string(mgcName)]
 		if !ok {
 			// Ignore non existing values
 			continue
 		}
 
-		tfState[string(info.tfName)] = value
-	}
-}
-
-func (c *tfStateConverter) fromMap(tfMap map[string]any) *tftypes.Value {
-	if c.tfSchema == nil {
-		// TODO: Error
-		return nil
-	}
-
-	state := map[string]tftypes.Value{}
-
-	for k, tfAttr := range c.tfSchema.Attributes {
-		t := tfAttr.GetType().TerraformType(c.ctx)
-		if t.Is(tftypes.List{}) {
-			// TODO: Convert list
-		} else if t.Is(tftypes.Object{}) {
-			// TODO: Convert object
-		} else {
-			state[k] = tftypes.NewValue(t, tfMap[k])
+		c.diag.Append(tfState.SetAttribute(ctx, path.AtName(string(attr.tfName)), value)...)
+		if c.diag.HasError() {
+			return
 		}
-
 	}
-
-	finalState := tftypes.NewValue(c.tfSchema.Type().TerraformType(c.ctx), state)
-	return &finalState
 }
