@@ -67,9 +67,8 @@ func getJsonType(v *mgcSdk.Schema) (string, error) {
 	return v.Type, nil
 }
 
-// TODO: attr.mgcSchema must always exist, but now we're not creating it recursively.
-// TODO: when it's recursively fixed, remove mgcSchema parameter and alway use from attr
-func (c *tfStateConverter) toMgcSchemaValue(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcValue any, isKnown bool) {
+func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcValue any, isKnown bool) {
+	mgcSchema := atinfo.mgcSchema
 	if mgcSchema == nil {
 		c.diag.AddError("Invalid schema", "null schema provided to convert state to go values")
 		return nil, false
@@ -147,18 +146,17 @@ func (c *tfStateConverter) toMgcSchemaValue(mgcSchema *mgcSdk.Schema, atinfo *at
 		}
 		return state, true
 	case "array":
-		return c.toMgcSchemaArray(mgcSchema, atinfo, tfValue, ignoreUnknown, filterUnset)
+		return c.toMgcSchemaArray(atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "object":
-		return c.toMgcSchemaMap(mgcSchema, atinfo, tfValue, ignoreUnknown, filterUnset)
+		return c.toMgcSchemaMap(atinfo, tfValue, ignoreUnknown, filterUnset)
 	default:
 		c.diag.AddError("Unknown value", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v", tfValue, mgcSchema))
 		return nil, false
 	}
 }
 
-// TODO: attr.mgcSchema must always exist, but now we're not creating it recursively.
-// TODO: when it's recursively fixed, remove mgcSchema parameter and alway use from attr
-func (c *tfStateConverter) toMgcSchemaArray(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any, isKnown bool) {
+func (c *tfStateConverter) toMgcSchemaArray(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any, isKnown bool) {
+	mgcSchema := atinfo.mgcSchema
 	var tfArray []tftypes.Value
 	err := tfValue.As(&tfArray)
 	if err != nil {
@@ -171,7 +169,7 @@ func (c *tfStateConverter) toMgcSchemaArray(mgcSchema *mgcSdk.Schema, atinfo *at
 	mgcArray = make([]any, len(tfArray))
 	isKnown = true
 	for i, tfItem := range tfArray {
-		mgcItem, isItemKnown := c.toMgcSchemaValue((*mgcSdk.Schema)(mgcSchema.Items.Value), itemAttr, tfItem, ignoreUnknown, filterUnset)
+		mgcItem, isItemKnown := c.toMgcSchemaValue(itemAttr, tfItem, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
 			c.diag.AddError("Unable to convert array", fmt.Sprintf("unknown value inside array at %v", i))
 			return nil, isItemKnown
@@ -187,9 +185,8 @@ func (c *tfStateConverter) toMgcSchemaArray(mgcSchema *mgcSdk.Schema, atinfo *at
 	return
 }
 
-// TODO: attr.mgcSchema must always exist, but now we're not creating it recursively.
-// TODO: when it's recursively fixed, remove mgcSchema parameter and alway use from attr
-func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcMap map[string]any, isKnown bool) {
+func (c *tfStateConverter) toMgcSchemaMap(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcMap map[string]any, isKnown bool) {
+	mgcSchema := atinfo.mgcSchema
 	var tfMap map[string]tftypes.Value
 	err := tfValue.As(&tfMap)
 	if err != nil {
@@ -199,7 +196,7 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 
 	mgcMap = map[string]any{}
 	isKnown = true
-	for attr, ref := range mgcSchema.Properties {
+	for attr := range mgcSchema.Properties {
 		mgcName := mgcName(attr)
 		itemAttr := atinfo.attributes[mgcName]
 		if itemAttr == nil {
@@ -223,7 +220,7 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 			continue
 		}
 
-		mgcItem, isItemKnown := c.toMgcSchemaValue((*mgcSdk.Schema)(ref.Value), itemAttr, tfItem, ignoreUnknown, filterUnset)
+		mgcItem, isItemKnown := c.toMgcSchemaValue(itemAttr, tfItem, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
 			return nil, false
 		}
@@ -249,7 +246,7 @@ func (c *tfStateConverter) readMgcMap(mgcSchema *mgcSdk.Schema, attributes mgcAt
 		attributes: attributes,
 	}
 
-	m, _ := c.toMgcSchemaMap(mgcSchema, attr, tfState.Raw, true, true)
+	m, _ := c.toMgcSchemaMap(attr, tfState.Raw, true, true)
 	return m
 }
 

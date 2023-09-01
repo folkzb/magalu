@@ -237,9 +237,13 @@ var results = []any{
 var attrInfo = mgcAttributes{
 	"value": {
 		tfName: "value",
+		mgcSchema: core.NewObjectSchema(map[string]*core.Schema{
+			"value_nested": core.NewStringSchema(),
+		}, []string{}),
 		attributes: mgcAttributes{
 			"value_nested": {
-				tfName: "value_nested",
+				tfName:    "value_nested",
+				mgcSchema: core.NewStringSchema(),
 			},
 		},
 	},
@@ -247,9 +251,13 @@ var attrInfo = mgcAttributes{
 var attrInfoList = mgcAttributes{
 	"0": {
 		tfName: "0",
+		mgcSchema: core.NewObjectSchema(map[string]*core.Schema{
+			"value": core.NewStringSchema(),
+		}, []string{"value"}),
 		attributes: mgcAttributes{
 			"value": {
-				tfName: "value",
+				tfName:    "value",
+				mgcSchema: core.NewStringSchema(),
 			},
 		},
 	},
@@ -257,9 +265,13 @@ var attrInfoList = mgcAttributes{
 var attrInfoTFNameObjectNested = mgcAttributes{
 	"value": {
 		tfName: "value",
+		mgcSchema: core.NewObjectSchema(map[string]*core.Schema{
+			"value_nested": core.NewStringSchema(),
+		}, []string{}),
 		attributes: mgcAttributes{
 			"value_nested": {
-				tfName: "tf_value_nested",
+				tfName:    "tf_value_nested",
+				mgcSchema: core.NewStringSchema(),
 			},
 		},
 	},
@@ -267,9 +279,13 @@ var attrInfoTFNameObjectNested = mgcAttributes{
 var attrInfoTFNameObjectInList = mgcAttributes{
 	"0": {
 		tfName: "0",
+		mgcSchema: core.NewObjectSchema(map[string]*core.Schema{
+			"value": core.NewStringSchema(),
+		}, []string{}),
 		attributes: mgcAttributes{
 			"value": {
-				tfName: "tf_value",
+				tfName:    "tf_value",
+				mgcSchema: core.NewStringSchema(),
 			},
 		},
 	},
@@ -317,7 +333,7 @@ var attrInfos = []mgcAttributes{
 	{},
 	{},
 	{},
-	{"0": {}},
+	{"0": {mgcSchema: core.NewStringSchema()}},
 	attrInfoList,
 	attrInfo,
 	attrInfoTFNameObjectNested,
@@ -334,11 +350,12 @@ func TestToMgcSchemaValue(t *testing.T) {
 	for i := 0; i < len(states); i++ {
 		atinfo := attribute{
 			tfName:     "schema",
+			mgcSchema:  schemas[i],
 			attributes: attrInfos[i],
 		}
-		result, _ := conv.toMgcSchemaValue(schemas[i], &atinfo, states[i], true, true)
+		result, _ := conv.toMgcSchemaValue(&atinfo, states[i], true, true)
 		if !reflect.DeepEqual(result, results[i]) {
-			t.Fatalf("result differs from expected: %T:%+v %T:%+v %+v", result, result, results[i], results[i], conv.diag)
+			t.Fatalf("result %d differs from expected: %T -> %T:\nRECEIVED: %+v\nEXPECTED: %+v\nDIAG: %+v\n", i, result, results[i], result, results[i], conv.diag)
 		}
 	}
 }
