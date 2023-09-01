@@ -154,6 +154,10 @@ type executeResultOutputOptions struct {
 	getOutputOptions func(exec Executor, result Value) string
 }
 
+func (o *executeResultOutputOptions) Unwrap() Executor {
+	return o.Executor
+}
+
 func (o *executeResultOutputOptions) DefaultOutputOptions(result Value) string {
 	return o.getOutputOptions(o.Executor, result)
 }
