@@ -8,12 +8,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/stoewer/go-strcase"
 	"golang.org/x/exp/slices"
+	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -84,6 +87,7 @@ type attributeModifiers struct {
 	isComputed                 bool
 	useStateForUnknown         bool
 	requiresReplaceWhenChanged bool
+	getChildModifiers          func(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers
 }
 
 func addMgcSchemaAttributes(
@@ -107,23 +111,37 @@ func addMgcSchemaAttributes(
 			continue
 		}
 
-		tfSchema, err := mgcToTFSchema(mgcSchema, getModifiers(mgcSchema, mgcName))
+		tfSchema, childAttributes, err := mgcToTFSchema(mgcSchema, getModifiers(mgcSchema, mgcName), resourceName, ctx)
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("[resource] schema for %q attribute %q schema: %+v; error: %s", resourceName, k, mgcSchema, err))
 			return fmt.Errorf("attribute %q, error=%s", k, err)
 		}
 
 		attr := &attribute{
-			tfName:    tfNameFromMgc(mgcName),
-			mgcName:   mgcName,
-			mgcSchema: mgcSchema,
-			tfSchema:  tfSchema,
+			tfName:     tfNameFromMgc(mgcName),
+			mgcName:    mgcName,
+			mgcSchema:  mgcSchema,
+			tfSchema:   tfSchema,
+			attributes: childAttributes,
 		}
 		attributes[mgcName] = attr
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for %q attribute %q: %+v", resourceName, k, attr))
 	}
 
 	return nil
+}
+
+func getInputChildModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	k := string(mgcName)
+	isRequired := slices.Contains(mgcSchema.Required, k)
+	return attributeModifiers{
+		isRequired:                 isRequired,
+		isOptional:                 !isRequired,
+		isComputed:                 !isRequired,
+		useStateForUnknown:         true,
+		requiresReplaceWhenChanged: false,
+		getChildModifiers:          getInputChildModifiers,
+	}
 }
 
 func (r *MgcResource) getCreateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
@@ -135,6 +153,7 @@ func (r *MgcResource) getCreateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName
 		isComputed:                 !isRequired && r.read.ResultSchema().Properties[k] != nil, // If not required and present in read it can be compute
 		useStateForUnknown:         false,
 		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil,
+		getChildModifiers:          getInputChildModifiers,
 	}
 }
 
@@ -148,16 +167,18 @@ func (r *MgcResource) getUpdateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName
 		isComputed:                 !required || isCreated,
 		useStateForUnknown:         true,
 		requiresReplaceWhenChanged: false,
+		getChildModifiers:          getInputChildModifiers,
 	}
 }
 
-func (r *MgcResource) getResultModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func getResultModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	return attributeModifiers{
 		isRequired:                 false,
 		isOptional:                 false,
 		isComputed:                 true,
 		useStateForUnknown:         true,
 		requiresReplaceWhenChanged: false,
+		getChildModifiers:          getResultModifiers,
 	}
 }
 
@@ -208,7 +229,7 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 	err := addMgcSchemaAttributes(
 		output,
 		r.create.ResultSchema(),
-		r.getResultModifiers,
+		getResultModifiers,
 		r.name,
 		ctx,
 	)
@@ -219,7 +240,7 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 	err = addMgcSchemaAttributes(
 		output,
 		r.read.ResultSchema(),
-		r.getResultModifiers,
+		getResultModifiers,
 		r.name,
 		ctx,
 	)
@@ -284,12 +305,12 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]
 	return
 }
 
-func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, error) {
+func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName string, ctx context.Context) (schema.Attribute, mgcAttributes, error) {
 	// TODO: Handle default values
 
 	t, err := getJsonType(mgcSchema)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	description := mgcSchema.Description
 
@@ -311,7 +332,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attri
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
-		}, nil
+		}, nil, nil
 	case "number":
 		mod := []planmodifier.Number{}
 		if m.useStateForUnknown {
@@ -326,7 +347,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attri
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
-		}, nil
+		}, nil, nil
 	case "integer":
 		mod := []planmodifier.Int64{}
 		if m.useStateForUnknown {
@@ -341,7 +362,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attri
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
-		}, nil
+		}, nil, nil
 	case "boolean":
 		mod := []planmodifier.Bool{}
 		if m.useStateForUnknown {
@@ -356,13 +377,78 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attri
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
-		}, nil
+		}, nil, nil
 	case "array":
-		return nil, fmt.Errorf("array not supported yet")
+		mgcItemSchema := (*core.Schema)(mgcSchema.Items.Value)
+		elemAttr, elemAttrs, err := mgcToTFSchema(mgcItemSchema, m.getChildModifiers(mgcItemSchema, "0"), resourceName, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		childAttrs := mgcAttributes{"0": &attribute{
+			tfName:     "0",
+			mgcName:    "0",
+			mgcSchema:  mgcItemSchema,
+			tfSchema:   elemAttr,
+			attributes: elemAttrs,
+		}}
+
+		mod := []planmodifier.List{}
+		if m.requiresReplaceWhenChanged {
+			mod = append(mod, listplanmodifier.RequiresReplace())
+		}
+
+		// TODO: How will we handle List of Lists? Does it need to be handled at all? Does the
+		// 'else' branch already cover that correctly?
+		if objAttr, ok := elemAttr.(schema.SingleNestedAttribute); ok {
+			// This type assertion will/should NEVER fail, according to TF code
+			nestedObj, ok := objAttr.GetNestedObject().(schema.NestedAttributeObject)
+			if !ok {
+				return nil, nil, fmt.Errorf("failed TF GetNestedObject")
+			}
+			return schema.ListNestedAttribute{
+				NestedObject:  nestedObj,
+				Description:   description,
+				Required:      m.isRequired,
+				Optional:      m.isOptional,
+				Computed:      m.isComputed,
+				PlanModifiers: mod,
+			}, childAttrs, nil
+		} else {
+			return schema.ListAttribute{
+				ElementType:   elemAttr.GetType(),
+				Description:   description,
+				Required:      m.isRequired,
+				Optional:      m.isOptional,
+				Computed:      m.isComputed,
+				PlanModifiers: mod,
+			}, childAttrs, nil
+		}
 	case "object":
-		return nil, fmt.Errorf("object not supported yet")
+		mgcAttributes := mgcAttributes{}
+		err := addMgcSchemaAttributes(mgcAttributes, mgcSchema, m.getChildModifiers, resourceName, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		tfAttributes := map[string]schema.Attribute{}
+		for _, attr := range mgcAttributes {
+			tfAttributes[string(attr.tfName)] = attr.tfSchema
+		}
+
+		mod := []planmodifier.Object{}
+		if m.requiresReplaceWhenChanged {
+			mod = append(mod, objectplanmodifier.RequiresReplace())
+		}
+		return schema.SingleNestedAttribute{
+			Attributes:    tfAttributes,
+			Description:   description,
+			Required:      m.isRequired,
+			Optional:      m.isOptional,
+			Computed:      m.isComputed,
+			PlanModifiers: mod,
+		}, mgcAttributes, nil
 	default:
-		return nil, fmt.Errorf("type %q not supported", t)
+		return nil, nil, fmt.Errorf("type %q not supported", t)
 	}
 }
 
