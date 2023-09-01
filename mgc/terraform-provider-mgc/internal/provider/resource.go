@@ -101,12 +101,12 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	// Create initial state from create params and update params
 	// TODO: Find a better way to send the filter flags
 	tfStateMap := map[string]any{}
-	mgcCreateMap := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
+	mgcCreateMap, _ := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
 	conv.mgcKeysToStateKeys(&iatinfo, mgcCreateMap, tfStateMap)
-	mgcUpdateStateMap := conv.toMgcSchemaMap(r.update.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
+	mgcUpdateStateMap, _ := conv.toMgcSchemaMap(r.update.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
 	conv.mgcKeysToStateKeys(&iatinfo, mgcUpdateStateMap, tfStateMap)
 
-	params := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, true)
+	params, _ := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, true)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -196,7 +196,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		tfName:     "schema",
 		attributes: r.inputAttr,
 	}
-	params := conv.toMgcSchemaMap(r.read.ParametersSchema(), &atinfo, req.State.Raw, true, true)
+	params, _ := conv.toMgcSchemaMap(r.read.ParametersSchema(), &atinfo, req.State.Raw, true, true)
 	if resp.Diagnostics.HasError() {
 		return
 	}

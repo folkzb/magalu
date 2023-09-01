@@ -67,35 +67,37 @@ func (c *tfStateConverter) getAttributeType(v *mgcSdk.Schema) string {
 	return v.Type
 }
 
-func (c *tfStateConverter) toMgcSchemaValue(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcValue any) {
+// TODO: attr.mgcSchema must always exist, but now we're not creating it recursively.
+// TODO: when it's recursively fixed, remove mgcSchema parameter and alway use from attr
+func (c *tfStateConverter) toMgcSchemaValue(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcValue any, isKnown bool) {
 	if mgcSchema == nil {
 		c.diag.AddError("Invalid schema", "null schema provided to convert state to go values")
-		return nil
+		return nil, false
 	}
 
 	if !tfValue.IsKnown() {
 		if !ignoreUnknown {
 			c.diag.AddError("Unable to convert unknown value", fmt.Sprintf("[convert] unable to convert since value is unknown: value %+v - schema: %+v", tfValue, mgcSchema))
-			return nil
+			return nil, false
 		}
-		return nil
+		return nil, false
 	}
 
 	if tfValue.IsNull() {
 		if atinfo.isOptional && !atinfo.isComputed {
 			// Optional values that aren't computed will never be unknown
 			// this means they will be null in the state
-			return nil
+			return nil, true
 		} else if !mgcSchema.Nullable && mgcSchema.Type != "null" {
 			c.diag.AddError("Unable to convert non nullable value", fmt.Sprintf("[convert] unable to convert since value is null and not nullable by the schema: value %+v - schema: %+v", tfValue, mgcSchema))
-			return nil
+			return nil, true
 		}
-		return nil
+		return nil, true
 	}
 
 	t := c.getAttributeType(mgcSchema)
 	if c.diag.HasError() {
-		return nil
+		return nil, false
 	}
 
 	switch t {
@@ -104,88 +106,98 @@ func (c *tfStateConverter) toMgcSchemaValue(mgcSchema *mgcSdk.Schema, atinfo *at
 		err := tfValue.As(&state)
 		if err != nil {
 			c.diag.AddError("Unable to convert value to string", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", tfValue, mgcSchema, err.Error()))
-			return nil
+			return nil, true
 		}
-		return state
+		return state, true
 	case "number":
 		var state big.Float
 		err := tfValue.As(&state)
 		if err != nil {
 			c.diag.AddError("Unable to convert value to number", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", tfValue, mgcSchema, err.Error()))
-			return nil
+			return nil, true
 		}
 
 		result, accuracy := state.Float64()
 		if accuracy != big.Exact {
 			c.diag.AddError("Unable to convert value to float", fmt.Sprintf("[convert] value %+v lost accuracy in conversion to %+v", state, result))
-			return nil
+			return nil, true
 		}
-		return result
+		return result, true
 	case "integer":
 		var state big.Float
 		err := tfValue.As(&state)
 		if err != nil {
 			c.diag.AddError("Unable to convert value to integer", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", tfValue, mgcSchema, err.Error()))
-			return nil
+			return nil, true
 		}
 
 		result, accuracy := state.Int64()
 		if accuracy != big.Exact {
 			c.diag.AddError("Unable to convert value to integer", fmt.Sprintf("[convert] value %+v lost accuracy in conversion to %+v", state, result))
-			return nil
+			return nil, true
 		}
-		return result
+		return result, true
 	case "boolean":
 		var state bool
 		err := tfValue.As(&state)
 		if err != nil {
 			c.diag.AddError("Unable to convert value to boolean", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", tfValue, mgcSchema, err.Error()))
-			return nil
+			return nil, true
 		}
-		return state
+		return state, true
 	case "array":
-		state := c.toMgcSchemaArray(mgcSchema, atinfo, tfValue, ignoreUnknown, filterUnset)
-		return state
+		return c.toMgcSchemaArray(mgcSchema, atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "object":
-		state := c.toMgcSchemaMap(mgcSchema, atinfo, tfValue, ignoreUnknown, filterUnset)
-		return state
+		return c.toMgcSchemaMap(mgcSchema, atinfo, tfValue, ignoreUnknown, filterUnset)
 	default:
 		c.diag.AddError("Unknown value", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v", tfValue, mgcSchema))
-		return nil
+		return nil, false
 	}
 }
 
-func (c *tfStateConverter) toMgcSchemaArray(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any) {
+// TODO: attr.mgcSchema must always exist, but now we're not creating it recursively.
+// TODO: when it's recursively fixed, remove mgcSchema parameter and alway use from attr
+func (c *tfStateConverter) toMgcSchemaArray(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any, isKnown bool) {
 	var tfArray []tftypes.Value
 	err := tfValue.As(&tfArray)
 	if err != nil {
 		c.diag.AddError("Unable to convert value to list", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", tfValue, mgcSchema, err.Error()))
-		return nil
+		return nil, false
 	}
 
 	// TODO: Handle attribute information in list - it should be mapped to "0" key
 	itemAttr := atinfo.attributes["0"]
 	mgcArray = make([]any, len(tfArray))
+	isKnown = true
 	for i, tfItem := range tfArray {
-		mgcItem := c.toMgcSchemaValue((*mgcSdk.Schema)(mgcSchema.Items.Value), itemAttr, tfItem, ignoreUnknown, filterUnset)
+		mgcItem, isItemKnown := c.toMgcSchemaValue((*mgcSdk.Schema)(mgcSchema.Items.Value), itemAttr, tfItem, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
 			c.diag.AddError("Unable to convert array", fmt.Sprintf("unknown value inside array at %v", i))
-			return nil
+			return nil, isItemKnown
+		}
+		if !isItemKnown {
+			// TODO: confirm this logic, should we just keep going?
+			c.diag.AddWarning("Unknown list item", fmt.Sprintf("Item %d is unknown: %+v", i, tfItem))
+			isKnown = false
+			return
 		}
 		mgcArray[i] = mgcItem
 	}
-	return mgcArray
+	return
 }
 
-func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcMap map[string]any) {
+// TODO: attr.mgcSchema must always exist, but now we're not creating it recursively.
+// TODO: when it's recursively fixed, remove mgcSchema parameter and alway use from attr
+func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcMap map[string]any, isKnown bool) {
 	var tfMap map[string]tftypes.Value
 	err := tfValue.As(&tfMap)
 	if err != nil {
 		c.diag.AddError("Unable to convert value to map", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", tfValue, mgcSchema, err.Error()))
-		return nil
+		return nil, false
 	}
 
 	mgcMap = map[string]any{}
+	isKnown = true
 	for attr, ref := range mgcSchema.Properties {
 		mgcName := mgcName(attr)
 		itemAttr := atinfo.attributes[mgcName]
@@ -210,23 +222,21 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 			continue
 		}
 
-		mgcItem := c.toMgcSchemaValue((*mgcSdk.Schema)(ref.Value), itemAttr, tfItem, ignoreUnknown, filterUnset)
+		mgcItem, isItemKnown := c.toMgcSchemaValue((*mgcSdk.Schema)(ref.Value), itemAttr, tfItem, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
-			return nil
+			return nil, false
 		}
 
-		// We need to ignore nil values generated from unknown elements that didn't generate errors
-		if mgcItem == nil {
-			if itemAttr.isOptional && !itemAttr.isComputed && !filterUnset {
-				mgcMap[string(mgcName)] = mgcItem
-			} else if ref.Value.Nullable || ref.Value.Type == "null" {
-				mgcMap[string(mgcName)] = mgcItem
-			}
-		} else {
-			mgcMap[string(mgcName)] = mgcItem
+		if !isItemKnown && ignoreUnknown {
+			continue
 		}
+		if mgcItem == nil && filterUnset {
+			continue
+		}
+
+		mgcMap[string(mgcName)] = mgcItem
 	}
-	return mgcMap
+	return
 }
 
 // Convert MGC schema keys to the corresponding TF state keys.

@@ -321,7 +321,7 @@ func TestToMgcSchemaValue(t *testing.T) {
 			tfName:     "schema",
 			attributes: attrInfos[i],
 		}
-		result := conv.toMgcSchemaValue(schemas[i], &atinfo, states[i], true, true)
+		result, _ := conv.toMgcSchemaValue(schemas[i], &atinfo, states[i], true, true)
 		if !reflect.DeepEqual(result, results[i]) {
 			t.Fatalf("result differs from expected: %T:%+v %T:%+v %+v", result, result, results[i], results[i], conv.diag)
 		}
