@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -34,6 +33,54 @@ type attribute struct {
 type mgcAttributes map[mgcName]*attribute
 
 var idRexp = regexp.MustCompile(`(^id$|_id$)`)
+
+// Similar schemas are those with the same type and, depending on the type,
+// similar properties or restrictions.
+func checkSimilarJsonSchemas(a, b *mgcSdk.Schema) bool {
+	if a == b {
+		return true
+	}
+
+	tA, err := getJsonType(a)
+	if err != nil {
+		return false
+	}
+
+	tB, err := getJsonType(b)
+	if err != nil {
+		return false
+	}
+
+	if tA != tB {
+		return false
+	}
+
+	switch tA {
+	default:
+		return true
+	case "string":
+		// Relax if one of them doesn't specify a format
+		return a.Format == b.Format || a.Format == "" || b.Format == ""
+	case "array":
+		return checkSimilarJsonSchemas((*mgcSdk.Schema)(a.Items.Value), (*mgcSdk.Schema)(b.Items.Value))
+	case "object":
+		// TODO: should we compare Required? I don't think so, but it may be a problem
+		if len(a.Properties) != len(b.Properties) {
+			return false
+		}
+		for k, refA := range a.Properties {
+			refB := b.Properties[k]
+			if refB == nil {
+				return false
+			}
+			if !checkSimilarJsonSchemas((*mgcSdk.Schema)(refA.Value), (*mgcSdk.Schema)(refB.Value)) {
+				return false
+			}
+		}
+		// TODO: handle additionalProperties and property patterns
+		return true
+	}
+}
 
 func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics {
 	d := diag.Diagnostics{}
@@ -75,7 +122,7 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 		mgcName := mgcName(attr)
 		mgcSchema := (*mgcSdk.Schema)(ref.Value)
 		if ca, ok := input[mgcName]; ok {
-			if !reflect.DeepEqual(ca.mgcSchema, mgcSchema) {
+			if !checkSimilarJsonSchemas(ca.mgcSchema, mgcSchema) {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
 				// TODO: Ignore default values when verifying equality
 				// TODO: Don't forget to add the path when using recursion
@@ -166,7 +213,7 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 		mgcName := mgcName(attr)
 		mgcSchema := (*mgcSdk.Schema)(ref.Value)
 		if ra, ok := output[mgcName]; ok {
-			if !reflect.DeepEqual(ra.mgcSchema, mgcSchema) {
+			if !checkSimilarJsonSchemas(ra.mgcSchema, mgcSchema) {
 				// Ignore read value in favor of create result value (This is probably a bug with the API)
 				// err := fmt.Sprintf("[resource] schema for `%s`: output attribute `%s` is different between create result and read - create result: %+v - read: %+v ", r.name, attr, ra.schema, rs)
 				// d.AddError("Attribute schema is different between create result and read schemas", err)
@@ -228,7 +275,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]
 	for name, iattr := range r.inputAttr {
 		// Split attributes that differ between input/output
 		if oattr := r.outputAttr[name]; oattr != nil && !iattr.isID {
-			if !reflect.DeepEqual(oattr.mgcSchema, iattr.mgcSchema) {
+			if !checkSimilarJsonSchemas(oattr.mgcSchema, iattr.mgcSchema) {
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()
 				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", r.name, name, is, os))
