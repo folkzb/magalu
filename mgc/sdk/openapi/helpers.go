@@ -18,6 +18,12 @@ func getExtensionString(prefix *string, name string, extensions map[string]any, 
 	return
 }
 
+func getExtensionObject(prefix *string, name string, extensions map[string]any, def map[string]any) (m map[string]any, ok bool) {
+	value, _ := getExtension(prefix, name, extensions, def)
+	m, ok = value.(map[string]any)
+	return
+}
+
 func getExtensionBool(prefix *string, name string, extensions map[string]any, def bool) (b bool, ok bool) {
 	value, _ := getExtension(prefix, name, extensions, def)
 	b, ok = value.(bool)

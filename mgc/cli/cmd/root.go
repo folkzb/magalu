@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -221,7 +222,7 @@ func handleJsonResult(exec mgcSdk.Executor, result core.Value, output string) (e
 
 	name, options := parseOutputFormatter(output)
 	if name == "" {
-		if formatter, ok := exec.(core.ExecutorResultFormatter); ok {
+		if formatter, ok := core.ExecutorAs[core.ExecutorResultFormatter](exec); ok {
 			fmt.Println(formatter.DefaultFormatResult(result))
 			return nil
 		}
@@ -260,6 +261,8 @@ func AddAction(
 		RunE: func(cmd *cobra.Command, args []string) error {
 			parameters := map[string]mgcSdk.Value{}
 			configs := map[string]mgcSdk.Value{}
+			var result any
+			var err error
 
 			if err := loadDataFromFlags(cmd.Flags(), exec.ParametersSchema(), parameters); err != nil {
 				return err
@@ -276,7 +279,23 @@ func AddAction(
 				defer cancel()
 			}
 
-			result, err := exec.Execute(ctx, parameters, configs)
+			retries, interval, err := getWaitTerminationFlag(cmd)
+			if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && err == nil {
+				result, err = tExec.ExecuteUntilTermination(ctx, parameters, configs, retries, interval)
+				if err != nil {
+					var maxRetriesError core.MaxRetriesExceededError
+					if errors.As(err, &maxRetriesError) {
+						op := getOutputFor(cmd, exec, maxRetriesError.Result)
+						if jErr := handleJsonResult(exec, maxRetriesError.Result, op); jErr != nil {
+							return jErr
+						}
+					}
+					return err
+				}
+			} else {
+				result, err = exec.Execute(ctx, parameters, configs)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -445,6 +464,7 @@ can generate a command line on-demand for Rest manipulation`,
 	addOutputFlag(rootCmd)
 	addLogFilterFlag(rootCmd)
 	addTimeoutFlag(rootCmd)
+	addWaitTerminationFlag(rootCmd)
 
 	sdk := &mgcSdk.Sdk{}
 	if err = initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {

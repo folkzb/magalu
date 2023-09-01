@@ -1,16 +1,29 @@
 package openapi
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 
+	"github.com/PaesslerAG/gval"
+	"github.com/PaesslerAG/jsonpath"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/mitchellh/mapstructure"
 )
+
+type WaitTermination struct {
+	MaxRetries        int           `json:"maxRetries,omitempty"`
+	IntervalInSeconds time.Duration `json:"intervalInSeconds,omitempty"`
+	JSONPathQuery     string        `json:"jsonPathQuery"`
+}
+
+var defaultWaitTerminaton = WaitTermination{MaxRetries: 30, IntervalInSeconds: time.Second}
 
 // Source -> Module -> Resource -> Operation
 
@@ -254,6 +267,12 @@ func (o *Resource) getOperations() map[string]core.Executor {
 				logger:          o.logger.Named(opName),
 			}
 
+			if wtExt, ok := getExtensionObject(o.extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
+				if tExec, err := o.wrapInTerminatorExecutor(wtExt, operation); err == nil {
+					operation = tExec
+				}
+			}
+
 			if output, ok := getExtensionString(o.extensionPrefix, "output-flag", desc.op.Extensions, ""); ok && output != "" {
 				operation = core.NewExecuteResultOutputOptions(operation, func(exec core.Executor, result core.Value) string {
 					return output
@@ -267,6 +286,59 @@ func (o *Resource) getOperations() map[string]core.Executor {
 		o.operations = &opMap
 	}
 	return *o.operations
+}
+
+func (o *Resource) wrapInTerminatorExecutor(wtExt map[string]any, exec core.Executor) (core.TerminatorExecutor, error) {
+	wt := defaultWaitTerminaton
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		DecodeHook:       mapstructure.StringToTimeDurationHookFunc(),
+		WeaklyTypedInput: true,
+		Result:           &wt,
+	})
+
+	if err != nil {
+		o.logger.Warnw("error configuring decoder", "error", err)
+	} else {
+		if err = dec.Decode(wtExt); err != nil {
+			o.logger.Warnw("error decoding extension wait-termination", "data", wtExt, "error", err)
+		}
+	}
+
+	if wt.MaxRetries <= 0 {
+		wt.MaxRetries = defaultWaitTerminaton.MaxRetries
+	}
+	if wt.IntervalInSeconds <= 0 {
+		wt.IntervalInSeconds = defaultWaitTerminaton.IntervalInSeconds
+	}
+
+	builder := gval.Full(jsonpath.PlaceholderExtension())
+	jp, err := builder.NewEvaluable(wt.JSONPathQuery)
+	if err == nil {
+		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.Value) bool {
+			v, err := jp(ctx, result)
+			if err != nil {
+				o.logger.Warnw("error evaluating jsonpath query", "query", wt.JSONPathQuery, "target", result, "error", err)
+				return false
+			}
+
+			if v == nil {
+				return false
+			} else if lst, ok := v.([]any); ok {
+				return len(lst) > 0
+			} else if m, ok := v.(map[string]any); ok {
+				return len(m) > 0
+			} else if b, ok := v.(bool); ok {
+				return b
+			} else {
+				o.logger.Warnw("unknown jsonpath result. Expected list, map or boolean", "result", result)
+				return false
+			}
+		})
+		return tExec, nil
+	} else {
+		o.logger.Warnw("error parsing jsonpath. Executing without polling", "expression", wt.JSONPathQuery, "error", err)
+		return nil, err
+	}
 }
 
 func (o *Resource) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {
