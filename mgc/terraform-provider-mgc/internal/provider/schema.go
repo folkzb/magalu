@@ -179,7 +179,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 			}
 		}
 
-		at := sdkToTerraformAttribute(ctx, iattr, diag.Diagnostics{})
+		at := sdkToTerraformAttribute(ctx, iattr, &d)
 		// TODO: This shouldn't happen after we handle complex types like slices and objects
 		// TODO: Remove debug log
 		if at == nil {
@@ -199,7 +199,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 			continue
 		}
 
-		at := sdkToTerraformAttribute(ctx, oattr, diag.Diagnostics{})
+		at := sdkToTerraformAttribute(ctx, oattr, &d)
 		if at == nil {
 			// TODO: This shouldn't happen after we handle complex types like slices and objects
 			// TODO: Remove debug log
@@ -215,7 +215,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 	return &tfa, d
 }
 
-func sdkToTerraformAttribute(ctx context.Context, c *attribute, di diag.Diagnostics) schema.Attribute {
+func sdkToTerraformAttribute(ctx context.Context, c *attribute, di *diag.Diagnostics) schema.Attribute {
 	if c.mgcSchema == nil || c == nil {
 		di.AddError("Invalid attribute pointer", fmt.Sprintf("ERROR invalid pointer, attribute pointer is nil %v %v", c.mgcSchema, c))
 		return nil
@@ -223,7 +223,7 @@ func sdkToTerraformAttribute(ctx context.Context, c *attribute, di diag.Diagnost
 
 	conv := tfStateConverter{
 		ctx:  ctx,
-		diag: &di,
+		diag: di,
 	}
 
 	// TODO: Handle default values
