@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -27,12 +26,9 @@ type attribute struct {
 	mgcSchema  *mgcSdk.Schema
 	tfSchema   schema.Attribute
 	attributes mgcAttributes
-	isID       bool // TODO: remove this once we use links, see https://github.com/profusion/magalu/issues/215
 }
 
 type mgcAttributes map[mgcName]*attribute
-
-var idRexp = regexp.MustCompile(`(^id$|_id$)`)
 
 // Similar schemas are those with the same type and, depending on the type,
 // similar properties or restrictions.
@@ -111,13 +107,11 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 			mgcName:   mgcName,
 			mgcSchema: mgcSchema,
 			tfSchema:  tfSchema,
-			isID:      false,
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[mgcName]))
 	}
 
 	uschema := r.update.ParametersSchema()
-	hasID := uschema.Properties["id"]
 	for attr, ref := range uschema.Properties {
 		mgcName := mgcName(attr)
 		mgcSchema := (*mgcSdk.Schema)(ref.Value)
@@ -134,19 +128,11 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 			continue
 		}
 
-		// TODO: Better handle ID attributions
-		// Consider other ID elements as ID if "id" doesn't exist
-		isID := false
-		if hasID != nil {
-			isID = attr == "id"
-		} else {
-			isID = idRexp.MatchString(attr)
-		}
-
+		isCreated := r.create.ResultSchema().Properties[attr] != nil
 		required := slices.Contains(uschema.Required, attr)
-		isRequired := required && !isID
-		isOptional := !required && !isID
-		isComputed := !required || isID
+		isRequired := required && !isCreated
+		isOptional := !required && !isCreated
+		isComputed := !required || isCreated
 		useStateForUnknown := true
 		requiresReplaceWhenChanged := false
 		tfSchema, err := mgcToTFSchema(mgcSchema, isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged)
@@ -160,7 +146,6 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 			mgcName:   mgcName,
 			mgcSchema: mgcSchema,
 			tfSchema:  tfSchema,
-			isID:      isID,
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[mgcName]))
 	}
@@ -178,16 +163,9 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 
 	output := mgcAttributes{}
 	crschema := r.create.ResultSchema()
-	hasID := crschema.Properties["id"]
 	for attr, ref := range crschema.Properties {
 		mgcName := mgcName(attr)
 		mgcSchema := (*mgcSdk.Schema)(ref.Value)
-		isID := false
-		if hasID != nil {
-			isID = attr == "id"
-		} else {
-			isID = idRexp.MatchString(attr)
-		}
 		isRequired := false
 		isOptional := false
 		isComputed := true
@@ -204,7 +182,6 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 			mgcName:   mgcName,
 			mgcSchema: mgcSchema,
 			tfSchema:  tfSchema,
-			isID:      isID,
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[mgcName]))
 	}
@@ -238,7 +215,6 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 			mgcName:   mgcName,
 			mgcSchema: mgcSchema,
 			tfSchema:  tfSchema,
-			isID:      false,
 		}
 		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[mgcName]))
 	}
@@ -274,7 +250,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]
 	tfa = map[tfName]schema.Attribute{}
 	for name, iattr := range r.inputAttr {
 		// Split attributes that differ between input/output
-		if oattr := r.outputAttr[name]; oattr != nil && !iattr.isID {
+		if oattr := r.outputAttr[name]; oattr != nil {
 			if !checkSimilarJsonSchemas(oattr.mgcSchema, iattr.mgcSchema) {
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()
