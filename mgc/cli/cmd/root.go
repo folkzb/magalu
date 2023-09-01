@@ -235,10 +235,14 @@ func handleJsonResult(exec mgcSdk.Executor, result core.Value, output string) (e
 }
 
 func getOutputFor(cmd *cobra.Command, exec core.Executor, result core.Value) string {
-	if outputOptions, ok := exec.(core.ExecutorResultOutputOptions); ok {
-		return outputOptions.DefaultOutputOptions(result)
+	output := getOutputFlag(cmd)
+	if output == "" {
+		if outputOptions, ok := exec.(core.ExecutorResultOutputOptions); ok {
+			return outputOptions.DefaultOutputOptions(result)
+		}
 	}
-	return getOutputFlag(cmd)
+
+	return output
 }
 
 func AddAction(
