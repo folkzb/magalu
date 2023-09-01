@@ -234,47 +234,47 @@ var results = []any{
 	},
 }
 
-var attrInfo = map[string]*attribute{
+var attrInfo = mgcAttributes{
 	"value": {
 		tfName: "value",
-		attributes: map[string]*attribute{
+		attributes: mgcAttributes{
 			"value_nested": {
 				tfName: "value_nested",
 			},
 		},
 	},
 }
-var attrInfoList = map[string]*attribute{
+var attrInfoList = mgcAttributes{
 	"0": {
 		tfName: "0",
-		attributes: map[string]*attribute{
+		attributes: mgcAttributes{
 			"value": {
 				tfName: "value",
 			},
 		},
 	},
 }
-var attrInfoTFNameObjectNested = map[string]*attribute{
+var attrInfoTFNameObjectNested = mgcAttributes{
 	"value": {
 		tfName: "value",
-		attributes: map[string]*attribute{
+		attributes: mgcAttributes{
 			"value_nested": {
 				tfName: "tf_value_nested",
 			},
 		},
 	},
 }
-var attrInfoTFNameObjectInList = map[string]*attribute{
+var attrInfoTFNameObjectInList = mgcAttributes{
 	"0": {
 		tfName: "0",
-		attributes: map[string]*attribute{
+		attributes: mgcAttributes{
 			"value": {
 				tfName: "tf_value",
 			},
 		},
 	},
 }
-var attrInfoTFInstanceCreate = map[string]*attribute{
+var attrInfoTFInstanceCreate = mgcAttributes{
 	"allocate_fip":      {tfName: "allocate_fip", isOptional: true, isComputed: false},
 	"availability_zone": {tfName: "availability_zone"},
 	"created_at":        {tfName: "created_at"},
@@ -295,7 +295,7 @@ var attrInfoTFInstanceCreate = map[string]*attribute{
 	"vcpus":             {tfName: "vcpus"},
 }
 
-var attrInfos = []map[string]*attribute{
+var attrInfos = []mgcAttributes{
 	{},
 	{},
 	{},

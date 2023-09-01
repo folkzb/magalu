@@ -19,10 +19,14 @@ import (
 	mgcSdk "magalu.cloud/sdk"
 )
 
+type mgcName string
+type tfName string
+
 type attribute struct {
-	tfName                     string
+	tfName                     tfName
+	mgcName                    mgcName
 	mgcSchema                  *mgcSdk.Schema
-	attributes                 map[string]*attribute
+	attributes                 mgcAttributes
 	isID                       bool
 	isRequired                 bool
 	isOptional                 bool
@@ -30,6 +34,8 @@ type attribute struct {
 	useStateForUnknown         bool
 	requiresReplaceWhenChanged bool
 }
+
+type mgcAttributes map[mgcName]*attribute
 
 var idRexp = regexp.MustCompile(`(^id$|_id$)`)
 
@@ -40,12 +46,14 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 	}
 	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading input attributes", r.name))
 
-	input := map[string]*attribute{}
+	input := mgcAttributes{}
 	cschema := r.create.ParametersSchema()
 	for attr, ref := range cschema.Properties {
 		required := slices.Contains(cschema.Required, attr)
-		input[attr] = &attribute{
-			tfName:                     kebabToSnakeCase(attr),
+		mgcName := mgcName(attr)
+		input[mgcName] = &attribute{
+			tfName:                     tfNameFromMgc(mgcName),
+			mgcName:                    mgcName,
 			mgcSchema:                  (*mgcSdk.Schema)(ref.Value),
 			isID:                       false,
 			isRequired:                 required,
@@ -54,13 +62,14 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 			useStateForUnknown:         false,
 			requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[attr] == nil,
 		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[attr]))
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[mgcName]))
 	}
 
 	uschema := r.update.ParametersSchema()
 	hasID := uschema.Properties["id"]
 	for attr, ref := range uschema.Properties {
-		if ca, ok := input[attr]; ok {
+		mgcName := mgcName(attr)
+		if ca, ok := input[mgcName]; ok {
 			us := ref.Value
 			if !reflect.DeepEqual(ca.mgcSchema, (*mgcSdk.Schema)(us)) {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
@@ -84,8 +93,9 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 		}
 
 		required := slices.Contains(uschema.Required, attr)
-		input[attr] = &attribute{
-			tfName:                     kebabToSnakeCase(attr),
+		input[mgcName] = &attribute{
+			tfName:                     tfNameFromMgc(mgcName),
+			mgcName:                    mgcName,
 			mgcSchema:                  (*mgcSdk.Schema)(ref.Value),
 			isID:                       isID,
 			isRequired:                 required && !isID,
@@ -94,7 +104,7 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 			useStateForUnknown:         true,
 			requiresReplaceWhenChanged: false,
 		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[attr]))
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, input[mgcName]))
 	}
 
 	r.inputAttr = input
@@ -108,7 +118,7 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 	}
 	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading output attributes", r.name))
 
-	output := map[string]*attribute{}
+	output := mgcAttributes{}
 	crschema := r.create.ResultSchema()
 	hasID := crschema.Properties["id"]
 	for attr, ref := range crschema.Properties {
@@ -118,8 +128,11 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 		} else {
 			isID = idRexp.MatchString(attr)
 		}
-		output[attr] = &attribute{
-			tfName:                     kebabToSnakeCase(attr),
+
+		mgcName := mgcName(attr)
+		output[mgcName] = &attribute{
+			tfName:                     tfNameFromMgc(mgcName),
+			mgcName:                    mgcName,
 			mgcSchema:                  (*mgcSdk.Schema)(ref.Value),
 			isID:                       isID,
 			isRequired:                 false,
@@ -128,11 +141,12 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 			useStateForUnknown:         true,
 			requiresReplaceWhenChanged: false, // This one is useless in this case
 		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[attr]))
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[mgcName]))
 	}
 
 	for attr, ref := range r.read.ResultSchema().Properties {
-		if ra, ok := output[attr]; ok {
+		mgcName := mgcName(attr)
+		if ra, ok := output[mgcName]; ok {
 			rs := ref.Value
 			if !reflect.DeepEqual(ra.mgcSchema, (*mgcSdk.Schema)(rs)) {
 				// Ignore read value in favor of create result value (This is probably a bug with the API)
@@ -144,8 +158,9 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 			continue
 		}
 
-		output[attr] = &attribute{
-			tfName:                     kebabToSnakeCase(attr),
+		output[mgcName] = &attribute{
+			tfName:                     tfNameFromMgc(mgcName),
+			mgcName:                    mgcName,
 			mgcSchema:                  (*mgcSdk.Schema)(ref.Value),
 			isID:                       false,
 			isRequired:                 false,
@@ -154,19 +169,38 @@ func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics
 			useStateForUnknown:         true,
 			requiresReplaceWhenChanged: false, // This one is useless in this case
 		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[attr]))
+		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` info - %+v", r.name, attr, output[mgcName]))
 	}
 
 	r.outputAttr = output
 	return d
 }
 
-func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]schema.Attribute, diag.Diagnostics) {
-	d := diag.Diagnostics{}
-	d.Append(r.readInputAttributes(ctx)...)
-	d.Append(r.readOutputAttributes(ctx)...)
+func (r *MgcResource) generateTFSchema(ctx context.Context) (tfSchema schema.Schema, d diag.Diagnostics) {
+	var tfsa map[tfName]schema.Attribute
+	tfsa, d = r.generateTFAttributes(ctx)
+	if d.HasError() {
+		return
+	}
 
-	tfa := map[string]schema.Attribute{}
+	tfSchema = schema.Schema{Attributes: map[string]schema.Attribute{}}
+	for tfName, tfAttr := range tfsa {
+		tfSchema.Attributes[string(tfName)] = tfAttr
+	}
+	return
+}
+
+func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]schema.Attribute, d diag.Diagnostics) {
+	d.Append(r.readInputAttributes(ctx)...)
+	if d.HasError() {
+		return
+	}
+	d.Append(r.readOutputAttributes(ctx)...)
+	if d.HasError() {
+		return
+	}
+
+	tfa = map[tfName]schema.Attribute{}
 	for name, iattr := range r.inputAttr {
 		// Split attributes that differ between input/output
 		if oattr := r.outputAttr[name]; oattr != nil && !iattr.isID {
@@ -174,8 +208,8 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()
 				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", r.name, name, is, os))
-				iattr.tfName = kebabToSnakeCase("desired_" + iattr.tfName)
-				oattr.tfName = kebabToSnakeCase("current_" + oattr.tfName)
+				iattr.tfName = iattr.tfName.asDesired()
+				oattr.tfName = iattr.tfName.asCurrent()
 			}
 		}
 
@@ -212,7 +246,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (*map[string]sch
 		tfa[oattr.tfName] = at
 	}
 
-	return &tfa, d
+	return
 }
 
 func sdkToTerraformAttribute(ctx context.Context, c *attribute, di *diag.Diagnostics) schema.Attribute {
@@ -307,6 +341,14 @@ func sdkToTerraformAttribute(ctx context.Context, c *attribute, di *diag.Diagnos
 	}
 }
 
-func kebabToSnakeCase(n string) string {
-	return strcase.SnakeCase(n)
+func tfNameFromMgc(n mgcName) tfName {
+	return tfName(strcase.SnakeCase(string(n)))
+}
+
+func (n tfName) asDesired() tfName {
+	return "desired_" + n
+}
+
+func (n tfName) asCurrent() tfName {
+	return "current_" + n
 }

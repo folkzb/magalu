@@ -177,30 +177,31 @@ func (c *tfStateConverter) toMgcSchemaArray(mgcSchema *mgcSdk.Schema, atinfo *at
 	return converted
 }
 
-func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attribute, value tftypes.Value, ignoreUnknown bool, filterUnset bool) (converted map[string]any) {
-	var state map[string]tftypes.Value
-	err := value.As(&state)
+func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attribute, value tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcState map[string]any) {
+	var tfState map[string]tftypes.Value
+	err := value.As(&tfState)
 	if err != nil {
 		c.diag.AddError("Unable to convert value to map", fmt.Sprintf("[convert] unable to convert value %+v to schema %+v - error: %s", value, mgcSchema, err.Error()))
 		return nil
 	}
 
-	converted = map[string]any{}
-	for mgcSchemaKey, mgcPropSchema := range mgcSchema.Properties {
-		tfinfo := atinfo.attributes[mgcSchemaKey]
+	mgcState = map[string]any{}
+	for attr, ref := range mgcSchema.Properties {
+		mgcName := mgcName(attr)
+		tfinfo := atinfo.attributes[mgcName]
 		if tfinfo == nil {
 			c.diag.AddError(
 				"Schema attribute missing from attribute information",
-				fmt.Sprintf("[convert] schema attribute `%s` doesn't have attribute information", mgcSchemaKey),
+				fmt.Sprintf("[convert] schema attribute `%s` doesn't have attribute information", mgcName),
 			)
 			continue
 		}
 
-		tfkey := tfinfo.tfName
-		v, ok := state[tfkey]
+		tfName := tfinfo.tfName
+		v, ok := tfState[string(tfName)]
 		if !ok {
 			title := "Schema attribute missing from state value"
-			msg := fmt.Sprintf("[convert] schema attribute `%s` with info `%+v` missing from state %+v", mgcSchemaKey, atinfo, state)
+			msg := fmt.Sprintf("[convert] schema attribute `%s` with info `%+v` missing from state %+v", mgcName, atinfo, tfState)
 			if tfinfo.isRequired {
 				c.diag.AddError(title, msg)
 				return
@@ -209,7 +210,7 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 			continue
 		}
 
-		propValue := c.toMgcSchemaValue((*mgcSdk.Schema)(mgcPropSchema.Value), tfinfo, v, ignoreUnknown, filterUnset)
+		propValue := c.toMgcSchemaValue((*mgcSdk.Schema)(ref.Value), tfinfo, v, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
 			return nil
 		}
@@ -217,15 +218,15 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 		// We need to ignore nil values generated from unknown elements that didn't generate errors
 		if propValue == nil {
 			if tfinfo.isOptional && !tfinfo.isComputed && !filterUnset {
-				converted[mgcSchemaKey] = propValue
-			} else if mgcPropSchema.Value.Nullable || mgcPropSchema.Value.Type == "null" {
-				converted[mgcSchemaKey] = propValue
+				mgcState[string(mgcName)] = propValue
+			} else if ref.Value.Nullable || ref.Value.Type == "null" {
+				mgcState[string(mgcName)] = propValue
 			}
 		} else {
-			converted[mgcSchemaKey] = propValue
+			mgcState[string(mgcName)] = propValue
 		}
 	}
-	return converted
+	return mgcState
 }
 
 // Convert MGC schema keys to the corresponding TF state keys.
@@ -241,16 +242,16 @@ func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, obj map[string]
 	}
 
 	// TODO: Make recursive
-	for key, info := range atinfo.attributes {
-		value, ok := obj[key]
+	for mgcName, info := range atinfo.attributes {
+		value, ok := obj[string(mgcName)]
 		if !ok {
 			// Ignore non existing values
 			continue
 		}
 
-		if key != info.tfName {
-			obj[info.tfName] = value
-			delete(obj, key)
+		if string(mgcName) != string(info.tfName) {
+			obj[string(info.tfName)] = value
+			delete(obj, string(mgcName))
 		}
 	}
 }

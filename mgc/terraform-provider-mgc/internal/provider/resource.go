@@ -30,8 +30,8 @@ type MgcResource struct {
 	read       mgcSdk.Executor
 	update     mgcSdk.Executor
 	delete     mgcSdk.Executor
-	inputAttr  map[string]*attribute
-	outputAttr map[string]*attribute
+	inputAttr  mgcAttributes
+	outputAttr mgcAttributes
 	tfschema   *schema.Schema
 }
 
@@ -67,20 +67,18 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 	// TODO: Handle nullable values
 	tflog.Debug(ctx, fmt.Sprintf("[resource] generating schema for `%s`", r.name))
 
-	if r.tfschema != nil {
-		resp.Schema = *r.tfschema
-		return
+	if r.tfschema == nil {
+		tfs, d := r.generateTFSchema(ctx)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
+			return
+		}
+
+		tfs.MarkdownDescription = r.name
+		r.tfschema = &tfs
 	}
 
-	tfsa, d := r.generateTFAttributes(ctx)
-	resp.Diagnostics.Append(d...)
-
-	tfs := schema.Schema{}
-	tfs.MarkdownDescription = r.name
-	tfs.Attributes = *tfsa
-
-	r.tfschema = &tfs
-	resp.Schema = tfs
+	resp.Schema = *r.tfschema
 }
 
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -90,11 +88,13 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	configs := map[string]any{}
 	iatinfo := attribute{
 		tfName:     "inputSchemasInfo",
+		mgcName:    "inputSchemasInfo",
 		mgcSchema:  r.create.ParametersSchema(),
 		attributes: r.inputAttr,
 	}
 	oatinfo := attribute{
 		tfName:     "outputSchemasInfo",
+		mgcName:    "outputSchemasInfo",
 		mgcSchema:  r.create.ResultSchema(),
 		attributes: r.outputAttr,
 	}
