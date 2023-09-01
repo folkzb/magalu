@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"golang.org/x/exp/maps"
 	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -101,11 +100,11 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	// Create initial state from create params and update params
 	// TODO: Find a better way to send the filter flags
-	stateMap := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
-	updateStateMap := conv.toMgcSchemaMap(r.update.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
-	maps.Copy(stateMap, updateStateMap)
-	// Convert state schema keys to input tfkeys
-	conv.mgcKeysToStateKeys(&iatinfo, stateMap)
+	tfStateMap := map[string]any{}
+	mgcCreateMap := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
+	conv.mgcKeysToStateKeys(&iatinfo, mgcCreateMap, tfStateMap)
+	mgcUpdateStateMap := conv.toMgcSchemaMap(r.update.ParametersSchema(), &iatinfo, req.Plan.Raw, true, false)
+	conv.mgcKeysToStateKeys(&iatinfo, mgcUpdateStateMap, tfStateMap)
 
 	params := conv.toMgcSchemaMap(r.create.ParametersSchema(), &iatinfo, req.Plan.Raw, true, true)
 	if resp.Diagnostics.HasError() {
@@ -128,7 +127,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	*/
 	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
 
-	resultMap, ok := result.(map[string]any)
+	mgcCreateResultMap, ok := result.(map[string]any)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Operation output mismatch",
@@ -138,8 +137,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	// Add create result information to state
-	maps.Copy(stateMap, resultMap)
-	conv.mgcKeysToStateKeys(&oatinfo, stateMap)
+	conv.mgcKeysToStateKeys(&oatinfo, mgcCreateResultMap, tfStateMap)
 
 	tflog.Info(ctx, "[resource] created a virtual-machine resource with id %s")
 
@@ -149,7 +147,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	// Read param elements from create result
 	params = map[string]any{}
 	for k := range r.read.ParametersSchema().Properties {
-		params[k] = resultMap[k]
+		params[k] = mgcCreateResultMap[k]
 	}
 	tflog.Debug(ctx, "[resource] reading new virtual-machine resource with id %s")
 	result, err = r.read.Execute(r.sdk.WrapContext(ctx), params, configs)
@@ -162,7 +160,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
 
-	resultMap, ok = result.(map[string]any)
+	mgcReadResultMap, ok := result.(map[string]any)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Operation output mismatch",
@@ -172,18 +170,17 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	// Update state with read result
-	maps.Copy(stateMap, resultMap)
-	conv.mgcKeysToStateKeys(&oatinfo, stateMap)
+	conv.mgcKeysToStateKeys(&oatinfo, mgcReadResultMap, tfStateMap)
 
 	// Create a tf state value from the state map
-	stateValue := conv.fromMap(stateMap)
+	tfStateValue := conv.fromMap(tfStateMap)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Save data into Terraform state
 	resp.State = tfsdk.State{
-		Raw:    *stateValue,
+		Raw:    *tfStateValue,
 		Schema: resp.State.Schema,
 	}
 }

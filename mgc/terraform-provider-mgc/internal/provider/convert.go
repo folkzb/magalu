@@ -235,7 +235,7 @@ func (c *tfStateConverter) toMgcSchemaMap(mgcSchema *mgcSdk.Schema, atinfo *attr
 // For example: "desired_status" and "current_status"
 //
 // Verify for errors in the converter diagnostics attribute.
-func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, obj map[string]any) {
+func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, mgcState map[string]any, tfState map[string]any) {
 	if atinfo.mgcSchema == nil {
 		c.diag.AddError("Missing schema to conversion", "schema not provided")
 		return
@@ -243,16 +243,13 @@ func (c *tfStateConverter) mgcKeysToStateKeys(atinfo *attribute, obj map[string]
 
 	// TODO: Make recursive
 	for mgcName, info := range atinfo.attributes {
-		value, ok := obj[string(mgcName)]
+		value, ok := mgcState[string(mgcName)]
 		if !ok {
 			// Ignore non existing values
 			continue
 		}
 
-		if string(mgcName) != string(info.tfName) {
-			obj[string(info.tfName)] = value
-			delete(obj, string(mgcName))
-		}
+		tfState[string(info.tfName)] = value
 	}
 }
 
