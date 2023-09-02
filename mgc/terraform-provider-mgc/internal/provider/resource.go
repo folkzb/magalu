@@ -124,7 +124,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	tflog.Info(ctx, "[resource] created a virtual-machine resource with id %s")
+	tflog.Info(ctx, "[resource] created a virtual-machine resource")
 
 	var resultMap map[string]any
 	if checkSimilarJsonSchemas(r.create.ResultSchema(), r.read.ResultSchema()) {
@@ -140,7 +140,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		for k := range r.read.ParametersSchema().Properties {
 			params[k] = mgcCreateResultMap[k]
 		}
-		tflog.Debug(ctx, "[resource] reading new virtual-machine resource with id %s")
+		tflog.Debug(ctx, "[resource] reading new virtual-machine resource")
 		result, err = r.read.Execute(r.sdk.WrapContext(ctx), params, configs)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -159,6 +159,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 			)
 			return
 		}
+		tflog.Debug(ctx, fmt.Sprintf("[resource] received new virtual-machine resource information: %#v", mgcReadResultMap))
 		resultMap = mgcReadResultMap
 	}
 

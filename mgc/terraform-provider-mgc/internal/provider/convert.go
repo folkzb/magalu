@@ -251,17 +251,92 @@ func (c *tfStateConverter) readMgcMap(mgcSchema *mgcSdk.Schema, attributes mgcAt
 }
 
 func (c *tfStateConverter) applyMgcMap(mgcMap map[string]any, attributes mgcAttributes, ctx context.Context, tfState tfsdk.State, path path.Path) {
-	// TODO: Make recursive
 	for mgcName, attr := range attributes {
-		value, ok := mgcMap[string(mgcName)]
+		mgcValue, ok := mgcMap[string(mgcName)]
 		if !ok {
 			// Ignore non existing values
 			continue
 		}
 
-		c.diag.Append(tfState.SetAttribute(ctx, path.AtName(string(attr.tfName)), value)...)
+		attrPath := path.AtName(string(attr.tfName))
+		tfType := attr.tfSchema.GetType().TerraformType(ctx)
+		if mgcValue == nil {
+			c.applyMgcNilValue(tfType, attr, ctx, tfState, attrPath)
+			if c.diag.HasError() {
+				attrSchema, _ := tfState.Schema.AttributeAtPath(ctx, attrPath)
+				c.diag.AddAttributeError(attrPath, "unable to convert value", fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema))
+				return
+			}
+			continue
+		}
+
+		switch tfType.(type) {
+		case tftypes.List, tftypes.Set, tftypes.Tuple:
+			tflog.Debug(ctx, fmt.Sprintf("populating list in state at path %#v", attrPath))
+			c.applyMgcList(mgcValue.([]any), attr.attributes, ctx, tfState, attrPath)
+
+		case tftypes.Map, tftypes.Object:
+			tflog.Debug(ctx, fmt.Sprintf("populating nested object in state at path %#v", attrPath))
+			c.applyMgcMap(mgcValue.(map[string]any), attr.attributes, ctx, tfState, attrPath)
+
+		default:
+			c.diag.Append(tfState.SetAttribute(ctx, attrPath, mgcValue)...)
+		}
+
 		if c.diag.HasError() {
+			attrSchema, _ := tfState.Schema.AttributeAtPath(ctx, attrPath)
+			c.diag.AddAttributeError(attrPath, "unable to convert value", fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema))
 			return
+		}
+	}
+}
+
+func (c *tfStateConverter) applyMgcList(mgcList []any, attributes mgcAttributes, ctx context.Context, tfState tfsdk.State, path path.Path) {
+	attr := attributes["0"]
+	tfType := attr.tfSchema.GetType().TerraformType(ctx)
+
+	for i, mgcValue := range mgcList {
+		attrPath := path.AtListIndex(i)
+		switch tfType.(type) {
+		case tftypes.List, tftypes.Set, tftypes.Tuple:
+			tflog.Debug(ctx, fmt.Sprintf("populating list in state at path %#v", attrPath))
+			c.applyMgcList(mgcValue.([]any), attr.attributes, ctx, tfState, attrPath)
+
+		case tftypes.Map, tftypes.Object:
+			tflog.Debug(ctx, fmt.Sprintf("populating nested object in state at path %#v", attrPath))
+			c.applyMgcMap(mgcValue.(map[string]any), attr.attributes, ctx, tfState, attrPath)
+
+		default:
+			c.diag.Append(tfState.SetAttribute(ctx, attrPath, mgcValue)...)
+		}
+
+		if c.diag.HasError() {
+			attrSchema, _ := tfState.Schema.AttributeAtPath(ctx, attrPath)
+			c.diag.AddAttributeError(attrPath, "unable to convert value", fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema))
+			return
+		}
+	}
+}
+
+func (c *tfStateConverter) applyMgcNilValue(tfType tftypes.Type, attr *attribute, ctx context.Context, tfState tfsdk.State, path path.Path) {
+	// We must check the nil value type, since SetAttribute method requires a typed nil
+	switch tfType.(type) {
+	case tftypes.Map, tftypes.Object:
+		c.diag.Append(tfState.SetAttribute(ctx, path, (map[string]any)(nil))...)
+	case tftypes.List, tftypes.Set, tftypes.Tuple:
+		c.diag.Append(tfState.SetAttribute(ctx, path, ([]any)(nil))...)
+	default:
+		mgcType, err := getJsonType(attr.mgcSchema)
+		if err != nil {
+			c.diag.AddError("Unable to identify type of nil", fmt.Sprintf("nil value with mgcSchema: %#v at path %#v has undefined type", attr.mgcSchema, path))
+		}
+		switch mgcType {
+		case "string":
+			c.diag.Append(tfState.SetAttribute(ctx, path, (*string)(nil))...)
+		case "boolean":
+			c.diag.Append(tfState.SetAttribute(ctx, path, (*bool)(nil))...)
+		case "number", "integer":
+			c.diag.Append(tfState.SetAttribute(ctx, path, (*float64)(nil))...)
 		}
 	}
 }
