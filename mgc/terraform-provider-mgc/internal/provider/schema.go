@@ -286,7 +286,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]
 				is, _ := iattr.mgcSchema.MarshalJSON()
 				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", r.name, name, is, os))
 				iattr.tfName = iattr.tfName.asDesired()
-				oattr.tfName = iattr.tfName.asCurrent()
+				oattr.tfName = oattr.tfName.asCurrent()
 			}
 		}
 
