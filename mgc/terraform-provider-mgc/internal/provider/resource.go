@@ -85,7 +85,12 @@ func (r *MgcResource) readMgcMap(mgcSchema *mgcSdk.Schema, ctx context.Context, 
 	return conv.readMgcMap(mgcSchema, r.inputAttr, tfState)
 }
 
-func (r *MgcResource) applyMgcMap(mgcMap map[string]any, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) {
+func (r *MgcResource) applyMgcInputMap(mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
+	conv := newTFStateConverter(ctx, diag, r.tfschema)
+	conv.applyMgcMap(mgcMap, r.inputAttr, ctx, tfState, path.Empty())
+}
+
+func (r *MgcResource) applyMgcOutputMap(mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
 	conv := newTFStateConverter(ctx, diag, r.tfschema)
 	conv.applyMgcMap(mgcMap, r.outputAttr, ctx, tfState, path.Empty())
 }
@@ -93,7 +98,6 @@ func (r *MgcResource) applyMgcMap(mgcMap map[string]any, ctx context.Context, tf
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Make request
 	configs := map[string]any{}
-
 	params := r.readMgcMap(r.create.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -124,6 +128,9 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	// We must apply the input parameters in the state
+	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
+	r.applyMgcInputMap(params, ctx, &resp.State, &resp.Diagnostics)
 	tflog.Info(ctx, "[resource] created a virtual-machine resource")
 
 	var resultMap map[string]any
@@ -163,7 +170,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		resultMap = mgcReadResultMap
 	}
 
-	r.applyMgcMap(resultMap, ctx, resp.State, &resp.Diagnostics)
+	r.applyMgcOutputMap(resultMap, ctx, &resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
