@@ -138,7 +138,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		resultMap = mgcCreateResultMap
 	} else {
 		// TODO: Wait until the desired status is achieved - Remove sleep timer
-		time.Sleep(time.Second * 20)
+		time.Sleep(time.Minute)
 
 		// TODO: this is going away when we implement links
 		// see: https://github.com/profusion/magalu/issues/215
@@ -199,51 +199,54 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	*/
 	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
 
-	// TODO: Update current state
-}
-
-func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data *VirtualMachineResourceModel
-
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	params := map[string]any{
-		"id":     data.Id.ValueString(),
-		"status": data.DesiredStatus.ValueString(),
-	}
-	_, err := r.update.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
-	if err != nil {
+	resultMap, ok := result.(map[string]any)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unable to get instance",
-			fmt.Sprintf("Fetching information for instance %v returned with error: %v", data.Id, err),
+			"Operation output mismatch",
+			fmt.Sprintf("Unable to convert %v to map.", result),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	r.applyMgcOutputMap(resultMap, ctx, &resp.State, &resp.Diagnostics)
 }
 
-func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data *VirtualMachineResourceModel
-
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	params := r.readMgcMap(r.update.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	result, err := r.update.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to get instance",
+			fmt.Sprintf("Fetching information for instance returned with error: %v", err),
+		)
+		return
+	}
 
-	params := map[string]any{
-		"id": data.Id.ValueString(),
+	resultMap, ok := result.(map[string]any)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Operation output mismatch",
+			fmt.Sprintf("Unable to convert %v to map.", result),
+		)
+		return
+	}
+
+	r.applyMgcOutputMap(resultMap, ctx, &resp.State, &resp.Diagnostics)
+}
+
+func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	params := r.readMgcMap(r.delete.ParametersSchema(), ctx, tfsdk.State(req.State), &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 	_, err := r.delete.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to get instance",
-			fmt.Sprintf("Fetching information for instance %v returned with error: %v", data.Id, err),
+			fmt.Sprintf("Fetching information for instance returned with error: %v", err),
 		)
 		return
 	}
