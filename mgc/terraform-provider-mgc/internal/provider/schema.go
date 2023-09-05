@@ -397,6 +397,9 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		if m.requiresReplaceWhenChanged {
 			mod = append(mod, listplanmodifier.RequiresReplace())
 		}
+		if m.useStateForUnknown {
+			mod = append(mod, listplanmodifier.UseStateForUnknown())
+		}
 
 		// TODO: How will we handle List of Lists? Does it need to be handled at all? Does the
 		// 'else' branch already cover that correctly?
@@ -438,6 +441,9 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		mod := []planmodifier.Object{}
 		if m.requiresReplaceWhenChanged {
 			mod = append(mod, objectplanmodifier.RequiresReplace())
+		}
+		if m.useStateForUnknown {
+			mod = append(mod, objectplanmodifier.UseStateForUnknown())
 		}
 		return schema.SingleNestedAttribute{
 			Attributes:    tfAttributes,
