@@ -99,28 +99,28 @@ func addMgcSchemaAttributes(
 ) error {
 	for k, ref := range mgcSchema.Properties {
 		mgcName := mgcName(k)
-		mgcSchema := (*mgcSdk.Schema)(ref.Value)
+		mgcPropSchema := (*mgcSdk.Schema)(ref.Value)
 		if ca, ok := attributes[mgcName]; ok {
-			if !checkSimilarJsonSchemas(ca.mgcSchema, mgcSchema) {
+			if !checkSimilarJsonSchemas(ca.mgcSchema, mgcPropSchema) {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
 				// TODO: Ignore default values when verifying equality
-				tflog.Error(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring DIFFERENT attribute `%s`:\nOLD=%+v\nNEW=%+v", resourceName, k, ca.mgcSchema, mgcSchema))
+				tflog.Error(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring DIFFERENT attribute `%s`:\nOLD=%+v\nNEW=%+v", resourceName, k, ca.mgcSchema, mgcPropSchema))
 				continue
 			}
 			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring already computed attribute `%s` ", resourceName, k))
 			continue
 		}
 
-		tfSchema, childAttributes, err := mgcToTFSchema(mgcSchema, getModifiers(mgcSchema, mgcName), resourceName, ctx)
+		tfSchema, childAttributes, err := mgcToTFSchema(mgcPropSchema, getModifiers(mgcSchema, mgcName), resourceName, ctx)
 		if err != nil {
-			tflog.Error(ctx, fmt.Sprintf("[resource] schema for %q attribute %q schema: %+v; error: %s", resourceName, k, mgcSchema, err))
+			tflog.Error(ctx, fmt.Sprintf("[resource] schema for %q attribute %q schema: %+v; error: %s", resourceName, k, mgcPropSchema, err))
 			return fmt.Errorf("attribute %q, error=%s", k, err)
 		}
 
 		attr := &attribute{
 			tfName:     tfNameFromMgc(mgcName),
 			mgcName:    mgcName,
-			mgcSchema:  mgcSchema,
+			mgcSchema:  mgcPropSchema,
 			tfSchema:   tfSchema,
 			attributes: childAttributes,
 		}
