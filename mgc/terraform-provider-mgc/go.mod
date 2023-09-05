@@ -3,6 +3,7 @@ module magalu.cloud/terraform-provider-mgc
 go 1.20
 
 require (
+	github.com/go-test/deep v1.1.0
 	github.com/hashicorp/terraform-plugin-framework v1.3.4
 	github.com/hashicorp/terraform-plugin-go v0.18.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
