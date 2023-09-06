@@ -621,7 +621,11 @@ func (o *Operation) ResultSchema() *core.Schema {
 			rootSchema.AnyOf = append(rootSchema.AnyOf, openapi3.NewSchemaRef(content.Schema.Ref, content.Schema.Value))
 		}
 
-		if len(rootSchema.AnyOf) == 1 {
+		switch len(rootSchema.AnyOf) {
+		default:
+		case 0:
+			rootSchema = core.NewNullSchema()
+		case 1:
 			rootSchema = (*core.Schema)(rootSchema.AnyOf[0].Value)
 		}
 

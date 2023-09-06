@@ -36,7 +36,8 @@ func NewBooleanSchema() *Schema {
 
 func NewNullSchema() *Schema {
 	return &Schema{
-		Type: "null",
+		Type:     "null",
+		Nullable: true,
 	}
 }
 
