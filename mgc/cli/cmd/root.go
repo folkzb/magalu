@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"magalu.cloud/core"
 	mgcLogger "magalu.cloud/core/logger"
@@ -191,6 +192,42 @@ func loadDataFromConfig(config *mgcSdk.Config, flags *flag.FlagSet, schema *mgcS
 	return nil
 }
 
+func handleTerminatorExecutor(ctx context.Context, cmd *cobra.Command, tExec core.TerminatorExecutor, parameters, configs map[string]any, retries int, interval time.Duration) error {
+	result, err := tExec.ExecuteUntilTermination(ctx, parameters, configs, retries, interval)
+	if err != nil {
+		var maxRetriesError core.MaxRetriesExceededError
+		if errors.As(err, &maxRetriesError) {
+			_ = formatResult(cmd, tExec, maxRetriesError.Result)
+		}
+		return err
+	}
+
+	return formatResult(cmd, tExec, result)
+}
+
+func handleRegularExecutor(ctx context.Context, cmd *cobra.Command, exec core.Executor, parameters, configs map[string]any) error {
+	result, err := exec.Execute(ctx, parameters, configs)
+	if err != nil {
+		return err
+	}
+
+	return formatResult(cmd, exec, result)
+}
+
+func formatResult(cmd *cobra.Command, exec core.Executor, result core.Value) error {
+	if result == nil {
+		return nil
+	}
+
+	output := getOutputFor(cmd, exec, result)
+
+	if reader, ok := result.(io.Reader); ok {
+		return handleReaderResult(reader, output)
+	}
+
+	return handleJsonResult(exec, result, output)
+}
+
 func handleReaderResult(reader io.Reader, outFile string) (err error) {
 	if closer, ok := reader.(io.Closer); ok {
 		defer closer.Close()
@@ -261,8 +298,6 @@ func AddAction(
 		RunE: func(cmd *cobra.Command, args []string) error {
 			parameters := map[string]mgcSdk.Value{}
 			configs := map[string]mgcSdk.Value{}
-			var result any
-			var err error
 
 			if err := loadDataFromFlags(cmd.Flags(), exec.ParametersSchema(), parameters); err != nil {
 				return err
@@ -281,36 +316,10 @@ func AddAction(
 
 			retries, interval, err := getWaitTerminationFlag(cmd)
 			if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && err == nil {
-				result, err = tExec.ExecuteUntilTermination(ctx, parameters, configs, retries, interval)
-				if err != nil {
-					var maxRetriesError core.MaxRetriesExceededError
-					if errors.As(err, &maxRetriesError) {
-						op := getOutputFor(cmd, exec, maxRetriesError.Result)
-						if jErr := handleJsonResult(exec, maxRetriesError.Result, op); jErr != nil {
-							return jErr
-						}
-					}
-					return err
-				}
+				return handleTerminatorExecutor(ctx, cmd, tExec, parameters, configs, retries, interval)
 			} else {
-				result, err = exec.Execute(ctx, parameters, configs)
+				return handleRegularExecutor(ctx, cmd, exec, parameters, configs)
 			}
-
-			if err != nil {
-				return err
-			}
-
-			if result == nil {
-				return nil
-			}
-
-			output := getOutputFor(cmd, exec, result)
-
-			if reader, ok := result.(io.Reader); ok {
-				return handleReaderResult(reader, output)
-			}
-
-			return handleJsonResult(exec, result, output)
 		},
 	}
 
