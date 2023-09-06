@@ -95,6 +95,102 @@ func (r *MgcResource) applyMgcOutputMap(mgcMap map[string]any, ctx context.Conte
 	conv.applyMgcMap(mgcMap, r.outputAttr, ctx, tfState, path.Empty())
 }
 
+func castToMap(result any, diag *diag.Diagnostics) (resultMap map[string]any, ok bool) {
+	resultMap, ok = result.(map[string]any)
+	if !ok {
+		diag.AddError(
+			"Operation output mismatch",
+			fmt.Sprintf("Unable to convert %v to map.", result),
+		)
+	}
+	return
+}
+
+func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any, configs map[string]any, diag *diag.Diagnostics) map[string]any {
+	exec := r.read
+
+	params := map[string]any{}
+	for k := range exec.ParametersSchema().Properties {
+		if value, ok := mgcState[k]; ok {
+			params[k] = value
+		}
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("[resource] reading new %s resource - request info with params: %+v", r.name, params))
+	result, err := exec.Execute(ctx, params, configs)
+	if err != nil {
+		diag.AddError(
+			"Unable to read instance",
+			fmt.Sprintf("Service returned with error: %v", err),
+		)
+		return nil
+	}
+
+	/* TODO:
+	if err := validateResult(diag, exec, result); err != nil {
+		return
+	}
+	*/
+	_ = validateResult(diag, exec, result) // just ignore errors for now
+
+	resultMap, ok := castToMap(result, diag)
+	if !ok {
+		return nil
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("[resource] received new %s resource information: %#v", r.name, resultMap))
+	return resultMap
+}
+
+func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any, configs map[string]any, result any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
+	var resultMap map[string]any
+	resultSchema := exec.ResultSchema()
+
+	/* TODO:
+	if err := validateResult(diag, exec, result); err != nil {
+		return
+	}
+	*/
+	_ = validateResult(diag, exec, result) // just ignore errors for now
+
+	if checkSimilarJsonSchemas(resultSchema, r.read.ResultSchema()) {
+		var ok bool
+		if resultMap, ok = castToMap(result, diag); !ok {
+			return
+		}
+	} else {
+		// TODO: when we implement links this will go away as it will get internally
+		// https://github.com/profusion/magalu/issues/215
+		mgcState := params
+		if resultSchema.Type == "object" {
+			hasAllProps := true
+			for k := range r.read.ParametersSchema().Properties {
+				if _, ok := resultSchema.Properties[k]; !ok {
+					hasAllProps = false
+					break
+				}
+			}
+			if hasAllProps {
+				var ok bool
+				if mgcState, ok = castToMap(result, diag); !ok {
+					return
+				}
+			}
+		}
+
+		// TODO: Wait until the desired status is achieved - Remove sleep timer
+		// this will go away when TerminatorExecutor is done
+		// https://github.com/profusion/magalu/pull/225
+		time.Sleep(time.Minute)
+		resultMap = r.readResource(ctx, mgcState, configs, diag)
+		if diag.HasError() {
+			return
+		}
+	}
+
+	r.applyMgcOutputMap(resultMap, ctx, tfState, diag)
+}
+
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Make request
 	configs := map[string]any{}
@@ -103,7 +199,9 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 	tflog.Debug(ctx, fmt.Sprintf("[resource] creating `%s` - request info with params: %+v", r.name, params))
-	result, err := r.create.Execute(r.sdk.WrapContext(ctx), params, configs)
+	ctx = r.sdk.WrapContext(ctx)
+	exec := r.create
+	result, err := exec.Execute(ctx, params, configs)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create instance",
@@ -112,140 +210,65 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	/* TODO:
-	if err := validateResult(resp.Diagnostics, r.create, result); err != nil {
-		return
-	}
-	*/
-	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
-
-	mgcCreateResultMap, ok := result.(map[string]any)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("Unable to convert %v to map.", result),
-		)
-		return
-	}
+	r.applyStateAfter(exec, params, configs, result, ctx, &resp.State, &resp.Diagnostics)
 
 	// We must apply the input parameters in the state
 	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
 	r.applyMgcInputMap(params, ctx, &resp.State, &resp.Diagnostics)
 	tflog.Info(ctx, "[resource] created a virtual-machine resource")
 
-	var resultMap map[string]any
-	if checkSimilarJsonSchemas(r.create.ResultSchema(), r.read.ResultSchema()) {
-		resultMap = mgcCreateResultMap
-	} else {
-		// TODO: Wait until the desired status is achieved - Remove sleep timer
-		time.Sleep(time.Minute)
-
-		// TODO: this is going away when we implement links
-		// see: https://github.com/profusion/magalu/issues/215
-		// Read param elements from create result
-		params = map[string]any{}
-		for k := range r.read.ParametersSchema().Properties {
-			params[k] = mgcCreateResultMap[k]
-		}
-		tflog.Debug(ctx, "[resource] reading new virtual-machine resource")
-		result, err = r.read.Execute(r.sdk.WrapContext(ctx), params, configs)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to create instance",
-				fmt.Sprintf("Service returned with error: %v", err),
-			)
-			return
-		}
-		_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
-
-		mgcReadResultMap, ok := result.(map[string]any)
-		if !ok {
-			resp.Diagnostics.AddError(
-				"Operation output mismatch",
-				fmt.Sprintf("Unable to convert %v to map.", result),
-			)
-			return
-		}
-		tflog.Debug(ctx, fmt.Sprintf("[resource] received new virtual-machine resource information: %#v", mgcReadResultMap))
-		resultMap = mgcReadResultMap
-	}
-
-	r.applyMgcOutputMap(resultMap, ctx, &resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s`", r.name))
 
+	configs := map[string]any{}
 	// Make request
 	params := r.readMgcMap(r.read.ParametersSchema(), ctx, req.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s` - request info with params: %+v", r.name, params))
-	result, err := r.read.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to get resource",
-			fmt.Sprintf("[resource] information for `%s` returned with error: %v", r.name, err),
-		)
+	ctx = r.sdk.WrapContext(ctx)
+	resultMap := r.readResource(ctx, params, configs, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	/* TODO:
-	if err := validateResult(resp.Diagnostics, r.create, result); err != nil {
-		return
-	}
-	*/
-	_ = validateResult(resp.Diagnostics, r.create, result) // just ignore errors for now
-
-	resultMap, ok := result.(map[string]any)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("Unable to convert %v to map.", result),
-		)
-		return
-	}
-
 	r.applyMgcOutputMap(resultMap, ctx, &resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	configs := map[string]any{}
 	params := r.readMgcMap(r.update.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	result, err := r.update.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
+	ctx = r.sdk.WrapContext(ctx)
+	exec := r.update
+	result, err := exec.Execute(ctx, params, configs)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to get instance",
-			fmt.Sprintf("Fetching information for instance returned with error: %v", err),
+			"Unable to update instance",
+			fmt.Sprintf("Service returned with error: %v", err),
 		)
 		return
 	}
 
-	resultMap, ok := result.(map[string]any)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("Unable to convert %v to map.", result),
-		)
-		return
-	}
-
-	r.applyMgcOutputMap(resultMap, ctx, &resp.State, &resp.Diagnostics)
+	r.applyStateAfter(exec, params, configs, result, ctx, &resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	configs := map[string]any{}
 	params := r.readMgcMap(r.delete.ParametersSchema(), ctx, tfsdk.State(req.State), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	_, err := r.delete.Execute(r.sdk.WrapContext(ctx), params, map[string]any{})
+	ctx = r.sdk.WrapContext(ctx)
+	exec := r.delete
+	_, err := exec.Execute(ctx, params, configs)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to get instance",
+			"Unable to delete instance",
 			fmt.Sprintf("Fetching information for instance returned with error: %v", err),
 		)
 		return
@@ -256,7 +279,7 @@ func (r *MgcResource) ImportState(ctx context.Context, req resource.ImportStateR
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func validateResult(d diag.Diagnostics, action core.Executor, result any) error {
+func validateResult(d *diag.Diagnostics, action core.Executor, result any) error {
 	err := action.ResultSchema().VisitJSON(result)
 	if err != nil {
 		d.AddWarning(
