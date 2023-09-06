@@ -21,3 +21,10 @@ resource "magalu_virtual-machine_instances" "myvm" {
   status = "ACTIVE"
   allocate_fip = false
 }
+
+resource "magalu_block-storage_volume" "myvmvolume" {
+    name = "myvmvolume"
+    description = "myvmvolumedescription"
+    size = 20
+    desired_volume_type = "cloud_nvme"
+}
