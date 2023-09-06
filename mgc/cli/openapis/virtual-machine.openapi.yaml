@@ -279,6 +279,10 @@ paths:
             -   OAuth2:
                 - virtual-machine.read
             x-cli-description: Get a Virtual Machine instance details
+            x-cli-wait-termination:
+                maxRetries: 30
+                intervalInSeconds: 1s
+                jsonPathQuery: "$.status == \"ACTIVE\" || $.status == \"SHUTOFF\" || $.status == \"ERROR\" || $.status == \"error\""
         delete:
             tags:
             - instances
