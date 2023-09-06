@@ -162,7 +162,7 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 		if err != nil {
 			return err
 		}
-		if val == nil && !(propSchema.Nullable || propSchema.Type == "null") {
+		if val == nil && !core.IsSchemaNullable((*core.Schema)(propSchema)) {
 			continue
 		}
 		dst[name] = val

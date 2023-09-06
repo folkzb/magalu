@@ -2,6 +2,10 @@ package core
 
 import "github.com/getkin/kin-openapi/openapi3"
 
+func NewSchemaRef(ref string, schema *Schema) *openapi3.SchemaRef {
+	return openapi3.NewSchemaRef(ref, (*openapi3.Schema)(schema))
+}
+
 func NewObjectSchema(properties map[string]*Schema, required []string) *Schema {
 	hasAdditionalProperties := false
 
@@ -49,11 +53,25 @@ func NewArraySchema(item *Schema) *Schema {
 }
 
 func NewAnyOfSchema(anyOfs ...*Schema) *Schema {
-	anyOfsCast := make([]*openapi3.Schema, len(anyOfs))
+	anyOfsCast := make([]*openapi3.Schema, 0, len(anyOfs))
 	for _, v := range anyOfs {
 		anyOfsCast = append(anyOfsCast, (*openapi3.Schema)(v))
 	}
 	return (*Schema)(openapi3.NewAnyOfSchema(anyOfsCast...))
+}
+func NewOneOfSchema(oneOfs ...*Schema) *Schema {
+	anyOfsCast := make([]*openapi3.Schema, 0, len(oneOfs))
+	for _, v := range oneOfs {
+		anyOfsCast = append(anyOfsCast, (*openapi3.Schema)(v))
+	}
+	return (*Schema)(openapi3.NewOneOfSchema(anyOfsCast...))
+}
+func NewAllOfSchema(allOfs ...*Schema) *Schema {
+	anyOfsCast := make([]*openapi3.Schema, 0, len(allOfs))
+	for _, v := range allOfs {
+		anyOfsCast = append(anyOfsCast, (*openapi3.Schema)(v))
+	}
+	return (*Schema)(openapi3.NewAllOfSchema(anyOfsCast...))
 }
 
 func SetDefault(schema *Schema, value any) *Schema {
@@ -74,4 +92,25 @@ func (schema *Schema) UnmarshalJSON(data []byte) error {
 // MarshalJSON returns the JSON encoding of Schema.
 func (schema Schema) MarshalJSON() ([]byte, error) {
 	return openapi3.Schema(schema).MarshalJSON()
+}
+
+// *Recursively* checks if schema can be nullable. Function supports `nullable`
+// fields and `type: 'null'` fields, including if included in anyOf, allOf and oneOf
+// properties. It also checks for type refs to check if they are nullable, alas why recursive.
+func IsSchemaNullable(schema *Schema) bool {
+	// Object is nullable
+	if schema.Nullable || schema.Type == "null" {
+		return true
+	}
+	// Object has nullable type in type list
+	possibleRefs := []openapi3.SchemaRefs{schema.AnyOf, schema.OneOf, schema.AllOf}
+	for _, refs := range possibleRefs {
+		for _, typeRef := range refs {
+			// ! Recursive call
+			if IsSchemaNullable((*Schema)(typeRef.Value)) {
+				return true
+			}
+		}
+	}
+	return false
 }
