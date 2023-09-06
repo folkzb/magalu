@@ -24,7 +24,7 @@ To run the project, the main dependency needed is [Go](https://go.dev/dl/). To
 install, visit the official link with the instructions.
 
 There are some utility scripts written in [Python](https://www.python.org/downloads/).
-To install, visit the official website.
+For this, [Poetry](https://python-poetry.org/) is used. Check [Poetry.md](Poetry.md) for instructions.
 
 
 ## Running the CLI

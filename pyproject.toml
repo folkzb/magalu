@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "magalu"
+version = "0.1.0"
+description = ""
+authors = ["Rafael Oliveira <rafael.oliveira@profusion.mobi>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyyaml = "^6.0.1"
+jsonschema = "^4.19.0"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^3.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
