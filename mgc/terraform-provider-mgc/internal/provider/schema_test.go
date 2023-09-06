@@ -88,6 +88,7 @@ var update = mgc.NewRawStaticExecute(
 	"",
 	mgc.NewObjectSchema(
 		map[string]*mgc.Schema{
+			"id":    mgc.NewStringSchema(),
 			"name":  mgc.NewStringSchema(),
 			"count": mgc.NewNumberSchema(),
 			"extra_field": mgc.NewArraySchema(
@@ -99,7 +100,7 @@ var update = mgc.NewRawStaticExecute(
 				),
 			),
 		},
-		[]string{},
+		[]string{"id"},
 	),
 	nil,
 	mgc.NewObjectSchema(
@@ -210,6 +211,15 @@ var testCases = []testCase{
 				mgcSchema: (*mgc.Schema)(create.ParametersSchema().Properties["name"].Value),
 				tfSchema: schema.StringAttribute{
 					Required:      true,
+					PlanModifiers: []planmodifier.String{},
+				},
+			},
+			"id": {
+				mgcName:   "id",
+				tfName:    "id",
+				mgcSchema: (*mgc.Schema)(create.ParametersSchema().Properties["name"].Value),
+				tfSchema: schema.StringAttribute{
+					Computed:      true,
 					PlanModifiers: []planmodifier.String{},
 				},
 			},
@@ -332,10 +342,8 @@ var testCases = []testCase{
 		},
 		expectedFinal: map[tfName]schema.Attribute{
 			"current_count": schema.Int64Attribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
+				Computed:      true,
+				PlanModifiers: []planmodifier.Int64{},
 			},
 			"desired_count": schema.NumberAttribute{
 				Optional:      true,
@@ -367,10 +375,8 @@ var testCases = []testCase{
 				},
 			},
 			"created_at": schema.Int64Attribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
+				Computed:      true,
+				PlanModifiers: []planmodifier.Int64{},
 			},
 			"id": schema.StringAttribute{
 				Computed: true,
