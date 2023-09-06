@@ -36,19 +36,25 @@ read DISK_ID < <($MGC_CLI block-storage volume create \
     --volume-type=$DISK_TYPE \
     --size=$DISK_SIZE -o jsonpath='$.id')
 
-# 5. Wait for the VM to transition to active
-CUR_STATUS=""
-DESIRED_STATUS="ACTIVE"
-while [ [${CUR_STATUS}] != [\"${DESIRED_STATUS}\"] ]
-do
-    CUR_STATUS=$($MGC_CLI virtual-machine instances get --id=$VM_ID 2>/dev/null -o jsonpath='$.status')
-    sleep 1
-done
+# 5. Wait for the VM to transition to a terminal state (ACTIVE, SHUTOFF or ERROR)
+read CUR_STATUS < <($MGC_CLI virtual-machine instances \
+    -o jsonpath='$.status' \
+    -l 'fatal:*' \
+    -w \
+    get --id=$VM_ID)
 
-# 6. Attach Disk to VM - may fail if VM is in Pending status
-$MGC_CLI block-storage volume attach \
-    --id=$DISK_ID \
-    --virtual-machine-id=$VM_ID
+# 6. Check if VM is in ACTIVE state
+DESIRED_STATUS='"ACTIVE"'
+if [ "$CUR_STATUS" != "$DESIRED_STATUS" ]
+then
+    $MGC_CLI virtual-machine instances delete --id=$VM_ID
+    exit 1
+else
+    # 6. Attach Disk to VM - may fail if VM is in Pending status
+    $MGC_CLI block-storage volume attach \
+        --id=$DISK_ID \
+        --virtual-machine-id=$VM_ID
 
-# 7. Shutoff VM
-$MGC_CLI virtual-machine instances update --id=$VM_ID --status="shutoff"
+    # 7. Shutoff VM
+    $MGC_CLI virtual-machine instances update --id=$VM_ID --status="shutoff"
+fi
