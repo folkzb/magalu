@@ -38,19 +38,22 @@ type parameterWithName struct {
 }
 
 type Operation struct {
-	name            string
-	key             string
-	method          string
-	path            *openapi3.PathItem
-	operation       *openapi3.Operation
-	doc             *openapi3.T
-	paramsSchema    *core.Schema
-	configsSchema   *core.Schema
-	resultSchema    *core.Schema
-	extensionPrefix *string
-	servers         openapi3.Servers
-	parameters      *[]*parameterWithName
-	logger          *zap.SugaredLogger
+	name                string
+	key                 string
+	method              string
+	path                *openapi3.PathItem
+	operation           *openapi3.Operation
+	doc                 *openapi3.T
+	paramsSchema        *core.Schema
+	configsSchema       *core.Schema
+	resultSchema        *core.Schema
+	transformParameters func(value map[string]any) (map[string]any, error)
+	transformConfigs    func(value map[string]any) (map[string]any, error)
+	transformResult     func(value any) (any, error)
+	extensionPrefix     *string
+	servers             openapi3.Servers
+	parameters          *[]*parameterWithName
+	logger              *zap.SugaredLogger
 }
 
 // BEGIN: Descriptor interface:
@@ -584,6 +587,7 @@ func (o *Operation) ParametersSchema() *core.Schema {
 		o.addSecurityParameters(rootSchema)
 
 		o.paramsSchema = rootSchema
+		o.transformParameters = createTransform[map[string]any](rootSchema, o.extensionPrefix)
 	}
 	return o.paramsSchema
 }
@@ -596,6 +600,7 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 		o.addServerVariables(rootSchema)
 
 		o.configsSchema = rootSchema
+		o.transformConfigs = createTransform[map[string]any](rootSchema, o.extensionPrefix)
 	}
 	return o.configsSchema
 }
@@ -630,6 +635,7 @@ func (o *Operation) ResultSchema() *core.Schema {
 		}
 
 		o.resultSchema = rootSchema
+		o.transformResult = createTransform[any](rootSchema, o.extensionPrefix)
 	}
 	return o.resultSchema
 }
@@ -998,7 +1004,16 @@ func (o *Operation) createHttpRequest(
 }
 
 func (o *Operation) getResponseValue(resp *http.Response) (core.Value, error) {
-	return coreHttp.UnwrapResponse(resp, nil)
+	value, err := coreHttp.UnwrapResponse(resp, nil)
+	if err != nil {
+		return value, err
+	}
+	// do this before checking o.transformResult as it will be initialized there
+	_ = o.ResultSchema()
+	if o.transformResult != nil {
+		return o.transformResult(value)
+	}
+	return value, nil
 }
 
 func (o *Operation) Execute(
@@ -1023,9 +1038,27 @@ func (o *Operation) Execute(
 	if err = parametersSchema.VisitJSON(parameters); err != nil {
 		return nil, err
 	}
+	if o.transformParameters != nil {
+		logger().Debugf("Starting parameter transforms for %+v...", parameters)
+		// Safe because transformParameters doesn't modify the input map
+		parameters, err = o.transformParameters(parameters)
+		if err != nil {
+			return nil, err
+		}
+		logger().Debug("Finished parameter transforms", parameters)
+	}
 
 	if err = configsSchema.VisitJSON(configs); err != nil {
 		return nil, err
+	}
+	if o.transformConfigs != nil {
+		logger().Debug("Starting config transforms for %+v...", configs)
+		// Safe because transformConfigs doesn't modify the input map
+		configs, err = o.transformConfigs(configs)
+		if err != nil {
+			return nil, err
+		}
+		logger().Debug("Finished config transforms", configs)
 	}
 
 	req, err := o.createHttpRequest(ctx, auth, parameters, configs)

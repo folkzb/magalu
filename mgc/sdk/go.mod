@@ -8,6 +8,7 @@ require (
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/stoewer/go-strcase v1.3.0
 	go.uber.org/zap v1.25.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	gopkg.in/yaml.v3 v3.0.1
