@@ -188,7 +188,7 @@ func getResultModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModi
 		isRequired:                 false,
 		isOptional:                 false,
 		isComputed:                 true,
-		useStateForUnknown:         true,
+		useStateForUnknown:         false,
 		requiresReplaceWhenChanged: false,
 		getChildModifiers:          getResultModifiers,
 	}
