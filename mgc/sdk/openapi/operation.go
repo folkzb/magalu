@@ -675,6 +675,7 @@ func (o *Operation) addServerVariables(schema *core.Schema) {
 		for _, e := range spec.Enum {
 			varSchema.Enum = append(varSchema.Enum, e)
 		}
+		varSchema.Extensions = spec.Extensions
 
 		schema.Properties[externalName] = &openapi3.SchemaRef{Value: varSchema}
 		return true, nil
