@@ -77,20 +77,17 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 		cs,
 		rs,
 		func(ctx context.Context, parameters, configs map[string]any) (Value, error) {
-			var paramsStruct ParamsT
-			var configsStruct ConfigsT
-
-			err := decode(parameters, &paramsStruct)
+			paramsStruct, err := DecodeNewValue[ParamsT](parameters)
 			if err != nil {
-				return nil, fmt.Errorf("error when decoding parameters. Did you forget to set 'mapstructure' struct flags?: %w", err)
+				return nil, fmt.Errorf("error when decoding parameters. Did you forget to set 'json' struct flags for struct %T?: %w", paramsStruct, err)
 			}
 
-			err = decode(configs, &configsStruct)
+			configsStruct, err := DecodeNewValue[ConfigsT](configs)
 			if err != nil {
-				return nil, fmt.Errorf("error when decoding configs. Did you forget to set 'mapstructure' struct flags?: %w", err)
+				return nil, fmt.Errorf("error when decoding configs. Did you forget to set 'json' struct flags for struct %T?: %w", paramsStruct, err)
 			}
 
-			result, err := execute(ctx, paramsStruct, configsStruct)
+			result, err := execute(ctx, *paramsStruct, *configsStruct)
 			if err != nil {
 				return nil, err
 			}

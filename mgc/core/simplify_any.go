@@ -3,8 +3,6 @@ package core
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 // This function takes any Go value (simple types, arrays, maps, structs, pointers...) and converts
@@ -46,7 +44,7 @@ func SimplifyAny(value Value) (converted Value, err error) {
 		return simplifyMap(v)
 	case reflect.Struct:
 		resultMap := map[string]Value{}
-		err = decode(value, &resultMap)
+		err := DecodeValue(value, &resultMap)
 		if err != nil {
 			return nil, err
 		}
@@ -85,25 +83,11 @@ func simplifyMap(v reflect.Value) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		keyStr := new(string)
-		err = decode(keyConverted, keyStr)
+		keyStr, err := DecodeNewValue[string](keyConverted)
 		if err != nil {
 			return nil, err
 		}
 		result[*keyStr] = subConverted
 	}
 	return result, nil
-}
-
-func decode[T any, U any](value T, result *U) error {
-	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:           result,
-		TagName:          "json",
-		WeaklyTypedInput: true,
-		DecodeHook:       mapstructure.RecursiveStructToMapHookFunc(),
-	})
-	if err != nil {
-		return err
-	}
-	return decoder.Decode(value)
 }

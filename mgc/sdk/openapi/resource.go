@@ -14,7 +14,6 @@ import (
 	"github.com/PaesslerAG/gval"
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/mitchellh/mapstructure"
 )
 
 type WaitTermination struct {
@@ -289,19 +288,9 @@ func (o *Resource) getOperations() map[string]core.Executor {
 }
 
 func (o *Resource) wrapInTerminatorExecutor(wtExt map[string]any, exec core.Executor) (core.TerminatorExecutor, error) {
-	wt := defaultWaitTerminaton
-	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		DecodeHook:       mapstructure.StringToTimeDurationHookFunc(),
-		WeaklyTypedInput: true,
-		Result:           &wt,
-	})
-
-	if err != nil {
-		o.logger.Warnw("error configuring decoder", "error", err)
-	} else {
-		if err = dec.Decode(wtExt); err != nil {
-			o.logger.Warnw("error decoding extension wait-termination", "data", wtExt, "error", err)
-		}
+	wt := &defaultWaitTerminaton
+	if err := core.DecodeValue(wtExt, wt); err != nil {
+		o.logger.Warnw("error decoding extension wait-termination", "data", wtExt, "error", err)
 	}
 
 	if wt.MaxRetries <= 0 {
