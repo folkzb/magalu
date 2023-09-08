@@ -204,7 +204,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	result, err := exec.Execute(ctx, params, configs)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to create instance",
+			"Unable to create resource",
 			fmt.Sprintf("Service returned with error: %v", err),
 		)
 		return
@@ -215,7 +215,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	// We must apply the input parameters in the state
 	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
 	r.applyMgcInputMap(params, ctx, &resp.State, &resp.Diagnostics)
-	tflog.Info(ctx, "[resource] created a virtual-machine resource")
+	tflog.Info(ctx, fmt.Sprintf("[resource] created a %s resource", r.name))
 
 }
 
@@ -268,8 +268,8 @@ func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	_, err := exec.Execute(ctx, params, configs)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to delete instance",
-			fmt.Sprintf("Fetching information for instance returned with error: %v", err),
+			"Unable to delete resource",
+			fmt.Sprintf("Removing resource request returned with error: %v", err),
 		)
 		return
 	}
