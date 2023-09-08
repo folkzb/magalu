@@ -118,7 +118,7 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 	var result any
 	var err error
 
-	tflog.Debug(ctx, fmt.Sprintf("[resource] reading new %s resource - request info with params: %+v", r.name, params))
+	tflog.Debug(ctx, fmt.Sprintf("[resource] reading new %s resource - request info with params: %+v and configs: %+v", r.name, params, configs))
 	if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok {
 		tflog.Debug(ctx, "[resource] running as TerminatorExecutor")
 		result, err = tExec.ExecuteUntilTermination(ctx, params, configs, 0, 0)
@@ -195,14 +195,25 @@ func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any,
 	r.applyMgcOutputMap(resultMap, ctx, tfState, diag)
 }
 
+func getConfigs(schema *core.Schema) map[string]core.Value {
+	result := map[string]core.Value{}
+	for propName, propRef := range schema.Properties {
+		prop := (*core.Schema)(propRef.Value)
+		if prop.Default != nil {
+			result[propName] = prop.Default
+		}
+	}
+	return result
+}
+
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Make request
-	configs := map[string]any{}
+	configs := getConfigs(r.create.ConfigsSchema())
 	params := r.readMgcMap(r.create.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("[resource] creating `%s` - request info with params: %+v", r.name, params))
+	tflog.Debug(ctx, fmt.Sprintf("[resource] creating `%s` - request info with params: %+v and configs: %+v", r.name, params, configs))
 	ctx = r.sdk.WrapContext(ctx)
 	exec := r.create
 	result, err := exec.Execute(ctx, params, configs)
@@ -226,8 +237,8 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s`", r.name))
 
-	configs := map[string]any{}
 	// Make request
+	configs := getConfigs(r.read.ConfigsSchema())
 	params := r.readMgcMap(r.read.ParametersSchema(), ctx, req.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -242,7 +253,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	configs := map[string]any{}
+	configs := getConfigs(r.update.ConfigsSchema())
 	params := r.readMgcMap(r.update.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -262,7 +273,7 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 }
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	configs := map[string]any{}
+	configs := getConfigs(r.delete.ConfigsSchema())
 	params := r.readMgcMap(r.delete.ParametersSchema(), ctx, tfsdk.State(req.State), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
