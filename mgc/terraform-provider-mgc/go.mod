@@ -14,6 +14,8 @@ require (
 )
 
 require (
+	github.com/PaesslerAG/gval v1.2.2 // indirect
+	github.com/PaesslerAG/jsonpath v0.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getkin/kin-openapi v0.118.0 // indirect
@@ -45,6 +47,7 @@ require (
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

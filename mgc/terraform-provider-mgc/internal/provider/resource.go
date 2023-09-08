@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -116,8 +115,17 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 		}
 	}
 
+	var result any
+	var err error
+
 	tflog.Debug(ctx, fmt.Sprintf("[resource] reading new %s resource - request info with params: %+v", r.name, params))
-	result, err := exec.Execute(ctx, params, configs)
+	if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok {
+		tflog.Debug(ctx, "[resource] running as TerminatorExecutor")
+		result, err = tExec.ExecuteUntilTermination(ctx, params, configs, 0, 0)
+	} else {
+		tflog.Debug(ctx, "[resource] running as Executor")
+		result, err = exec.Execute(ctx, params, configs)
+	}
 	if err != nil {
 		diag.AddError(
 			"Unable to read instance",
@@ -178,10 +186,6 @@ func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any,
 			}
 		}
 
-		// TODO: Wait until the desired status is achieved - Remove sleep timer
-		// this will go away when TerminatorExecutor is done
-		// https://github.com/profusion/magalu/pull/225
-		time.Sleep(time.Minute)
 		resultMap = r.readResource(ctx, mgcState, configs, diag)
 		if diag.HasError() {
 			return
