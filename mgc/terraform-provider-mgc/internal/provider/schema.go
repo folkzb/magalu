@@ -183,6 +183,19 @@ func (r *MgcResource) getUpdateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName
 	}
 }
 
+func (r *MgcResource) getDeleteParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	// For now we consider all delete params as optionals, we need to think a way for the user to define
+	// required delete params
+	return attributeModifiers{
+		isRequired:                 false,
+		isOptional:                 true,
+		isComputed:                 false,
+		useStateForUnknown:         true,
+		requiresReplaceWhenChanged: false,
+		getChildModifiers:          getInputChildModifiers,
+	}
+}
+
 func getResultModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	return attributeModifiers{
 		isRequired:                 false,
@@ -218,6 +231,18 @@ func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics 
 		input,
 		r.update.ParametersSchema(),
 		r.getUpdateParamsModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF input attributes", err.Error())
+		return d
+	}
+
+	err = addMgcSchemaAttributes(
+		input,
+		r.delete.ParametersSchema(),
+		r.getDeleteParamsModifiers,
 		r.name,
 		ctx,
 	)

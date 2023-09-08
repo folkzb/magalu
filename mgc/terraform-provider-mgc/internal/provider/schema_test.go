@@ -114,9 +114,26 @@ var update = mgc.NewRawStaticExecute(
 	},
 )
 
+var delete = mgc.NewRawStaticExecute(
+	"mock delete",
+	"v1",
+	"",
+	mgc.NewObjectSchema(
+		map[string]*mgc.Schema{
+			"id": mgc.NewStringSchema(),
+		},
+		[]string{"id"},
+	),
+	nil,
+	mgc.NewNullSchema(),
+	func(context context.Context, parameters map[string]any, configs map[string]any) (result any, err error) {
+		return nil, nil
+	},
+)
+
 var testCases = []testCase{
 	{
-		res: &MgcResource{create: create, read: read, update: update},
+		res: &MgcResource{create: create, read: read, update: update, delete: delete},
 		expectedInput: mgcAttributes{
 			"count": {
 				mgcName:   "count",
