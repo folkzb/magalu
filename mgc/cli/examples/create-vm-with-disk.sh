@@ -36,15 +36,15 @@ read DISK_ID < <($MGC_CLI block-storage volume create \
     --volume-type=$DISK_TYPE \
     --size=$DISK_SIZE -o jsonpath='$.id')
 
-# 5. Wait for the VM to transition to a terminal state (ACTIVE, SHUTOFF or ERROR)
+# 5. Wait for the VM to transition to a terminal state (active, shutoff or error)
 read CUR_STATUS < <($MGC_CLI virtual-machine instances \
     -o jsonpath='$.status' \
     -l 'fatal:*' \
     -w \
     get --id=$VM_ID)
 
-# 6. Check if VM is in ACTIVE state
-DESIRED_STATUS='"ACTIVE"'
+# 6. Check if VM is in active state
+DESIRED_STATUS='"active"'
 if [ "$CUR_STATUS" != "$DESIRED_STATUS" ]
 then
     $MGC_CLI virtual-machine instances delete --id=$VM_ID

@@ -18,7 +18,7 @@ resource "magalu_virtual-machine_instances" "myvm" {
   desired_image = "cloud-ubuntu-22.04 LTS"
   key_name = "luizalabs-key"
   availability_zone = "br-ne-1c"
-  status = "ACTIVE"
+  status = "active"
   allocate_fip = false
 }
 
