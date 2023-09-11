@@ -6,9 +6,19 @@ import (
 	"reflect"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/config"
 )
+
+var listLoggerInstance *zap.SugaredLogger
+
+func listLogger() *zap.SugaredLogger {
+	if listLoggerInstance == nil {
+		listLoggerInstance = logger().Named("list")
+	}
+	return listLoggerInstance
+}
 
 func configListFormatter(result core.Value) string {
 	configMap := result.(map[string]any) // it must be this, assert
@@ -56,7 +66,7 @@ func getAllConfigs(ctx context.Context) (map[string]*core.Schema, error) {
 
 			if existing, ok := configMap[name]; ok {
 				if !reflect.DeepEqual(existing, current) {
-					fmt.Printf("WARNING: unhandled diverging config at %v %v: %v != %v\n", path, name, existing, current)
+					listLogger().Warnw("unhandled diverging config", "config", name, "path", path, "current", current, "existing", existing)
 				}
 
 				continue
