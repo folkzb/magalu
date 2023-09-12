@@ -3,8 +3,10 @@ package openapi
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
+	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -23,6 +25,8 @@ type Module struct {
 	doc             *openapi3.T
 	loader          Loader
 	logger          *zap.SugaredLogger
+	resourcesByName map[string]*Resource
+	resources       []*Resource
 }
 
 // BEGIN: Descriptor interface:
@@ -62,11 +66,18 @@ func (m *Module) getDoc() (*openapi3.T, error) {
 	return m.doc, nil
 }
 
-func (m *Module) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {
+func (m *Module) getResources() (resources []*Resource, byName map[string]*Resource, err error) {
+	if m.resources != nil {
+		return m.resources, m.resourcesByName, nil
+	}
+
 	doc, err := m.getDoc()
 	if err != nil {
-		return false, err
+		return nil, nil, err
 	}
+
+	m.resources = make([]*Resource, 0, len(doc.Tags))
+	m.resourcesByName = make(map[string]*Resource, len(doc.Tags))
 
 	for _, tag := range doc.Tags {
 		if getHiddenExtension(m.extensionPrefix, tag.Extensions) {
@@ -81,7 +92,25 @@ func (m *Module) VisitChildren(visitor core.DescriptorVisitor) (finished bool, e
 			logger:          m.logger.Named(tag.Name),
 		}
 
-		run, err := visitor(resource)
+		m.resources = append(m.resources, resource)
+		m.resourcesByName[resource.Name()] = resource
+	}
+
+	slices.SortFunc(m.resources, func(a, b *Resource) int {
+		return strings.Compare(a.Name(), b.Name())
+	})
+
+	return m.resources, m.resourcesByName, nil
+}
+
+func (m *Module) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {
+	resources, _, err := m.getResources()
+	if err != nil {
+		return false, err
+	}
+
+	for _, res := range resources {
+		run, err := visitor(res)
 		if err != nil {
 			return false, err
 		}
@@ -89,30 +118,20 @@ func (m *Module) VisitChildren(visitor core.DescriptorVisitor) (finished bool, e
 			return false, nil
 		}
 	}
-
 	return true, nil
 }
 
 func (m *Module) GetChildByName(name string) (child core.Descriptor, err error) {
-	// TODO: write O(1) version that doesn't list
-	var found core.Descriptor
-	finished, err := m.VisitChildren(func(child core.Descriptor) (run bool, err error) {
-		if child.Name() == name {
-			found = child
-			return false, nil
-		}
-		return true, nil
-	})
-
+	_, byName, err := m.getResources()
 	if err != nil {
 		return nil, err
 	}
-
-	if finished {
-		return nil, fmt.Errorf("Resource not found: %s", name)
+	res, ok := byName[name]
+	if !ok {
+		return nil, fmt.Errorf("resource not found: %s", name)
 	}
 
-	return found, err
+	return res, nil
 }
 
 var _ core.Grouper = (*Module)(nil)
