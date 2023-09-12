@@ -66,6 +66,7 @@ type Executor interface {
 	ParametersSchema() *Schema
 	ConfigsSchema() *Schema
 	ResultSchema() *Schema
+	// The maps for the parameters and configs should NOT be modified inside the implementation of 'Execute'
 	Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
 }
 
