@@ -57,6 +57,7 @@ type Operation struct {
 	servers             openapi3.Servers
 	parameters          *[]*parameterWithName
 	logger              *zap.SugaredLogger
+	execResolver        *executorResolver
 }
 
 // BEGIN: Descriptor interface:
