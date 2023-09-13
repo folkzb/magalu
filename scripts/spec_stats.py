@@ -390,6 +390,7 @@ REQUIRED_CRUD_OP_KEYS = ["get", "post", "delete"]
 COMPUTED_VARIABLES = "computed-variables"
 MISSING_CRUD = "missing-crud"
 MISSING_OPERATION_ID = "missing-operation-id"
+XOF_SCHEMA_SINGLE_ITEM = "xof-single-item"
 MIXED_ENUMS = "mixed-enums"
 NON_JSON_REQUESTS = "non-json-requests"
 NON_JSON_RESPONSES = "non-json-responses"
@@ -462,6 +463,13 @@ def is_tag_crud(tag: Optional[OAPITagInfo]) -> bool:
         return False
 
     return True
+
+
+def single_item_xofs(schema: JSONSchema) -> List[str]:
+    def filterFn(xof: str) -> bool:
+        return len(schema.get(xof, []))
+
+    return list(filter(filterFn, ["allOf", "anyOf", "oneOf"]))
 
 
 def is_snake_case(s: str) -> bool:
@@ -645,15 +653,20 @@ def fill_responses_stats(
 
             s: JSONSchema = get(c.get("schema", {}), resolve)
 
-            if filterer.should_include(NON_SNAKECASE_VALUES):
-
-                def visit_schema(path: str, schema: JSONSchema):
+            def visit_schema(path: str, schema: JSONSchema):
+                if filterer.should_include(NON_SNAKECASE_VALUES):
                     if not is_snake_case(path):
                         dst.setdefault(NON_SNAKECASE_VALUES, {}).setdefault(
                             op.key(), {}
                         ).setdefault("responses", {}).setdefault(t, []).append(path)
 
-                traverse_all_subschemas("", s, resolve, visit_schema)
+                if filterer.should_include(XOF_SCHEMA_SINGLE_ITEM):
+                    if len(which := single_item_xofs(schema)) > 0:
+                        dst.setdefault(XOF_SCHEMA_SINGLE_ITEM, {}).setdefault(
+                            op.key(), {}
+                        ).setdefault("response", {}).setdefault(code, []).extend(which)
+
+            traverse_all_subschemas("", s, resolve, visit_schema)
 
             if filterer.should_include(MIXED_ENUMS):
                 if s:
@@ -682,9 +695,8 @@ def fill_req_body_stats(
 
             s: JSONSchema = get(c.get("schema", {}), resolve)
 
-            if filterer.should_include(NON_SNAKECASE_VALUES):
-
-                def visit_schema(path: str, schema: JSONSchema):
+            def visit_schema(path: str, schema: JSONSchema):
+                if filterer.should_include(NON_SNAKECASE_VALUES):
                     if not is_snake_case(path):
                         dst.setdefault(NON_SNAKECASE_VALUES, {}).setdefault(
                             op.key(), {}
@@ -692,7 +704,13 @@ def fill_req_body_stats(
                             path
                         )
 
-                traverse_all_subschemas("", s, resolve, visit_schema)
+                if filterer.should_include(XOF_SCHEMA_SINGLE_ITEM):
+                    if len(which := single_item_xofs(schema)) > 0:
+                        dst.setdefault(XOF_SCHEMA_SINGLE_ITEM, {}).setdefault(
+                            op.key(), {}
+                        ).setdefault("request", []).extend(which)
+
+            traverse_all_subschemas("", s, resolve, visit_schema)
 
             if filterer.should_include(MIXED_ENUMS):
                 if s:
