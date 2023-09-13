@@ -64,6 +64,7 @@ func (c *colorString) UnmarshalYAML(node *yaml.Node) error {
 	switch strings.ToLower(node.Value) {
 	case "reset":
 		*c = colorString(text.Reset)
+	// Styling
 	case "bold":
 		*c = colorString(text.Bold)
 	case "faint":
@@ -72,16 +73,18 @@ func (c *colorString) UnmarshalYAML(node *yaml.Node) error {
 		*c = colorString(text.Italic)
 	case "underline":
 		*c = colorString(text.Underline)
-	case "blinkslow":
-		*c = colorString(text.BlinkSlow)
-	case "blinkrapid":
-		*c = colorString(text.BlinkRapid)
 	case "reversevideo":
 		*c = colorString(text.ReverseVideo)
 	case "concealed":
 		*c = colorString(text.Concealed)
 	case "crossedout":
 		*c = colorString(text.CrossedOut)
+	// Blinking
+	case "blinkslow":
+		*c = colorString(text.BlinkSlow)
+	case "blinkrapid":
+		*c = colorString(text.BlinkRapid)
+	// Foreground colors
 	case "black", "fgblack":
 		*c = colorString(text.FgBlack)
 	case "red", "fgred":
@@ -98,8 +101,58 @@ func (c *colorString) UnmarshalYAML(node *yaml.Node) error {
 		*c = colorString(text.FgCyan)
 	case "white", "fgwhite":
 		*c = colorString(text.FgWhite)
+	// Foreground high intensity colors
+	case "fghiblack":
+		*c = colorString(text.FgHiBlack)
+	case "fghired":
+		*c = colorString(text.FgHiRed)
+	case "fghigreen":
+		*c = colorString(text.FgHiGreen)
+	case "fghiyellow":
+		*c = colorString(text.FgHiYellow)
+	case "fghiblue":
+		*c = colorString(text.FgHiBlue)
+	case "fghimagenta":
+		*c = colorString(text.FgHiMagenta)
+	case "fghicyan":
+		*c = colorString(text.FgHiCyan)
+	case "fghiwhite":
+		*c = colorString(text.FgHiWhite)
+	// Background colors
+	case "bgblack":
+		*c = colorString(text.BgBlack)
+	case "bgred":
+		*c = colorString(text.BgRed)
+	case "bggreen":
+		*c = colorString(text.BgGreen)
+	case "bgyellow":
+		*c = colorString(text.BgYellow)
+	case "bgblue":
+		*c = colorString(text.BgBlue)
+	case "bgmagenta":
+		*c = colorString(text.BgMagenta)
+	case "bgcyan":
+		*c = colorString(text.BgCyan)
+	case "bgwhite":
+		*c = colorString(text.BgWhite)
+	// Background high intensity colors
+	case "bghiblack":
+		*c = colorString(text.BgHiBlack)
+	case "bghired":
+		*c = colorString(text.BgHiRed)
+	case "bghigreen":
+		*c = colorString(text.BgHiGreen)
+	case "bghiyellow":
+		*c = colorString(text.BgHiYellow)
+	case "bghiblue":
+		*c = colorString(text.BgHiBlue)
+	case "bghimagenta":
+		*c = colorString(text.BgHiMagenta)
+	case "bghicyan":
+		*c = colorString(text.BgHiCyan)
+	case "bghiwhite":
+		*c = colorString(text.BgHiWhite)
 	default:
-		// TODO: Handle FgHi, Bg and BgHi colors as well
 		return fmt.Errorf("unknown column color value: %s", node.Value)
 	}
 
