@@ -439,8 +439,12 @@ def load_oapis(dir_or_path: str, ignore_disabled: bool) -> List[OAPI]:
         result = []
         for f in os.listdir(d):
             path = os.path.join(d, f)
+            # Prevent file loading, save resources
+            if ignore_disabled and ".disabled" in path:
+                continue
+
             oapi = load_oapi(path)
-            if not oapi or (ignore_disabled and ".disabled" in path):
+            if not oapi:
                 continue
 
             result.append(oapi)
