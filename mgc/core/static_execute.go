@@ -17,12 +17,13 @@ type StaticExecute struct {
 	parameters  *Schema
 	config      *Schema
 	result      *Schema
+	links       map[string]Linker
 	execute     func(ctx context.Context, parameters Parameters, configs Configs) (value Value, err error)
 }
 
 // Raw Parameter and Config JSON Schemas
-func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, result *Schema, execute func(context context.Context, parameters Parameters, configs Configs) (value Value, err error)) *StaticExecute {
-	return &StaticExecute{name, version, description, parameters, config, result, execute}
+func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, result *Schema, links map[string]Linker, execute func(context context.Context, parameters Parameters, configs Configs) (value Value, err error)) *StaticExecute {
+	return &StaticExecute{name, version, description, parameters, config, result, links, execute}
 }
 
 func newAnySchema() *Schema {
@@ -73,10 +74,11 @@ func schemaFromType[T any]() (*Schema, error) {
 // See:
 // - https://pkg.go.dev/github.com/invopop/jsonschema
 // - https://pkg.go.dev/github.com/mitchellh/mapstructure
-func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
+func NewStaticExecuteWithLinks[ParamsT any, ConfigsT any, ResultT any](
 	name string,
 	version string,
 	description string,
+	links map[string]Linker,
 	execute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
 ) *StaticExecute {
 	ps, err := schemaFromType[ParamsT]()
@@ -99,6 +101,7 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 		ps,
 		cs,
 		rs,
+		links,
 		func(ctx context.Context, parameters Parameters, configs Configs) (Value, error) {
 			paramsStruct, err := DecodeNewValue[ParamsT](parameters)
 			if err != nil {
@@ -120,21 +123,49 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 	)
 }
 
+// Go Parameter and Config structs
+// Note: we use both 'jsonschema' and 'mapstructure' for this helper. Be careful
+// when using struct tags in your Params and Configs structs, as the tags from those
+// libraries can't be out of sync when it comes to field names/json names
+// See:
+// - https://pkg.go.dev/github.com/invopop/jsonschema
+// - https://pkg.go.dev/github.com/mitchellh/mapstructure
+func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
+	name string,
+	version string,
+	description string,
+	execute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
+) *StaticExecute {
+	return NewStaticExecuteWithLinks(name, version, description, nil, execute)
+}
+
+// No parameters or configs
+func NewStaticExecuteSimpleWithLinks[ResultT any](
+	name string,
+	version string,
+	description string,
+	links map[string]Linker,
+	execute func(ctx context.Context) (result ResultT, err error),
+) *StaticExecute {
+	return NewStaticExecuteWithLinks(
+		name,
+		version,
+		description,
+		links,
+		func(ctx context.Context, _, _ struct{}) (ResultT, error) {
+			return execute(ctx)
+		},
+	)
+}
+
 // No parameters or configs
 func NewStaticExecuteSimple[ResultT any](
 	name string,
 	version string,
 	description string,
-	execute func(ctx context.Context) (result ResultT, err error),
+	execute func(context context.Context) (result ResultT, err error),
 ) *StaticExecute {
-	return NewStaticExecute(
-		name,
-		version,
-		description,
-		func(ctx context.Context, _, _ struct{}) (ResultT, error) {
-			return execute(ctx)
-		},
-	)
+	return NewStaticExecuteSimpleWithLinks(name, version, description, nil, execute)
 }
 
 // BEGIN: Descriptor interface:
@@ -179,6 +210,10 @@ func (o *StaticExecute) Execute(context context.Context, parameters Parameters, 
 		Configs:    configs,
 	}
 	return NewSimpleResult(source, o.result, value), nil
+}
+
+func (o *StaticExecute) Links() map[string]Linker {
+	return o.links
 }
 
 var _ Executor = (*StaticExecute)(nil)

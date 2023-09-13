@@ -650,6 +650,11 @@ func (o *Operation) ResultSchema() *core.Schema {
 	return o.resultSchema
 }
 
+func (o *Operation) Links() map[string]core.Linker {
+	// TODO: implement OAPI Links
+	return nil
+}
+
 func (o *Operation) getTransformResult() func(value any) (any, error) {
 	// do this before checking o.transformResult as it will be initialized there
 	o.initResultSchema()

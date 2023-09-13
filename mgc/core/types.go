@@ -68,6 +68,14 @@ type Example = Value
 type Parameters = map[string]Value
 type Configs = Parameters
 
+type Linker interface {
+	Name() string
+	Description() string
+	AdditionalParametersSchema() *Schema
+	PrepareLink(originalResult Result, additionalParameters Parameters) (preparedParams Parameters, preparedConfigs Configs, err error)
+	Target() Executor
+}
+
 type Executor interface {
 	Descriptor
 	ParametersSchema() *Schema
@@ -75,6 +83,8 @@ type Executor interface {
 	// The general schema this executor can produce. It may be oneOf/anyOf with multiple schemas.
 	// The Result.Schema() may be a subset of the schema, if multiple were available.
 	ResultSchema() *Schema
+	// This map should not be altered externally
+	Links() map[string]Linker
 	// The maps for the parameters and configs should NOT be modified inside the implementation of 'Execute'
 	Execute(context context.Context, parameters Parameters, configs Configs) (result Result, err error)
 }
