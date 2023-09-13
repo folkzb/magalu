@@ -49,6 +49,7 @@ type Operation struct {
 	configsSchema       *core.Schema
 	resultSchema        *core.Schema
 	responseSchemas     map[string]*core.Schema
+	links               map[string]core.Linker
 	transformParameters func(value map[string]any) (map[string]any, error)
 	transformConfigs    func(value map[string]any) (map[string]any, error)
 	transformResult     func(value any) (any, error)
@@ -693,9 +694,28 @@ func (o *Operation) ResultSchema() *core.Schema {
 	return o.resultSchema
 }
 
+// This map should not be altered externally
 func (o *Operation) Links() map[string]core.Linker {
-	// TODO: implement OAPI Links
-	return nil
+	if o.links == nil {
+		o.links = map[string]core.Linker{}
+		// TODO: Handle 'default' status code
+		for _, respRef := range o.operation.Responses {
+			resp := respRef.Value
+			for key, linkRef := range resp.Links {
+				link := linkRef.Value
+				name := getNameExtension(o.extensionPrefix, link.Extensions, key)
+				description := getDescriptionExtension(o.extensionPrefix, link.Extensions, link.Description)
+
+				o.links[name] = &openapiLinker{
+					name:        name,
+					description: description,
+					owner:       o,
+					link:        linkRef.Value,
+				}
+			}
+		}
+	}
+	return o.links
 }
 
 func (o *Operation) getTransformResult() func(value any) (any, error) {
