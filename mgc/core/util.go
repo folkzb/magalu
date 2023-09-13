@@ -8,7 +8,9 @@ import (
 	"runtime"
 )
 
-const FILE_PERMISSION = 0777 // TODO: investigate how to lower permission
+// These two const are needed because only 07xx (executable) directories can be accessed
+const FILE_PERMISSION = 0644
+const DIR_PERMISSION = 0744
 
 // Copied code from https://pkg.go.dev/os#UserConfigDir but modified to treat
 // Darwin the same way as Unix by setting to "~/.config"
@@ -34,7 +36,7 @@ func BuildMGCPath() (string, error) {
 		}
 	}
 	mgcDir := path.Join(dir, "mgc")
-	if err := os.MkdirAll(mgcDir, FILE_PERMISSION); err != nil {
+	if err := os.MkdirAll(mgcDir, DIR_PERMISSION); err != nil {
 		return "", fmt.Errorf("Error creating mgc dir at %s: %w", mgcDir, err)
 	}
 	return mgcDir, nil
@@ -45,7 +47,7 @@ func BuildMGCFilePath(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := os.MkdirAll(mgcDir, FILE_PERMISSION); err != nil {
+	if err := os.MkdirAll(mgcDir, DIR_PERMISSION); err != nil {
 		return "", fmt.Errorf("Error creating mgc dir at %s: %w", mgcDir, err)
 	}
 	return path.Join(mgcDir, filename), nil
