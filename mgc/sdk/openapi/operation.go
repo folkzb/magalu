@@ -1145,26 +1145,26 @@ func (o *Operation) Execute(
 		return nil, err
 	}
 	if o.transformParameters != nil {
-		logger().Debugf("Starting parameter transforms for %+v...", parameters)
+		logger().Debugw("Starting parameter transforms", "parameters", parameters)
 		// Safe because transformParameters doesn't modify the input map
 		parameters, err = o.transformParameters(parameters)
 		if err != nil {
 			return nil, err
 		}
-		logger().Debug("Finished parameter transforms", parameters)
+		logger().Debugw("Finished parameter transforms", "transformed parameters", parameters)
 	}
 
 	if err = configsSchema.VisitJSON(configs, openapi3.MultiErrors()); err != nil {
 		return nil, err
 	}
 	if o.transformConfigs != nil {
-		logger().Debug("Starting config transforms for %+v...", configs)
+		logger().Debugw("Starting config transforms", "configs", configs)
 		// Safe because transformConfigs doesn't modify the input map
 		configs, err = o.transformConfigs(configs)
 		if err != nil {
 			return nil, err
 		}
-		logger().Debug("Finished config transforms", configs)
+		logger().Debugw("Finished config transforms", "transformed configs", configs)
 	}
 
 	req, requestBody, err := o.createHttpRequest(ctx, auth, parameters, configs)
