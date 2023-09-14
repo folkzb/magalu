@@ -35,6 +35,24 @@ paths:
             x-cli-output-flag: table=NAME:$.instances[*].name,ID:$.instances[*].id
         post:
             x-cli-description: Create a Virtual Machine instance
+            responses:
+                '200':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v0_instances__id__get
+                            parameters:
+                                id: $response.body#/id
+                        update:
+                            description: Update Virtual Machine instance
+                            operationId: update_instance_status_v0_instances__id__patch
+                            parameters:
+                                id: $response.body#/id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v0_instances__id__delete
+                            parameters:
+                                id: $response.body#/id
     /v0/instances/{id}:
         get:
             x-cli-description: Get a Virtual Machine instance details
@@ -42,10 +60,36 @@ paths:
                 maxRetries: 30
                 intervalInSeconds: 1s
                 jsonPathQuery: "$.status == \"active\" || $.status == \"shutoff\" || $.status == \"error\""
+            responses:
+                '200':
+                    links:
+                        update:
+                            description: Update Virtual Machine instance
+                            operationId: update_instance_status_v0_instances__id__patch
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v0_instances__id__delete
+                            parameters:
+                                id: $request.path.id
         delete:
             x-cli-description: Delete a Virtual Machine instance
         patch:
             x-cli-description: Update a Virtual Machine instance
+            responses:
+                '200':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v0_instances__id__get
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v0_instances__id__delete
+                            parameters:
+                                id: $request.path.id
 
 components:
     schemas:

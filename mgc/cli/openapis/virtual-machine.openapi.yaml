@@ -234,6 +234,22 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/CreateResponse'
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v0_instances__id__get
+                            parameters:
+                                id: $response.body#/id
+                        update:
+                            description: Update Virtual Machine instance
+                            operationId: update_instance_status_v0_instances__id__patch
+                            parameters:
+                                id: $response.body#/id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v0_instances__id__delete
+                            parameters:
+                                id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -269,6 +285,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/InstanceResponse'
+                    links:
+                        update:
+                            description: Update Virtual Machine instance
+                            operationId: update_instance_status_v0_instances__id__patch
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v0_instances__id__delete
+                            parameters:
+                                id: $request.path.id
                 '422':
                     description: Validation Error
                     content:
@@ -342,6 +369,18 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
+                '200':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v0_instances__id__get
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v0_instances__id__delete
+                            parameters:
+                                id: $request.path.id
             security:
             -   OAuth2:
                 - virtual-machine.write
