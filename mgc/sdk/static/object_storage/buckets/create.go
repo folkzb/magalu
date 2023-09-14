@@ -23,7 +23,7 @@ func newCreate() core.Executor {
 		create,
 	)
 
-	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Value) string {
+	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Created bucket {{.name}}\n"
 	})
 }

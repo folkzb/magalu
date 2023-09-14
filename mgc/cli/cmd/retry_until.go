@@ -27,7 +27,7 @@ var retryUntilTemplateStrings = []string{
 	"true",
 }
 
-type retryUntilCheck func(ctx context.Context, result core.Value) (finished bool, err error)
+type retryUntilCheck func(ctx context.Context, value core.Value) (finished bool, err error)
 type retryUntilSpec struct {
 	maxRetries int
 	interval   time.Duration
@@ -35,9 +35,9 @@ type retryUntilSpec struct {
 	check      retryUntilCheck
 }
 
-type retryUntilCb func() (result core.Value, err error)
+type retryUntilCb func() (result core.Result, err error)
 
-func (r *retryUntilSpec) run(ctx context.Context, cb retryUntilCb) (result core.Value, err error) {
+func (r *retryUntilSpec) run(ctx context.Context, cb retryUntilCb) (result core.Result, err error) {
 	if r == nil {
 		return cb()
 	}
@@ -47,7 +47,11 @@ func (r *retryUntilSpec) run(ctx context.Context, cb retryUntilCb) (result core.
 		if err != nil {
 			return result, err
 		}
-		finished, err := r.check(ctx, result)
+		resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
+		if !ok {
+			return result, fmt.Errorf("result has no value")
+		}
+		finished, err := r.check(ctx, resultWithValue.Value())
 		if err != nil {
 			return result, err
 		}
@@ -137,8 +141,8 @@ func parseRetryUntilJsonPath(expression string) (check retryUntilCheck, err erro
 		return nil, err
 	}
 
-	check = func(ctx context.Context, result core.Value) (finished bool, err error) {
-		v, err := jp(ctx, result)
+	check = func(ctx context.Context, value core.Value) (finished bool, err error) {
+		v, err := jp(ctx, value)
 		if err != nil {
 			return false, err
 		}
@@ -152,7 +156,7 @@ func parseRetryUntilJsonPath(expression string) (check retryUntilCheck, err erro
 		} else if b, ok := v.(bool); ok {
 			return b, nil
 		} else {
-			return false, fmt.Errorf("unknown jsonpath result. Expected list, map or boolean. Got %+v", result)
+			return false, fmt.Errorf("unknown jsonpath result. Expected list, map or boolean. Got %+v", value)
 		}
 	}
 
@@ -165,9 +169,9 @@ func parseRetryUntilTemplate(expression string) (check retryUntilCheck, err erro
 		return nil, err
 	}
 
-	check = func(ctx context.Context, result core.Value) (finished bool, err error) {
+	check = func(ctx context.Context, value core.Value) (finished bool, err error) {
 		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, result)
+		err = tmpl.Execute(&buf, value)
 		if err != nil {
 			return false, err
 		}

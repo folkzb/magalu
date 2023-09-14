@@ -281,7 +281,8 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 		}
 
 		if output, ok := getExtensionString(o.extensionPrefix, "output-flag", desc.op.Extensions, ""); ok && output != "" {
-			operation = core.NewExecuteResultOutputOptions(operation, func(exec core.Executor, result core.Value) string {
+			// TODO: we should wrap the result directly instead
+			operation = core.NewExecuteResultOutputOptions(operation, func(exec core.Executor, result core.Result) string {
 				return output
 			})
 		}
@@ -320,10 +321,11 @@ func (o *Resource) wrapInTerminatorExecutor(wtExt map[string]any, exec core.Exec
 	builder := gval.Full(jsonpath.PlaceholderExtension())
 	jp, err := builder.NewEvaluable(wt.JSONPathQuery)
 	if err == nil {
-		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.Value) (terminated bool, err error) {
-			v, err := jp(ctx, result)
+		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (terminated bool, err error) {
+			value := result.Value()
+			v, err := jp(ctx, value)
 			if err != nil {
-				o.logger.Warnw("error evaluating jsonpath query", "query", wt.JSONPathQuery, "target", result, "error", err)
+				o.logger.Warnw("error evaluating jsonpath query", "query", wt.JSONPathQuery, "target", value, "error", err)
 				return false, err
 			}
 
@@ -336,8 +338,8 @@ func (o *Resource) wrapInTerminatorExecutor(wtExt map[string]any, exec core.Exec
 			} else if b, ok := v.(bool); ok {
 				return b, nil
 			} else {
-				o.logger.Warnw("unknown jsonpath result. Expected list, map or boolean", "result", result)
-				return false, fmt.Errorf("unknown jsonpath result. Expected list, map or boolean. Got %+v", result)
+				o.logger.Warnw("unknown jsonpath result. Expected list, map or boolean", "result", value)
+				return false, fmt.Errorf("unknown jsonpath result. Expected list, map or boolean. Got %+v", value)
 			}
 		})
 		return tExec, nil

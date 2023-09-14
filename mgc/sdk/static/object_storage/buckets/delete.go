@@ -64,7 +64,7 @@ func newDelete() core.Executor {
 		delete,
 	)
 
-	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Value) string {
+	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Deleted bucket {{.name}}\n"
 	})
 }

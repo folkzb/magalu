@@ -17,11 +17,11 @@ type StaticExecute struct {
 	parameters  *Schema
 	config      *Schema
 	result      *Schema
-	execute     func(ctx context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
+	execute     func(ctx context.Context, parameters map[string]Value, configs map[string]Value) (value Value, err error)
 }
 
 // Raw Parameter and Config JSON Schemas
-func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, result *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)) *StaticExecute {
+func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, result *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (value Value, err error)) *StaticExecute {
 	return &StaticExecute{name, version, description, parameters, config, result, execute}
 }
 
@@ -110,12 +110,12 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 				return nil, fmt.Errorf("error when decoding configs. Did you forget to set 'json' struct flags for struct %T?: %w", paramsStruct, err)
 			}
 
-			result, err := execute(ctx, *paramsStruct, *configsStruct)
+			value, err := execute(ctx, *paramsStruct, *configsStruct)
 			if err != nil {
 				return nil, err
 			}
 
-			return SimplifyAny(result)
+			return SimplifyAny(value)
 		},
 	)
 }
@@ -167,8 +167,18 @@ func (o *StaticExecute) ResultSchema() *Schema {
 	return o.result
 }
 
-func (o *StaticExecute) Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error) {
-	return o.execute(context, parameters, configs)
+func (o *StaticExecute) Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error) {
+	value, err := o.execute(context, parameters, configs)
+	if err != nil {
+		return nil, err
+	}
+	source := ResultSource{
+		Executor:   o,
+		Context:    context,
+		Parameters: parameters,
+		Configs:    configs,
+	}
+	return NewSimpleResult(source, o.result, value), nil
 }
 
 var _ Executor = (*StaticExecute)(nil)

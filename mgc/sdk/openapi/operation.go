@@ -1021,7 +1021,7 @@ func (o *Operation) Execute(
 	ctx context.Context,
 	parameters map[string]core.Value,
 	configs map[string]core.Value,
-) (result core.Value, err error) {
+) (result core.Result, err error) {
 	// load definitions if not done yet
 	parametersSchema := o.ParametersSchema()
 	configsSchema := o.ConfigsSchema()
@@ -1076,7 +1076,20 @@ func (o *Operation) Execute(
 		return nil, coreHttp.NewHttpErrorFromResponse(resp)
 	}
 
-	return o.getResponseValue(resp)
+	// TODO: we should wrap the result directly instead with formatting + default options
+	// TODO: coreHttp.UnwrapResponse() should return a Result (interface) that is implemented by a HttpResult
+	// that will contain the request, response, responseBody (post-JSON Unmarshal), requestBody (pre-JSON Marshal)
+	value, err := o.getResponseValue(resp)
+	if err != nil {
+		return nil, err
+	}
+	source := core.ResultSource{
+		Executor:   o,
+		Context:    ctx,
+		Parameters: parameters,
+		Configs:    configs,
+	}
+	return core.NewSimpleResult(source, o.resultSchema, value), nil
 }
 
 var _ core.Executor = (*Operation)(nil)

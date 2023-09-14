@@ -65,13 +65,25 @@ type Executor interface {
 	Descriptor
 	ParametersSchema() *Schema
 	ConfigsSchema() *Schema
+	// The general schema this executor can produce. It may be oneOf/anyOf with multiple schemas.
+	// The Result.Schema() may be a subset of the schema, if multiple were available.
 	ResultSchema() *Schema
 	// The maps for the parameters and configs should NOT be modified inside the implementation of 'Execute'
-	Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
+	Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error)
 }
 
+// NOTE: whenever you wrap an executor remember to also wrap the result with
+// ExecutorWrapResult() so the outmost executor is given as source
 type ExecutorWrapper interface {
+	Executor
 	Unwrap() Executor
+}
+
+func ExecutorWrapResult(executorWrapper ExecutorWrapper, result Result, err error) (Result, error) {
+	if result != nil {
+		result = NewResultWithOriginalExecutor(executorWrapper, result)
+	}
+	return result, err
 }
 
 func ExecutorAs[T Executor](exec Executor) (T, bool) {
@@ -109,64 +121,60 @@ func VisitAllExecutors(child Descriptor, path []string, visitExecutor func(execu
 	}
 }
 
-// Implement this interface in Executor()s that want to provide customized formatting of output.
-// It's used by the command line interface (CLI) and possible other tools.
-// This is only called if no other explicit formatting is desired
-type ExecutorResultFormatter interface {
+type executeResultWrapper struct {
 	Executor
-	// NOTE: result is the converted value, such as primitives, map[string]any, []any...
-	// Whenever using StaticExecute, it's *NOT* the ResultT (ie: struct)
-	DefaultFormatResult(result Value) string
+	wrapResult func(wrapperExecutor ExecutorWrapper, originalResult Result) (wrappedResult Result, err error)
 }
 
-type executeFormat struct {
-	Executor
-	formatter func(result Value) string
+func (o *executeResultWrapper) Execute(ctx context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error) {
+	result, err = o.Executor.Execute(ctx, parameters, configs)
+	if err != nil {
+		return
+	}
+	result, err = o.wrapResult(o, result)
+	return ExecutorWrapResult(o, result, err)
 }
 
-func (o *executeFormat) DefaultFormatResult(result Value) string {
-	return o.formatter(result)
+func (o *executeResultWrapper) Unwrap() Executor {
+	return o.Executor
 }
 
-var _ ExecutorResultFormatter = (*executeFormat)(nil)
+var _ Executor = (*executeResultWrapper)(nil)
+var _ ExecutorWrapper = (*executeResultWrapper)(nil)
+
+// Wraps (embeds) an executor and wrap its result.
+// This may be used to add extra interfaces to a result, such as formatting or output options
+func NewExecuteResultWrapper(
+	executor Executor,
+	wrapResult func(wrapperExecutor ExecutorWrapper, originalResult Result) (wrappedResult Result, err error),
+) Executor {
+	return &executeResultWrapper{executor, wrapResult}
+}
 
 // Wraps (embeds) an executor and add specific result formatting.
 func NewExecuteFormat(
 	executor Executor,
-	formatter func(result Value) string,
-) ExecutorResultFormatter {
-	return &executeFormat{executor, formatter}
+	getFormatter func(exec Executor, result Result) string,
+) Executor {
+	return NewExecuteResultWrapper(executor, func(wrapperExecutor ExecutorWrapper, originalResult Result) (wrappedResult Result, err error) {
+		result, ok := ResultAs[ResultWithValue](originalResult)
+		if !ok {
+			return nil, fmt.Errorf("result is not core.ResultWithValue: %T %+v", originalResult, originalResult)
+		}
+		return NewResultWithDefaultFormatter(result, getFormatter(executor, originalResult)), nil
+	})
 }
-
-// Implement this interface in Executor()s that want to provide default output options.
-// It's used by the command line interface (CLI) and possible other tools.
-// This is only called if no other explicit options are desired
-type ExecutorResultOutputOptions interface {
-	Executor
-	// The return should be in the same format as CLI -o "VALUE"
-	// example: "yaml" or "table=COL:$.path.to[*].element,OTHERCOL:$.path.to[*].other"
-	DefaultOutputOptions(result Value) string
-}
-
-type executeResultOutputOptions struct {
-	Executor
-	getOutputOptions func(exec Executor, result Value) string
-}
-
-func (o *executeResultOutputOptions) Unwrap() Executor {
-	return o.Executor
-}
-
-func (o *executeResultOutputOptions) DefaultOutputOptions(result Value) string {
-	return o.getOutputOptions(o.Executor, result)
-}
-
-var _ ExecutorResultOutputOptions = (*executeResultOutputOptions)(nil)
 
 // Wraps (embeds) an executor and add specific result default output options getter.
 func NewExecuteResultOutputOptions(
 	executor Executor,
-	getOutputOptions func(exec Executor, result Value) string,
-) ExecutorResultOutputOptions {
-	return &executeResultOutputOptions{executor, getOutputOptions}
+	getOutputOptions func(exec Executor, result Result) string,
+) Executor {
+	return NewExecuteResultWrapper(executor, func(wrapperExecutor ExecutorWrapper, originalResult Result) (wrappedResult Result, err error) {
+		result, ok := ResultAs[ResultWithValue](originalResult)
+		if !ok {
+			return nil, fmt.Errorf("result is not core.ResultWithValue: %T %+v", originalResult, originalResult)
+		}
+		return NewResultWithDefaultOutputOptions(result, getOutputOptions(executor, originalResult)), nil
+	})
 }

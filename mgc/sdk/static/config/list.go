@@ -20,8 +20,10 @@ func listLogger() *zap.SugaredLogger {
 	return listLoggerInstance
 }
 
-func configListFormatter(result core.Value) string {
-	configMap := result.(map[string]any) // it must be this, assert
+func configListFormatter(exec core.Executor, result core.Result) string {
+	// it must be this, no need to check
+	resultWithValue, _ := core.ResultAs[core.ResultWithValue](result)
+	configMap := resultWithValue.Value().(map[string]any)
 
 	writer := table.NewWriter()
 	writer.AppendHeader(table.Row{"Config", "Type", "Description"})

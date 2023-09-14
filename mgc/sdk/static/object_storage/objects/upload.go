@@ -32,7 +32,7 @@ func newUpload() core.Executor {
 		upload,
 	)
 
-	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Value) string {
+	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Uploaded file {{.file}} to {{.uri}}\n"
 	})
 }

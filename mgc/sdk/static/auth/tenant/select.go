@@ -20,7 +20,7 @@ func newSelect() core.Executor {
 		selectTenant,
 	)
 
-	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Value) string {
+	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Success! Current tenant changed to {{.id}}\n"
 	})
 }

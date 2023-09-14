@@ -67,7 +67,7 @@ func newDownload() core.Executor {
 		download,
 	)
 
-	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Value) string {
+	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Downloaded from {{.src}} to {{.dst}}\n"
 	})
 }

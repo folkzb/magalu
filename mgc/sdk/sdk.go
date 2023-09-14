@@ -23,6 +23,7 @@ type Executor = core.Executor
 type Grouper = core.Grouper
 type Schema = core.Schema
 type Value = core.Value
+type Result = core.Result
 type Config = config.Config
 
 type Sdk struct {

@@ -94,8 +94,8 @@ func (r *MgcResource) applyMgcOutputMap(mgcMap map[string]any, ctx context.Conte
 	conv.applyMgcMap(mgcMap, r.outputAttr, ctx, tfState, path.Empty())
 }
 
-func castToMap(result any, diag *diag.Diagnostics) (resultMap map[string]any, ok bool) {
-	resultMap, ok = result.(map[string]any)
+func castToMap(result core.ResultWithValue, diag *diag.Diagnostics) (resultMap map[string]any, ok bool) {
+	resultMap, ok = result.Value().(map[string]any)
 	if !ok {
 		diag.AddError(
 			"Operation output mismatch",
@@ -115,7 +115,7 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 		}
 	}
 
-	var result any
+	var result core.Result
 	var err error
 
 	tflog.Debug(ctx, fmt.Sprintf("[resource] reading new %s resource - request info with params: %+v and configs: %+v", r.name, params, configs))
@@ -134,14 +134,23 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 		return nil
 	}
 
+	resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
+	if !ok {
+		diag.AddError(
+			"Operation output mismatch",
+			fmt.Sprintf("result has no value %+v", result),
+		)
+		return nil
+	}
+
 	/* TODO:
-	if err := validateResult(diag, exec, result); err != nil {
+	if err := validateResult(diag, result); err != nil {
 		return
 	}
 	*/
-	_ = validateResult(diag, exec, result) // just ignore errors for now
+	_ = validateResult(diag, resultWithValue) // just ignore errors for now
 
-	resultMap, ok := castToMap(result, diag)
+	resultMap, ok := castToMap(resultWithValue, diag)
 	if !ok {
 		return nil
 	}
@@ -150,16 +159,16 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 	return resultMap
 }
 
-func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any, configs map[string]any, result any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
+func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any, configs map[string]any, result core.ResultWithValue, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
 	var resultMap map[string]any
 	resultSchema := exec.ResultSchema()
 
 	/* TODO:
-	if err := validateResult(diag, exec, result); err != nil {
+	if err := validateResult(diag, result); err != nil {
 		return
 	}
 	*/
-	_ = validateResult(diag, exec, result) // just ignore errors for now
+	_ = validateResult(diag, result) // just ignore errors for now
 
 	if checkSimilarJsonSchemas(resultSchema, r.read.ResultSchema()) {
 		var ok bool
@@ -225,7 +234,16 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	r.applyStateAfter(exec, params, configs, result, ctx, &resp.State, &resp.Diagnostics)
+	resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Operation output mismatch",
+			fmt.Sprintf("result has no value %+v", result),
+		)
+		return
+	}
+
+	r.applyStateAfter(exec, params, configs, resultWithValue, ctx, &resp.State, &resp.Diagnostics)
 
 	// We must apply the input parameters in the state
 	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
@@ -269,7 +287,16 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	r.applyStateAfter(exec, params, configs, result, ctx, &resp.State, &resp.Diagnostics)
+	resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Operation output mismatch",
+			fmt.Sprintf("result has no value %+v", result),
+		)
+		return
+	}
+
+	r.applyStateAfter(exec, params, configs, resultWithValue, ctx, &resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -294,8 +321,8 @@ func (r *MgcResource) ImportState(ctx context.Context, req resource.ImportStateR
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func validateResult(d *diag.Diagnostics, action core.Executor, result any) error {
-	err := action.ResultSchema().VisitJSON(result)
+func validateResult(d *diag.Diagnostics, result core.ResultWithValue) error {
+	err := result.ValidateSchema()
 	if err != nil {
 		d.AddWarning(
 			"Operation output mismatch",

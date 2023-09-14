@@ -191,30 +191,30 @@ func loadDataFromConfig(config *mgcSdk.Config, flags *flag.FlagSet, schema *mgcS
 	return nil
 }
 
-func handleExecutorResult(ctx context.Context, cmd *cobra.Command, exec core.Executor, result core.Value, err error) error {
+func handleExecutorResult(ctx context.Context, cmd *cobra.Command, result core.Result, err error) error {
 	if err != nil {
 		var failedTerminationError core.FailedTerminationError
 		if errors.As(err, &failedTerminationError) {
-			_ = formatResult(cmd, exec, failedTerminationError.Result)
+			_ = formatResult(cmd, failedTerminationError.Result)
 		}
 		return err
 	}
 
-	return formatResult(cmd, exec, result)
+	return formatResult(cmd, result)
 }
 
-func formatResult(cmd *cobra.Command, exec core.Executor, result core.Value) error {
-	if result == nil {
-		return nil
+func formatResult(cmd *cobra.Command, result core.Result) error {
+	output := getOutputFor(cmd, result)
+
+	if resultWithReader, ok := core.ResultAs[core.ResultWithReader](result); ok {
+		return handleReaderResult(resultWithReader.Reader(), output)
 	}
 
-	output := getOutputFor(cmd, exec, result)
-
-	if reader, ok := result.(io.Reader); ok {
-		return handleReaderResult(reader, output)
+	if resultWithValue, ok := core.ResultAs[core.ResultWithValue](result); ok {
+		return handleJsonResult(resultWithValue, output)
 	}
 
-	return handleJsonResult(exec, result, output)
+	return fmt.Errorf("unsupported result: %T %+v", result, result)
 }
 
 func handleReaderResult(reader io.Reader, outFile string) (err error) {
@@ -240,16 +240,21 @@ func handleReaderResult(reader io.Reader, outFile string) (err error) {
 	return nil
 }
 
-func handleJsonResult(exec mgcSdk.Executor, result core.Value, output string) (err error) {
-	err = exec.ResultSchema().VisitJSON(result)
+func handleJsonResult(result core.ResultWithValue, output string) (err error) {
+	value := result.Value()
+	if value == nil {
+		return nil
+	}
+
+	err = result.ValidateSchema()
 	if err != nil {
 		logger().Warnf("Warning: result validation failed: %v", err)
 	}
 
 	name, options := parseOutputFormatter(output)
 	if name == "" {
-		if formatter, ok := core.ExecutorAs[core.ExecutorResultFormatter](exec); ok {
-			fmt.Println(formatter.DefaultFormatResult(result))
+		if formatter, ok := core.ResultAs[core.ResultWithDefaultFormatter](result); ok {
+			fmt.Println(formatter.DefaultFormatter())
 			return nil
 		}
 	}
@@ -258,14 +263,14 @@ func handleJsonResult(exec mgcSdk.Executor, result core.Value, output string) (e
 	if err != nil {
 		return err
 	}
-	return formatter.Format(result, options)
+	return formatter.Format(value, options)
 }
 
-func getOutputFor(cmd *cobra.Command, exec core.Executor, result core.Value) string {
+func getOutputFor(cmd *cobra.Command, result core.Result) string {
 	output := getOutputFlag(cmd)
 	if output == "" {
-		if outputOptions, ok := core.ExecutorAs[core.ExecutorResultOutputOptions](exec); ok {
-			return outputOptions.DefaultOutputOptions(result)
+		if outputOptions, ok := core.ResultAs[core.ResultWithDefaultOutputOptions](result); ok {
+			return outputOptions.DefaultOutputOptions()
 		}
 	}
 
@@ -306,11 +311,11 @@ func AddAction(
 			waitTermination := getWaitTerminationFlag(cmd)
 			var cb retryUntilCb
 			if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && waitTermination {
-				cb = func() (result core.Value, err error) {
+				cb = func() (result core.Result, err error) {
 					return tExec.ExecuteUntilTermination(ctx, parameters, configs)
 				}
 			} else {
-				cb = func() (result core.Value, err error) {
+				cb = func() (result core.Result, err error) {
 					return exec.Execute(ctx, parameters, configs)
 				}
 			}
@@ -321,7 +326,7 @@ func AddAction(
 			}
 			result, err := retry.run(ctx, cb)
 
-			return handleExecutorResult(ctx, cmd, exec, result, err)
+			return handleExecutorResult(ctx, cmd, result, err)
 		},
 	}
 
