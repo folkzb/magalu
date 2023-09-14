@@ -214,6 +214,13 @@ dbaas.openapi:
         - delete
   tagless-operations:
     - GET /v1/healthcheck
+  xof-single-item:
+    POST /v1/instances:
+      request:
+        - allOf
+    POST /v1/instances/{instance_id}/resize:
+      request:
+        - allOf
 mke.openapi:
   computed-variables:
     - POST /v0/clusters:
