@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"text/scanner"
 
 	"github.com/PaesslerAG/jsonpath"
 	"golang.org/x/exp/slices"
@@ -390,29 +391,44 @@ func columnsFromAny(val any, prefix string) ([]*column, error) {
 	}
 }
 
-func splitUnquoted(str string, separator rune) []string {
-	// TODO: Use tokenizer
-	result := []string{}
+func splitUnquoted(str string, separator string) (result []string, err error) {
 	cur := ""
-	isInQuotes := false
-	for _, sub := range str {
-		if sub == separator && !isInQuotes && cur != "" {
+	result = []string{}
+	var s scanner.Scanner
+	s.Init(strings.NewReader(str))
+	s.Mode |= scanner.ScanStrings
+	s.Error = func(s *scanner.Scanner, msg string) {} // function does nothing so errors are not printed
+	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+		txt := s.TokenText()
+		if txt == "" {
+			continue
+		}
+		switch txt[0] {
+		case '"', '\'', '`':
+			txt, err = strconv.Unquote(txt)
+			if err != nil {
+				return
+			}
+		default:
+		}
+		if txt == separator {
 			result = append(result, cur)
 			cur = ""
-		} else if sub == '"' {
-			isInQuotes = !isInQuotes
 		} else {
-			cur += string(sub)
+			cur += txt
 		}
 	}
 	if cur != "" {
 		result = append(result, cur)
 	}
-	return result
+	return
 }
 
 func columnsFromString(str string) ([]*column, error) {
-	colStrings := splitUnquoted(str, ',')
+	colStrings, err := splitUnquoted(str, ",")
+	if err != nil {
+		return nil, err
+	}
 	result := make([]*column, 0)
 	for _, colString := range colStrings {
 		if colString == "" {
