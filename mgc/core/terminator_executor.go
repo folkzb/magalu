@@ -8,48 +8,44 @@ import (
 
 type TerminatorExecutor interface {
 	Executor
-	ExecuteUntilTermination(context context.Context, parameters map[string]Value, configs map[string]Value, maxRetries int, interval time.Duration) (result Value, err error)
+	ExecuteUntilTermination(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error)
+}
+
+type FailedTerminationError struct {
+	Result  Value
+	Message string
+}
+
+func (e FailedTerminationError) Error() string {
+	return e.Message
 }
 
 type executeTerminatorWithCheck struct {
 	Executor
-	defaultMaxRetries int
-	defatultInterval  time.Duration
-	checkTerminate    func(ctx context.Context, exec Executor, result Value) bool
-}
-
-type MaxRetriesExceededError struct {
-	Result     Value
-	maxRetries int
-	interval   time.Duration
-}
-
-func (e MaxRetriesExceededError) Error() string {
-	return fmt.Sprintf("maximum number of retries exceeded. Retries: %d, interval: %s", e.maxRetries, e.interval)
+	maxRetries     int
+	interval       time.Duration
+	checkTerminate func(ctx context.Context, exec Executor, result Value) (terminated bool, err error)
 }
 
 func (o *executeTerminatorWithCheck) Unwrap() Executor {
 	return o.Executor
 }
 
-func (o *executeTerminatorWithCheck) ExecuteUntilTermination(context context.Context, parameters map[string]Value, configs map[string]Value, maxRetries int, interval time.Duration) (result Value, err error) {
-	if interval <= 0 {
-		interval = o.defatultInterval
-	}
-	if maxRetries <= 0 {
-		maxRetries = o.defaultMaxRetries
-	}
-
-	for i := 0; i < maxRetries; i++ {
+func (o *executeTerminatorWithCheck) ExecuteUntilTermination(context context.Context, parameters map[string]Value, configs map[string]Value) (result Value, err error) {
+	for i := 0; i < o.maxRetries; i++ {
 		result, err = o.Execute(context, parameters, configs)
 		if err != nil {
 			return result, err
 		}
-		if o.checkTerminate(context, o.Executor, result) {
+		terminated, err := o.checkTerminate(context, o.Executor, result)
+		if err != nil {
+			return result, err
+		}
+		if terminated {
 			return result, nil
 		}
 
-		timer := time.NewTimer(interval)
+		timer := time.NewTimer(o.interval)
 		select {
 		case <-context.Done():
 			timer.Stop()
@@ -57,16 +53,20 @@ func (o *executeTerminatorWithCheck) ExecuteUntilTermination(context context.Con
 		case <-timer.C:
 		}
 	}
-	return result, MaxRetriesExceededError{Result: result, maxRetries: maxRetries, interval: interval}
+
+	msg := fmt.Sprintf("maximum number of retries exceeded. Retries: %d, interval: %s", o.maxRetries, o.interval)
+	return result, FailedTerminationError{Result: result, Message: msg}
 }
 
 var _ TerminatorExecutor = (*executeTerminatorWithCheck)(nil)
 
+// Execute the operation and check the results until it's considered terminated.
+// The executor will wait `interval` between retries, executing up to `maxRetries`
 func NewTerminatorExecutorWithCheck(
 	executor Executor,
-	defaultMaxRetries int,
-	defaultInterval time.Duration,
-	checkTerminate func(ctx context.Context, exec Executor, result Value) bool,
+	maxRetries int,
+	interval time.Duration,
+	checkTerminate func(ctx context.Context, exec Executor, result Value) (terminated bool, err error),
 ) TerminatorExecutor {
-	return &executeTerminatorWithCheck{executor, defaultMaxRetries, defaultInterval, checkTerminate}
+	return &executeTerminatorWithCheck{executor, maxRetries, interval, checkTerminate}
 }

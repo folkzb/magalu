@@ -16,13 +16,13 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-type WaitTermination struct {
+type waitTermination struct {
 	MaxRetries        int           `json:"maxRetries,omitempty"`
 	IntervalInSeconds time.Duration `json:"intervalInSeconds,omitempty"`
 	JSONPathQuery     string        `json:"jsonPathQuery"`
 }
 
-var defaultWaitTerminaton = WaitTermination{MaxRetries: 30, IntervalInSeconds: time.Second}
+var defaultWaitTermination = waitTermination{MaxRetries: 30, IntervalInSeconds: time.Second}
 
 // Source -> Module -> Resource -> Operation
 
@@ -305,39 +305,39 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 }
 
 func (o *Resource) wrapInTerminatorExecutor(wtExt map[string]any, exec core.Executor) (core.TerminatorExecutor, error) {
-	wt := &defaultWaitTerminaton
+	wt := &defaultWaitTermination
 	if err := core.DecodeValue(wtExt, wt); err != nil {
 		o.logger.Warnw("error decoding extension wait-termination", "data", wtExt, "error", err)
 	}
 
 	if wt.MaxRetries <= 0 {
-		wt.MaxRetries = defaultWaitTerminaton.MaxRetries
+		wt.MaxRetries = defaultWaitTermination.MaxRetries
 	}
 	if wt.IntervalInSeconds <= 0 {
-		wt.IntervalInSeconds = defaultWaitTerminaton.IntervalInSeconds
+		wt.IntervalInSeconds = defaultWaitTermination.IntervalInSeconds
 	}
 
 	builder := gval.Full(jsonpath.PlaceholderExtension())
 	jp, err := builder.NewEvaluable(wt.JSONPathQuery)
 	if err == nil {
-		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.Value) bool {
+		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.Value) (terminated bool, err error) {
 			v, err := jp(ctx, result)
 			if err != nil {
 				o.logger.Warnw("error evaluating jsonpath query", "query", wt.JSONPathQuery, "target", result, "error", err)
-				return false
+				return false, err
 			}
 
 			if v == nil {
-				return false
+				return false, nil
 			} else if lst, ok := v.([]any); ok {
-				return len(lst) > 0
+				return len(lst) > 0, nil
 			} else if m, ok := v.(map[string]any); ok {
-				return len(m) > 0
+				return len(m) > 0, nil
 			} else if b, ok := v.(bool); ok {
-				return b
+				return b, nil
 			} else {
 				o.logger.Warnw("unknown jsonpath result. Expected list, map or boolean", "result", result)
-				return false
+				return false, fmt.Errorf("unknown jsonpath result. Expected list, map or boolean. Got %+v", result)
 			}
 		})
 		return tExec, nil

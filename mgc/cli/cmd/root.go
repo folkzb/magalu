@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"time"
 
 	"magalu.cloud/core"
 	mgcLogger "magalu.cloud/core/logger"
@@ -192,12 +191,12 @@ func loadDataFromConfig(config *mgcSdk.Config, flags *flag.FlagSet, schema *mgcS
 	return nil
 }
 
-func handleTerminatorExecutor(ctx context.Context, cmd *cobra.Command, tExec core.TerminatorExecutor, parameters, configs map[string]any, retries int, interval time.Duration) error {
-	result, err := tExec.ExecuteUntilTermination(ctx, parameters, configs, retries, interval)
+func handleTerminatorExecutor(ctx context.Context, cmd *cobra.Command, tExec core.TerminatorExecutor, parameters, configs map[string]any) error {
+	result, err := tExec.ExecuteUntilTermination(ctx, parameters, configs)
 	if err != nil {
-		var maxRetriesError core.MaxRetriesExceededError
-		if errors.As(err, &maxRetriesError) {
-			_ = formatResult(cmd, tExec, maxRetriesError.Result)
+		var failedTerminationError core.FailedTerminationError
+		if errors.As(err, &failedTerminationError) {
+			_ = formatResult(cmd, tExec, failedTerminationError.Result)
 		}
 		return err
 	}
@@ -314,9 +313,9 @@ func AddAction(
 				defer cancel()
 			}
 
-			retries, interval, err := getWaitTerminationFlag(cmd)
-			if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && err == nil {
-				return handleTerminatorExecutor(ctx, cmd, tExec, parameters, configs, retries, interval)
+			waitTermination := getWaitTerminationFlag(cmd)
+			if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && waitTermination {
+				return handleTerminatorExecutor(ctx, cmd, tExec, parameters, configs)
 			} else {
 				return handleRegularExecutor(ctx, cmd, exec, parameters, configs)
 			}

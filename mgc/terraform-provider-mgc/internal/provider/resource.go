@@ -121,7 +121,7 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 	tflog.Debug(ctx, fmt.Sprintf("[resource] reading new %s resource - request info with params: %+v and configs: %+v", r.name, params, configs))
 	if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok {
 		tflog.Debug(ctx, "[resource] running as TerminatorExecutor")
-		result, err = tExec.ExecuteUntilTermination(ctx, params, configs, 0, 0)
+		result, err = tExec.ExecuteUntilTermination(ctx, params, configs)
 	} else {
 		tflog.Debug(ctx, "[resource] running as Executor")
 		result, err = exec.Execute(ctx, params, configs)

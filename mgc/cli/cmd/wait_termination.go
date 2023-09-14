@@ -1,10 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
-	"time"
-
 	"github.com/spf13/cobra"
 )
 
@@ -13,49 +9,22 @@ const (
 )
 
 func addWaitTerminationFlag(cmd *cobra.Command) {
-	cmd.Root().PersistentFlags().StringP(
+	cmd.Root().PersistentFlags().BoolP(
 		waitTerminationFlag,
 		"w",
-		"",
-		"Conditions for request polling. Format is \"retries,interval\" or \"retries\". For values <= 0 the CLI will use the action default value",
+		false,
+		"Wait any asynchronous actions to transition to their final state. Note that not all actions implement ExecuteUntilTermination(), if that is not available, then regular Execute() is used and no wait will be done",
 	)
 
 	f := cmd.Root().PersistentFlags().Lookup(waitTerminationFlag)
-	f.NoOptDefVal = "0,0"
+	f.NoOptDefVal = "true"
 }
 
-func getWaitTerminationFlag(cmd *cobra.Command) (int, time.Duration, error) {
-	wt, err := cmd.Root().PersistentFlags().GetString(waitTerminationFlag)
+func getWaitTerminationFlag(cmd *cobra.Command) bool {
+	v, err := cmd.Root().PersistentFlags().GetBool(waitTerminationFlag)
 	if err != nil {
-		return 0, 0, err
+		return false
 	}
 
-	return parseWaitTermination(wt)
-}
-
-func parseWaitTermination(wt string) (maxRetries int, interval time.Duration, err error) {
-	maxRetries = 0
-	interval = 0
-
-	if wt == "" {
-		err = fmt.Errorf("value for request polling should be in the form retries,interval")
-		return
-	}
-
-	p := strings.SplitN(wt, ",", 2)
-
-	if _, err = fmt.Sscanf(p[0], "%d", &maxRetries); err != nil {
-		err = fmt.Errorf("value for request polling should be in the form retries,interval. Failed to parse retries: %w", err)
-		return
-	}
-
-	if len(p) > 1 {
-		interval, err = time.ParseDuration(p[1])
-		if err != nil {
-			err = fmt.Errorf("value for request polling should be in the form retries,interval. Failed to parse interval: %w", err)
-			return
-		}
-	}
-
-	return
+	return v
 }
