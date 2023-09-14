@@ -191,22 +191,12 @@ func loadDataFromConfig(config *mgcSdk.Config, flags *flag.FlagSet, schema *mgcS
 	return nil
 }
 
-func handleTerminatorExecutor(ctx context.Context, cmd *cobra.Command, tExec core.TerminatorExecutor, parameters, configs map[string]any) error {
-	result, err := tExec.ExecuteUntilTermination(ctx, parameters, configs)
+func handleExecutorResult(ctx context.Context, cmd *cobra.Command, exec core.Executor, result core.Value, err error) error {
 	if err != nil {
 		var failedTerminationError core.FailedTerminationError
 		if errors.As(err, &failedTerminationError) {
-			_ = formatResult(cmd, tExec, failedTerminationError.Result)
+			_ = formatResult(cmd, exec, failedTerminationError.Result)
 		}
-		return err
-	}
-
-	return formatResult(cmd, tExec, result)
-}
-
-func handleRegularExecutor(ctx context.Context, cmd *cobra.Command, exec core.Executor, parameters, configs map[string]any) error {
-	result, err := exec.Execute(ctx, parameters, configs)
-	if err != nil {
 		return err
 	}
 
@@ -314,11 +304,24 @@ func AddAction(
 			}
 
 			waitTermination := getWaitTerminationFlag(cmd)
+			var cb retryUntilCb
 			if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && waitTermination {
-				return handleTerminatorExecutor(ctx, cmd, tExec, parameters, configs)
+				cb = func() (result core.Value, err error) {
+					return tExec.ExecuteUntilTermination(ctx, parameters, configs)
+				}
 			} else {
-				return handleRegularExecutor(ctx, cmd, exec, parameters, configs)
+				cb = func() (result core.Value, err error) {
+					return exec.Execute(ctx, parameters, configs)
+				}
 			}
+
+			retry, err := getRetryUntilFlag(cmd)
+			if err != nil {
+				return err
+			}
+			result, err := retry.run(ctx, cb)
+
+			return handleExecutorResult(ctx, cmd, exec, result, err)
 		},
 	}
 
@@ -473,6 +476,7 @@ can generate a command line on-demand for Rest manipulation`,
 	addLogFilterFlag(rootCmd)
 	addTimeoutFlag(rootCmd)
 	addWaitTerminationFlag(rootCmd)
+	addRetryUntilFlag(rootCmd)
 
 	sdk := &mgcSdk.Sdk{}
 	if err = initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {

@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/PaesslerAG/gval v1.2.2
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/stoewer/go-strcase v1.3.0
@@ -20,7 +21,6 @@ require (
 )
 
 require (
-	github.com/PaesslerAG/gval v1.2.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getkin/kin-openapi v0.118.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
