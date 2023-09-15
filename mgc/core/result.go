@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"io"
+	"mime/multipart"
 )
 
 type ResultSource struct {
@@ -29,6 +30,11 @@ type ResultWithValue interface {
 type ResultWithReader interface {
 	Result
 	Reader() io.Reader
+}
+
+type ResultWithMultipart interface {
+	Result
+	Multipart() *multipart.Part
 }
 
 type ResultWrapper interface {
