@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/afero"
 	"magalu.cloud/core"
 	coreHttp "magalu.cloud/core/http"
 
@@ -67,6 +68,7 @@ type Auth struct {
 	currentTenantId string
 	codeVerifier    *codeVerifier
 	group           singleflight.Group
+	fs              afero.Fs
 }
 
 type Tenant struct {
@@ -113,7 +115,7 @@ func FromContext(ctx context.Context) *Auth {
 	return a
 }
 
-func New(config Config, client *http.Client) *Auth {
+func New(config Config, client *http.Client, fs afero.Fs) *Auth {
 	filePath, err := core.BuildMGCFilePath(authFilename)
 	if err != nil {
 		logger().Warnw("unable to locate auth configuration file", "error", err)
@@ -125,6 +127,7 @@ func New(config Config, client *http.Client) *Auth {
 		config:       config,
 		configFile:   filePath,
 		codeVerifier: nil,
+		fs:           fs,
 	}
 	newAuth.InitTokensFromFile()
 
@@ -389,8 +392,7 @@ func (o *Auth) newRefreshAccessTokenRequest(ctx context.Context) (*http.Request,
 
 func (o *Auth) readConfigFile() (*ConfigResult, error) {
 	var result ConfigResult
-
-	authFile, err := os.ReadFile(o.configFile)
+	authFile, err := afero.ReadFile(o.fs, o.configFile)
 	if err != nil {
 		logger().Warnw("unable to read from auth configuration file", "error", err)
 		return nil, err
@@ -412,7 +414,7 @@ func (o *Auth) writeConfigFile(result *ConfigResult) error {
 		return err
 	}
 
-	err = os.WriteFile(o.configFile, yamlData, 0600)
+	err = afero.WriteFile(o.fs, o.configFile, yamlData, 0600)
 	if err != nil {
 		return err
 	}

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/spf13/afero"
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
 	"magalu.cloud/core/config"
@@ -161,7 +162,7 @@ func (o *Sdk) addHttpRefreshHandler(t http.RoundTripper) http.RoundTripper {
 func (o *Sdk) Auth() *auth.Auth {
 	if o.auth == nil {
 		client := &http.Client{Transport: newHttpTransport()}
-		o.auth = auth.New(authConfig, client)
+		o.auth = auth.New(authConfig, client, afero.NewOsFs())
 	}
 	return o.auth
 }
