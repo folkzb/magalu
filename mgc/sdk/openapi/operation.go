@@ -51,6 +51,7 @@ type Operation struct {
 	transformConfigs    func(value map[string]any) (map[string]any, error)
 	transformResult     func(value any) (any, error)
 	extensionPrefix     *string
+	outputFlag          string
 	servers             openapi3.Servers
 	parameters          *[]*parameterWithName
 	logger              *zap.SugaredLogger
@@ -1076,7 +1077,6 @@ func (o *Operation) Execute(
 		return nil, coreHttp.NewHttpErrorFromResponse(resp)
 	}
 
-	// TODO: we should wrap the result directly instead with formatting + default options
 	// TODO: coreHttp.UnwrapResponse() should return a Result (interface) that is implemented by a HttpResult
 	// that will contain the request, response, responseBody (post-JSON Unmarshal), requestBody (pre-JSON Marshal)
 	value, err := o.getResponseValue(resp)
@@ -1089,7 +1089,13 @@ func (o *Operation) Execute(
 		Parameters: parameters,
 		Configs:    configs,
 	}
-	return core.NewSimpleResult(source, o.resultSchema, value), nil
+	result = core.NewSimpleResult(source, o.resultSchema, value)
+	if o.outputFlag != "" {
+		if resultWithValue, ok := core.ResultAs[core.ResultWithValue](result); ok {
+			result = core.NewResultWithDefaultOutputOptions(resultWithValue, o.outputFlag)
+		}
+	}
+	return
 }
 
 var _ core.Executor = (*Operation)(nil)

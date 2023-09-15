@@ -260,6 +260,8 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 			servers = o.servers
 		}
 
+		outputFlag, _ := getExtensionString(o.extensionPrefix, "output-flag", desc.op.Extensions, "")
+
 		var operation core.Executor = &Operation{
 			name:            opName,
 			key:             desc.key,
@@ -270,6 +272,7 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 			extensionPrefix: o.extensionPrefix,
 			servers:         servers,
 			logger:          o.logger.Named(opName),
+			outputFlag:      outputFlag,
 		}
 
 		if wtExt, ok := getExtensionObject(o.extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
@@ -278,13 +281,6 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 			} else {
 				return false, err
 			}
-		}
-
-		if output, ok := getExtensionString(o.extensionPrefix, "output-flag", desc.op.Extensions, ""); ok && output != "" {
-			// TODO: we should wrap the result directly instead
-			operation = core.NewExecuteResultOutputOptions(operation, func(exec core.Executor, result core.Result) string {
-				return output
-			})
 		}
 
 		o.operations = append(o.operations, operation)
