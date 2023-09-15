@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/invopop/jsonschema"
 )
 
@@ -24,14 +25,36 @@ func NewRawStaticExecute(name string, version string, description string, parame
 	return &StaticExecute{name, version, description, parameters, config, result, execute}
 }
 
+func newAnySchema() *Schema {
+	s := &openapi3.Schema{
+		Nullable: true,
+		AnyOf: openapi3.SchemaRefs{
+			&openapi3.SchemaRef{Value: &openapi3.Schema{Type: "null", Nullable: true}},
+			&openapi3.SchemaRef{Value: openapi3.NewBoolSchema()},
+			&openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
+			&openapi3.SchemaRef{Value: openapi3.NewFloat64Schema()},
+			&openapi3.SchemaRef{Value: openapi3.NewIntegerSchema()},
+			&openapi3.SchemaRef{Value: openapi3.NewArraySchema()},
+			&openapi3.SchemaRef{Value: openapi3.NewObjectSchema().WithAnyAdditionalProperties()},
+		},
+	}
+
+	return (*Schema)(s)
+}
+
 func schemaFromType[T any]() (*Schema, error) {
 	t := new(T)
+	tp := reflect.TypeOf(t).Elem()
+	kind := tp.Kind()
+	if tp.Name() == "" && kind == reflect.Interface {
+		return newAnySchema(), nil
+	}
+
 	s, err := ToCoreSchema(schemaReflector.Reflect(t))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create JSON Schema for type '%T': %w", t, err)
 	}
 
-	kind := reflect.TypeOf(t).Elem().Kind()
 	isArray := kind == reflect.Array || kind == reflect.Slice
 
 	// schemaReflector seems to lose the fact that it's an array, so we bring that back
