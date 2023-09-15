@@ -307,7 +307,7 @@ func (o *Operation) addRequestBodyJsonParameters(mediaType *openapi3.MediaType, 
 	return
 }
 
-func (o *Operation) createRequestBodyJson(mediaType *openapi3.MediaType, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, err error) {
+func (o *Operation) createRequestBodyJson(mediaType *openapi3.MediaType, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	size = -1
 
 	body := map[string]core.Value{}
@@ -334,6 +334,7 @@ func (o *Operation) createRequestBodyJson(mediaType *openapi3.MediaType, pValues
 	mimeType = "application/json"
 	size = int64(bodyBuf.Len())
 	reader = bodyBuf
+	requestBody = body
 	return
 }
 
@@ -370,7 +371,7 @@ func (o *Operation) createRequestBodyUploadMultipart(
 	mediaType *openapi3.MediaType,
 	content openapi3.Content,
 	pValues map[string]core.Value,
-) (mimeType string, size int64, reader io.Reader, err error) {
+) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	size = -1 // always -1 for multipart content
 
 	type uploadEntry struct {
@@ -446,7 +447,7 @@ func (o *Operation) addRequestBodyUploadFormParameters(mediaType *openapi3.Media
 	return
 }
 
-func (o *Operation) createRequestBodyUploadForm(mediaType *openapi3.MediaType, content openapi3.Content, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, err error) {
+func (o *Operation) createRequestBodyUploadForm(mediaType *openapi3.MediaType, content openapi3.Content, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep this paired with addRequestBodyUploadFormParameters()
 
 	size = -1
@@ -486,10 +487,10 @@ func (o *Operation) addRequestBodyUploadSimpleParameters(content openapi3.Conten
 	return
 }
 
-func (o *Operation) createRequestBodyUploadSimple(content openapi3.Content, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, err error) {
+func (o *Operation) createRequestBodyUploadSimple(content openapi3.Content, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep in sync with addRequestBodyUploadSimpleParameters
 	_, mimeType, size, reader, err = getFileFromParameter(fileUploadParam, pValues)
-	return mimeType, size, reader, err
+	return mimeType, size, reader, nil, err
 }
 
 func (o *Operation) hasBody() bool {
@@ -501,7 +502,7 @@ func (o *Operation) hasBody() bool {
 	}
 }
 
-func (o *Operation) createRequestBody(pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, err error) {
+func (o *Operation) createRequestBody(pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep in sync with addRequestBodyParameters()
 
 	size = -1
@@ -881,22 +882,22 @@ func (o *Operation) buildRequestFromParams(
 	ctx context.Context,
 	paramValues map[string]core.Value,
 	configs map[string]core.Value,
-) (*http.Request, error) {
+) (req *http.Request, requestBody core.Value, err error) {
 	url, err := o.getRequestUrl(paramValues, configs)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	mimeType, size, body, err := o.createRequestBody(paramValues)
+	mimeType, size, reader, requestBody, err := o.createRequestBody(paramValues)
 	if err != nil {
-		return nil, err
+		return
 	}
 	// NOTE: from here on, error handling MUST close body!
 
-	req, err := http.NewRequestWithContext(ctx, o.method, url, body)
+	req, err = http.NewRequestWithContext(ctx, o.method, url, reader)
 	if err != nil {
-		closeIfCloser(body)
-		return nil, err
+		closeIfCloser(reader)
+		return
 	}
 	if mimeType != "" {
 		req.Header.Set("Content-Type", mimeType)
@@ -907,10 +908,10 @@ func (o *Operation) buildRequestFromParams(
 
 	err = o.configureRequest(req, configs)
 	if err != nil {
-		closeIfCloser(body)
-		return nil, err
+		closeIfCloser(reader)
+		return
 	}
-	return req, nil
+	return
 }
 
 func (o *Operation) forEachSecurityRequirement(cb func(scheme string, scopes []string) (run bool, err error)) (finished bool, err error) {
@@ -987,10 +988,10 @@ func (o *Operation) createHttpRequest(
 	auth *auth.Auth,
 	paramValues map[string]core.Value,
 	configs map[string]core.Value,
-) (*http.Request, error) {
-	req, err := o.buildRequestFromParams(ctx, paramValues, configs)
+) (req *http.Request, requestBody core.Value, err error) {
+	req, requestBody, err = o.buildRequestFromParams(ctx, paramValues, configs)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// TODO: accept everything, but later we need to fine-grain if json, multipart, etc
@@ -998,18 +999,14 @@ func (o *Operation) createHttpRequest(
 	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Add("Connection", "keep-alive")
 
-	if err := o.setSecurityHeader(ctx, paramValues, req, auth); err != nil {
-		return nil, err
+	if err = o.setSecurityHeader(ctx, paramValues, req, auth); err != nil {
+		return
 	}
 
-	return req, nil
+	return
 }
 
-func (o *Operation) getResponseValue(resp *http.Response) (core.Value, error) {
-	value, err := coreHttp.UnwrapResponse(resp, nil)
-	if err != nil {
-		return value, err
-	}
+func (o *Operation) getValueFromResponseBody(value core.Value) (core.Value, error) {
 	// do this before checking o.transformResult as it will be initialized there
 	_ = o.ResultSchema()
 	if o.transformResult != nil {
@@ -1023,6 +1020,15 @@ func (o *Operation) Execute(
 	parameters map[string]core.Value,
 	configs map[string]core.Value,
 ) (result core.Result, err error) {
+	// keep the original parameters, configs -- do not use the transformed versions!
+	// transformed versions will be new instances, so no worries changing the map pointer we reference here
+	source := core.ResultSource{
+		Executor:   o,
+		Context:    ctx,
+		Parameters: parameters,
+		Configs:    configs,
+	}
+
 	// load definitions if not done yet
 	parametersSchema := o.ParametersSchema()
 	configsSchema := o.ConfigsSchema()
@@ -1063,7 +1069,7 @@ func (o *Operation) Execute(
 		logger().Debug("Finished config transforms", configs)
 	}
 
-	req, err := o.createHttpRequest(ctx, auth, parameters, configs)
+	req, requestBody, err := o.createHttpRequest(ctx, auth, parameters, configs)
 	if err != nil {
 		return nil, err
 	}
@@ -1077,19 +1083,14 @@ func (o *Operation) Execute(
 		return nil, coreHttp.NewHttpErrorFromResponse(resp)
 	}
 
-	// TODO: coreHttp.UnwrapResponse() should return a Result (interface) that is implemented by a HttpResult
-	// that will contain the request, response, responseBody (post-JSON Unmarshal), requestBody (pre-JSON Marshal)
-	value, err := o.getResponseValue(resp)
+	// TODO: also keep per-status code + default responses and choose the specific
+	// schema to use for this result
+	schema := o.ResultSchema()
+
+	result, err = coreHttp.NewHttpResult(source, schema, req, requestBody, resp, o.getValueFromResponseBody)
 	if err != nil {
 		return nil, err
 	}
-	source := core.ResultSource{
-		Executor:   o,
-		Context:    ctx,
-		Parameters: parameters,
-		Configs:    configs,
-	}
-	result = core.NewSimpleResult(source, o.resultSchema, value)
 	if o.outputFlag != "" {
 		if resultWithValue, ok := core.ResultAs[core.ResultWithValue](result); ok {
 			result = core.NewResultWithDefaultOutputOptions(resultWithValue, o.outputFlag)
