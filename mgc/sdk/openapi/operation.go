@@ -27,6 +27,7 @@ import (
 
 const fileUploadPrefix = "upload-"
 const fileUploadParam = fileUploadPrefix + "file"
+const defaultResponseStatusCode = "default"
 
 // Source -> Module -> Resource -> Operation
 
@@ -47,6 +48,7 @@ type Operation struct {
 	paramsSchema        *core.Schema
 	configsSchema       *core.Schema
 	resultSchema        *core.Schema
+	responseSchemas     map[string]*core.Schema
 	transformParameters func(value map[string]any) (map[string]any, error)
 	transformConfigs    func(value map[string]any) (map[string]any, error)
 	transformResult     func(value any) (any, error)
@@ -607,13 +609,14 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 	return o.configsSchema
 }
 
-func (o *Operation) ResultSchema() *core.Schema {
+func (o *Operation) initResultSchema() {
 	if o.resultSchema == nil {
 		rootSchema := core.NewAnyOfSchema()
 		responses := o.operation.Responses
+		o.responseSchemas = make(map[string]*core.Schema)
 
 		for code, ref := range responses {
-			if !(len(code) == 3 && strings.HasPrefix(code, "2")) {
+			if !(len(code) == 3 && strings.HasPrefix(code, "2")) && code != defaultResponseStatusCode {
 				continue
 			}
 
@@ -626,6 +629,7 @@ func (o *Operation) ResultSchema() *core.Schema {
 			}
 
 			rootSchema.AnyOf = append(rootSchema.AnyOf, openapi3.NewSchemaRef(content.Schema.Ref, content.Schema.Value))
+			o.responseSchemas[code] = (*core.Schema)(content.Schema.Value)
 		}
 
 		switch len(rootSchema.AnyOf) {
@@ -639,7 +643,23 @@ func (o *Operation) ResultSchema() *core.Schema {
 		o.resultSchema = rootSchema
 		o.transformResult = createTransform[any](rootSchema, o.extensionPrefix)
 	}
+}
+
+func (o *Operation) ResultSchema() *core.Schema {
+	o.initResultSchema()
 	return o.resultSchema
+}
+
+func (o *Operation) getTransformResult() func(value any) (any, error) {
+	// do this before checking o.transformResult as it will be initialized there
+	o.initResultSchema()
+	return o.transformResult
+}
+
+func (o *Operation) getResponseSchemas() map[string]*core.Schema {
+	// do this before checking o.responseSchemas as it will be initialized there
+	o.initResultSchema()
+	return o.responseSchemas
 }
 
 type cbForEachVariable func(externalName string, internalName string, spec *openapi3.ServerVariable, server *openapi3.Server) (run bool, err error)
@@ -1007,12 +1027,22 @@ func (o *Operation) createHttpRequest(
 }
 
 func (o *Operation) getValueFromResponseBody(value core.Value) (core.Value, error) {
-	// do this before checking o.transformResult as it will be initialized there
-	_ = o.ResultSchema()
-	if o.transformResult != nil {
-		return o.transformResult(value)
+	if transform := o.getTransformResult(); transform != nil {
+		return transform(value)
 	}
 	return value, nil
+}
+
+func (o *Operation) getResponseSchema(resp *http.Response) *core.Schema {
+	responseSchemas := o.getResponseSchemas()
+	code := fmt.Sprint(resp.StatusCode)
+	if schema, ok := responseSchemas[code]; ok {
+		return schema
+	}
+	if schema, ok := responseSchemas[defaultResponseStatusCode]; ok {
+		return schema
+	}
+	return o.ResultSchema()
 }
 
 func (o *Operation) Execute(
@@ -1083,10 +1113,7 @@ func (o *Operation) Execute(
 		return nil, coreHttp.NewHttpErrorFromResponse(resp)
 	}
 
-	// TODO: also keep per-status code + default responses and choose the specific
-	// schema to use for this result
-	schema := o.ResultSchema()
-
+	schema := o.getResponseSchema(resp)
 	result, err = coreHttp.NewHttpResult(source, schema, req, requestBody, resp, o.getValueFromResponseBody)
 	if err != nil {
 		return nil, err
