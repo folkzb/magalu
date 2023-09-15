@@ -43,7 +43,7 @@ var create = mgc.NewRawStaticExecute(
 		map[string]*mgc.Schema{"id": mgc.NewStringSchema()},
 		[]string{"id"},
 	),
-	func(context context.Context, parameters map[string]any, configs map[string]any) (result any, err error) {
+	func(context context.Context, parameters mgc.Parameters, configs mgc.Configs) (result any, err error) {
 		return nil, nil
 	},
 )
@@ -77,7 +77,7 @@ var read = mgc.NewRawStaticExecute(
 		},
 		[]string{"id", "image", "name", "count", "createdAt", "extra_field"},
 	),
-	func(context context.Context, parameters map[string]any, configs map[string]any) (result any, err error) {
+	func(context context.Context, parameters mgc.Parameters, configs mgc.Configs) (result any, err error) {
 		return nil, nil
 	},
 )
@@ -109,7 +109,7 @@ var update = mgc.NewRawStaticExecute(
 		},
 		[]string{},
 	),
-	func(context context.Context, parameters map[string]any, configs map[string]any) (result any, err error) {
+	func(context context.Context, parameters mgc.Parameters, configs mgc.Configs) (result any, err error) {
 		return nil, nil
 	},
 )
@@ -126,7 +126,7 @@ var delete = mgc.NewRawStaticExecute(
 	),
 	nil,
 	mgc.NewNullSchema(),
-	func(context context.Context, parameters map[string]any, configs map[string]any) (result any, err error) {
+	func(context context.Context, parameters mgc.Parameters, configs mgc.Configs) (result any, err error) {
 		return nil, nil
 	},
 )

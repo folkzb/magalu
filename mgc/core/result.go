@@ -9,8 +9,8 @@ import (
 type ResultSource struct {
 	Executor   Executor
 	Context    context.Context
-	Parameters map[string]Value
-	Configs    map[string]Value
+	Parameters Parameters
+	Configs    Configs
 }
 
 type Result interface {

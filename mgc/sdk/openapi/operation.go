@@ -309,7 +309,7 @@ func (o *Operation) addRequestBodyJsonParameters(mediaType *openapi3.MediaType, 
 	return
 }
 
-func (o *Operation) createRequestBodyJson(mediaType *openapi3.MediaType, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
+func (o *Operation) createRequestBodyJson(mediaType *openapi3.MediaType, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	size = -1
 
 	body := map[string]core.Value{}
@@ -372,7 +372,7 @@ func (o *Operation) addRequestBodyUploadMultipartParameters(mediaType *openapi3.
 func (o *Operation) createRequestBodyUploadMultipart(
 	mediaType *openapi3.MediaType,
 	content openapi3.Content,
-	pValues map[string]core.Value,
+	pValues core.Parameters,
 ) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	size = -1 // always -1 for multipart content
 
@@ -449,7 +449,7 @@ func (o *Operation) addRequestBodyUploadFormParameters(mediaType *openapi3.Media
 	return
 }
 
-func (o *Operation) createRequestBodyUploadForm(mediaType *openapi3.MediaType, content openapi3.Content, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
+func (o *Operation) createRequestBodyUploadForm(mediaType *openapi3.MediaType, content openapi3.Content, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep this paired with addRequestBodyUploadFormParameters()
 
 	size = -1
@@ -489,7 +489,7 @@ func (o *Operation) addRequestBodyUploadSimpleParameters(content openapi3.Conten
 	return
 }
 
-func (o *Operation) createRequestBodyUploadSimple(content openapi3.Content, pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
+func (o *Operation) createRequestBodyUploadSimple(content openapi3.Content, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep in sync with addRequestBodyUploadSimpleParameters
 	_, mimeType, size, reader, err = getFileFromParameter(fileUploadParam, pValues)
 	return mimeType, size, reader, nil, err
@@ -504,7 +504,7 @@ func (o *Operation) hasBody() bool {
 	}
 }
 
-func (o *Operation) createRequestBody(pValues map[string]core.Value) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
+func (o *Operation) createRequestBody(pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep in sync with addRequestBodyParameters()
 
 	size = -1
@@ -708,7 +708,7 @@ func (o *Operation) addServerVariables(schema *core.Schema) {
 	}
 }
 
-func (o *Operation) getServerURL(configs map[string]core.Value) (string, error) {
+func (o *Operation) getServerURL(configs core.Configs) (string, error) {
 	url := ""
 	_, err := o.forEachServerVariable(func(externalName, internalName string, spec *openapi3.ServerVariable, server *openapi3.Server) (run bool, err error) {
 		val, ok := configs[externalName]
@@ -793,7 +793,7 @@ func getFileMimeTypeAndSize(filename string, file *os.File) (mimeType string, si
 
 func getFileFromParameter(
 	name string,
-	pValues map[string]core.Value,
+	pValues core.Parameters,
 ) (filename string, mimeType string, size int64, file *os.File, err error) {
 	size = -1
 
@@ -848,8 +848,8 @@ func closeIfCloser(reader io.Reader) {
 }
 
 func (o *Operation) getRequestUrl(
-	paramValues map[string]core.Value,
-	configs map[string]core.Value,
+	paramValues core.Parameters,
+	configs core.Configs,
 ) (string, error) {
 	serverURL, err := o.getServerURL(configs)
 	if err != nil {
@@ -884,7 +884,7 @@ func (o *Operation) getRequestUrl(
 
 func (o *Operation) configureRequest(
 	req *http.Request,
-	configs map[string]core.Value,
+	configs core.Configs,
 ) (err error) {
 	_, err = o.forEachParameterWithValue(configs, configLocations, func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
 		switch parameter.In {
@@ -900,8 +900,8 @@ func (o *Operation) configureRequest(
 
 func (o *Operation) buildRequestFromParams(
 	ctx context.Context,
-	paramValues map[string]core.Value,
-	configs map[string]core.Value,
+	paramValues core.Parameters,
+	configs core.Configs,
 ) (req *http.Request, requestBody core.Value, err error) {
 	url, err := o.getRequestUrl(paramValues, configs)
 	if err != nil {
@@ -975,7 +975,7 @@ func (o *Operation) addSecurityParameters(schema *core.Schema) {
 	schema.Properties[forceAuthParameter] = openapi3.NewSchemaRef("", p)
 }
 
-func isAuthForced(parameters map[string]core.Value) bool {
+func isAuthForced(parameters core.Parameters) bool {
 	v, ok := parameters[forceAuthParameter]
 	if !ok {
 		return false
@@ -987,7 +987,7 @@ func isAuthForced(parameters map[string]core.Value) bool {
 	return b
 }
 
-func (o *Operation) setSecurityHeader(ctx context.Context, paramValues map[string]core.Value, req *http.Request, auth *auth.Auth) (err error) {
+func (o *Operation) setSecurityHeader(ctx context.Context, paramValues core.Parameters, req *http.Request, auth *auth.Auth) (err error) {
 	if isAuthForced(paramValues) || o.needsAuth() {
 		// TODO: review needsAuth() usage if more security schemes are used. Assuming oauth2 + bearer
 		// If others are to be used, loop using forEachSecurityRequirement()
@@ -1006,8 +1006,8 @@ func (o *Operation) setSecurityHeader(ctx context.Context, paramValues map[strin
 func (o *Operation) createHttpRequest(
 	ctx context.Context,
 	auth *auth.Auth,
-	paramValues map[string]core.Value,
-	configs map[string]core.Value,
+	paramValues core.Parameters,
+	configs core.Configs,
 ) (req *http.Request, requestBody core.Value, err error) {
 	req, requestBody, err = o.buildRequestFromParams(ctx, paramValues, configs)
 	if err != nil {
@@ -1047,8 +1047,8 @@ func (o *Operation) getResponseSchema(resp *http.Response) *core.Schema {
 
 func (o *Operation) Execute(
 	ctx context.Context,
-	parameters map[string]core.Value,
-	configs map[string]core.Value,
+	parameters core.Parameters,
+	configs core.Configs,
 ) (result core.Result, err error) {
 	// keep the original parameters, configs -- do not use the transformed versions!
 	// transformed versions will be new instances, so no worries changing the map pointer we reference here
@@ -1073,7 +1073,8 @@ func (o *Operation) Execute(
 		return nil, fmt.Errorf("No Auth configured")
 	}
 
-	if err = parametersSchema.VisitJSON(parameters); err != nil {
+	// Cast parameters to 'map[string]core.Value' to avoid type false negatives
+	if err = parametersSchema.VisitJSON(map[string]core.Value(parameters)); err != nil {
 		return nil, err
 	}
 	if o.transformParameters != nil {
@@ -1086,7 +1087,8 @@ func (o *Operation) Execute(
 		logger().Debug("Finished parameter transforms", parameters)
 	}
 
-	if err = configsSchema.VisitJSON(configs); err != nil {
+	// Cast configs to 'map[string]core.Value' to avoid type false negatives
+	if err = configsSchema.VisitJSON(map[string]core.Value(configs)); err != nil {
 		return nil, err
 	}
 	if o.transformConfigs != nil {

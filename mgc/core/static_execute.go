@@ -17,11 +17,11 @@ type StaticExecute struct {
 	parameters  *Schema
 	config      *Schema
 	result      *Schema
-	execute     func(ctx context.Context, parameters map[string]Value, configs map[string]Value) (value Value, err error)
+	execute     func(ctx context.Context, parameters Parameters, configs Configs) (value Value, err error)
 }
 
 // Raw Parameter and Config JSON Schemas
-func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, result *Schema, execute func(context context.Context, parameters map[string]Value, configs map[string]Value) (value Value, err error)) *StaticExecute {
+func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, result *Schema, execute func(context context.Context, parameters Parameters, configs Configs) (value Value, err error)) *StaticExecute {
 	return &StaticExecute{name, version, description, parameters, config, result, execute}
 }
 
@@ -99,7 +99,7 @@ func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 		ps,
 		cs,
 		rs,
-		func(ctx context.Context, parameters, configs map[string]any) (Value, error) {
+		func(ctx context.Context, parameters Parameters, configs Configs) (Value, error) {
 			paramsStruct, err := DecodeNewValue[ParamsT](parameters)
 			if err != nil {
 				return nil, fmt.Errorf("error when decoding parameters. Did you forget to set 'json' struct flags for struct %T?: %w", paramsStruct, err)
@@ -167,7 +167,7 @@ func (o *StaticExecute) ResultSchema() *Schema {
 	return o.result
 }
 
-func (o *StaticExecute) Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error) {
+func (o *StaticExecute) Execute(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
 	value, err := o.execute(context, parameters, configs)
 	if err != nil {
 		return nil, err

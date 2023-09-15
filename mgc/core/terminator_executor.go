@@ -8,7 +8,7 @@ import (
 
 type TerminatorExecutor interface {
 	Executor
-	ExecuteUntilTermination(context context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error)
+	ExecuteUntilTermination(context context.Context, parameters Parameters, configs Configs) (result Result, err error)
 }
 
 type FailedTerminationError struct {
@@ -31,12 +31,12 @@ func (o *executeTerminatorWithCheck) Unwrap() Executor {
 	return o.Executor
 }
 
-func (o *executeTerminatorWithCheck) ExecuteUntilTermination(context context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error) {
+func (o *executeTerminatorWithCheck) ExecuteUntilTermination(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
 	result, err = o.executeUntilTermination(context, parameters, configs)
 	return ExecutorWrapResult(o, result, err)
 }
 
-func (o *executeTerminatorWithCheck) executeUntilTermination(context context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error) {
+func (o *executeTerminatorWithCheck) executeUntilTermination(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
 	for i := 0; i < o.maxRetries; i++ {
 		result, err = o.Execute(context, parameters, configs)
 		if err != nil {

@@ -61,6 +61,9 @@ type Value = any
 // Type comes from the Schema
 type Example = Value
 
+type Parameters map[string]Value
+type Configs = Parameters
+
 type Executor interface {
 	Descriptor
 	ParametersSchema() *Schema
@@ -69,7 +72,7 @@ type Executor interface {
 	// The Result.Schema() may be a subset of the schema, if multiple were available.
 	ResultSchema() *Schema
 	// The maps for the parameters and configs should NOT be modified inside the implementation of 'Execute'
-	Execute(context context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error)
+	Execute(context context.Context, parameters Parameters, configs Configs) (result Result, err error)
 }
 
 // NOTE: whenever you wrap an executor remember to also wrap the result with
@@ -126,7 +129,7 @@ type executeResultWrapper struct {
 	wrapResult func(wrapperExecutor ExecutorWrapper, originalResult Result) (wrappedResult Result, err error)
 }
 
-func (o *executeResultWrapper) Execute(ctx context.Context, parameters map[string]Value, configs map[string]Value) (result Result, err error) {
+func (o *executeResultWrapper) Execute(ctx context.Context, parameters Parameters, configs Configs) (result Result, err error) {
 	result, err = o.Executor.Execute(ctx, parameters, configs)
 	if err != nil {
 		return

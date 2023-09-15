@@ -147,7 +147,7 @@ func getFlagValue(flags *flag.FlagSet, name string) (mgcSdk.Value, *pflag.Flag, 
 	}
 }
 
-func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[string]mgcSdk.Value) error {
+func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[string]core.Value) error {
 	if flags == nil || schema == nil || dst == nil {
 		return fmt.Errorf("invalid command or parameter schema")
 	}
@@ -290,8 +290,8 @@ func AddAction(
 		// TODO: Long:    desc.Description,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			parameters := map[string]mgcSdk.Value{}
-			configs := map[string]mgcSdk.Value{}
+			parameters := core.Parameters{}
+			configs := core.Configs{}
 
 			if err := loadDataFromFlags(cmd.Flags(), exec.ParametersSchema(), parameters); err != nil {
 				return err

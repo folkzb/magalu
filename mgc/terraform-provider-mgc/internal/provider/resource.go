@@ -204,8 +204,8 @@ func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any,
 	r.applyMgcOutputMap(resultMap, ctx, tfState, diag)
 }
 
-func getConfigs(schema *core.Schema) map[string]core.Value {
-	result := map[string]core.Value{}
+func getConfigs(schema *core.Schema) core.Configs {
+	result := core.Configs{}
 	for propName, propRef := range schema.Properties {
 		prop := (*core.Schema)(propRef.Value)
 		if prop.Default != nil {
