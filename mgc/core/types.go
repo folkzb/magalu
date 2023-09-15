@@ -77,18 +77,16 @@ type ExecutorWrapper interface {
 func ExecutorAs[T Executor](exec Executor) (T, bool) {
 	var zeroT T
 
-	if u, ok := exec.(ExecutorWrapper); ok {
-		t, ok := u.(T)
-		if ok {
+	for {
+		if t, ok := exec.(T); ok {
 			return t, true
 		}
 
-		x := u.Unwrap()
-		if x == nil {
-			return zeroT, false
+		if u, ok := exec.(ExecutorWrapper); ok {
+			exec = u.Unwrap()
+		} else {
+			break
 		}
-
-		return ExecutorAs[T](t)
 	}
 
 	return zeroT, false
