@@ -217,7 +217,7 @@ func (h *callbackHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	authCode := url.Query().Get("code")
-	err := h.auth.RequestAuthTokeWithAuthorizationCode(h.ctx, authCode)
+	err := h.auth.RequestAuthTokenWithAuthorizationCode(h.ctx, authCode)
 	if err != nil {
 		showErrorPage(w, err, http.StatusInternalServerError)
 		h.done <- &authResult{err: fmt.Errorf("Could not request auth token with authorization code: %w", err)}

@@ -95,6 +95,14 @@ type TenantAuth struct {
 	Scope        []string  `json:"scope"`
 }
 
+type FailedRefreshAccessToken struct {
+	Message string
+}
+
+func (e FailedRefreshAccessToken) Error() string {
+	return e.Message
+}
+
 var authKey contextKey = "magalu.cloud/core/Authentication"
 
 func NewContext(parentCtx context.Context, auth *Auth) context.Context {
@@ -234,7 +242,7 @@ func (o *Auth) CodeChallengeToURL() (*url.URL, error) {
 /** Creates a new request access token from authorization code request, be
  * mindful that the code verifier used in this request come from the last call
  * of `CodeChallengeToUrl` method. */
-func (o *Auth) RequestAuthTokeWithAuthorizationCode(ctx context.Context, authCode string) error {
+func (o *Auth) RequestAuthTokenWithAuthorizationCode(ctx context.Context, authCode string) error {
 	if o.codeVerifier == nil {
 		logger().Errorw("no code verification provided")
 		return fmt.Errorf("no code verification provided, first execute a code challenge request")
@@ -325,13 +333,16 @@ func (o *Auth) RefreshAccessToken(ctx context.Context) (string, error) {
 }
 
 func (o *Auth) doRefreshAccessToken(ctx context.Context) (core.Value, error) {
+	var err error
+	var resp *http.Response
+
 	r, err := o.newRefreshAccessTokenRequest(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	for i := 0; i < maxRetryCount; i++ {
-		resp, err := o.httpClient.Do(r)
+		resp, err = o.httpClient.Do(r)
 		if err != nil {
 			wait := coreHttp.DefaultBackoff(minRetryWait, maxRetryCount, i, resp)
 			fmt.Printf("Refresh access token failed, retrying in %s\n", wait)
@@ -355,7 +366,8 @@ func (o *Auth) doRefreshAccessToken(ctx context.Context) (core.Value, error) {
 		}
 	}
 
-	return o.accessToken, err
+	msg := fmt.Sprintf("failed to refresh access token: %v", err)
+	return o.accessToken, FailedRefreshAccessToken{Message: msg}
 }
 
 func (o *Auth) newRefreshAccessTokenRequest(ctx context.Context) (*http.Request, error) {
