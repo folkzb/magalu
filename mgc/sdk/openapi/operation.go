@@ -1073,8 +1073,7 @@ func (o *Operation) Execute(
 		return nil, fmt.Errorf("No Auth configured")
 	}
 
-	// Cast parameters to 'map[string]core.Value' to avoid type false negatives
-	if err = parametersSchema.VisitJSON(map[string]core.Value(parameters), openapi3.MultiErrors()); err != nil {
+	if err = parametersSchema.VisitJSON(parameters, openapi3.MultiErrors()); err != nil {
 		return nil, err
 	}
 	if o.transformParameters != nil {
@@ -1087,8 +1086,7 @@ func (o *Operation) Execute(
 		logger().Debug("Finished parameter transforms", parameters)
 	}
 
-	// Cast configs to 'map[string]core.Value' to avoid type false negatives
-	if err = configsSchema.VisitJSON(map[string]core.Value(configs), openapi3.MultiErrors()); err != nil {
+	if err = configsSchema.VisitJSON(configs, openapi3.MultiErrors()); err != nil {
 		return nil, err
 	}
 	if o.transformConfigs != nil {

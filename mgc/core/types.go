@@ -62,7 +62,10 @@ type Value = any
 // Type comes from the Schema
 type Example = Value
 
-type Parameters map[string]Value
+// TODO: Evaluate if the typealias/type assign is needed at all. If a type assign is needed for some reason,
+// the kin-openapi lib will need to be patched to accept type assigns of the correct structure on VisitJSON
+// (likely through reflection). As it is now, validation fails with type assigns
+type Parameters = map[string]Value
 type Configs = Parameters
 
 type Executor interface {
