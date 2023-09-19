@@ -5,6 +5,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"magalu.cloud/core"
 )
 
@@ -120,7 +121,7 @@ func (r *httpResultWithValue) Schema() *core.Schema {
 }
 
 func (r *httpResultWithValue) ValidateSchema() error {
-	return r.schema.VisitJSON(r.value)
+	return r.schema.VisitJSON(r.value, openapi3.MultiErrors())
 }
 
 func (r *httpResultWithValue) Value() core.Value {

@@ -1074,7 +1074,7 @@ func (o *Operation) Execute(
 	}
 
 	// Cast parameters to 'map[string]core.Value' to avoid type false negatives
-	if err = parametersSchema.VisitJSON(map[string]core.Value(parameters)); err != nil {
+	if err = parametersSchema.VisitJSON(map[string]core.Value(parameters), openapi3.MultiErrors()); err != nil {
 		return nil, err
 	}
 	if o.transformParameters != nil {
@@ -1088,7 +1088,7 @@ func (o *Operation) Execute(
 	}
 
 	// Cast configs to 'map[string]core.Value' to avoid type false negatives
-	if err = configsSchema.VisitJSON(map[string]core.Value(configs)); err != nil {
+	if err = configsSchema.VisitJSON(map[string]core.Value(configs), openapi3.MultiErrors()); err != nil {
 		return nil, err
 	}
 	if o.transformConfigs != nil {

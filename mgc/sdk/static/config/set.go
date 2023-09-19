@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"magalu.cloud/core"
 	"magalu.cloud/core/config"
 )
@@ -34,7 +35,7 @@ func newSet() *core.StaticExecute {
 				return nil, fmt.Errorf("no config %s found", parameter.Key)
 			}
 
-			if err := s.VisitJSON(parameter.Value); err != nil {
+			if err := s.VisitJSON(parameter.Value, openapi3.MultiErrors()); err != nil {
 				return nil, err
 			}
 

@@ -12,6 +12,7 @@ import (
 type Schema openapi3.Schema
 
 func (s *Schema) VisitJSON(value any, opts ...openapi3.SchemaValidationOption) error {
+	opts = append(opts, openapi3.MultiErrors())
 	return (*openapi3.Schema)(s).VisitJSON(value, opts...)
 }
 

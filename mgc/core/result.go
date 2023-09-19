@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 	"mime/multipart"
+
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
 type ResultSource struct {
@@ -79,7 +81,7 @@ func (s SimpleResult) Schema() *Schema {
 }
 
 func (s SimpleResult) ValidateSchema() error {
-	return s.schema.VisitJSON(s.value)
+	return s.schema.VisitJSON(s.value, openapi3.MultiErrors())
 }
 
 func (s SimpleResult) Value() Value {
