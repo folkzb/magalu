@@ -591,7 +591,7 @@ func (o *Operation) forEachParameterName(cb cbForEachParameterName) (finished bo
 	finished, err = o.forEachParameter(parametersLocations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
 		return cb(externalName, parameter.Name, parameter.In)
 	})
-	if finished || err != nil {
+	if !finished || err != nil {
 		return
 	}
 
@@ -616,7 +616,7 @@ func (o *Operation) forEachParameterName(cb cbForEachParameterName) (finished bo
 			}
 		}
 	}
-	if finished || err != nil {
+	if !finished || err != nil {
 		return
 	}
 
