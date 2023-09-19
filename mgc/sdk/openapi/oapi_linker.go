@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/go-openapi/jsonpointer"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/http"
@@ -187,9 +188,32 @@ func (l *openapiLinker) PrepareLink(
 		insertParameter(op, paramOAPIName, resolved, preparedParams, preparedConfigs)
 	}
 
-	// TODO: Include support for requestBody, and not only parameters. Unable to add this
-	// until OAPI fixes their specification to be the same as the parameters specification.
-	// More info can be seen here: https://github.com/OAI/OpenAPI-Specification/issues/1594
+	// The official OAPI specification for link request body is, for some reason, different from
+	// the parameters and, thus, unusable. The issue can be tracked here: https://github.com/OAI/OpenAPI-Specification/issues/1594
+	// Until a version of OAPI fixes this, the extension specified by @anentropic will be used.
+	// Ref: https://apigraph.readthedocs.io/en/latest/reference/openapi-extensions.html#x-apigraph-requestbodyparameters
+	if reqBodyParams, ok := getExtensionObject(op.extensionPrefix, "requestBodyParameters", l.link.Extensions, nil); ok {
+		for jpStr, rtExpStr := range reqBodyParams {
+			resolved, found, err := resolver.resolve(rtExpStr)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if !found {
+				continue
+			}
+
+			jp, err := jsonpointer.New(jpStr)
+			if err != nil {
+				return nil, nil, fmt.Errorf("malformed json pointer: '%s'", jpStr)
+			}
+
+			_, err = jp.Set(preparedParams, resolved)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to set jsonpointer '%s' on object %#v using value %#v", jpStr, preparedParams, resolved)
+			}
+		}
+	}
 
 	fillMissingConfigs(preparedConfigs, target.ConfigsSchema(), originalResult.Source().Configs)
 	return preparedParams, preparedConfigs, nil
