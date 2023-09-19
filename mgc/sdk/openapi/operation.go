@@ -582,10 +582,52 @@ var (
 	configLocations     = []string{openapi3.ParameterInHeader, openapi3.ParameterInCookie}
 )
 
+type cbForEachParameterName func(externalName, internalName, location string) (run bool, err error)
+
+// Must match ParametersSchema!
+func (o *Operation) forEachParameterName(cb cbForEachParameterName) (finished bool, err error) {
+	finished, err = o.forEachParameter(parametersLocations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
+		return cb(externalName, parameter.Name, parameter.In)
+	})
+	if finished || err != nil {
+		return
+	}
+
+	if rbr := o.operation.RequestBody; rbr != nil {
+		rb := rbr.Value
+		if content := rb.Content; content != nil {
+			var mt *openapi3.MediaType
+			if x := content.Get("application/json"); x != nil {
+				mt = x
+			} else if x := content.Get("multipart/form-data"); x != nil {
+				mt = x
+			} else if x := content.Get("application/x-www-form-urlencoded"); x != nil {
+				mt = x
+			} else {
+				finished, err = cb(fileUploadParam, fileUploadParam, "body")
+			}
+
+			if mt != nil {
+				finished, err = o.forEachBodyJsonParameter(mt, func(externalName, internalName string, _ *openapi3.SchemaRef, _ *openapi3.Schema) (run bool, err error) {
+					return cb(externalName, internalName, "body")
+				})
+			}
+		}
+	}
+	if finished || err != nil {
+		return
+	}
+
+	// TODO: Walk through security requirement parameters, but currently they're not used in ParametersSchema
+	// o.forEachSecurityRequirement(func(scheme string, scopes []string) (run bool, err error) {})
+	return
+}
+
 func (o *Operation) ParametersSchema() *core.Schema {
 	if o.paramsSchema == nil {
 		rootSchema := core.NewObjectSchema(map[string]*core.Schema{}, []string{})
 
+		// Must match forEachParameterName!
 		o.addParameters(rootSchema, parametersLocations)
 		o.addRequestBodyParameters(rootSchema)
 		o.addSecurityParameters(rootSchema)
