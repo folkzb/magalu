@@ -105,20 +105,18 @@ func castToMap(result core.ResultWithValue, diag *diag.Diagnostics) (resultMap m
 	return
 }
 
-func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any, configs map[string]any, diag *diag.Diagnostics) map[string]any {
-	exec := r.read
-
-	params := map[string]any{}
-	for k := range exec.ParametersSchema().Properties {
-		if value, ok := mgcState[k]; ok {
-			params[k] = value
-		}
-	}
-
+// Does not return error, check for 'diag.HasError' to see if operation was successful
+func (r *MgcResource) execute(
+	ctx context.Context,
+	exec core.Executor,
+	params core.Parameters,
+	configs core.Configs,
+	diag *diag.Diagnostics,
+) core.ResultWithValue {
 	var result core.Result
 	var err error
 
-	tflog.Debug(ctx, fmt.Sprintf("[resource] reading new %s resource - request info with params: %+v and configs: %+v", r.name, params, configs))
+	tflog.Debug(ctx, fmt.Sprintf("[resource] will %s new %s resource - request info with params: %#v and configs: %#v", exec.Name(), r.name, params, configs))
 	if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok {
 		tflog.Debug(ctx, "[resource] running as TerminatorExecutor")
 		result, err = tExec.ExecuteUntilTermination(ctx, params, configs)
@@ -128,7 +126,7 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 	}
 	if err != nil {
 		diag.AddError(
-			"Unable to read instance",
+			fmt.Sprintf("Unable to %s resource", exec.Name()),
 			fmt.Sprintf("Service returned with error: %v", err),
 		)
 		return nil
@@ -138,7 +136,7 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 	if !ok {
 		diag.AddError(
 			"Operation output mismatch",
-			fmt.Sprintf("result has no value %+v", result),
+			fmt.Sprintf("result has no value %#v", result),
 		)
 		return nil
 	}
@@ -150,7 +148,26 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 	*/
 	_ = validateResult(diag, resultWithValue) // just ignore errors for now
 
-	resultMap, ok := castToMap(resultWithValue, diag)
+	return resultWithValue
+}
+
+// Does not return error, check for 'diag.HasError' to see if operation was successful
+func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any, configs map[string]any, diag *diag.Diagnostics) map[string]any {
+	exec := r.read
+
+	params := map[string]any{}
+	for k := range exec.ParametersSchema().Properties {
+		if value, ok := mgcState[k]; ok {
+			params[k] = value
+		}
+	}
+
+	result := r.execute(ctx, r.read, params, configs, diag)
+	if diag.HasError() {
+		return nil
+	}
+
+	resultMap, ok := castToMap(result, diag)
 	if !ok {
 		return nil
 	}
@@ -222,28 +239,14 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("[resource] creating `%s` - request info with params: %+v and configs: %+v", r.name, params, configs))
+
 	ctx = r.sdk.WrapContext(ctx)
-	exec := r.create
-	result, err := exec.Execute(ctx, params, configs)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to create resource",
-			fmt.Sprintf("Service returned with error: %v", err),
-		)
+	result := r.execute(ctx, r.create, params, configs, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("result has no value %+v", result),
-		)
-		return
-	}
-
-	r.applyStateAfter(exec, params, configs, resultWithValue, ctx, &resp.State, &resp.Diagnostics)
+	r.applyStateAfter(r.create, params, configs, result, ctx, &resp.State, &resp.Diagnostics)
 
 	// We must apply the input parameters in the state
 	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
@@ -276,27 +279,14 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	ctx = r.sdk.WrapContext(ctx)
-	exec := r.update
-	result, err := exec.Execute(ctx, params, configs)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to update instance",
-			fmt.Sprintf("Service returned with error: %v", err),
-		)
+	result := r.execute(ctx, r.update, params, configs, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("result has no value %+v", result),
-		)
-		return
-	}
-
-	r.applyStateAfter(exec, params, configs, resultWithValue, ctx, &resp.State, &resp.Diagnostics)
+	r.applyStateAfter(r.update, params, configs, result, ctx, &resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -306,15 +296,7 @@ func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 		return
 	}
 	ctx = r.sdk.WrapContext(ctx)
-	exec := r.delete
-	_, err := exec.Execute(ctx, params, configs)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to delete resource",
-			fmt.Sprintf("Removing resource request returned with error: %v", err),
-		)
-		return
-	}
+	_ = r.execute(ctx, r.delete, params, configs, &resp.Diagnostics)
 }
 
 func (r *MgcResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
