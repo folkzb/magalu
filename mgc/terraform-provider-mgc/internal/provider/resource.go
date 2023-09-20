@@ -94,15 +94,16 @@ func (r *MgcResource) applyMgcOutputMap(mgcMap map[string]any, ctx context.Conte
 	conv.applyMgcMap(mgcMap, r.outputAttr, ctx, tfState, path.Empty())
 }
 
-func castToMap(result core.ResultWithValue, diag *diag.Diagnostics) (resultMap map[string]any, ok bool) {
-	resultMap, ok = result.Value().(map[string]any)
+// Does not return error, check for 'diag.HasError' to see if operation was successful
+func castToMap(result core.ResultWithValue, diag *diag.Diagnostics) map[string]any {
+	resultMap, ok := result.Value().(map[string]any)
 	if !ok {
 		diag.AddError(
 			"Operation output mismatch",
 			fmt.Sprintf("Unable to convert %v to map.", result),
 		)
 	}
-	return
+	return resultMap
 }
 
 // Does not return error, check for 'diag.HasError' to see if operation was successful
@@ -167,8 +168,8 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 		return nil
 	}
 
-	resultMap, ok := castToMap(result, diag)
-	if !ok {
+	resultMap := castToMap(result, diag)
+	if diag.HasError() {
 		return nil
 	}
 
@@ -193,8 +194,7 @@ func (r *MgcResource) applyStateAfter(
 	_ = validateResult(diag, result) // just ignore errors for now
 
 	if checkSimilarJsonSchemas(resultSchema, r.read.ResultSchema()) {
-		var ok bool
-		if resultMap, ok = castToMap(result, diag); !ok {
+		if resultMap = castToMap(result, diag); diag.HasError() {
 			return
 		}
 	} else {
@@ -210,8 +210,7 @@ func (r *MgcResource) applyStateAfter(
 				}
 			}
 			if hasAllProps {
-				var ok bool
-				if mgcState, ok = castToMap(result, diag); !ok {
+				if mgcState = castToMap(result, diag); diag.HasError() {
 					return
 				}
 			}
