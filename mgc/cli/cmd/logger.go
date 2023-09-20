@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -36,23 +35,8 @@ func newLogConfig() zap.Config {
 func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
 	zapConfig := newLogConfig()
 
-	if loggerConfig := sdk.Config().Get(loggerConfigKey); loggerConfig != nil {
-		var data []byte
-		var err error
-
-		switch v := loggerConfig.(type) {
-		case string:
-			data = []byte(v)
-		default:
-			data, err = json.Marshal(v)
-			if err != nil {
-				return fmt.Errorf("unable to marhsall logger config: %w", err)
-			}
-		}
-
-		if err := json.Unmarshal(data, &zapConfig); err != nil {
-			return fmt.Errorf("unable to unmarshal logger config: %w", err)
-		}
+	if err := sdk.Config().Get(loggerConfigKey, &zapConfig); err != nil {
+		return err
 	}
 
 	logger, err := zapConfig.Build()

@@ -2,10 +2,12 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path"
+	"reflect"
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/logger"
@@ -85,8 +87,36 @@ func (c *Config) BuiltInConfigs() (map[string]*core.Schema, error) {
 	return configMap, nil
 }
 
-func (c *Config) Get(key string) any {
-	return c.viper.Get(key)
+func (c *Config) Get(key string, out any) error {
+	val := reflect.ValueOf(out)
+	if val.Kind() == reflect.Pointer && !val.Elem().IsValid() {
+		return fmt.Errorf("result should not be nil pointer")
+	}
+
+	return c.viper.UnmarshalKey(key, out, viper.DecodeHook(stringToMapOrStructHook))
+}
+
+func stringToMapOrStructHook(f reflect.Value, t reflect.Value) (interface{}, error) {
+	str, ok := f.Interface().(string)
+	if !ok {
+		return f.Interface(), nil
+	}
+
+	kind := t.Kind()
+	target := t.Type()
+
+	if kind == reflect.Pointer {
+		target = target.Elem()
+		kind = target.Kind()
+	}
+
+	if kind != reflect.Struct && kind != reflect.Map {
+		return f.Interface(), nil
+	}
+
+	o := reflect.New(target).Interface()
+	err := json.Unmarshal([]byte(str), o)
+	return o, err
 }
 
 func (c *Config) Set(key string, value interface{}) error {

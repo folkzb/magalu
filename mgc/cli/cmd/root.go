@@ -177,7 +177,12 @@ func loadDataFromConfig(config *mgcSdk.Config, flags *flag.FlagSet, schema *mgcS
 			continue
 		}
 
-		cfgVal := config.Get(name)
+		var cfgVal any
+		errCfg := config.Get(name, &cfgVal)
+		if errCfg != nil {
+			return errCfg
+		}
+
 		if flag.Changed || cfgVal == nil {
 			if err != nil {
 				return err

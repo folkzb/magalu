@@ -22,9 +22,12 @@ func newGet() *core.StaticExecute {
 			if config == nil {
 				return nil, fmt.Errorf("unable to retrieve system configuration")
 			}
+			var out any
+			if err := config.Get(parameter.Key, &out); err != nil {
+				return nil, err
+			}
 
-			value := config.Get(parameter.Key)
-			return value, nil
+			return out, nil
 		},
 	)
 }
