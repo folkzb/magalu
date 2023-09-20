@@ -176,9 +176,14 @@ func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any,
 	return resultMap
 }
 
-func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any, configs map[string]any, result core.ResultWithValue, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
+func (r *MgcResource) applyStateAfter(
+	result core.ResultWithValue,
+	ctx context.Context,
+	tfState *tfsdk.State,
+	diag *diag.Diagnostics,
+) {
 	var resultMap map[string]any
-	resultSchema := exec.ResultSchema()
+	resultSchema := result.Schema()
 
 	/* TODO:
 	if err := validateResult(diag, result); err != nil {
@@ -195,7 +200,7 @@ func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any,
 	} else {
 		// TODO: when we implement links this will go away as it will get internally
 		// https://github.com/profusion/magalu/issues/215
-		mgcState := params
+		mgcState := result.Source().Parameters
 		if resultSchema.Type == "object" {
 			hasAllProps := true
 			for k := range r.read.ParametersSchema().Properties {
@@ -212,7 +217,7 @@ func (r *MgcResource) applyStateAfter(exec core.Executor, params map[string]any,
 			}
 		}
 
-		resultMap = r.readResource(ctx, mgcState, configs, diag)
+		resultMap = r.readResource(ctx, mgcState, result.Source().Configs, diag)
 		if diag.HasError() {
 			return
 		}
@@ -246,7 +251,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	r.applyStateAfter(r.create, params, configs, result, ctx, &resp.State, &resp.Diagnostics)
+	r.applyStateAfter(result, ctx, &resp.State, &resp.Diagnostics)
 
 	// We must apply the input parameters in the state
 	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
@@ -286,7 +291,7 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	r.applyStateAfter(r.update, params, configs, result, ctx, &resp.State, &resp.Diagnostics)
+	r.applyStateAfter(result, ctx, &resp.State, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
