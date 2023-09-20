@@ -186,38 +186,41 @@ func (r *MgcResource) applyStateAfter(
 	var resultMap map[string]any
 	resultSchema := result.Schema()
 
-	/* TODO:
-	if err := validateResult(diag, result); err != nil {
-		return
-	}
-	*/
-	_ = validateResult(diag, result) // just ignore errors for now
-
 	if checkSimilarJsonSchemas(resultSchema, r.read.ResultSchema()) {
 		if resultMap = castToMap(result, diag); diag.HasError() {
 			return
 		}
 	} else {
-		// TODO: when we implement links this will go away as it will get internally
-		// https://github.com/profusion/magalu/issues/215
-		mgcState := result.Source().Parameters
-		if resultSchema.Type == "object" {
-			hasAllProps := true
-			for k := range r.read.ParametersSchema().Properties {
-				if _, ok := resultSchema.Properties[k]; !ok {
-					hasAllProps = false
-					break
-				}
-			}
-			if hasAllProps {
-				if mgcState = castToMap(result, diag); diag.HasError() {
-					return
-				}
-			}
+		readLink, ok := result.Source().Executor.Links()["read"]
+		if !ok {
+			diag.AddError("Read link failed", fmt.Sprintf("Unable to resolve Read link for applying new state on resource '%s'", r.name))
+			return
 		}
 
-		resultMap = r.readResource(ctx, mgcState, result.Source().Configs, diag)
+		target := readLink.Target()
+		if target == nil {
+			diag.AddError("Read link failed", fmt.Sprintf("Unable to resolve Read link for applying new state on resource '%s'", r.name))
+			return
+		}
+
+		additionalParametersSchema := readLink.AdditionalParametersSchema()
+		if len(additionalParametersSchema.Required) > 0 {
+			diag.AddError("Read link failed", fmt.Sprintf("Unable to resolve parameters on Read link for applying new state on resource '%s'", r.name))
+			return
+		}
+
+		preparedParams, preparedConfigs, err := readLink.PrepareLink(result, core.Parameters{})
+		if err != nil {
+			diag.AddError("Read link failed", fmt.Sprintf("Link preparation returned error: %s", err.Error()))
+			return
+		}
+
+		result := r.execute(ctx, target, preparedParams, preparedConfigs, diag)
 		if diag.HasError() {
+			return
+		}
+
+		if resultMap = castToMap(result, diag); diag.HasError() {
 			return
 		}
 	}
