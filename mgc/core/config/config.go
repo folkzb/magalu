@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"reflect"
 
 	"magalu.cloud/core"
-	"magalu.cloud/core/logger"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
@@ -49,8 +47,7 @@ func FromContext(ctx context.Context) *Config {
 func New() *Config {
 	dirname, err := core.BuildMGCPath()
 	if err != nil {
-		// TODO: when it's done, use logger instead
-		log.Println(err)
+		logger().Warnln(err)
 	}
 
 	c := &Config{}
@@ -75,7 +72,7 @@ func (c *Config) init(dirname string, fs afero.Fs) {
 }
 
 func (c *Config) BuiltInConfigs() (map[string]*core.Schema, error) {
-	loggerConfigSchema, err := logger.ConfigSchema()
+	loggerConfigSchema, err := loggerSchema()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger config schema: %w", err)
 	}
