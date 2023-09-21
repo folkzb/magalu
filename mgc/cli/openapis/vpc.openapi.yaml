@@ -296,6 +296,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PortCreateResponse'
+                    links:
+                        read:
+                            operationId: portDetails
+                            description: Read Port
+                            parameters:
+                                port_id: $response.body#/id
+                        delete:
+                            operationId: deletePort
+                            description: Delete Port
+                            parameters:
+                                port_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -328,6 +339,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PortResponse'
+                    links:
+                        delete:
+                            operationId: deletePort
+                            description: Delete Port
+                            parameters:
+                                port_id: $request.path.port_id
                 '422':
                     description: Validation Error
                     content:
@@ -561,6 +578,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PublicIpCreateResponse'
+                    links:
+                        read:
+                            operationId: publicIpDetails
+                            description: Read Public IP
+                            parameters:
+                                public_ip_id: $response.body#/id
+                        delete:
+                            operationId: deletePublicIp
+                            description: Delete Public IP
+                            parameters:
+                                public_ip_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -593,6 +621,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PublicIpDb'
+                    links:
+                        delete:
+                            operationId: deletePublicIp
+                            description: Delete Public IP
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
                 '422':
                     description: Validation Error
                     content:
@@ -790,6 +824,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/RuleCreateResponse'
+                    links:
+                        read:
+                            operationId: ruleDetails
+                            description: Read Rule
+                            parameters:
+                                rule_id: $response.body#/id
+                        delete:
+                            operationId: deleteRule
+                            description: Delete Rule
+                            parameters:
+                                rule_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -822,6 +867,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/RuleResponse'
+                    links:
+                        delete:
+                            operationId: deleteRule
+                            description: Delete Rule
+                            parameters:
+                                rule_id: $request.path.rule_id
                 '422':
                     description: Validation Error
                     content:
@@ -1058,6 +1109,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SecurityGroupCreateResponse'
+                    links:
+                        read:
+                            operationId: securityGroupDetails
+                            description: Read Security Group
+                            parameters:
+                                security_group_id: $response.body#/id
+                        delete:
+                            operationId: deleteSecurityGroup
+                            description: Delete Security Group
+                            parameters:
+                                security_group_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -1090,6 +1152,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SecurityGroupDetailResponse'
+                    links:
+                        delete:
+                            operationId: deleteSecurityGroup
+                            description: Delete Security Group
+                            parameters:
+                                security_group_id: $request.path.security_group_id
                 '422':
                     description: Validation Error
                     content:

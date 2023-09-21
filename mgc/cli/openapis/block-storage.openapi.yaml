@@ -161,6 +161,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VolumeCreateResponse'
+                    links:
+                        delete:
+                            operationId: delete_snapshot_v0_snapshots__snapshot_id__delete
+                            description: Delete snapshot
+                            parameters:
+                                snapshot_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -284,6 +290,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
+                '200':
+                    links:
+                        read:
+                            operationId: volume_details_v0_volumes__id__get
+                            description: Read Block Storage volume
+                            parameters:
+                                id: $response.body#/id
+                        update:
+                            operationId: update_volume_v0_volumes__id__patch
+                            description: Update Block Storage volume
+                            parameters:
+                                id: $response.body#/id
+                        delete:
+                            operationId: delete_volume_v0_volumes__id__delete
+                            description: Delete Block Storage volume
+                            parameters:
+                                id: $response.body#/id
             security:
             -   OAuth2:
                 - block-storage.write
@@ -311,6 +334,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VolumeResponse'
+                    links:
+                        update:
+                            operationId: update_volume_v0_volumes__id__patch
+                            description: Update Block Storage volume
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            operationId: delete_volume_v0_volumes__id__delete
+                            description: Delete Block Storage volume
+                            parameters:
+                                id: $request.path.id
                 '422':
                     description: Validation Error
                     content:
@@ -385,6 +419,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VolumeResponse'
+                    links:
+                        read:
+                            operationId: volume_details_v0_volumes__id__get
+                            description: Read Block Storage volume
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            operationId: delete_volume_v0_volumes__id__delete
+                            description: Delete Block Storage volume
+                            parameters:
+                                id: $request.path.id
                 '422':
                     description: Validation Error
                     content:

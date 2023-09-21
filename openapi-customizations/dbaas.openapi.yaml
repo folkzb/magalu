@@ -28,6 +28,110 @@ servers:
                 -   from: pre-prod
                     to: .pre-prod
 
+paths:
+    /v1/instances/{instance_id}/backups:
+        post:
+            responses:
+                '202':
+                    links:
+                        read:
+                            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
+                            description: Read a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: $response.body#/id
+                        delete:
+                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
+                            description: Delete a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: $response.body#/id
+    /v1/instances/{instance_id}/backups/{backup_id}:
+        get:
+            responses:
+                '200':
+                    links:
+                        delete:
+                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
+                            description: Delete a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: request.path.id
+    /v1/instances:
+        post:
+            responses:
+              '202':
+                  links:
+                      read:
+                          operationId: instances_v1_get_by_id
+                          description: Read Database instance
+                          parameters:
+                              instance_id: $response.body#/id
+                      update:
+                          operationId: instances_v1_patch
+                          description: Update Database instance
+                          parameters:
+                              instance_id: $response.body#/id
+                      delete:
+                          operationId: instances_v1_delete
+                          description: Delete Database instance
+                          parameters:
+                              instance_id: $response.body#/id
+    /v1/instances/{instance_id}:
+        get:
+            responses:
+              '200':
+                  links:
+                      update:
+                          operationId: instances_v1_patch
+                          description: Update Database instance
+                          parameters:
+                              instance_id: $request.path.instance_id
+                      delete:
+                          operationId: instances_v1_delete
+                          description: Delete Database instance
+                          parameters:
+                              instance_id: $request.path.instance_id
+        patch:
+            responses:
+              '200':
+                  links:
+                      read:
+                          operationId: instances_v1_get_by_id
+                          description: Read Database instance
+                          parameters:
+                              instance_id: $request.path.instance_id
+                      delete:
+                          operationId: instances_v1_delete
+                          description: Delete Database instance
+                          parameters:
+                              instance_id: $request.path.instance_id
+    /v1/replicas:
+        post:
+            responses:
+              '202':
+                  links:
+                      read:
+                          operationId: replica_detail_v1_replicas__replica_id__get
+                          description: Read Database replica
+                          parameters:
+                              replica_id: $response.body#/id
+                      delete:
+                          operationId: replica_delete_v1_replicas__replica_id__delete
+                          description: Delete Database replica
+                          parameters:
+                              replica_id: $response.body#/id
+    /v1/replicas/{replica_id}:
+        get:
+            responses:
+              '200':
+                  links:
+                      delete:
+                          operationId: replica_delete_v1_replicas__replica_id__delete
+                          description: Delete Database replica
+                          parameters:
+                              replica_id: $request.path.replica_id
+
 # ExclusiveMinimum must be replaced from number to boolean. JSON Schema new draft
 # proposes as a number, but this is only available in OpenAPI 3.1.0. Since kin-openapi
 # only supports up to 3.0.0, we need to patch to be a boolean

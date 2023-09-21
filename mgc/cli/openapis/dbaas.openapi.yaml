@@ -107,6 +107,19 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/BackupResponse'
+                    links:
+                        read:
+                            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
+                            description: Read a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: $response.body#/id
+                        delete:
+                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
+                            description: Delete a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -142,6 +155,13 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/BackupDetailResponse'
+                    links:
+                        delete:
+                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
+                            description: Delete a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: request.path.id
                 '422':
                     description: Validation Error
                     content:
@@ -385,6 +405,22 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/InstanceResponse'
+                    links:
+                        read:
+                            operationId: instances_v1_get_by_id
+                            description: Read Database instance
+                            parameters:
+                                instance_id: $response.body#/id
+                        update:
+                            operationId: instances_v1_patch
+                            description: Update Database instance
+                            parameters:
+                                instance_id: $response.body#/id
+                        delete:
+                            operationId: instances_v1_delete
+                            description: Delete Database instance
+                            parameters:
+                                instance_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -421,6 +457,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/InstanceDetailResponse'
+                    links:
+                        update:
+                            operationId: instances_v1_patch
+                            description: Update Database instance
+                            parameters:
+                                instance_id: $request.path.instance_id
+                        delete:
+                            operationId: instances_v1_delete
+                            description: Delete Database instance
+                            parameters:
+                                instance_id: $request.path.instance_id
                 '422':
                     description: Validation Error
                     content:
@@ -477,6 +524,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/InstanceDetailResponse'
+                    links:
+                        read:
+                            operationId: instances_v1_get_by_id
+                            description: Read Database instance
+                            parameters:
+                                instance_id: $request.path.instance_id
+                        delete:
+                            operationId: instances_v1_delete
+                            description: Delete Database instance
+                            parameters:
+                                instance_id: $request.path.instance_id
                 '422':
                     description: Validation Error
                     content:
@@ -637,6 +695,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ReplicaResponse'
+                    links:
+                        read:
+                            operationId: replica_detail_v1_replicas__replica_id__get
+                            description: Read Database replica
+                            parameters:
+                                replica_id: $response.body#/id
+                        delete:
+                            operationId: replica_delete_v1_replicas__replica_id__delete
+                            description: Delete Database replica
+                            parameters:
+                                replica_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -665,6 +734,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ReplicaDetailResponse'
+                    links:
+                        delete:
+                            operationId: replica_delete_v1_replicas__replica_id__delete
+                            description: Delete Database replica
+                            parameters:
+                                replica_id: $request.path.replica_id
                 '422':
                     description: Validation Error
                     content:

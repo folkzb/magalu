@@ -36,6 +36,105 @@ paths:
             parameters:
             - name: vpc_id
               x-cli-name: vpc
+        post:
+            responses:
+                '200':
+                    links:
+                        read:
+                            operationId: portDetails
+                            description: Read Port
+                            parameters:
+                                port_id: $response.body#/id
+                        delete:
+                            operationId: deletePort
+                            description: Delete Port
+                            parameters:
+                                port_id: $response.body#/id
+    /v0/ports/{port_id}:
+        get:
+            responses:
+                '200':
+                    links:
+                        delete:
+                            operationId: deletePort
+                            description: Delete Port
+                            parameters:
+                                port_id: $request.path.port_id
+    /v0/vpcs/{vpc_id}/public_ips:
+        post:
+            responses:
+                '200':
+                    links:
+                        read:
+                            operationId: publicIpDetails
+                            description: Read Public IP
+                            parameters:
+                                public_ip_id: $response.body#/id
+                        delete:
+                            operationId: deletePublicIp
+                            description: Delete Public IP
+                            parameters:
+                                public_ip_id: $response.body#/id
+    /v0/public_ips/{public_ip_id}:
+        get:
+            responses:
+                '200':
+                    links:
+                        delete:
+                            operationId: deletePublicIp
+                            description: Delete Public IP
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+    /v0/vpcs/{vpc_id}/security_groups:
+        post:
+            responses:
+                '200':
+                    links:
+                        read:
+                            operationId: securityGroupDetails
+                            description: Read Security Group
+                            parameters:
+                                security_group_id: $response.body#/id
+                        delete:
+                            operationId: deleteSecurityGroup
+                            description: Delete Security Group
+                            parameters:
+                                security_group_id: $response.body#/id
+    /v0/security_groups/{security_group_id}:
+        get:
+            responses:
+                '200':
+                    links:
+                        delete:
+                            operationId: deleteSecurityGroup
+                            description: Delete Security Group
+                            parameters:
+                                security_group_id: $request.path.security_group_id
+    /v0/security_groups/{security_group_id}/rules:
+        post:
+            responses:
+                '200':
+                    links:
+                        read:
+                            operationId: ruleDetails
+                            description: Read Rule
+                            parameters:
+                                rule_id: $response.body#/id
+                        delete:
+                            operationId: deleteRule
+                            description: Delete Rule
+                            parameters:
+                                rule_id: $response.body#/id
+    /v0/rules/{rule_id}:
+        get:
+            responses:
+                '200':
+                    links:
+                        delete:
+                            operationId: deleteRule
+                            description: Delete Rule
+                            parameters:
+                                rule_id: $request.path.rule_id
 
 tags:
 -   name: vpc
