@@ -98,6 +98,7 @@ func (l *openapiLinker) addParameters(
 	return nil
 }
 
+// TODO: This function only deals with one-level deep JSON Pointers, we should handle arbitrary depths later on
 func (l *openapiLinker) addReqBodyParameters(
 	operation *Operation,
 	specResolver *linkSpecResolver,
@@ -108,6 +109,7 @@ func (l *openapiLinker) addReqBodyParameters(
 	// Until a version of OAPI fixes this, the extension specified by @anentropic will be used.
 	// Ref: https://apigraph.readthedocs.io/en/latest/reference/openapi-extensions.html#x-apigraph-requestbodyparameters
 	if reqBodyParamsSpec, ok := getExtensionObject(operation.extensionPrefix, "requestBodyParameters", l.link.Extensions, nil); ok {
+		reqBodyParams := map[string]core.Value{}
 		for jpStr, rtExpStr := range reqBodyParamsSpec {
 			resolved, found, err := specResolver.resolve(rtExpStr)
 			if err != nil {
@@ -123,11 +125,21 @@ func (l *openapiLinker) addReqBodyParameters(
 				return fmt.Errorf("malformed json pointer: '%s'", jpStr)
 			}
 
-			_, err = jp.Set(preparedParams, resolved)
+			// Set to 'reqBodyParams' instead of 'preparedParams' because name in JSON Pointer is internal,
+			// without 'x-' extension transformations
+			_, err = jp.Set(reqBodyParams, resolved)
 			if err != nil {
 				return fmt.Errorf("failed to set jsonpointer '%s' on object %#v using value %#v", jpStr, preparedParams, resolved)
 			}
 		}
+
+		// Translate names to set to 'preparedParams'
+		_, _ = operation.forEachParameterName(func(externalName, internalName, location string) (run bool, err error) {
+			if value, ok := reqBodyParams[internalName]; ok {
+				preparedParams[externalName] = value
+			}
+			return true, nil
+		})
 	}
 
 	return nil
