@@ -463,7 +463,7 @@ func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
 
 func Execute() (err error) {
 	rootCmd := &cobra.Command{
-		Use:     "cloud",
+		Use:     "mgc",
 		Version: "TODO",
 		Short:   "CLI tool for OpenAPI integration",
 		Long: `This CLI is a dynamic processor of OpenAPI files that
