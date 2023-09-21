@@ -479,7 +479,11 @@ func formatTableWithOptions(val any, options *tableOptions) error {
 	configs := []table.ColumnConfig{}
 	handleVal := func(rowIdx int, colIdx int, value any) error {
 		if rowIdx >= len(rows) {
-			rows = append(rows, make(table.Row, columnCount))
+			newRow := make(table.Row, columnCount)
+			for i := 0; i < columnCount; i++ {
+				newRow[i] = ""
+			}
+			rows = append(rows, newRow)
 		}
 
 		var sanitized any

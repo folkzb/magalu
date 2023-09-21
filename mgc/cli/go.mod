@@ -23,8 +23,8 @@ require (
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getkin/kin-openapi v0.118.0 // indirect
-	github.com/go-openapi/jsonpointer v0.19.6 // indirect
-	github.com/go-openapi/swag v0.22.3 // indirect
+	github.com/go-openapi/jsonpointer v0.20.0 // indirect
+	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
