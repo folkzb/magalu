@@ -72,6 +72,88 @@ func fillMissingConfigs(preparedConfigs core.Configs, schema *core.Schema, sourc
 	}
 }
 
+func (l *openapiLinker) addParameters(
+	operation *Operation,
+	specResolver *linkSpecResolver,
+	preparedParams core.Parameters,
+	preparedConfigs core.Configs,
+) error {
+	for paramOAPIName, paramSpec := range l.link.Parameters {
+		if paramSpec == nil {
+			continue
+		}
+
+		resolved, found, err := specResolver.resolve(paramSpec)
+		if err != nil {
+			return err
+		}
+
+		if !found {
+			continue
+		}
+
+		insertParameter(operation, paramOAPIName, resolved, preparedParams, preparedConfigs)
+	}
+
+	return nil
+}
+
+func (l *openapiLinker) addReqBodyParameters(
+	operation *Operation,
+	specResolver *linkSpecResolver,
+	preparedParams core.Parameters,
+) error {
+	// The official OAPI specification for link request body is, for some reason, different from
+	// the parameters and, thus, unusable. The issue can be tracked here: https://github.com/OAI/OpenAPI-Specification/issues/1594
+	// Until a version of OAPI fixes this, the extension specified by @anentropic will be used.
+	// Ref: https://apigraph.readthedocs.io/en/latest/reference/openapi-extensions.html#x-apigraph-requestbodyparameters
+	if reqBodyParamsSpec, ok := getExtensionObject(operation.extensionPrefix, "requestBodyParameters", l.link.Extensions, nil); ok {
+		for jpStr, rtExpStr := range reqBodyParamsSpec {
+			resolved, found, err := specResolver.resolve(rtExpStr)
+			if err != nil {
+				return err
+			}
+
+			if !found {
+				continue
+			}
+
+			jp, err := jsonpointer.New(jpStr)
+			if err != nil {
+				return fmt.Errorf("malformed json pointer: '%s'", jpStr)
+			}
+
+			_, err = jp.Set(preparedParams, resolved)
+			if err != nil {
+				return fmt.Errorf("failed to set jsonpointer '%s' on object %#v using value %#v", jpStr, preparedParams, resolved)
+			}
+		}
+	}
+
+	return nil
+}
+
+func opParameterValueResolver(op *Operation, paramData core.Parameters) func(location, name string) (core.Value, bool) {
+	return func(location, name string) (core.Value, bool) {
+		var result core.Value
+		notFound, err := op.forEachParameterWithValue(
+			paramData,
+			[]string{location},
+			func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
+				if name == parameter.Name {
+					result = value
+					return false, nil
+				}
+				return true, nil
+			},
+		)
+		if err != nil || notFound {
+			return nil, false
+		}
+		return result, true
+	}
+}
+
 // START: Linker
 
 func (l *openapiLinker) Name() string {
@@ -142,25 +224,6 @@ func (l *openapiLinker) PrepareLink(
 		return nil, nil, fmt.Errorf("additional parameters passed to PrepareLink are invalid: %w", err)
 	}
 
-	findParameterValue := func(location, name string) (core.Value, bool) {
-		var result core.Value
-		notFound, err := op.forEachParameterWithValue(
-			originalResult.Source().Parameters,
-			[]string{location},
-			func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
-				if name == parameter.Name {
-					result = value
-					return false, nil
-				}
-				return true, nil
-			},
-		)
-		if err != nil || notFound {
-			return nil, false
-		}
-		return result, true
-	}
-
 	preparedParams := core.Parameters{}
 	preparedConfigs := core.Configs{}
 
@@ -169,50 +232,15 @@ func (l *openapiLinker) PrepareLink(
 		return nil, nil, fmt.Errorf("result passed to PrepareLink has unexpected type. Expected HttpResult for link '%s'", l.Name())
 	}
 
-	resolver := linkSpecResolver{httpResult, findParameterValue}
+	parameterValueResolver := opParameterValueResolver(op, originalResult.Source().Parameters)
+	specResolver := linkSpecResolver{httpResult, parameterValueResolver}
 
-	for paramOAPIName, paramSpec := range l.link.Parameters {
-		if paramSpec == nil {
-			continue
-		}
-
-		resolved, found, err := resolver.resolve(paramSpec)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if !found {
-			continue
-		}
-
-		insertParameter(op, paramOAPIName, resolved, preparedParams, preparedConfigs)
+	if err := l.addParameters(op, &specResolver, preparedParams, preparedConfigs); err != nil {
+		return nil, nil, err
 	}
 
-	// The official OAPI specification for link request body is, for some reason, different from
-	// the parameters and, thus, unusable. The issue can be tracked here: https://github.com/OAI/OpenAPI-Specification/issues/1594
-	// Until a version of OAPI fixes this, the extension specified by @anentropic will be used.
-	// Ref: https://apigraph.readthedocs.io/en/latest/reference/openapi-extensions.html#x-apigraph-requestbodyparameters
-	if reqBodyParams, ok := getExtensionObject(op.extensionPrefix, "requestBodyParameters", l.link.Extensions, nil); ok {
-		for jpStr, rtExpStr := range reqBodyParams {
-			resolved, found, err := resolver.resolve(rtExpStr)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			if !found {
-				continue
-			}
-
-			jp, err := jsonpointer.New(jpStr)
-			if err != nil {
-				return nil, nil, fmt.Errorf("malformed json pointer: '%s'", jpStr)
-			}
-
-			_, err = jp.Set(preparedParams, resolved)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to set jsonpointer '%s' on object %#v using value %#v", jpStr, preparedParams, resolved)
-			}
-		}
+	if err := l.addReqBodyParameters(op, &specResolver, preparedParams); err != nil {
+		return nil, nil, err
 	}
 
 	fillMissingConfigs(preparedConfigs, target.ConfigsSchema(), originalResult.Source().Configs)
