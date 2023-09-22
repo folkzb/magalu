@@ -339,10 +339,6 @@ virtual-machine.openapi:
     - usage:
         - post
         - delete
-  missing-operation-id:
-    - DELETE /v0/instances
-  tagless-operations:
-    - DELETE /v0/instances
 vpc.openapi:
   computed-variables:
     - POST /v0/xaas/vpcs/{vpc_id}/ports:
