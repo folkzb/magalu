@@ -4,30 +4,6 @@
 # to keep it sane, keep some list item identifier (ex: "name") and add extra properties,
 # such as "x-cli-name" or "x-cli-description"
 
-servers:
--   url: https://api-virtual-machine{env}.{region}.jaxyendy.com
-    variables:
-        region:
-            description: Region to reach the service
-            default: br-ne-1
-            enum:
-            - br-ne-1
-            - br-ne-2
-            - br-se-1
-        env:
-            description: Environment to use
-            default: prod
-            enum:
-            - prod
-            - pre-prod
-            x-cli-transforms:
-            -   type: translate
-                translations:
-                -   from: prod
-                    to: ''
-                -   from: pre-prod
-                    to: .pre-prod
-
 paths:
     /v0/instances:
         get:
@@ -90,46 +66,46 @@ paths:
                             operationId: instance_delete_v0_instances__id__delete
                             parameters:
                                 id: $request.path.id
-/v0/images:
-    post:
-        responses:
-            '201':
-                links:
-                    delete:
-                        operationId: delete_image_v0_images__image_id__delete
-                        description: Delete image in DB
-                        parameters:
-                            image_id: $response.body#/id
-/v0/instance_types:
-    post:
-        responses:
-            '201':
-                links:
-                    delete:
-                        operationId: delete_instance_type_v0_instance_types__instance_type_id__delete
-                        description: Delete Instance Type
-                        parameters:
-                            instance_type_id: $response.body#/id
-/v0/keypairs:
-    post:
-        responses:
-            '201':
-                links:
-                    delete:
-                        operationId: delete_keypair_v0_keypairs__keypair_name__delete
-                        description: Delete keypair
-                        parameters:
-                            keypair_name: $response.body#/name
-/v0/keypairs/{keypair_name}:
-    post:
-        responses:
-            '201':
-                links:
-                    delete:
-                        operationId: delete_keypair_v0_keypairs__keypair_name__delete
-                        description: Delete keypair
-                        parameters:
-                            keypair_name: $response.body#/name
+    /v0/images:
+        post:
+            responses:
+                '201':
+                    links:
+                        delete:
+                            operationId: delete_image_v0_images__image_id__delete
+                            description: Delete image in DB
+                            parameters:
+                                image_id: $response.body#/id
+    /v0/instance_types:
+        post:
+            responses:
+                '201':
+                    links:
+                        delete:
+                            operationId: delete_instance_type_v0_instance_types__instance_type_id__delete
+                            description: Delete Instance Type
+                            parameters:
+                                instance_type_id: $response.body#/id
+    /v0/keypairs:
+        post:
+            responses:
+                '201':
+                    links:
+                        delete:
+                            operationId: delete_keypair_v0_keypairs__keypair_name__delete
+                            description: Delete keypair
+                            parameters:
+                                keypair_name: $response.body#/name
+    /v0/keypairs/{keypair_name}:
+        post:
+            responses:
+                '201':
+                    links:
+                        delete:
+                            operationId: delete_keypair_v0_keypairs__keypair_name__delete
+                            description: Delete keypair
+                            parameters:
+                                keypair_name: $response.body#/name
 
 components:
     schemas:
@@ -153,3 +129,27 @@ tags:
     description: images
 -   name: usage
     description: usage
+
+servers:
+-   url: https://api-virtual-machine{env}.{region}.jaxyendy.com
+    variables:
+        region:
+            description: Region to reach the service
+            default: br-ne-1
+            enum:
+            - br-ne-1
+            - br-ne-2
+            - br-se-1
+        env:
+            description: Environment to use
+            default: prod
+            enum:
+            - prod
+            - pre-prod
+            x-cli-transforms:
+            -   type: translate
+                translations:
+                -   from: prod
+                    to: ''
+                -   from: pre-prod
+                    to: .pre-prod

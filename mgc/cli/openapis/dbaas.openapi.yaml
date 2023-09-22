@@ -474,6 +474,10 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
+            x-cli-wait-termination:
+                maxRetries: 30
+                intervalInSeconds: 10s
+                jsonPathQuery: $.status == "active" || $.status == "error"
         delete:
             tags:
             - instances
