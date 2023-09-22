@@ -19,9 +19,11 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
+	"magalu.cloud/core/config"
 	coreHttp "magalu.cloud/core/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
 
@@ -646,6 +648,7 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 
 		o.addParameters(rootSchema, configLocations)
 		o.addServerVariables(rootSchema)
+		o.addNetworkConfig(rootSchema)
 
 		o.configsSchema = rootSchema
 		o.transformConfigs = createTransform[map[string]any](rootSchema, o.extensionPrefix)
@@ -776,7 +779,17 @@ func (o *Operation) addServerVariables(schema *core.Schema) {
 	}
 }
 
+func (o *Operation) addNetworkConfig(schema *core.Schema) {
+	s := config.NetworkConfigSchema()
+	maps.Copy(schema.Properties, s.Properties)
+}
+
 func (o *Operation) getServerURL(configs core.Configs) (string, error) {
+	nc, _ := core.DecodeNewValue[config.NetworkConfig](configs)
+
+	if nc.ServerUrl != "" {
+		return nc.ServerUrl, nil
+	}
 	if len(o.servers) == 0 {
 		return "", fmt.Errorf("no available servers in spec")
 	}
