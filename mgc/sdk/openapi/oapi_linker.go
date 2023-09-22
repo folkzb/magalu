@@ -17,6 +17,7 @@ type openapiLinker struct {
 	owner                *Operation
 	link                 *openapi3.Link
 	additionalParameters *core.Schema
+	additionalConfigs    *core.Schema
 }
 
 func insertParameterCb(
@@ -219,9 +220,37 @@ func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 	return l.additionalParameters
 }
 
+func (l *openapiLinker) AdditionalConfigsSchema() *core.Schema {
+	if l.additionalConfigs == nil {
+		target := l.Target()
+		if target == nil {
+			return nil
+		}
+
+		targetConfigs := target.ConfigsSchema()
+		props := map[string]*core.Schema{}
+		required := []string{}
+
+		for targetConfigName, targetConfigRef := range targetConfigs.Properties {
+			if _, ok := l.owner.ConfigsSchema().Properties[targetConfigName]; ok {
+				continue
+			}
+
+			props[targetConfigName] = (*core.Schema)(targetConfigRef.Value)
+			if slices.Contains(targetConfigs.Required, targetConfigName) {
+				required = append(required, targetConfigName)
+			}
+		}
+
+		l.additionalConfigs = core.NewObjectSchema(props, required)
+	}
+	return l.additionalConfigs
+}
+
 func (l *openapiLinker) PrepareLink(
 	originalResult core.Result,
 	additionalParameters core.Parameters,
+	additionalConfigs core.Configs,
 ) (core.Parameters, core.Configs, error) {
 	target := l.Target()
 	if target == nil {
@@ -235,6 +264,11 @@ func (l *openapiLinker) PrepareLink(
 	err := l.AdditionalParametersSchema().VisitJSON(additionalParameters, openapi3.MultiErrors())
 	if err != nil {
 		return nil, nil, fmt.Errorf("additional parameters passed to PrepareLink are invalid: %w", err)
+	}
+
+	err = l.AdditionalConfigsSchema().VisitJSON(additionalConfigs, openapi3.MultiErrors())
+	if err != nil {
+		return nil, nil, fmt.Errorf("additional configs passed to PrepareLink are invalid: %w", err)
 	}
 
 	preparedParams := core.Parameters{}
@@ -259,6 +293,7 @@ func (l *openapiLinker) PrepareLink(
 	fillMissingConfigs(preparedConfigs, target.ConfigsSchema(), originalResult.Source().Configs)
 
 	maps.Copy(preparedParams, additionalParameters)
+	maps.Copy(preparedConfigs, additionalConfigs)
 
 	return preparedParams, preparedConfigs, nil
 }

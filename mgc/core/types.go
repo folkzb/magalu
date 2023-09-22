@@ -72,7 +72,8 @@ type Linker interface {
 	Name() string
 	Description() string
 	AdditionalParametersSchema() *Schema
-	PrepareLink(originalResult Result, additionalParameters Parameters) (preparedParams Parameters, preparedConfigs Configs, err error)
+	AdditionalConfigsSchema() *Schema
+	PrepareLink(originalResult Result, additionalParameters Parameters, additionalConfigs Configs) (preparedParams Parameters, preparedConfigs Configs, err error)
 	Target() Executor
 }
 

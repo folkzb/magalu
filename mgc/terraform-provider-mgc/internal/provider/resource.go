@@ -209,7 +209,7 @@ func (r *MgcResource) applyStateAfter(
 			return
 		}
 
-		preparedParams, preparedConfigs, err := readLink.PrepareLink(result, core.Parameters{})
+		preparedParams, preparedConfigs, err := readLink.PrepareLink(result, core.Parameters{}, core.Configs{})
 		if err != nil {
 			diag.AddError("Read link failed", fmt.Sprintf("Link preparation returned error: %s", err.Error()))
 			return
