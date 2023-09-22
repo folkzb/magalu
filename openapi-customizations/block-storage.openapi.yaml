@@ -88,6 +88,24 @@ paths:
     /v0/volumes/{id}/attach/{virtual_machine_id}:
         post:
             x-cli-name: attach
+            responses:
+                '200':
+                    links:
+                        delete:
+                            description: Detach from a Virtual Machine instance
+                            operationId: detach_volume_v0_volumes__id__detach__virtual_machine_id__post
+                            parameters:
+                                id: $path.id
+                        read:
+                            description: Check if block storage is attached to Virtual Machine instance
+                            operationId: volume_details_v0_volumes__id__get
+                            parameters:
+                                id: $path.id
+                            x-cli-wait-termination:
+                                maxRetries: 3
+                                intervalInSeconds: 20s
+                                jsonPathQuery: $.attachments[*].virtual_machine_id
+
     /v0/volumes/{id}/detach/{virtual_machine_id}:
         post:
             x-cli-name: detach
