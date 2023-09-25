@@ -2,18 +2,30 @@ package provider
 
 import (
 	"context"
+	"math/big"
+	"reflect"
 	"testing"
 
 	"github.com/go-test/deep"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	mgc "magalu.cloud/core"
+	"magalu.cloud/sdk"
 )
 
 type testCase struct {
@@ -438,4 +450,271 @@ func TestGenerateTFAttributes(t *testing.T) {
 			t.Errorf("MgcResource.generateTFAttributes failed. Diff list: %v", diff)
 		}
 	}
+}
+
+func TestMgcToTfSchemaDefaultValues(t *testing.T) {
+	t.Run("non computed attriubte", func(t *testing.T) {
+		s := mgc.NewStringSchema()
+		s.Default = "default"
+		m := attributeModifiers{}
+		ctx := context.Background()
+
+		var expected defaults.String = nil
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+
+		found := sAtt.(schema.StringAttribute).Default
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("no default", func(t *testing.T) {
+		s := mgc.NewStringSchema()
+		m := attributeModifiers{}
+		ctx := context.Background()
+
+		var expected defaults.String = nil
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+
+		found := sAtt.(schema.StringAttribute).Default
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("string", func(t *testing.T) {
+		def := "foo"
+
+		s := mgc.NewStringSchema()
+		s.Default = def
+		m := attributeModifiers{isComputed: true}
+		ctx := context.Background()
+
+		expected := stringdefault.StaticString(def)
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+
+		found := sAtt.(schema.StringAttribute).Default
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("number", func(t *testing.T) {
+		def := float64(3.14)
+
+		s := mgc.NewNumberSchema()
+		s.Default = def
+		m := attributeModifiers{isComputed: true}
+		ctx := context.Background()
+
+		expected := numberdefault.StaticBigFloat(big.NewFloat(def))
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+
+		found := sAtt.(schema.NumberAttribute).Default
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("integer", func(t *testing.T) {
+		def := int64(0)
+
+		s := mgc.NewIntegerSchema()
+		s.Default = def
+		m := attributeModifiers{isComputed: true}
+		ctx := context.Background()
+
+		expected := int64default.StaticInt64(def)
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+
+		found := sAtt.(schema.Int64Attribute).Default
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("boolean", func(t *testing.T) {
+		def := false
+
+		s := mgc.NewBooleanSchema()
+		s.Default = def
+		m := attributeModifiers{isComputed: true}
+		ctx := context.Background()
+
+		expected := booldefault.StaticBool(def)
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+
+		found := sAtt.(schema.BoolAttribute).Default
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("object", func(t *testing.T) {
+		nameSchema := mgc.NewStringSchema()
+		nameSchema.Default = "pedro"
+
+		p := map[string]*mgc.Schema{
+			"name": nameSchema,
+			"age":  mgc.NewIntegerSchema(),
+		}
+
+		s := mgc.NewObjectSchema(p, []string{})
+		s.Default = map[string]any{
+			"name": "pedro",
+			"age":  int64(10),
+		}
+
+		m := attributeModifiers{
+			isComputed: true,
+			getChildModifiers: func(mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
+				return attributeModifiers{isComputed: true}
+			},
+		}
+
+		ctx := context.Background()
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+		found := sAtt.(schema.SingleNestedAttribute).Default
+
+		obj, _ := types.ObjectValue(
+			map[string]attr.Type{
+				"name": types.StringType,
+				"age":  types.Int64Type,
+			},
+			map[string]attr.Value{
+				"name": types.StringValue("pedro"),
+				"age":  types.Int64Value(10),
+			},
+		)
+		expected := objectdefault.StaticValue(obj)
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("list", func(t *testing.T) {
+		s := mgc.NewArraySchema(mgc.NewStringSchema())
+		s.Default = []any{"hello", "world"}
+
+		ctx := context.Background()
+
+		m := attributeModifiers{
+			isComputed: true,
+			getChildModifiers: func(mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
+				return attributeModifiers{}
+			},
+		}
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+		found := sAtt.(schema.ListAttribute).Default
+
+		lst, _ := types.ListValue(
+			types.StringType,
+			[]attr.Value{types.StringValue("hello"), types.StringValue("world")},
+		)
+
+		expected := listdefault.StaticValue(lst)
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("list empty", func(t *testing.T) {
+		s := mgc.NewArraySchema(mgc.NewStringSchema())
+		s.Default = []any{}
+
+		ctx := context.Background()
+
+		m := attributeModifiers{
+			isComputed: true,
+			getChildModifiers: func(mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
+				return attributeModifiers{isComputed: true}
+			},
+		}
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+		found := sAtt.(schema.ListAttribute).Default
+
+		lst, _ := types.ListValue(
+			types.StringType,
+			[]attr.Value{},
+		)
+
+		expected := listdefault.StaticValue(lst)
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
+
+	t.Run("list nested", func(t *testing.T) {
+		s := mgc.NewArraySchema(
+			mgc.NewObjectSchema(
+				map[string]*mgc.Schema{
+					"key": mgc.NewStringSchema(),
+				},
+				[]string{},
+			),
+		)
+
+		s.Default = []any{
+			map[string]any{
+				"key": "hello",
+			},
+			map[string]any{
+				"key": "world",
+			},
+		}
+
+		m := attributeModifiers{
+			isComputed: true,
+			getChildModifiers: func(mgcSchema *sdk.Schema, n mgcName) attributeModifiers {
+				return attributeModifiers{
+					isComputed: true,
+					getChildModifiers: func(mgcSchema *sdk.Schema, m mgcName) attributeModifiers {
+						return attributeModifiers{isComputed: true}
+					},
+				}
+			},
+		}
+
+		ctx := context.Background()
+
+		sAtt, _, _ := mgcToTFSchema(s, m, "test", ctx)
+		found := sAtt.(schema.ListNestedAttribute).Default
+
+		hello, _ := types.ObjectValue(
+			map[string]attr.Type{"key": types.StringType},
+			map[string]attr.Value{"key": types.StringValue("hello")},
+		)
+		world, _ := types.ObjectValue(
+			map[string]attr.Type{"key": types.StringType},
+			map[string]attr.Value{"key": types.StringValue("world")},
+		)
+		lst, _ := types.ListValue(
+			types.ObjectType{AttrTypes: map[string]attr.Type{"key": types.StringType}},
+			[]attr.Value{hello, world},
+		)
+
+		expected := listdefault.StaticValue(lst)
+
+		if !reflect.DeepEqual(found, expected) {
+			t.Errorf("expected default == %+v, found: %+v", expected, found)
+		}
+	})
 }

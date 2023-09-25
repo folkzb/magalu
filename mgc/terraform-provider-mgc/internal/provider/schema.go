@@ -3,16 +3,26 @@ package provider
 import (
 	"context"
 	"fmt"
+	"math/big"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/stoewer/go-strcase"
 	"golang.org/x/exp/slices"
@@ -362,12 +372,19 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		if m.requiresReplaceWhenChanged {
 			mod = append(mod, stringplanmodifier.RequiresReplace())
 		}
+
+		var d defaults.String
+		if v, ok := mgcSchema.Default.(string); ok && m.isComputed {
+			d = stringdefault.StaticString(v)
+		}
+
 		return schema.StringAttribute{
 			Description:   description,
 			Required:      m.isRequired,
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
+			Default:       d,
 		}, nil, nil
 	case "number":
 		mod := []planmodifier.Number{}
@@ -377,12 +394,19 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		if m.requiresReplaceWhenChanged {
 			mod = append(mod, numberplanmodifier.RequiresReplace())
 		}
+
+		var d defaults.Number
+		if v, ok := mgcSchema.Default.(float64); ok && m.isComputed {
+			d = numberdefault.StaticBigFloat(big.NewFloat(v))
+		}
+
 		return schema.NumberAttribute{
 			Description:   description,
 			Required:      m.isRequired,
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
+			Default:       d,
 		}, nil, nil
 	case "integer":
 		mod := []planmodifier.Int64{}
@@ -392,12 +416,19 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		if m.requiresReplaceWhenChanged {
 			mod = append(mod, int64planmodifier.RequiresReplace())
 		}
+
+		var d defaults.Int64
+		if v, ok := mgcSchema.Default.(int64); ok && m.isComputed {
+			d = int64default.StaticInt64(v)
+		}
+
 		return schema.Int64Attribute{
 			Description:   description,
 			Required:      m.isRequired,
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
+			Default:       d,
 		}, nil, nil
 	case "boolean":
 		mod := []planmodifier.Bool{}
@@ -407,12 +438,19 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		if m.requiresReplaceWhenChanged {
 			mod = append(mod, boolplanmodifier.RequiresReplace())
 		}
+
+		var d defaults.Bool
+		if v, ok := mgcSchema.Default.(bool); ok && m.isComputed {
+			d = booldefault.StaticBool(v)
+		}
+
 		return schema.BoolAttribute{
 			Description:   description,
 			Required:      m.isRequired,
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
+			Default:       d,
 		}, nil, nil
 	case "array":
 		mgcItemSchema := (*core.Schema)(mgcSchema.Items.Value)
@@ -437,6 +475,18 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 			mod = append(mod, listplanmodifier.UseStateForUnknown())
 		}
 
+		var d defaults.List
+		if v, ok := mgcSchema.Default.([]any); ok && m.isComputed {
+			lst, err := tfAttrListValueFromMgcSchema(ctx, mgcSchema, *childAttrs["0"], v)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if l, ok := lst.(types.List); ok {
+				d = listdefault.StaticValue(l)
+			}
+		}
+
 		// TODO: How will we handle List of Lists? Does it need to be handled at all? Does the
 		// 'else' branch already cover that correctly?
 		if objAttr, ok := elemAttr.(schema.SingleNestedAttribute); ok {
@@ -452,6 +502,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 				Optional:      m.isOptional,
 				Computed:      m.isComputed,
 				PlanModifiers: mod,
+				Default:       d,
 			}, childAttrs, nil
 		} else {
 			return schema.ListAttribute{
@@ -461,6 +512,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 				Optional:      m.isOptional,
 				Computed:      m.isComputed,
 				PlanModifiers: mod,
+				Default:       d,
 			}, childAttrs, nil
 		}
 	case "object":
@@ -481,6 +533,19 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		if m.useStateForUnknown {
 			mod = append(mod, objectplanmodifier.UseStateForUnknown())
 		}
+
+		var d defaults.Object
+		if v, ok := mgcSchema.Default.(map[string]any); ok && m.isComputed {
+			obj, err := tfAttrObjectValueFromMgcSchema(ctx, mgcSchema, mgcAttributes, v)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if o, ok := obj.(types.Object); ok {
+				d = objectdefault.StaticValue(o)
+			}
+		}
+
 		return schema.SingleNestedAttribute{
 			Attributes:    tfAttributes,
 			Description:   description,
@@ -488,9 +553,117 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 			Optional:      m.isOptional,
 			Computed:      m.isComputed,
 			PlanModifiers: mod,
+			Default:       d,
 		}, mgcAttributes, nil
 	default:
 		return nil, nil, fmt.Errorf("type %q not supported", t)
+	}
+}
+
+func tfAttrListValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, listAttr attribute, v []any) (attr.Value, error) {
+	attrSchema := (*core.Schema)(s.Items.Value)
+	attrType := listAttr.tfSchema.GetType()
+	attrValues := []attr.Value{}
+	for i := range v {
+		v, ok, err := attrValueFromMgcSchema(ctx, attrSchema, listAttr, v[i])
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			continue
+		}
+
+		attrValues = append(attrValues, v)
+	}
+
+	lst, diag := types.ListValue(attrType, attrValues)
+	if diag.HasError() {
+		return nil, fmt.Errorf("unable to create default list value")
+	}
+	return lst, nil
+}
+
+func tfAttrObjectValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, mapAttr map[mgcName]*attribute, v map[string]any) (attr.Value, error) {
+	attrTypes := map[string]attr.Type{}
+	attrValues := map[string]attr.Value{}
+	for k := range v {
+		attrSchema := (*core.Schema)(s.Properties[k].Value)
+
+		val, ok, err := attrValueFromMgcSchema(ctx, attrSchema, *mapAttr[mgcName(k)], v[k])
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			continue
+		}
+
+		attrValues[k] = val
+		attrTypes[k] = val.Type(ctx)
+	}
+	obj, diag := types.ObjectValue(attrTypes, attrValues)
+	if diag.HasError() {
+		return nil, fmt.Errorf("unable to create default object value")
+	}
+	return obj, nil
+}
+
+func attrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType attribute, v any) (attr.Value, bool, error) {
+	if v == nil {
+		return nil, false, nil
+	}
+
+	t, err := getJsonType(s)
+	if err != nil {
+		return nil, false, err
+	}
+
+	switch t {
+	case "string":
+		if dStr, ok := v.(string); ok {
+			return types.StringValue(dStr), true, nil
+		}
+		return nil, false, fmt.Errorf("unable to create attr.Value of type string")
+	case "number":
+		if dFloat, ok := v.(float64); ok {
+			return types.NumberValue(big.NewFloat(dFloat)), true, nil
+		}
+		return nil, false, fmt.Errorf("unable to create attr.Value of type number")
+	case "integer":
+		if dInt, ok := v.(int64); ok {
+			return types.Int64Value(dInt), true, nil
+		}
+		return nil, false, fmt.Errorf("unable to create attr.Value of type integer")
+	case "boolean":
+		if b, ok := v.(bool); ok {
+			return types.BoolValue(b), true, nil
+		}
+		return nil, false, fmt.Errorf("unable to create attr.Value of type boolean")
+	case "array":
+		listVal, ok := v.([]any)
+		if !ok {
+			return nil, false, fmt.Errorf("unable to create attr.Value of type list")
+		}
+
+		attrValue, err := tfAttrListValueFromMgcSchema(ctx, s, attrType, listVal)
+		if err != nil {
+			return nil, false, err
+		}
+		return attrValue, true, nil
+	case "object":
+		mapVal, ok := v.(map[string]any)
+		if !ok {
+			return nil, false, fmt.Errorf("unable to create attr.Value of type object")
+		}
+
+		attrValue, err := tfAttrObjectValueFromMgcSchema(ctx, s, attrType.attributes, mapVal)
+		if err != nil {
+			return nil, false, err
+		}
+		return attrValue, true, nil
+	default:
+		return nil, false, fmt.Errorf("type %q not supported", t)
 	}
 }
 
