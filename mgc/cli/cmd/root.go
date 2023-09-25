@@ -22,6 +22,8 @@ import (
 
 const loggerConfigKey = "logging"
 
+var argParser = &osArgParser{}
+
 // -- BEGIN: create Dynamic Argument Loaders --
 
 // TODO: likely this DynamicArgLoader is not needed anymore,
@@ -495,7 +497,9 @@ can generate a command line on-demand for Rest manipulation`,
 
 	rootCmd.AddCommand(newDumpTreeCmd(sdk))
 
-	err = DynamicLoadCommand(rootCmd, os.Args[1:], createGroupLoader(sdk, sdk.Group()))
+	mainArgs := argParser.MainArgs()
+
+	err = DynamicLoadCommand(rootCmd, mainArgs, createGroupLoader(sdk, sdk.Group()))
 	if err != nil {
 		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
 	}
@@ -504,5 +508,6 @@ can generate a command line on-demand for Rest manipulation`,
 		_ = mgcLogger.Root().Sync()
 	}()
 
+	rootCmd.SetArgs(mainArgs)
 	return rootCmd.Execute()
 }
