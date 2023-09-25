@@ -22,6 +22,9 @@ paths:
                             parameters:
                                 instance_id: $request.path.instance_id
                                 backup_id: $response.body#/id
+            security:
+                -   OAuth2:
+                    - dbaas.write
     /v1/instances/{instance_id}/backups/{backup_id}:
         get:
             responses:
@@ -33,7 +36,38 @@ paths:
                             parameters:
                                 instance_id: $request.path.instance_id
                                 backup_id: request.path.id
+            security:
+            -   OAuth2:
+                - dbaas.read
+        delete:
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/datastores:
+        get:
+            security:
+            -   OAuth2:
+                - dbaas.read
+    /v1/datastores/{datastore_id}:
+        get:
+            security:
+            -   OAuth2:
+                - dbaas.read
+    /v1/flavors:
+        get:
+            security:
+            -   OAuth2:
+                - dbaas.read
+    /v1/flavors/{flavor_id}:
+        get:
+            security:
+            -   OAuth2:
+                - dbaas.read
     /v1/instances:
+        get:
+            security:
+            -   OAuth2:
+                - dbaas.read
         post:
             responses:
               '202':
@@ -53,6 +87,9 @@ paths:
                           description: Delete Database instance
                           parameters:
                               instance_id: $response.body#/id
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/instances/{instance_id}:
         get:
             responses:
@@ -68,11 +105,18 @@ paths:
                           description: Delete Database instance
                           parameters:
                               instance_id: $request.path.instance_id
+            security:
+            -   OAuth2:
+                - dbaas.read
             x-cli-wait-termination:
                 maxRetries: 30
                 intervalInSeconds: 10s
                 jsonPathQuery: $.status == "active" || $.status
                     == "error"
+        delete:
+            security:
+            -   OAuth2:
+                - dbaas.write
         patch:
             responses:
               '200':
@@ -87,7 +131,29 @@ paths:
                           description: Delete Database instance
                           parameters:
                               instance_id: $request.path.instance_id
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/instances/{instance_id}/resize:
+        post:
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/instances/{instance_id}/start:
+        post:
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/instances/{instance_id}/stop:
+        post:
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/replicas:
+        get:
+            security:
+            -   OAuth2:
+                - dbaas.read
         post:
             responses:
               '202':
@@ -102,6 +168,9 @@ paths:
                           description: Delete Database replica
                           parameters:
                               replica_id: $response.body#/id
+            security:
+                -   OAuth2:
+                    - dbaas.write
     /v1/replicas/{replica_id}:
         get:
             responses:
@@ -112,6 +181,24 @@ paths:
                           description: Delete Database replica
                           parameters:
                               replica_id: $request.path.replica_id
+            security:
+            -   OAuth2:
+                - dbaas.read
+    /v1/replicas/{replica_id}/resize:
+        post:
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/replicas/{replica_id}/start:
+        post:
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/replicas/{replica_id}/stop:
+        post:
+            security:
+            -   OAuth2:
+                - dbaas.write
 
 # ExclusiveMinimum must be replaced from number to boolean. JSON Schema new draft
 # proposes as a number, but this is only available in OpenAPI 3.1.0. Since kin-openapi
@@ -131,28 +218,16 @@ components:
                 backup_retention_days:
                     minimum: 0.0
                     exclusiveMinimum: true
-        InstanceDetailResponse:
+        DatabaseInstance:
             properties:
                 backup_retention_days:
                     minimum: 0.0
                     exclusiveMinimum: true
-        InstanceUpdateRequest:
+        DatabaseInstanceUpdateRequest:
             properties:
                 backup_retention_days:
                     minimum: 0.0
                     exclusiveMinimum: true
-
-tags:
--   name: backups
-    description: backups
--   name: datastores
-    description: datastores
--   name: flavors
-    description: flavors
--   name: instances
-    description: instances
--   name: replicas
-    description: replicas
 
 servers:
 -   url: https://api-dbaas{env}.{region}.jaxyendy.com

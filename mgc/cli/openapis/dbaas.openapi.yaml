@@ -5,320 +5,121 @@ info:
     contact:
         name: Tribo IAAS Cloud
         url: https://github.com/luizalabs/cloud/dbaas/docs
-        email: joao.ferranti@luizalabs.com
-    version: 1.8.1
+        email: cloud-iaas-dbaas@luizalabs.com
+    version: 1.10.1
+tags:
+-   name: datastores
+    description: Datastores available for database instances.
+-   name: flavors
+    description: Flavors available for database instances.
+-   name: instances
+    description: Database instances management.
+-   name: backups
+    description: Database backups management.
+-   name: replicas
+    description: Database replicas management.
 paths:
-    /v1/healthcheck:
-        get:
-            summary: Healthcheck
-            description: Check api status
-            operationId: healthcheck_v1_healthcheck_get
-            responses:
-                '200':
-                    description: Successful Response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Healthcheck'
-    /v1/instances/{instance_id}/backups:
-        get:
-            tags:
-            - backups
-            summary: Backups List.
-            description: List all backups.
-            operationId: backups_list_v1_instances__instance_id__backups_get
-            parameters:
-            -   required: true
-                schema:
-                    title: Instance Id
-                    type: string
-                    format: uuid
-                name: instance_id
-                in: path
-            -   required: false
-                schema:
-                    title: ' Offset'
-                    minimum: 0.0
-                    type: integer
-                    default: 0
-                name: _offset
-                in: query
-            -   required: false
-                schema:
-                    title: ' Limit'
-                    maximum: 25.0
-                    minimum: 1.0
-                    type: integer
-                    default: 10
-                name: _limit
-                in: query
-            -   required: false
-                schema:
-                    $ref: '#/components/schemas/BackupType'
-                name: type
-                in: query
-            -   required: false
-                schema:
-                    $ref: '#/components/schemas/BackupMode'
-                name: mode
-                in: query
-            -   required: false
-                schema:
-                    $ref: '#/components/schemas/BackupStatusResponse'
-                name: status
-                in: query
-            responses:
-                '200':
-                    description: Successful Response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/BackupsResponse'
-                '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
-        post:
-            tags:
-            - backups
-            summary: Backup Create.
-            description: Creates a new backup asynchronously.
-            operationId: backup_create_v1_instances__instance_id__backups_post
-            parameters:
-            -   required: true
-                schema:
-                    title: Instance Id
-                    type: string
-                    format: uuid
-                name: instance_id
-                in: path
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BackupCreateRequest'
-                required: true
-            responses:
-                '202':
-                    description: Successful Response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/BackupResponse'
-                    links:
-                        read:
-                            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
-                            description: Read a Backup
-                            parameters:
-                                instance_id: $request.path.instance_id
-                                backup_id: $response.body#/id
-                        delete:
-                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
-                            description: Delete a Backup
-                            parameters:
-                                instance_id: $request.path.instance_id
-                                backup_id: $response.body#/id
-                '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
-    /v1/instances/{instance_id}/backups/{backup_id}:
-        get:
-            tags:
-            - backups
-            summary: Backup Detail.
-            description: Get a backup detail.
-            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
-            parameters:
-            -   required: true
-                schema:
-                    title: Instance Id
-                    type: string
-                    format: uuid
-                name: instance_id
-                in: path
-            -   required: true
-                schema:
-                    title: Backup Id
-                    type: string
-                    format: uuid
-                name: backup_id
-                in: path
-            responses:
-                '200':
-                    description: Successful Response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/BackupDetailResponse'
-                    links:
-                        delete:
-                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
-                            description: Delete a Backup
-                            parameters:
-                                instance_id: $request.path.instance_id
-                                backup_id: request.path.id
-                '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
-        delete:
-            tags:
-            - backups
-            summary: Delete Backup.
-            description: Deletes a database backup.
-            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
-            parameters:
-            -   required: true
-                schema:
-                    title: Instance Id
-                    type: string
-                    format: uuid
-                name: instance_id
-                in: path
-            -   required: true
-                schema:
-                    title: Backup Id
-                    type: string
-                    format: uuid
-                name: backup_id
-                in: path
-            responses:
-                '202':
-                    description: Successful Response
-                    content:
-                        application/json:
-                            schema: {}
-                '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
     /v1/datastores:
         get:
+            operationId: datastores_v1_get_all
             tags:
             - datastores
             summary: List available datastores.
             description: Returns a list of available datastores. A datastore is a
                 combination of engine and version.
-            operationId: datastores_v1_get_all
             parameters:
-            -   required: false
-                schema:
-                    title: ' Offset'
-                    minimum: 0.0
-                    type: integer
-                    default: 0
-                name: _offset
-                in: query
-            -   required: false
-                schema:
-                    title: ' Limit'
-                    maximum: 25.0
-                    minimum: 1.0
-                    type: integer
-                    default: 10
-                name: _limit
-                in: query
-            -   required: false
-                schema:
-                    $ref: '#/components/schemas/DatastoreStatus'
-                name: status
-                in: query
+            -   $ref: '#/components/parameters/offset'
+            -   $ref: '#/components/parameters/limit'
+            -   $ref: '#/components/parameters/datastore_status'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/DatastoresResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
     /v1/datastores/{datastore_id}:
         get:
+            operationId: datastores_v1_get_by_id
             tags:
             - datastores
             summary: Datastore detail.
             description: Returns a datastore detail.
-            operationId: datastores_v1_get_by_id
             parameters:
-            -   required: true
-                schema:
-                    title: Datastore Id
-                    type: string
-                    format: uuid
-                name: datastore_id
-                in: path
+            -   $ref: '#/components/parameters/datastore_id_path'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/DatastoreResponse'
+                                $ref: '#/components/schemas/Datastore'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
     /v1/flavors:
         get:
+            operationId: flavors_v1_get_all
             tags:
             - flavors
             summary: List available flavors.
             description: Returns a list of available flavors. A flavor is a hardware
                 template that defines the size of RAM and vcpu.
-            operationId: flavors_v1_get_all
             parameters:
-            -   required: false
-                schema:
-                    title: ' Offset'
-                    minimum: 0.0
-                    type: integer
-                    default: 0
-                name: _offset
-                in: query
-            -   required: false
-                schema:
-                    title: ' Limit'
-                    maximum: 25.0
-                    minimum: 1.0
-                    type: integer
-                    default: 10
-                name: _limit
-                in: query
+            -   $ref: '#/components/parameters/offset'
+            -   $ref: '#/components/parameters/limit'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/FlavorsResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
     /v1/flavors/{flavor_id}:
         get:
+            operationId: flavors_v1_get_by_id
             tags:
             - flavors
             summary: Flavor detail.
             description: Returns a flavor detail.
-            operationId: flavors_v1_get_by_id
             parameters:
             -   required: true
                 schema:
@@ -327,71 +128,66 @@ paths:
                     format: uuid
                 name: flavor_id
                 in: path
+                description: Flavor Unique Id.
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/FlavorResponse'
+                                $ref: '#/components/schemas/Flavor'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
     /v1/instances:
         get:
+            operationId: instances_list_v1_instances_get
             tags:
             - instances
             summary: List all database instances.
             description: Returns a list of database instances for a x-tenant-id.
-            operationId: instances_list_v1_instances_get
             parameters:
-            -   required: false
-                schema:
-                    title: ' Offset'
-                    minimum: 0.0
-                    type: integer
-                    default: 0
-                name: _offset
-                in: query
-            -   required: false
-                schema:
-                    title: ' Limit'
-                    maximum: 25.0
-                    minimum: 1.0
-                    type: integer
-                    default: 10
-                name: _limit
-                in: query
-            -   required: false
-                schema:
-                    title: ' Expand'
-                    type: string
-                    default: ''
-                example: replicas
-                name: _expand
-                in: query
+            -   $ref: '#/components/parameters/offset'
+            -   $ref: '#/components/parameters/limit'
+            -   $ref: '#/components/parameters/instance_expand'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/InstancesResponse'
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
         post:
+            operationId: instances_v1_post
             tags:
             - instances
             summary: Creates a new database instance.
             description: Creates a new database instance asynchronously for a tenant.
-            operationId: instances_v1_post
             requestBody:
                 content:
                     application/json:
@@ -400,7 +196,7 @@ paths:
                 required: true
             responses:
                 '202':
-                    description: Successful Response
+                    description: Accepted - Database instance creation in progress.
                     content:
                         application/json:
                             schema:
@@ -421,42 +217,43 @@ paths:
                             description: Delete Database instance
                             parameters:
                                 instance_id: $response.body#/id
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/instances/{instance_id}:
         get:
+            operationId: instances_v1_get_by_id
             tags:
             - instances
             summary: Database instance details.
             description: Returns a database instance detail.
-            operationId: instances_v1_get_by_id
             parameters:
             -   required: true
                 schema:
-                    title: Instance Id
+                    title: Database Instance Id
                     type: string
                     format: uuid
                 name: instance_id
                 in: path
-            -   required: false
-                schema:
-                    title: ' Expand'
-                    type: string
-                    default: ''
-                example: replicas
-                name: _expand
-                in: query
+                description: Database Instance Unique Id.
+            -   $ref: '#/components/parameters/instance_expand'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/InstanceDetailResponse'
+                                $ref: '#/components/schemas/DatabaseInstance'
                     links:
                         update:
                             operationId: instances_v1_patch
@@ -468,66 +265,53 @@ paths:
                             description: Delete Database instance
                             parameters:
                                 instance_id: $request.path.instance_id
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
             x-cli-wait-termination:
                 maxRetries: 30
                 intervalInSeconds: 10s
                 jsonPathQuery: $.status == "active" || $.status == "error"
-        delete:
-            tags:
-            - instances
-            summary: Deletes a database instance.
-            description: Deletes a database instance.
-            operationId: instances_v1_delete
-            parameters:
-            -   required: true
-                schema:
-                    title: Instance Id
-                    type: string
-                    format: uuid
-                name: instance_id
-                in: path
-            responses:
-                '202':
-                    description: Successful Response
-                '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
         patch:
+            operationId: instances_v1_patch
             tags:
             - instances
             summary: Database instance update.
             description: Updates a database instance.
-            operationId: instances_v1_patch
             parameters:
             -   required: true
                 schema:
-                    title: Instance Id
+                    title: Database Instance Id
                     type: string
                     format: uuid
                 name: instance_id
                 in: path
+                description: Database Instance Unique Id.
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/InstanceUpdateRequest'
+                            $ref: '#/components/schemas/DatabaseInstanceUpdateRequest'
                 required: true
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/InstanceDetailResponse'
+                                $ref: '#/components/schemas/DatabaseInstance'
                     links:
                         read:
                             operationId: instances_v1_get_by_id
@@ -539,12 +323,54 @@ paths:
                             description: Delete Database instance
                             parameters:
                                 instance_id: $request.path.instance_id
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
+        delete:
+            operationId: instances_v1_delete
+            tags:
+            - instances
+            summary: Deletes a database instance.
+            description: Deletes a database instance.
+            parameters:
+            -   required: true
+                schema:
+                    title: Database Instance Id
+                    type: string
+                    format: uuid
+                name: instance_id
+                in: path
+                description: Database Instance Unique Id.
+            responses:
+                '202':
+                    description: Accepted - Database instance deletion in progress.
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/instances/{instance_id}/resize:
         post:
             tags:
@@ -555,11 +381,12 @@ paths:
             parameters:
             -   required: true
                 schema:
-                    title: Instance Id
+                    title: Database Instance Id
                     type: string
                     format: uuid
                 name: instance_id
                 in: path
+                description: Database Instance Unique Id.
             requestBody:
                 content:
                     application/json:
@@ -568,17 +395,26 @@ paths:
                 required: true
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/InstanceDetailResponse'
+                                $ref: '#/components/schemas/DatabaseInstance'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/instances/{instance_id}/start:
         post:
             tags:
@@ -589,24 +425,34 @@ paths:
             parameters:
             -   required: true
                 schema:
-                    title: Instance Id
+                    title: Database Instance Id
                     type: string
                     format: uuid
                 name: instance_id
                 in: path
+                description: Database Instance Unique Id.
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/InstanceDetailResponse'
+                                $ref: '#/components/schemas/DatabaseInstance'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/instances/{instance_id}/stop:
         post:
             tags:
@@ -617,24 +463,273 @@ paths:
             parameters:
             -   required: true
                 schema:
-                    title: Instance Id
+                    title: Database Instance Id
                     type: string
                     format: uuid
                 name: instance_id
                 in: path
+                description: Database Instance Unique Id.
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/InstanceDetailResponse'
+                                $ref: '#/components/schemas/DatabaseInstance'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/instances/{instance_id}/backups:
+        get:
+            tags:
+            - instances
+            summary: Backups List.
+            description: List all backups.
+            operationId: backups_list_v1_instances__instance_id__backups_get
+            parameters:
+            -   $ref: '#/components/parameters/instance_id'
+            -   $ref: '#/components/parameters/offset'
+            -   $ref: '#/components/parameters/limit'
+            -   $ref: '#/components/parameters/backup_type'
+            -   $ref: '#/components/parameters/backup_mode'
+            -   $ref: '#/components/parameters/backup_status'
+            responses:
+                '200':
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                                $ref: '#/components/schemas/BackupsResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
+        post:
+            tags:
+            - instances
+            summary: Backup Create.
+            description: Creates a new backup asynchronously.
+            operationId: backup_create_v1_instances__instance_id__backups_post
+            parameters:
+            -   $ref: '#/components/parameters/instance_id'
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BackupCreateRequest'
+                required: true
+            responses:
+                '202':
+                    description: Successful Response.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BackupResponse'
+                    links:
+                        read:
+                            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
+                            description: Read a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: $response.body#/id
+                        delete:
+                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
+                            description: Delete a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: $response.body#/id
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/instances/{instance_id}/backups/{backup_id}:
+        get:
+            tags:
+            - instances
+            summary: Backup Detail.
+            description: Get a backup detail.
+            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
+            parameters:
+            -   $ref: '#/components/parameters/instance_id'
+            -   $ref: '#/components/parameters/backup_id'
+            responses:
+                '200':
+                    description: Successful Response.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BackupDetailResponse'
+                    links:
+                        delete:
+                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
+                            description: Delete a Backup
+                            parameters:
+                                instance_id: $request.path.instance_id
+                                backup_id: request.path.id
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
+        delete:
+            tags:
+            - instances
+            summary: Delete Backup.
+            description: Deletes a database backup.
+            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
+            parameters:
+            -   $ref: '#/components/parameters/instance_id'
+            -   $ref: '#/components/parameters/backup_id'
+            responses:
+                '202':
+                    description: Successful Response.
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/backups:
+        get:
+            tags:
+            - backups
+            summary: Backups List.
+            description: List all backups.
+            operationId: backups_list_v1__backups_get
+            parameters:
+            -   $ref: '#/components/parameters/offset'
+            -   $ref: '#/components/parameters/limit'
+            -   $ref: '#/components/parameters/backup_type'
+            -   $ref: '#/components/parameters/backup_mode'
+            -   $ref: '#/components/parameters/backup_status'
+            responses:
+                '200':
+                    description: Successful Response.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BackupsResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
+    /v1/backups/{backup_id}:
+        get:
+            tags:
+            - backups
+            summary: Backup Detail.
+            description: Get a backup detail.
+            operationId: backup_detail_v1__backups__backup_id__get
+            parameters:
+            -   $ref: '#/components/parameters/backup_id'
+            responses:
+                '200':
+                    description: Successful Response.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BackupDetailResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
+        delete:
+            tags:
+            - backups
+            summary: Delete Backup.
+            description: Deletes a database backup.
+            operationId: delete_backup_v1__backups__backup_id__delete
+            parameters:
+            -   $ref: '#/components/parameters/backup_id'
+            responses:
+                '202':
+                    description: Successful Response.
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/replicas:
         get:
             tags:
@@ -643,43 +738,31 @@ paths:
             description: List all replicas for a given instance.
             operationId: replicas_list_v1_replicas_get
             parameters:
-            -   required: false
-                schema:
-                    title: Source Id
-                    type: string
-                    format: uuid
-                name: source_id
-                in: query
-            -   required: false
-                schema:
-                    title: ' Offset'
-                    minimum: 0.0
-                    type: integer
-                    default: 0
-                name: _offset
-                in: query
-            -   required: false
-                schema:
-                    title: ' Limit'
-                    maximum: 25.0
-                    minimum: 1.0
-                    type: integer
-                    default: 10
-                name: _limit
-                in: query
+            -   $ref: '#/components/parameters/source_id'
+            -   $ref: '#/components/parameters/offset'
+            -   $ref: '#/components/parameters/limit'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ReplicasResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
         post:
             tags:
             - replicas
@@ -694,7 +777,7 @@ paths:
                 required: true
             responses:
                 '202':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
@@ -710,12 +793,21 @@ paths:
                             description: Delete Database replica
                             parameters:
                                 replica_id: $response.body#/id
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/replicas/{replica_id}:
         get:
             tags:
@@ -724,16 +816,10 @@ paths:
             description: Get an instance replica detail.
             operationId: replica_detail_v1_replicas__replica_id__get
             parameters:
-            -   required: true
-                schema:
-                    title: Replica Id
-                    type: string
-                    format: uuid
-                name: replica_id
-                in: path
+            -   $ref: '#/components/parameters/replica_id'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
@@ -744,50 +830,63 @@ paths:
                             description: Delete Database replica
                             parameters:
                                 replica_id: $request.path.replica_id
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.read
         delete:
+            operationId: replica_v1_delete
             tags:
             - replicas
-            summary: Replica Delete.
-            description: Deletes an instance replica.
-            operationId: replica_delete_v1_replicas__replica_id__delete
+            summary: Deletes a replica instance
+            description: Deletes a replica instance
             parameters:
             -   required: true
                 schema:
-                    title: Replica Id
+                    title: Database Replica Id
                     type: string
                     format: uuid
                 name: replica_id
                 in: path
+                description: Database Replica Unique Id
             responses:
                 '202':
-                    description: Successful Response
+                    description: Accepted - Database replica deletion in progress.
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/replicas/{replica_id}/resize:
         post:
             tags:
             - replicas
             summary: Replica Resize.
             description: Resize an instance replica.
-            operationId: replica_resize_v1_replicas__replica_id__resize_post
+            operationId: replica_resize_v1_replicas_post
             parameters:
-            -   required: true
-                schema:
-                    title: Replica Id
-                    type: string
-                    format: uuid
-                name: replica_id
-                in: path
+            -   $ref: '#/components/parameters/replica_id'
             requestBody:
                 content:
                     application/json:
@@ -796,95 +895,253 @@ paths:
                 required: true
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ReplicaDetailResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/replicas/{replica_id}/start:
         post:
             tags:
             - replicas
             summary: Replica Start.
             description: Start an instance replica.
-            operationId: replica_start_v1_replicas__replica_id__start_post
+            operationId: replica_start_v1_replicas_post
             parameters:
-            -   required: true
-                schema:
-                    title: Replica Id
-                    type: string
-                    format: uuid
-                name: replica_id
-                in: path
+            -   $ref: '#/components/parameters/replica_id'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ReplicaDetailResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
     /v1/replicas/{replica_id}/stop:
         post:
             tags:
             - replicas
             summary: Replica Stop.
             description: Stop an instance replica.
-            operationId: replica_stop_v1_replicas__replica_id__stop_post
+            operationId: replica_stop_v1_replicas_post
             parameters:
-            -   required: true
-                schema:
-                    title: Replica Id
-                    type: string
-                    format: uuid
-                name: replica_id
-                in: path
+            -   $ref: '#/components/parameters/replica_id'
             responses:
                 '200':
-                    description: Successful Response
+                    description: Successful Response.
                     content:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ReplicaDetailResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
                 '422':
-                    description: Validation Error
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
+    /v1/instances/{instance_id}/restores:
+        post:
+            tags:
+            - instances
+            summary: Backup restore.
+            description: Restores a backup for an instance asynchronously.
+            operationId: instances_v1_restore
+            parameters:
+            -   $ref: '#/components/parameters/instance_id'
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/InstanceRestoreRequest'
+                required: true
+            responses:
+                '202':
+                    description: Accepted - Database restore creation in progress.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
+                                $ref: '#/components/schemas/RestoreResponse'
+                '400':
+                    $ref: '#/components/responses/RequiredField'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '422':
+                    $ref: '#/components/responses/UnprocessableEntity'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+            security:
+            -   OAuth2:
+                - dbaas.write
 components:
+    parameters:
+        replica_id:
+            name: replica_id
+            in: path
+            required: true
+            style: simple
+            explode: false
+            schema:
+                title: Replica Id
+                type: string
+                format: uuid
+            example: 2218ad95-6ba2-4fef-8302-a31cb1062412
+            description: value referring to replica id
+        source_id:
+            name: source_id
+            in: query
+            required: false
+            style: form
+            explode: true
+            schema:
+                title: Source Id
+                type: string
+                format: uuid
+            example: 9959ee7a-0710-4faa-9f10-6845819e8ac0
+            description: value referring to source id
+        backup_id:
+            name: backup_id
+            in: path
+            required: true
+            style: simple
+            explode: false
+            schema:
+                title: Backup Id
+                type: string
+                format: uuid
+            example: 1b65c0e4-94a1-4385-aedb-c1b34f6e8935
+            description: value referring to backup id
+        instance_id:
+            name: instance_id
+            in: path
+            required: true
+            style: simple
+            explode: false
+            schema:
+                title: Instance Id
+                type: string
+                format: uuid
+            example: f21999cb-302f-48f7-b584-6a84748e112c
+            description: value referring to instance id
+        datastore_id_path:
+            name: datastore_id
+            in: path
+            required: true
+            style: simple
+            explode: false
+            schema:
+                title: Datastore Id
+                type: string
+                format: uuid
+            example: 7a11cfc5-f9f8-4fa2-a418-94a423f6a51f
+            description: value referring to datastore id
+        instance_expand:
+            name: _expand
+            in: query
+            required: false
+            style: form
+            explode: true
+            schema:
+                type: string
+                enum:
+                - replicas
+            description: 'Instance extra attributes or relations to show with the
+                main query. When available, more than one value can be informed using
+                commas. e.g: `_expand=value1,value2`'
+        offset:
+            name: _offset
+            in: query
+            schema:
+                type: integer
+                minimum: 0
+                default: 0
+            description: offset
+        limit:
+            name: _limit
+            in: query
+            schema:
+                type: integer
+                minimum: 1
+                maximum: 50
+                default: 10
+            description: limit
+        datastore_status:
+            name: status
+            in: query
+            schema:
+                $ref: '#/components/schemas/DatastoreStatus'
+            description: value referring to datastore status
+        backup_type:
+            name: type
+            in: query
+            schema:
+                $ref: '#/components/schemas/BackupType'
+            description: value referring to backup type
+        backup_mode:
+            name: mode
+            in: query
+            schema:
+                $ref: '#/components/schemas/BackupMode'
+            description: value referring to backup mode
+        backup_status:
+            name: status
+            in: query
+            schema:
+                $ref: '#/components/schemas/BackupStatus'
+            description: value referring to backup status
     schemas:
-        AddressAccess:
-            title: AddressAccess
-            enum:
-            - PRIVATE
-            - PUBLIC
-            description: An enumeration.
-        AddressType:
-            title: AddressType
-            enum:
-            - IPv4
-            - IPv6
-            description: An enumeration.
-        BackupCreateRequest:
-            title: BackupCreateRequest
+        BackupsResponse:
+            title: BackupsResponse
             required:
-            - mode
+            - results
             type: object
             properties:
-                mode:
-                    $ref: '#/components/schemas/BackupModeRequest'
+                results:
+                    title: Results
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/BackupDetailResponse'
         BackupDetailResponse:
             title: BackupDetailResponse
             required:
@@ -913,19 +1170,22 @@ components:
                 type:
                     $ref: '#/components/schemas/BackupType'
                 status:
-                    $ref: '#/components/schemas/BackupStatusResponse'
+                    $ref: '#/components/schemas/BackupStatus'
                 mode:
                     $ref: '#/components/schemas/BackupMode'
                 db_size:
-                    title: Db Size
-                    exclusiveMinimum: true
+                    title: Database Size
                     type: integer
+                    description: Database size in kilobytes (1024 kilobytes = 1 megabyte).
                     minimum: 0.0
+                    exclusiveMinimum: true
                 size:
                     title: Size
-                    exclusiveMinimum: true
                     type: integer
+                    description: Backup file size in kilobytes (1024 kilobytes = 1
+                        megabyte).
                     minimum: 0.0
+                    exclusiveMinimum: true
                 started_at:
                     title: Started At
                     type: string
@@ -942,17 +1202,45 @@ components:
                     title: Updated At
                     type: string
                     format: date-time
+        BackupStatus:
+            title: BackupStatus
+            type: string
+            description: An enumeration.
+            enum:
+            - PENDING
+            - CREATING
+            - CREATED
+            - ERROR
+            - DELETING
+            - DELETED
+        BackupType:
+            title: BackupType
+            type: string
+            description: An enumeration.
+            enum:
+            - ON_DEMAND
+            - AUTOMATED
         BackupMode:
             title: BackupMode
+            type: string
+            description: An enumeration.
             enum:
             - FULL
             - INCREMENTAL
-            description: An enumeration.
+        BackupCreateRequest:
+            title: BackupCreateRequest
+            required:
+            - mode
+            type: object
+            properties:
+                mode:
+                    $ref: '#/components/schemas/BackupModeRequest'
         BackupModeRequest:
             title: BackupModeRequest
+            type: string
+            description: An enumeration.
             enum:
             - FULL
-            description: An enumeration.
         BackupResponse:
             title: BackupResponse
             required:
@@ -963,94 +1251,6 @@ components:
                     title: Id
                     type: string
                     format: uuid
-        BackupStatusResponse:
-            title: BackupStatusResponse
-            enum:
-            - PENDING
-            - CREATING
-            - CREATED
-            - ERROR
-            - DELETING
-            - DELETED
-            - ERROR_DELETING
-            description: An enumeration.
-        BackupType:
-            title: BackupType
-            enum:
-            - ON_DEMAND
-            - AUTOMATED
-            description: An enumeration.
-        BackupsResponse:
-            title: BackupsResponse
-            required:
-            - results
-            type: object
-            properties:
-                results:
-                    title: Results
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/BackupDetailResponse'
-        DatastoreResponse:
-            title: DatastoreResponse
-            required:
-            - id
-            - engine
-            - version
-            - status
-            type: object
-            properties:
-                id:
-                    title: Id
-                    type: string
-                    format: uuid
-                engine:
-                    title: Engine
-                    type: string
-                version:
-                    title: Version
-                    type: string
-                status:
-                    $ref: '#/components/schemas/DatastoreStatus'
-        DatastoreStatus:
-            title: DatastoreStatus
-            enum:
-            - ACTIVE
-            - DEPRECATED
-            description: An enumeration.
-        DatastoresResponse:
-            title: DatastoresResponse
-            required:
-            - results
-            type: object
-            properties:
-                results:
-                    title: Results
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/DatastoreResponse'
-        FlavorResponse:
-            title: FlavorResponse
-            required:
-            - id
-            - name
-            - vcpu
-            - ram
-            type: object
-            properties:
-                id:
-                    title: Id
-                    type: string
-                    format: uuid
-                name:
-                    title: Name
-                    type: string
-                vcpu:
-                    title: Vcpu
-                    type: string
-                ram:
-                    title: Ram
-                    type: string
         FlavorsResponse:
             title: FlavorsResponse
             required:
@@ -1061,58 +1261,85 @@ components:
                     title: Results
                     type: array
                     items:
-                        $ref: '#/components/schemas/FlavorResponse'
-        HTTPValidationError:
-            title: HTTPValidationError
-            type: object
-            properties:
-                message:
-                    title: Message
-                    type: string
-                slug:
-                    title: Slug
-                    type: string
-            example:
-                message: Unauthorized
-                slug: Unauthorized
-        Healthcheck:
-            title: Healthcheck
+                        $ref: '#/components/schemas/Flavor'
+        AddressAccess:
+            title: AddressAccess
+            type: string
+            enum:
+            - PRIVATE
+            - PUBLIC
+            example: PRIVATE
+        AddressType:
+            title: AddressType
+            type: string
+            enum:
+            - IPv4
+            - IPv6
+            example: IPv4
+        InstanceStatusUpdate:
+            type: string
+            enum:
+            - ACTIVE
+            - STOPPED
+            example: ACTIVE
+        InstancesResponse:
+            title: InstancesResponse
             required:
-            - status
+            - results
             type: object
             properties:
-                status:
-                    title: Status
-                    type: string
-            example:
-                status: OK
-        InstanceAddressResponse:
-            title: InstanceAddressResponse
-            required:
-            - access
-            type: object
-            properties:
-                access:
-                    $ref: '#/components/schemas/AddressAccess'
-                type:
-                    $ref: '#/components/schemas/AddressType'
-                address:
-                    title: Address
-                    type: string
+                results:
+                    title: Results
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/DatabaseInstance'
+        InstanceStatus:
+            type: string
+            readOnly: true
+            enum:
+            - ERROR
+            - PENDING
+            - ACTIVE
+            - BUILD
+            - BUILDING
+            - DELETED
+            - HARD_REBOOT
+            - PASSWORD
+            - PAUSED
+            - REBUILD
+            - RESCUED
+            - RESIZED
+            - REVERT_SIZE
+            - SOFT_DELETED
+            - STOPPED
+            - SUSPENDED
+            - UNKNOWN
+            - VERIFY_RESIZE
+            - CREATING
+            - STARTING
+            - STOPPING
+            - BACKING_UP
+            - RESIZING
+            - DELETING
+            - RESTORING
+            - ERROR_RESTORING
+            - ERROR_DELETING
+            - REBOOT
+            example: ACTIVE
         InstanceCreateRequest:
             title: InstanceCreateRequest
             required:
-            - name
             - datastore_id
             - flavor_id
-            - user
+            - name
             - password
+            - user
             - volume
             type: object
             properties:
                 name:
                     title: Name
-                    maxLength: 100
+                    maxLength: 255
                     type: string
                 datastore_id:
                     title: Datastore Id
@@ -1134,86 +1361,52 @@ components:
                     $ref: '#/components/schemas/InstanceVolumeRequest'
                 backup_retention_days:
                     title: Backup Retention Days
-                    exclusiveMinimum: true
                     type: integer
-                    default: 7
+                    example: 7
+                    default: 30
+                    description: The number of days that a particular backup is kept
+                        until its deletion.
                     minimum: 0.0
+                    exclusiveMinimum: true
                 backup_start_at:
                     title: Backup Start At
+                    description: Start time which is allowed to start the automated
+                        backup process.
                     type: string
                     format: time
-                    default: 04:00:00
-        InstanceDetailResponse:
-            title: InstanceDetailResponse
+                    example: 03:00:00
+                    default: 01:00:00
+        InstanceVolumeRequest:
+            title: InstanceVolumeRequest
             required:
-            - id
-            - name
-            - datastore_id
-            - flavor_id
-            - volume
-            - addresses
-            - status
-            - created_at
-            - backup_retention_days
-            - backup_start_at
+            - size
             type: object
             properties:
-                id:
-                    title: Id
+                size:
+                    description: The size of the volume (in GiB).
+                    type: number
+                    minimum: 10
+                    maximum: 50000
+                    example: 30
+                type:
+                    description: The type of the volume
                     type: string
-                    format: uuid
-                name:
-                    title: Name
-                    type: string
-                datastore_id:
-                    title: Datastore Id
-                    type: string
-                    format: uuid
-                flavor_id:
-                    title: Flavor Id
-                    type: string
-                    format: uuid
-                volume:
-                    $ref: '#/components/schemas/InstanceVolumeResponse'
-                addresses:
-                    title: Addresses
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/InstanceAddressResponse'
-                status:
-                    $ref: '#/components/schemas/InstanceStatus'
-                created_at:
-                    title: Created At
-                    type: string
-                    format: date-time
-                updated_at:
-                    title: Updated At
-                    type: string
-                    format: date-time
-                backup_retention_days:
-                    title: Backup Retention Days
-                    exclusiveMinimum: true
-                    type: integer
-                    minimum: 0.0
-                backup_start_at:
-                    title: Backup Start At
-                    type: string
-                    format: time
-                replicas:
-                    title: Replicas
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/ReplicaDetailResponse'
-        InstanceResizeRequest:
-            title: InstanceResizeRequest
+                    enum:
+                    - CLOUD_NVME
+                    - CLOUD_HDD
+                    default: CLOUD_NVME
+        InstanceVolumeResizeRequest:
+            title: InstanceVolumeRequest
+            required:
+            - size
             type: object
             properties:
-                flavor_id:
-                    title: Flavor Id
-                    type: string
-                    format: uuid
-                volume:
-                    $ref: '#/components/schemas/InstanceVolumeRequest'
+                size:
+                    description: The size of the volume (in GiB).
+                    type: number
+                    minimum: 10
+                    maximum: 50000
+                    example: 30
         InstanceResponse:
             title: InstanceResponse
             required:
@@ -1224,88 +1417,159 @@ components:
                     title: Id
                     type: string
                     format: uuid
-        InstanceStatus:
-            title: InstanceStatus
-            enum:
-            - ERROR
-            - PENDING
-            - ACTIVE
-            - BUILD
-            - BUILDING
-            - DELETED
-            - HARD_REBOOT
-            - PASSWORD
-            - PAUSED
-            - REBUILD
-            - RESCUED
-            - RESIZED
-            - RESIZING
-            - REVERT_SIZE
-            - SOFT_DELETED
-            - STOPPED
-            - SUSPENDED
-            - UNKNOWN
-            - VERIFY_RESIZE
-            - CREATING
-            - STARTING
-            - STOPPING
-            - BACKING_UP
-            - DELETING
-            - RESTORING
-            - ERROR_RESTORING
-            - ERROR_DELETING
-            - REBOOT
-            description: An enumeration.
-        InstanceUpdateRequest:
-            title: InstanceUpdateRequest
+        RestoreResponse:
+            title: RestoreResponse
+            required:
+            - id
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+        InstanceRestoreRequest:
+            title: InstanceRestoreRequest
+            required:
+            - backup_id
+            type: object
+            properties:
+                backup_id:
+                    title: Backup Id
+                    type: string
+                    format: uuid
+        DatabaseInstance:
+            required:
+            - id
+            - name
+            - datastore_id
+            - flavor_id
+            - volume
+            - addresses
+            - status
+            - created_at
+            - backup_start_at
+            - backup_retention_days
+            - replicas
+            type: object
+            properties:
+                id:
+                    title: Id
+                    description: Database instance unique identifier.
+                    type: string
+                    format: uuid
+                    readOnly: true
+                name:
+                    title: Name
+                    description: Database instance unique name.
+                    type: string
+                    maxLength: 100
+                    example: mydbinstance
+                datastore_id:
+                    description: Datastore unique identifier. Engine and version of
+                        datastore.
+                    type: string
+                    format: uuid
+                flavor_id:
+                    description: Flavor unique identifier. Instance size.
+                    type: string
+                    format: uuid
+                user:
+                    writeOnly: true
+                    description: Database User
+                    type: string
+                    maxLength: 25
+                    example: myuser
+                password:
+                    writeOnly: true
+                    description: Database Password
+                    type: string
+                    maxLength: 50
+                    format: password
+                    example: cGFzc3dk
+                volume:
+                    $ref: '#/components/schemas/Volume'
+                addresses:
+                    title: Addresses
+                    type: array
+                    readOnly: true
+                    items:
+                        $ref: '#/components/schemas/Addresses'
+                status:
+                    $ref: '#/components/schemas/InstanceStatus'
+                backup_retention_days:
+                    title: Backup Retention Days
+                    type: integer
+                    example: 7
+                    default: 30
+                    description: The number of days that a particular backup is kept
+                        until its deletion.
+                    minimum: 0.0
+                    exclusiveMinimum: true
+                backup_start_at:
+                    title: Backup Start At
+                    description: Start time (UTC timezone) which is allowed to start
+                        the automated backup process.
+                    type: string
+                    format: time
+                    example: 02:00:00
+                    default: 04:00:00
+                created_at:
+                    title: Creation date.
+                    type: string
+                    format: date-time
+                    readOnly: true
+                updated_at:
+                    title: Last updated date.
+                    type: string
+                    format: date-time
+                    readOnly: true
+                started_at:
+                    title: Initial setup start date.
+                    type: string
+                    format: date-time
+                    readOnly: true
+                finished_at:
+                    title: Initial setup finish date.
+                    type: string
+                    format: date-time
+                    readOnly: true
+                replicas:
+                    title: Replicas
+                    type: array
+                    readOnly: true
+                    items:
+                        $ref: '#/components/schemas/ReplicaDetailResponse'
+        DatabaseInstanceUpdateRequest:
             type: object
             properties:
                 status:
-                    $ref: '#/components/schemas/InstanceUpdateStatus'
+                    $ref: '#/components/schemas/InstanceStatusUpdate'
                 backup_retention_days:
                     title: Backup Retention Days
-                    exclusiveMinimum: true
                     type: integer
+                    example: 7
+                    default: 30
+                    description: The number of days that a particular backup is kept
+                        until its deletion.
                     minimum: 0.0
+                    exclusiveMinimum: true
                 backup_start_at:
                     title: Backup Start At
+                    description: Start time which is allowed to start the automated
+                        backup process.
                     type: string
                     format: time
-        InstanceUpdateStatus:
-            title: InstanceUpdateStatus
+                    example: 03:00:00
+                    default: 01:00:00
+        DatastoreStatus:
+            title: DatastoreStatus
+            type: string
+            description: An enumeration.
             enum:
             - ACTIVE
-            - STOPPED
-            description: An enumeration.
-        InstanceVolumeRequest:
-            title: InstanceVolumeRequest
-            required:
-            - size
-            type: object
-            properties:
-                size:
-                    title: Size
-                    maximum: 50000.0
-                    minimum: 10.0
-                    type: integer
-                type:
-                    allOf:
-                    -   $ref: '#/components/schemas/VolumeType'
-                    default: CLOUD_NVME_15K
-        InstanceVolumeResponse:
-            title: InstanceVolumeResponse
-            required:
-            - size
-            - type
-            type: object
-            properties:
-                size:
-                    title: Size
-                    type: integer
-                type:
-                    $ref: '#/components/schemas/VolumeType'
-        InstancesResponse:
-            title: InstancesResponse
+            - DEPRECATED
+        DatastoresResponse:
+            title: DatastoresResponse
             required:
             - results
             type: object
@@ -1314,7 +1578,105 @@ components:
                     title: Results
                     type: array
                     items:
-                        $ref: '#/components/schemas/InstanceDetailResponse'
+                        $ref: '#/components/schemas/Datastore'
+        Datastore:
+            title: Datastore
+            required:
+            - engine
+            - id
+            - version
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                    description: Datastore unique identifier.
+                engine:
+                    title: Engine
+                    type: string
+                    example: mysql
+                    description: Database engine.
+                version:
+                    title: Version
+                    type: string
+                    description: Database engine version.
+                    example: '5.7'
+                status:
+                    $ref: '#/components/schemas/DatastoreStatus'
+        ReplicasResponse:
+            title: ReplicasResponse
+            required:
+            - results
+            type: object
+            properties:
+                results:
+                    title: Results
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ReplicaDetailResponse'
+        ReplicaDetailResponse:
+            title: ReplicaDetailResponse
+            required:
+            - addresses
+            - created_at
+            - datastore_id
+            - flavor_id
+            - volume
+            - id
+            - name
+            - source_id
+            - status
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid
+                source_id:
+                    title: Source Id
+                    type: string
+                    format: uuid
+                name:
+                    title: Name
+                    type: string
+                datastore_id:
+                    readOnly: true
+                    description: Datastore unique identifier. Engine and version of
+                        datastore.
+                    type: string
+                    format: uuid
+                flavor_id:
+                    title: Flavor Id
+                    type: string
+                    format: uuid
+                volume:
+                    $ref: '#/components/schemas/Volume'
+                addresses:
+                    title: Addresses
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ReplicaAddressResponse'
+                status:
+                    $ref: '#/components/schemas/InstanceStatus'
+                created_at:
+                    title: Created At
+                    type: string
+                    format: date-time
+                updated_at:
+                    title: Updated At
+                    type: string
+                    format: date-time
+                started_at:
+                    title: Initial setup start date.
+                    type: string
+                    format: date-time
+                    readOnly: true
+                finished_at:
+                    title: Initial setup finish date.
+                    type: string
+                    format: date-time
+                    readOnly: true
         ReplicaAddressResponse:
             title: ReplicaAddressResponse
             required:
@@ -1331,8 +1693,8 @@ components:
         ReplicaCreateRequest:
             title: ReplicaCreateRequest
             required:
-            - source_id
             - name
+            - source_id
             type: object
             properties:
                 source_id:
@@ -1347,56 +1709,6 @@ components:
                     title: Flavor Id
                     type: string
                     format: uuid
-        ReplicaDetailResponse:
-            title: ReplicaDetailResponse
-            required:
-            - id
-            - source_id
-            - name
-            - datastore_id
-            - flavor_id
-            - volume
-            - addresses
-            - status
-            - created_at
-            type: object
-            properties:
-                id:
-                    title: Id
-                    type: string
-                    format: uuid
-                source_id:
-                    title: Source Id
-                    type: string
-                    format: uuid
-                name:
-                    title: Name
-                    type: string
-                datastore_id:
-                    title: Datastore Id
-                    type: string
-                    format: uuid
-                flavor_id:
-                    title: Flavor Id
-                    type: string
-                    format: uuid
-                volume:
-                    $ref: '#/components/schemas/ReplicaVolumeResponse'
-                addresses:
-                    title: Addresses
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/ReplicaAddressResponse'
-                status:
-                    $ref: '#/components/schemas/InstanceStatus'
-                created_at:
-                    title: Created At
-                    type: string
-                    format: date-time
-                updated_at:
-                    title: Updated At
-                    type: string
-                    format: date-time
         ReplicaResizeRequest:
             title: ReplicaResizeRequest
             required:
@@ -1417,53 +1729,179 @@ components:
                     title: Id
                     type: string
                     format: uuid
-        ReplicaVolumeResponse:
-            title: ReplicaVolumeResponse
-            required:
-            - size
-            - type
+        Volume:
             type: object
             properties:
                 size:
-                    title: Size
-                    type: integer
+                    description: The size of the volume (in GiB).
+                    type: number
+                    minimum: 10
+                    maximum: 50000
+                    example: 30
                 type:
-                    $ref: '#/components/schemas/VolumeType'
-        ReplicasResponse:
-            title: ReplicasResponse
+                    description: The type of the volume
+                    type: string
+                    enum:
+                    - CLOUD_NVME
+                    - CLOUD_HDD
+                    - CLOUD_NVME_15K
             required:
-            - results
-            type: object
-            properties:
-                results:
-                    title: Results
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/ReplicaDetailResponse'
-        ValidationError:
-            title: ValidationError
-            required:
-            - loc
-            - msg
+            - size
             - type
+        Addresses:
+            required:
+            - access
+            - type
+            - address
             type: object
             properties:
-                message:
-                    title: Message
+                access:
+                    title: Access
+                    description: Determine if the IP can be accessed from the internet
                     type: string
+                    enum:
+                    - PRIVATE
+                    - PUBLIC
+                type:
+                    title: Type
+                    type: string
+                    enum:
+                    - IPv4
+                    - IPv6
+                address:
+                    title: Address
+                    type: string
+                    example: 172.53.10.82
+        Flavor:
+            type: object
+            required:
+            - id
+            - name
+            - ram
+            - vcpu
+            properties:
+                id:
+                    description: Flavor unique identifier.
+                    type: string
+                    format: uuid
+                name:
+                    description: Flavor name.
+                    type: string
+                    example: bs1.xsmal
+                vcpu:
+                    description: Number of vCPUs.
+                    type: string
+                    example: '1'
+                ram:
+                    description: RAM Amount
+                    type: string
+                    example: 1 GB
+        ErrorResponse:
+            type: object
+            properties:
                 slug:
-                    title: Slug
                     type: string
-            example:
-                message: Unauthorized
-                slug: Unauthorized
-        VolumeType:
-            title: VolumeType
-            enum:
-            - CLOUD_NVME
-            - CLOUD_HDD
-            - CLOUD_NVME_15K
-            description: An enumeration.
+                    example: bad_request
+                message:
+                    type: string
+                    example: Bad Request
+            required:
+            - slug
+            - message
+        InstanceResizeRequest:
+            title: InstanceResizeRequest
+            type: object
+            properties:
+                flavor_id:
+                    title: Flavor Id
+                    type: string
+                    format: uuid
+                volume:
+                    $ref: '#/components/schemas/InstanceVolumeResizeRequest'
+    securitySchemes:
+        OAuth2:
+            flows:
+                authorizationCode:
+                    authorizationUrl: https://idp-maas-sandbox.ipet.sh/auth/realms/master/protocol/openid-connect/auth
+                    tokenUrl: https://idp-maas-sandbox.ipet.sh/auth/realms/master/protocol/openid-connect/token
+                    scopes:
+                        virtual-machine.read: Ler informações de recursos IaaS
+                        virtual-machine.write: Escrever informações de recursos IaaS
+            type: oauth2
+            description: OAuth2 via IDPA
+    responses:
+        BadRequest:
+            description: Bad Request
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+                    example:
+                        slug: bad_request
+                        message: Bad request
+        NotFound:
+            description: Not Found
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+                    example:
+                        slug: not_found
+                        message: Not Found
+        RequiredField:
+            description: Required Field
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+                    example:
+                        slug: bad_request
+                        message: Bad request
+        Unauthorized:
+            description: Access Unauthorized
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+                    example:
+                        slug: unauthorized
+                        message: Access unauthorized
+        Forbidden:
+            description: Access Forbidden
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+                    example:
+                        slug: forbidden
+                        message: Access Forbidden
+        UnprocessableEntity:
+            description: Unprocessable Entity
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+                    example:
+                        slug: unprocessable_entity
+                        message: Unprocessable entity
+        TooManyRequests:
+            description: Too Many Requests
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+                    example:
+                        slug: too_many_requests
+                        message: Too Many Requests
+        InternalServerError:
+            description: Internal Server Error
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+                    example:
+                        slug: internal_server_error
+                        message: Internal server error
 servers:
 -   url: https://api-dbaas{env}.{region}.jaxyendy.com
     variables:
@@ -1487,14 +1925,3 @@ servers:
                     to: ''
                 -   from: pre-prod
                     to: .pre-prod
-tags:
--   name: backups
-    description: backups
--   name: datastores
-    description: datastores
--   name: flavors
-    description: flavors
--   name: instances
-    description: instances
--   name: replicas
-    description: replicas

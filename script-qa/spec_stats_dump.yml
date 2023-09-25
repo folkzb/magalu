@@ -74,13 +74,6 @@ block-storage.openapi:
         - delete
 dbaas.openapi:
   computed-variables:
-    - POST /v1/instances/{instance_id}/backups:
-        - '202':
-            computed:
-              - id
-            non-computed:
-              - instance_id
-              - mode
     - POST /v1/instances:
         - '202':
             computed:
@@ -103,16 +96,20 @@ dbaas.openapi:
               - backup_start_at
               - created_at
               - datastore_id
+              - finished_at
               - id
               - name
+              - password
               - replicas
+              - started_at
               - status
+              - type
               - updated_at
+              - user
             non-computed:
               - flavor_id
               - instance_id
               - size
-              - type
     - POST /v1/instances/{instance_id}/start:
         - '200':
             computed:
@@ -121,14 +118,18 @@ dbaas.openapi:
               - backup_start_at
               - created_at
               - datastore_id
+              - finished_at
               - flavor_id
               - id
               - name
+              - password
               - replicas
               - size
+              - started_at
               - status
               - type
               - updated_at
+              - user
             non-computed:
               - instance_id
     - POST /v1/instances/{instance_id}/stop:
@@ -139,15 +140,33 @@ dbaas.openapi:
               - backup_start_at
               - created_at
               - datastore_id
+              - finished_at
               - flavor_id
               - id
               - name
+              - password
               - replicas
               - size
+              - started_at
               - status
               - type
               - updated_at
+              - user
             non-computed:
+              - instance_id
+    - POST /v1/instances/{instance_id}/backups:
+        - '202':
+            computed:
+              - id
+            non-computed:
+              - instance_id
+              - mode
+    - POST /v1/instances/{instance_id}/restores:
+        - '202':
+            computed:
+              - id
+            non-computed:
+              - backup_id
               - instance_id
     - POST /v1/replicas:
         - '202':
@@ -163,10 +182,12 @@ dbaas.openapi:
               - addresses
               - created_at
               - datastore_id
+              - finished_at
               - id
               - name
               - size
               - source_id
+              - started_at
               - status
               - type
               - updated_at
@@ -179,11 +200,13 @@ dbaas.openapi:
               - addresses
               - created_at
               - datastore_id
+              - finished_at
               - flavor_id
               - id
               - name
               - size
               - source_id
+              - started_at
               - status
               - type
               - updated_at
@@ -195,11 +218,13 @@ dbaas.openapi:
               - addresses
               - created_at
               - datastore_id
+              - finished_at
               - flavor_id
               - id
               - name
               - size
               - source_id
+              - started_at
               - status
               - type
               - updated_at
@@ -212,15 +237,8 @@ dbaas.openapi:
     - flavors:
         - post
         - delete
-  tagless-operations:
-    - GET /v1/healthcheck
-  xof-single-item:
-    POST /v1/instances:
-      request:
-        - allOf
-    POST /v1/instances/{instance_id}/resize:
-      request:
-        - allOf
+    - backups:
+        - post
 mke.openapi:
   computed-variables:
     - POST /v0/clusters:
