@@ -284,6 +284,45 @@ func getOutputFor(cmd *cobra.Command, result core.Result) string {
 	return output
 }
 
+func handleExecutor(
+	ctx context.Context,
+	cmd *cobra.Command,
+	exec core.Executor,
+	parameters core.Parameters,
+	configs core.Configs,
+) (core.Result, error) {
+	if t := getTimeoutFlag(cmd); t > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, t)
+		defer cancel()
+	}
+
+	waitTermination := getWaitTerminationFlag(cmd)
+	var cb retryUntilCb
+	if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && waitTermination {
+		cb = func() (result core.Result, err error) {
+			return tExec.ExecuteUntilTermination(ctx, parameters, configs)
+		}
+	} else {
+		cb = func() (result core.Result, err error) {
+			return exec.Execute(ctx, parameters, configs)
+		}
+	}
+
+	retry, err := getRetryUntilFlag(cmd)
+	if err != nil {
+		return nil, err
+	}
+	result, err := retry.run(ctx, cb)
+
+	err = handleExecutorResult(ctx, cmd, result, err)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, err
+}
+
 func AddAction(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
@@ -309,31 +348,8 @@ func AddAction(
 			}
 
 			ctx := sdk.NewContext()
-			if t := getTimeoutFlag(cmd); t > 0 {
-				var cancel context.CancelFunc
-				ctx, cancel = context.WithTimeout(ctx, t)
-				defer cancel()
-			}
-
-			waitTermination := getWaitTerminationFlag(cmd)
-			var cb retryUntilCb
-			if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && waitTermination {
-				cb = func() (result core.Result, err error) {
-					return tExec.ExecuteUntilTermination(ctx, parameters, configs)
-				}
-			} else {
-				cb = func() (result core.Result, err error) {
-					return exec.Execute(ctx, parameters, configs)
-				}
-			}
-
-			retry, err := getRetryUntilFlag(cmd)
-			if err != nil {
-				return err
-			}
-			result, err := retry.run(ctx, cb)
-
-			return handleExecutorResult(ctx, cmd, result, err)
+			_, err := handleExecutor(ctx, cmd, exec, parameters, configs)
+			return err
 		},
 	}
 
