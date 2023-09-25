@@ -12,6 +12,7 @@ import (
 	mgcLogger "magalu.cloud/core/logger"
 	mgcSdk "magalu.cloud/sdk"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stoewer/go-strcase"
@@ -284,6 +285,36 @@ func getOutputFor(cmd *cobra.Command, result core.Result) string {
 	return output
 }
 
+func handleLinkArgs(
+	ctx context.Context,
+	parentCmd *cobra.Command,
+	linkChainedArgs [][]string,
+	links map[string]core.Linker,
+	config *mgcSdk.Config,
+	originalResult core.Result,
+) error {
+	if len(linkChainedArgs) == 0 {
+		return nil
+	}
+
+	currentLinkArgs := linkChainedArgs[0]
+	linkName := currentLinkArgs[0]
+
+	if link, ok := links[linkName]; ok {
+		linkCmd := AddLink(ctx, parentCmd, config, originalResult, link, linkChainedArgs[1:])
+		err := linkCmd.ParseFlags(currentLinkArgs[1:])
+		if err != nil {
+			return err
+		}
+		return linkCmd.RunE(linkCmd, []string{})
+	} else if linkName == "help" {
+		// TODO: Add support for "help" link command
+		return nil
+	} else {
+		return fmt.Errorf("Invalid link execution. Command '%s' has no link '%s'", parentCmd.Use, linkName)
+	}
+}
+
 func handleExecutor(
 	ctx context.Context,
 	cmd *cobra.Command,
@@ -323,6 +354,70 @@ func handleExecutor(
 	return result, err
 }
 
+func AddLink(
+	ctx context.Context,
+	parentCmd *cobra.Command,
+	config *mgcSdk.Config,
+	originalResult core.Result,
+	link core.Linker,
+	followingLinkArgs [][]string,
+) *cobra.Command {
+	linkCmd := &cobra.Command{
+		Use:   link.Name(),
+		Short: link.Description(),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			t := table.NewWriter()
+			t.AppendHeader(table.Row{"Executing link"})
+			t.AppendRows([]table.Row{{"Name", link.Name()}, {"Description", link.Description()}})
+			t.SetStyle(table.StyleRounded)
+			fmt.Println()
+			fmt.Println(t.Render())
+			fmt.Println()
+
+			target := link.Target()
+			if target == nil {
+				return fmt.Errorf("unable to resolve link %s", link.Name())
+			}
+
+			additionalParameters := core.Parameters{}
+			additionalConfigs := core.Configs{}
+
+			if err := loadDataFromFlags(cmd.Flags(), link.AdditionalParametersSchema(), additionalParameters); err != nil {
+				return err
+			}
+
+			if err := loadDataFromConfig(config, cmd.PersistentFlags(), link.AdditionalConfigsSchema(), additionalConfigs); err != nil {
+				return err
+			}
+
+			preparedParameters, preparedConfigs, err := link.PrepareLink(originalResult, additionalParameters, additionalConfigs)
+			if err != nil {
+				return err
+			}
+
+			result, err := handleExecutor(ctx, cmd, target, preparedParameters, preparedConfigs)
+			if err != nil {
+				return err
+			}
+
+			return handleLinkArgs(ctx, cmd, followingLinkArgs, target.Links(), config, result)
+		},
+	}
+
+	addFlags(linkCmd.Flags(), link.AdditionalParametersSchema())
+	addFlags(linkCmd.PersistentFlags(), link.AdditionalConfigsSchema())
+
+	parentCmd.AddCommand(linkCmd)
+	logger().Debugw("Link added to command tree", "name", link.Name())
+
+	// Reset values of persistent flags to avoid inheriting the values set from previous actions/links
+	linkCmd.PersistentFlags().Visit(func(f *flag.Flag) {
+		_ = f.Value.Set(f.DefValue)
+	})
+
+	return linkCmd
+}
+
 func AddAction(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
@@ -339,17 +434,25 @@ func AddAction(
 			parameters := core.Parameters{}
 			configs := core.Configs{}
 
+			config := sdk.Config()
+
 			if err := loadDataFromFlags(cmd.Flags(), exec.ParametersSchema(), parameters); err != nil {
 				return err
 			}
 
-			if err := loadDataFromConfig(sdk.Config(), cmd.PersistentFlags(), exec.ConfigsSchema(), configs); err != nil {
+			if err := loadDataFromConfig(config, cmd.PersistentFlags(), exec.ConfigsSchema(), configs); err != nil {
 				return err
 			}
 
 			ctx := sdk.NewContext()
-			_, err := handleExecutor(ctx, cmd, exec, parameters, configs)
-			return err
+			result, err := handleExecutor(ctx, cmd, exec, parameters, configs)
+			if err != nil {
+				return err
+			}
+
+			// First chained args structure is MainArgs
+			linkChainedArgs := argParser.ChainedArgs()[1:]
+			return handleLinkArgs(ctx, cmd, linkChainedArgs, exec.Links(), config, result)
 		},
 	}
 
