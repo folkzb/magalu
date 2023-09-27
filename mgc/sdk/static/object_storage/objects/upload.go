@@ -37,8 +37,8 @@ func newUpload() core.Executor {
 	})
 }
 
-func newUploadRequest(ctx context.Context, region, dst string, reader io.Reader) (*http.Request, error) {
-	host := s3.BuildHost(region)
+func newUploadRequest(ctx context.Context, cfg s3.Config, dst string, reader io.Reader) (*http.Request, error) {
+	host := s3.BuildHost(cfg)
 	url, err := url.JoinPath(host, dst)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func upload(ctx context.Context, params uploadParams, cfg s3.Config) (*uploadTem
 	if err != nil {
 		return nil, fmt.Errorf("error reading object: %w", err)
 	}
-	req, err := newUploadRequest(ctx, cfg.Region, dst, reader)
+	req, err := newUploadRequest(ctx, cfg, dst, reader)
 	if err != nil {
 		return nil, err
 	}

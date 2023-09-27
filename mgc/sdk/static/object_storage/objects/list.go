@@ -25,8 +25,8 @@ type ListObjectsResponse struct {
 	Contents []*bucketContent `xml:"Contents"`
 }
 
-func newListRequest(ctx context.Context, region, bucket string) (*http.Request, error) {
-	host := s3.BuildHost(region)
+func newListRequest(ctx context.Context, cfg s3.Config, bucket string) (*http.Request, error) {
+	host := s3.BuildHost(cfg)
 	url, err := url.JoinPath(host, bucket)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func newList() core.Executor {
 
 func List(ctx context.Context, params ListObjectsParams, cfg s3.Config) (result ListObjectsResponse, err error) {
 	bucket, _ := strings.CutPrefix(params.Destination, s3.URIPrefix)
-	req, err := newListRequest(ctx, cfg.Region, bucket)
+	req, err := newListRequest(ctx, cfg, bucket)
 	if err != nil {
 		return result, err
 	}

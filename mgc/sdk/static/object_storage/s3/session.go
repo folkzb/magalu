@@ -21,8 +21,11 @@ var excludedHeaders = HeaderMap{
 	"Expect":                nil,
 }
 
-func BuildHost(region string) string {
-	return strings.ReplaceAll(templateUrl, "{{region}}", region)
+func BuildHost(cfg Config) string {
+	if cfg.ServerUrl != "" {
+		return cfg.ServerUrl
+	}
+	return strings.ReplaceAll(templateUrl, "{{region}}", cfg.Region)
 }
 
 func SendRequest[T core.Value](ctx context.Context, req *http.Request, accessKey, secretKey string, dataPtr *T) (result T, err error) {

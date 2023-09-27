@@ -72,8 +72,8 @@ func newDownload() core.Executor {
 	})
 }
 
-func newDownloadRequest(ctx context.Context, region string, pathURIs ...string) (*http.Request, error) {
-	host := s3.BuildHost(region)
+func newDownloadRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*http.Request, error) {
+	host := s3.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func writeToFile(reader io.ReadCloser, outFile string) (err error) {
 func downloadSingleFile(ctx context.Context, cfg s3.Config, src, dst string) error {
 	bucketURI, _ := strings.CutPrefix(src, s3.URIPrefix)
 	downloadLogger().Infof("Downloading %s", bucketURI)
-	req, err := newDownloadRequest(ctx, cfg.Region, bucketURI)
+	req, err := newDownloadRequest(ctx, cfg, bucketURI)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func downloadMultipleFiles(ctx context.Context, cfg s3.Config, src, dst string) 
 	for _, obj := range objs.Contents {
 		objURI := path.Join(bucketName, obj.Key)
 		downloadLogger().Infof("Downloading %s", objURI)
-		req, err := newDownloadRequest(ctx, cfg.Region, objURI)
+		req, err := newDownloadRequest(ctx, cfg, objURI)
 		if err != nil {
 			objError.Add(objURI, err)
 			continue

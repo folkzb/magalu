@@ -28,8 +28,8 @@ func newCreate() core.Executor {
 	})
 }
 
-func newCreateRequest(ctx context.Context, region, bucket string) (*http.Request, error) {
-	host := s3.BuildHost(region)
+func newCreateRequest(ctx context.Context, cfg s3.Config, bucket string) (*http.Request, error) {
+	host := s3.BuildHost(cfg)
 	url, err := url.JoinPath(host, bucket)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func newCreateRequest(ctx context.Context, region, bucket string) (*http.Request
 }
 
 func create(ctx context.Context, params createParams, cfg s3.Config) (core.Value, error) {
-	req, err := newCreateRequest(ctx, cfg.Region, params.Name)
+	req, err := newCreateRequest(ctx, cfg, params.Name)
 	if err != nil {
 		return nil, err
 	}

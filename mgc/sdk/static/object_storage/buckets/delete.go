@@ -69,8 +69,8 @@ func newDelete() core.Executor {
 	})
 }
 
-func newDeleteRequest(ctx context.Context, region string, pathURIs ...string) (*http.Request, error) {
-	host := s3.BuildHost(region)
+func newDeleteRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*http.Request, error) {
+	host := s3.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func delete(ctx context.Context, params deleteParams, cfg s3.Config) (core.Value
 		return nil, objErr
 	}
 
-	req, err := newDeleteRequest(ctx, cfg.Region, params.Name)
+	req, err := newDeleteRequest(ctx, cfg, params.Name)
 	if err != nil {
 		return nil, err
 	}
