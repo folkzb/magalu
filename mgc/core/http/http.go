@@ -42,22 +42,22 @@ func ClientFromContext(context context.Context) *Client {
 	return client
 }
 
-func DecodeJSON(resp *http.Response, data core.Value) error {
+func DecodeJSON[T core.Value](resp *http.Response, data *T) error {
 	defer resp.Body.Close()
-	err := json.NewDecoder(resp.Body).Decode(data)
+	decoder := json.NewDecoder(resp.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(data)
 	if err != nil {
 		return fmt.Errorf("error decoding JSON response body: %w", err)
 	}
 	return nil
 }
 
-func DecodeXML(resp *http.Response, data core.Value) error {
+func DecodeXML[T core.Value](resp *http.Response, data *T) error {
 	defer resp.Body.Close()
-	b, err := io.ReadAll(resp.Body)
+	decoder := xml.NewDecoder(resp.Body)
+	err := decoder.Decode(data)
 	if err != nil {
-		return fmt.Errorf("error reading XML body: %w", err)
-	}
-	if err = xml.Unmarshal(b, data); err != nil {
 		return fmt.Errorf("error unmarshalling XML body: %w", err)
 	}
 	return err
@@ -124,10 +124,9 @@ func assignToT[T any, U any](t *T, u U) error {
 		return nil
 	}
 
-	anyType := reflect.TypeOf(*new(any))
 	tVal := reflect.ValueOf(t).Elem()
-
-	if tVal.Type() != anyType {
+	// Empty name means `any`
+	if tVal.Type().Name() != "" {
 		return fmt.Errorf("request response of type %T is not convertible to %T", *t, u)
 	}
 
