@@ -47,8 +47,9 @@ func List(ctx context.Context, params ListObjectsParams, cfg s3.Config) (result 
 	bucket, _ := strings.CutPrefix(params.Destination, s3.URIPrefix)
 	req, err := newListRequest(ctx, cfg, bucket)
 	if err != nil {
-		return result, err
+		return
 	}
 
-	return s3.SendRequest(ctx, req, cfg.AccessKeyID, cfg.SecretKey, &result)
+	result, err = s3.SendRequest[ListObjectsResponse](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
+	return
 }

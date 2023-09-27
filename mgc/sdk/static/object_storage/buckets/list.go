@@ -37,11 +37,12 @@ func newList() core.Executor {
 	)
 }
 
-func list(ctx context.Context, _ struct{}, cfg s3.Config) (core.Value, error) {
+func list(ctx context.Context, _ struct{}, cfg s3.Config) (result ListResponse, err error) {
 	req, err := newListRequest(ctx, cfg)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return s3.SendRequest(ctx, req, cfg.AccessKeyID, cfg.SecretKey, &ListResponse{})
+	result, err = s3.SendRequest[ListResponse](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
+	return
 }

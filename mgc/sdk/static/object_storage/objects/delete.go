@@ -32,12 +32,13 @@ func newDeleteRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*
 	return http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 }
 
-func Delete(ctx context.Context, params DeleteObjectParams, cfg s3.Config) (core.Value, error) {
+func Delete(ctx context.Context, params DeleteObjectParams, cfg s3.Config) (result core.Value, err error) {
 	bucketURI, _ := strings.CutPrefix(params.Destination, s3.URIPrefix)
 	req, err := newDeleteRequest(ctx, cfg, bucketURI)
 	if err != nil {
 		return nil, err
 	}
 
-	return s3.SendRequest(ctx, req, cfg.AccessKeyID, cfg.SecretKey, (*core.Value)(nil))
+	result, err = s3.SendRequest[core.Value](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
+	return
 }

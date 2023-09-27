@@ -118,7 +118,24 @@ func NewHttpErrorFromResponse(resp *http.Response) error {
 	}
 }
 
-// Handles the response, whenever possible decodes (unmarshal) the data.
+func assignToT[T any, U any](t *T, u U) error {
+	if uAsT, ok := any(u).(T); ok {
+		*t = uAsT
+		return nil
+	}
+
+	anyType := reflect.TypeOf(*new(any))
+	tVal := reflect.ValueOf(t).Elem()
+
+	if tVal.Type() != anyType {
+		return fmt.Errorf("request response of type %T is not convertible to %T", *t, u)
+	}
+
+	tVal.Set(reflect.ValueOf(u))
+	return nil
+}
+
+// Handles the response, and tries to convert the data to T
 //
 // If the Content-Type header starts with "multipart/", then a pointer to multipart.Part
 // is returned as data.
@@ -127,42 +144,44 @@ func NewHttpErrorFromResponse(resp *http.Response) error {
 //   - application/json
 //   - application/xml
 //
-// Then it will be decoded. If dataPtr is not nil, then it will be given to the decoder,
-// this allows a struct with Golang tags to be passed, controlling the JSON and XML decoders.
-// If dataPtr is nil, then it will be a pointer to "any".
-// The returned data is always the final value, not a pointer to it
-// (not dataPtr, but the value it points to).
+// Then it will be decoded.
 //
 // If the Content-Type is none of the above, then io.ReadCloser (resp.Body) is returned.
-func UnwrapResponse(resp *http.Response, dataPtr any) (data any, err error) {
+//
+// To avoid errors when the result type isn't known, UnwrapResponse[any] can be used.
+func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, NewHttpErrorFromResponse(resp)
+		err = NewHttpErrorFromResponse(resp)
+		return
 	}
 
 	if resp.StatusCode == 204 {
-		return nil, nil
-	}
-
-	if dataPtr == nil {
-		dataPtr = &data
+		return
 	}
 
 	contentType, params, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+
 	switch {
 	default:
-		return resp.Body, nil
+		err = assignToT(&result, resp.Body)
+		return
 	case strings.HasPrefix(contentType, "multipart/"):
 		// TODO: do we have multi-part downloads? or just single?
 		// If multi, then we need to return a multipart reader...
 		// return multipart.NewReader(resp.Body, params["boundary"]), nil
 		r := multipart.NewReader(resp.Body, params["boundary"])
-		return r.NextPart()
+		nextPart, npErr := r.NextPart()
+		err = npErr
+		if err != nil {
+			return
+		}
+		err = assignToT(&result, nextPart)
+		return
 	case contentType == "application/json":
-		err = DecodeJSON(resp, dataPtr)
+		err = DecodeJSON(resp, &result)
 	case contentType == "application/xml":
-		err = DecodeXML(resp, dataPtr)
+		err = DecodeXML(resp, &result)
 	}
 
-	data = reflect.ValueOf(dataPtr).Elem().Interface()
 	return
 }

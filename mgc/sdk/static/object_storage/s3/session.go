@@ -28,10 +28,11 @@ func BuildHost(cfg Config) string {
 	return strings.ReplaceAll(templateUrl, "{{region}}", cfg.Region)
 }
 
-func SendRequest[T core.Value](ctx context.Context, req *http.Request, accessKey, secretKey string, dataPtr *T) (result T, err error) {
+func SendRequest[T core.Value](ctx context.Context, req *http.Request, accessKey, secretKey string) (result T, err error) {
 	httpClient := corehttp.ClientFromContext(ctx)
 	if httpClient == nil {
-		return result, fmt.Errorf("couldn't get http client from context")
+		err = fmt.Errorf("couldn't get http client from context")
+		return
 	}
 
 	var unsignedPayload bool
@@ -40,22 +41,16 @@ func SendRequest[T core.Value](ctx context.Context, req *http.Request, accessKey
 		unsignedPayload = true
 	}
 
-	if err := sign(req, accessKey, secretKey, unsignedPayload, excludedHeaders); err != nil {
-		return result, err
+	if err = sign(req, accessKey, secretKey, unsignedPayload, excludedHeaders); err != nil {
+		return
 	}
 
 	res, err := httpClient.Do(req)
 	if err != nil {
-		return result, fmt.Errorf("error to send HTTP request: %w", err)
+		err = fmt.Errorf("error to send HTTP request: %w", err)
+		return
 	}
 
-	data, err := corehttp.UnwrapResponse(res, dataPtr)
-	if err != nil || data == nil {
-		return result, err
-	}
-	convertedVal, ok := data.(T)
-	if !ok {
-		return result, fmt.Errorf("failed to convert response value from %T to %T", data, result)
-	}
-	return convertedVal, err
+	result, err = corehttp.UnwrapResponse[T](res)
+	return
 }

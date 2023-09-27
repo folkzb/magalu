@@ -105,8 +105,7 @@ func downloadSingleFile(ctx context.Context, cfg s3.Config, src, dst string) err
 		return err
 	}
 
-	var closer io.ReadCloser
-	data, err := s3.SendRequest(ctx, req, cfg.AccessKeyID, cfg.SecretKey, &closer)
+	closer, err := s3.SendRequest[io.ReadCloser](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
 	if err != nil {
 		return err
 	}
@@ -121,7 +120,7 @@ func downloadSingleFile(ctx context.Context, cfg s3.Config, src, dst string) err
 		return err
 	}
 
-	if err := writeToFile(data, dst); err != nil {
+	if err := writeToFile(closer, dst); err != nil {
 		return err
 	}
 
@@ -146,9 +145,8 @@ func downloadMultipleFiles(ctx context.Context, cfg s3.Config, src, dst string) 
 			continue
 		}
 
-		var closer io.ReadCloser
-		data, err := s3.SendRequest(ctx, req, cfg.AccessKeyID, cfg.SecretKey, &closer)
-		if err != nil || data == nil {
+		closer, err := s3.SendRequest[io.ReadCloser](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
+		if err != nil || closer == nil {
 			objError.Add(objURI, err)
 			continue
 		}
@@ -159,7 +157,7 @@ func downloadMultipleFiles(ctx context.Context, cfg s3.Config, src, dst string) 
 			continue
 		}
 
-		if err := writeToFile(data, path.Join(dst, obj.Key)); err != nil {
+		if err := writeToFile(closer, path.Join(dst, obj.Key)); err != nil {
 			objError.Add(objURI, err)
 			continue
 		}

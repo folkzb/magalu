@@ -66,7 +66,7 @@ func NewHttpResult(
 		requestBody: requestBody,
 	}
 
-	result.responseBody, err = UnwrapResponse(response, nil)
+	result.responseBody, err = UnwrapResponse[any](response)
 	if err != nil {
 		return
 	}
