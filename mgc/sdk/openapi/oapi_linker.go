@@ -10,6 +10,7 @@ import (
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/http"
+	"magalu.cloud/core/schema"
 )
 
 type openapiLinker struct {
@@ -229,7 +230,7 @@ func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 
 			return true, nil
 		})
-		l.additionalParameters = core.NewObjectSchema(props, required)
+		l.additionalParameters = schema.NewObjectSchema(props, required)
 	}
 	return l.additionalParameters
 }
@@ -252,7 +253,7 @@ func (l *openapiLinker) AdditionalConfigsSchema() *core.Schema {
 			}
 		}
 
-		l.additionalConfigs = core.NewObjectSchema(props, required)
+		l.additionalConfigs = schema.NewObjectSchema(props, required)
 	}
 	return l.additionalConfigs
 }
