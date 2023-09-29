@@ -202,6 +202,24 @@ func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 				return true, nil
 			}
 
+			if reqBodyParamsSpec, ok := getExtensionObject(op.extensionPrefix, "requestBodyParameters", l.link.Extensions, nil); ok {
+				for jpStr := range reqBodyParamsSpec {
+					jp, err := jsonpointer.New(jpStr)
+					if err != nil {
+						continue
+					}
+
+					tokens := jp.DecodedTokens()
+					if len(tokens) == 0 {
+						continue
+					}
+
+					if tokens[0] == internalName {
+						return true, nil
+					}
+				}
+			}
+
 			// The parameter name can be qualified using the parameter location [{in}.]{name} for
 			// operations that use the same parameter name in different locations (e.g. path.id).
 			if _, ok := l.link.Parameters[fmt.Sprintf("%s.%s", location, internalName)]; ok {
