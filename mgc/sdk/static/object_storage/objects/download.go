@@ -105,7 +105,7 @@ func downloadSingleFile(ctx context.Context, cfg s3.Config, src, dst string) err
 		return err
 	}
 
-	closer, err := s3.SendRequest[io.ReadCloser](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
+	closer, _, err := s3.SendRequest[io.ReadCloser](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func downloadMultipleFiles(ctx context.Context, cfg s3.Config, src, dst string) 
 			continue
 		}
 
-		closer, err := s3.SendRequest[io.ReadCloser](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
+		closer, _, err := s3.SendRequest[io.ReadCloser](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
 		if err != nil || closer == nil {
 			objError.Add(objURI, err)
 			continue

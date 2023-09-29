@@ -28,7 +28,7 @@ func BuildHost(cfg Config) string {
 	return strings.ReplaceAll(templateUrl, "{{region}}", cfg.Region)
 }
 
-func SendRequest[T core.Value](ctx context.Context, req *http.Request, accessKey, secretKey string) (result T, err error) {
+func SendRequest[T core.Value](ctx context.Context, req *http.Request, accessKey, secretKey string) (result T, res *http.Response, err error) {
 	httpClient := corehttp.ClientFromContext(ctx)
 	if httpClient == nil {
 		err = fmt.Errorf("couldn't get http client from context")
@@ -45,7 +45,7 @@ func SendRequest[T core.Value](ctx context.Context, req *http.Request, accessKey
 		return
 	}
 
-	res, err := httpClient.Do(req)
+	res, err = httpClient.Do(req)
 	if err != nil {
 		err = fmt.Errorf("error to send HTTP request: %w", err)
 		return
