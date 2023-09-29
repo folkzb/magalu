@@ -203,7 +203,6 @@ Loop:
 }
 
 func (o *linkRtExpression) resolveChild(s *scanner.Scanner) (any, bool, error) {
-Loop:
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		text := s.TokenText()
 		switch text {
@@ -217,15 +216,6 @@ Loop:
 			return (&linkRtExpSource{s, o.findParameterValue, o.httpResult.Request().Header, o.httpResult.RequestBody()}).resolve()
 		case "response":
 			return (&linkRtExpSource{s, o.findParameterValue, o.httpResult.Response().Header, o.httpResult.ResponseBody()}).resolve()
-		default:
-			// Treat entire string as raw value
-
-			// TODO: Use regex to detect pattern
-			if strings.Contains(o.str, "{") && strings.Contains(o.str, "}") {
-				break Loop
-			}
-
-			return o.str, true, nil
 		}
 	}
 	return nil, false, fmt.Errorf("malformed link runtime expression")
@@ -242,7 +232,14 @@ Loop:
 		case "$":
 			return o.resolveChild(s)
 		default:
-			break Loop
+			// Treat entire string as raw value
+
+			// TODO: Use regex to detect pattern
+			if strings.Contains(o.str, "{") && strings.Contains(o.str, "}") {
+				break Loop
+			}
+
+			return o.str, true, nil
 		}
 	}
 	return nil, false, fmt.Errorf("malformed link runtime expression")
