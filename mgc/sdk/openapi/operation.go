@@ -600,21 +600,19 @@ func (o *Operation) forEachParameterName(cb cbForEachParameterName) (finished bo
 	if rbr := o.operation.RequestBody; rbr != nil {
 		rb := rbr.Value
 		if content := rb.Content; content != nil {
-			var mt *openapi3.MediaType
-			if x := content.Get("application/json"); x != nil {
-				mt = x
-			} else if x := content.Get("multipart/form-data"); x != nil {
-				mt = x
-			} else if x := content.Get("application/x-www-form-urlencoded"); x != nil {
-				mt = x
-			} else {
-				finished, err = cb(fileUploadParam, fileUploadParam, "body")
-			}
-
-			if mt != nil {
+			if mt := content.Get("application/json"); mt != nil {
 				finished, err = o.forEachBodyJsonParameter(mt, func(externalName, internalName string, _ *openapi3.SchemaRef, _ *openapi3.Schema) (run bool, err error) {
 					return cb(externalName, internalName, "body")
 				})
+			} else if mt := content.Get("multipart/form-data"); mt != nil {
+				finished, err = o.forEachBodyUploadMultipartParameter(mt, func(externalName, internalName string, _ *openapi3.SchemaRef, _ *openapi3.Schema) (run bool, err error) {
+					return cb(externalName, internalName, "body")
+				})
+			} else if x := content.Get("application/x-www-form-urlencoded"); x != nil {
+				err = fmt.Errorf("application/x-www-form-urlencoded not implemented")
+				return
+			} else {
+				finished, err = cb(fileUploadParam, fileUploadParam, "body")
 			}
 		}
 	}
