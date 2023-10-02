@@ -20,7 +20,8 @@ mkdir -p "$BUILDDIR"
 for D in `go tool dist list | grep "$DESIRED_DIST_REGEXP"`; do
     OS=`echo "$D" | cut -d/ -f1`
     ARCH=`echo "$D" | cut -d/ -f2`
-    GOOS="$OS" GOARCH="$ARCH" go build -tags "$TAGS" -ldflags "$LDFLAGS" -o "$BUILDDIR/$NAME-$OS-$ARCH-$VERSION" "$ENTRYPOINT"
+    EXT=`if [ "$OS" = "windows" ]; then echo ".exe"; fi`
+    GOOS="$OS" GOARCH="$ARCH" go build -tags "$TAGS" -ldflags "$LDFLAGS" -o "$BUILDDIR/$NAME-$OS-$ARCH-$VERSION$EXT" "$ENTRYPOINT"
 done
 
 cp mgc/cli/RUNNING.md "$BUILDDIR/README.md"
