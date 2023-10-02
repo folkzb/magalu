@@ -61,11 +61,7 @@ func TestNewHttpErrorFromResponse(t *testing.T) {
 		Status:     "not ok",
 		Header:     http.Header{"Content-Type": []string{"application/json"}},
 	}
-	err := NewHttpErrorFromResponse(dummyResponse)
-	httpErr, ok := err.(*HttpError)
-	if !ok {
-		t.Error("NewHttpErrorFromResponse did not return expected HttpError type")
-	}
+	httpErr := NewHttpErrorFromResponse(dummyResponse)
 
 	expected := &HttpError{
 		Code:    123,
@@ -84,7 +80,7 @@ func TestNewHttpErrorFromResponse(t *testing.T) {
 	expected.Slug = "the slug"
 	expected.Payload = bytes.NewBufferString("{\"slug\": \"the slug\",\"message\": \"the message\"}").Bytes()
 
-	httpErr = NewHttpErrorFromResponse(dummyResponse).(*HttpError)
+	httpErr = NewHttpErrorFromResponse(dummyResponse)
 	if !reflect.DeepEqual(httpErr, expected) {
 		t.Errorf("NewHttpErrorFromResponse failed to decode response's 'data' and 'message' fields properly\nInput: %+v\nOutput: %+v\nExpected: %+v", *dummyResponse, *httpErr, *expected)
 	}

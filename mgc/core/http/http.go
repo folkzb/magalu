@@ -85,7 +85,7 @@ func (e *HttpError) String() string {
 	return fmt.Sprintf("%T{Status: %q, Slug: %q, Message: %q}", e, e.Status, e.Slug, e.Message)
 }
 
-func NewHttpErrorFromResponse(resp *http.Response) error {
+func NewHttpErrorFromResponse(resp *http.Response) *HttpError {
 	slug := "unknown"
 	message := resp.Status
 
