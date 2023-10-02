@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -97,27 +96,23 @@ func setMD5Checksum(req *http.Request) error {
 	}
 
 	h := md5.New()
-	switch req.Body.(type) {
-	case io.ReadSeeker:
-		length, err := CopySeekableBody(h, req.Body.(io.ReadSeeker))
-		if err != nil {
-			return err
-		}
-		req.ContentLength = length
-	default:
-		// Creates a deep copy of body that is safe to use
-		bodyReader, err := req.GetBody()
-		if err != nil {
-			return err
-		}
 
-		defer bodyReader.Close()
-		buf, err := io.ReadAll(bodyReader)
-		if err != nil {
-			return err
-		}
-		h.Write(buf)
+	// req.Body can be io.SectionReader, which cannot be cloned
+	// calling req.GetBody in this situation causes nil pointer exception.
+	// This code manually clones the body
+	buff := bytes.NewBuffer([]byte{})
+	tee := io.TeeReader(req.Body, buff)
+	defer func() {
+		req.Body.Close()
+		req.Body = io.NopCloser(bytes.NewReader(buff.Bytes()))
+		req.Header.Set("Content-Length", fmt.Sprint(len(buff.Bytes())))
+	}()
+
+	data, err := io.ReadAll(tee)
+	if err != nil {
+		return err
 	}
+	h.Write(data)
 	checksum := base64.StdEncoding.EncodeToString(h.Sum(nil))
 	req.Header.Set(contentMD5Header, checksum)
 	return nil
@@ -145,8 +140,8 @@ func buildCanonicalHeaders(req *http.Request, ignoredHeaders HeaderMap) (string,
 		req.Header.Set("Host", req.Host)
 	}
 
-	if req.Body != nil && req.Header.Get("Content-Length") == "" {
-		req.Header.Set("Content-Length", strconv.FormatInt(req.ContentLength, 10))
+	if req.Body != nil && req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", "application/octet-stream")
 	}
 
 	sortedHeaderKeys := make([]string, 0, len(req.Header))
@@ -269,8 +264,10 @@ func sign(req *http.Request, accessKey, secretKey string, unsignedPayload bool, 
 	// Set date header based on the custom key provided
 	req.Header.Set(headerDateKey, signingTime.Format(longTimeFormat))
 
-	if err := setMD5Checksum(req); err != nil {
-		return fmt.Errorf("Unable to compute checksum of the body content: %w", err)
+	if _, ok := excludedHeaders["Content-MD5"]; !ok {
+		if err := setMD5Checksum(req); err != nil {
+			return fmt.Errorf("Unable to compute checksum of the body content: %w", err)
+		}
 	}
 
 	// Sort Each Query Key's Values

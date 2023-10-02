@@ -2,11 +2,6 @@ package objects
 
 import (
 	"context"
-	"fmt"
-	"io"
-	"net/http"
-	"net/url"
-	"os"
 	"path"
 	"strings"
 
@@ -37,36 +32,6 @@ func newUpload() core.Executor {
 	})
 }
 
-func newUploadRequest(ctx context.Context, cfg s3.Config, dst string, reader io.Reader) (*http.Request, error) {
-	host := s3.BuildHost(cfg)
-	url, err := url.JoinPath(host, dst)
-	if err != nil {
-		return nil, err
-	}
-	return http.NewRequestWithContext(ctx, http.MethodPut, url, reader)
-}
-
-func readContent(path string) (io.Reader, error) {
-	file, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	switch mode := file.Mode(); {
-	case mode&os.ModeSymlink != 0:
-		resolvedPath, err := os.Readlink(path)
-		if err != nil {
-			return nil, err
-		}
-		return os.Open(resolvedPath)
-	case mode.IsRegular():
-		return os.Open(path)
-	default:
-		// TODO: treat directory recursively
-		return nil, fmt.Errorf("file type %s not supported", mode.Type())
-	}
-}
-
 func formatURI(uri string) string {
 	if !strings.Contains(uri, s3.URIPrefix) {
 		return s3.URIPrefix + uri
@@ -82,17 +47,12 @@ func upload(ctx context.Context, params uploadParams, cfg s3.Config) (*uploadTem
 		dst = path.Join(dst, fileName)
 	}
 
-	reader, err := readContent(params.Source)
-	if err != nil {
-		return nil, fmt.Errorf("error reading object: %w", err)
-	}
-	req, err := newUploadRequest(ctx, cfg, dst, reader)
+	uploader, err := s3.NewS3Uploader(ctx, cfg, params.Source, dst)
 	if err != nil {
 		return nil, err
 	}
 
-	_, _, err = s3.SendRequest[core.Value](ctx, req, cfg.AccessKeyID, cfg.SecretKey)
-	if err != nil {
+	if err = uploader.Upload(); err != nil {
 		return nil, err
 	}
 

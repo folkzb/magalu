@@ -37,4 +37,6 @@ const (
 	unsignedPayloadHeader = "UNSIGNED-PAYLOAD"
 
 	URIPrefix = "s3://"
+
+	CHUNK_SIZE = 1024 * 1024 * 5
 )

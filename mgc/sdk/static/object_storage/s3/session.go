@@ -3,7 +3,6 @@ package s3
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -19,6 +18,7 @@ var excludedHeaders = HeaderMap{
 	"User-Agent":            nil,
 	"X-Amzn-Trace-Id":       nil,
 	"Expect":                nil,
+	"Content-Length":        nil,
 }
 
 func BuildHost(cfg Config) string {
@@ -36,8 +36,7 @@ func SendRequest[T core.Value](ctx context.Context, req *http.Request, accessKey
 	}
 
 	var unsignedPayload bool
-	switch req.Body.(type) {
-	case io.ReadSeeker:
+	if req.Method == http.MethodPut {
 		unsignedPayload = true
 	}
 
