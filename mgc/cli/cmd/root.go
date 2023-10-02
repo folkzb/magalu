@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"magalu.cloud/cli/ui"
 	"magalu.cloud/core"
 	mgcHttp "magalu.cloud/core/http"
 	mgcLogger "magalu.cloud/core/logger"
@@ -325,6 +326,19 @@ func handleExecutor(
 	parameters core.Parameters,
 	configs core.Configs,
 ) (core.Result, error) {
+
+	if cExec, ok := core.ExecutorAs[core.ConfirmableExecutor](exec); ok && !getBypassConfirmationFlag(cmd) {
+		msg := cExec.ConfirmPrompt(parameters, configs)
+		run, err := ui.Confirm(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		if !run {
+			return nil, core.UserDeniedConfirmationError{Prompt: msg}
+		}
+	}
+
 	if t := getTimeoutFlag(cmd); t > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, t)
@@ -347,6 +361,7 @@ func handleExecutor(
 	if err != nil {
 		return nil, err
 	}
+
 	result, err := retry.run(ctx, cb)
 
 	err = handleExecutorResult(ctx, cmd, result, err)
@@ -625,6 +640,7 @@ func showHelpForError(cmd *cobra.Command, args []string, err error) {
 	switch {
 	case errors.Is(err, &mgcHttp.HttpError{}),
 		errors.Is(err, core.FailedTerminationError{}),
+		errors.As(err, &core.UserDeniedConfirmationError{}),
 		errors.Is(err, &url.Error{}),
 		errors.Is(err, context.Canceled),
 		errors.Is(err, context.DeadlineExceeded):
@@ -660,6 +676,7 @@ can generate a command line on-demand for Rest manipulation`,
 	addTimeoutFlag(rootCmd)
 	addWaitTerminationFlag(rootCmd)
 	addRetryUntilFlag(rootCmd)
+	addBypassConfirmationFlag(rootCmd)
 
 	if hasOutputFormatHelp(rootCmd) {
 		return nil
