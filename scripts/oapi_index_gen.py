@@ -1,7 +1,7 @@
 # noqa: T201
 
 import os
-from typing import Dict, Any, List, TypedDict, TextIO
+from typing import Dict, Any, List, TypedDict, TextIO, Tuple
 import argparse
 import yaml
 import json
@@ -42,7 +42,9 @@ def save_index(mods: IndexModules, path: str):
         return idx_file
 
 
-def load_mods(oapiDir: str, outDir: str = None):
+def load_mods(
+    oapiDir: str, outDir: str | None = None
+) -> Tuple[Dict[str, OAPISchema], IndexModules]:
     if outDir is None:
         outDir = oapiDir
 
