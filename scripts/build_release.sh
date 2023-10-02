@@ -7,6 +7,7 @@ BUILDDIR=${BUILDDIR:-build}
 NAME=${NAME:-mgc}
 VERSION=${VERSION}
 TAGS=${TAGS:-embed}
+CGO_ENABLED=${CGO_ENABLED:-0}
 LDFLAGS=${LDFLAGS:-"-s -w"}
 DESIRED_DIST_REGEXP=${DESIRED_DIST_REGEXP:-"^\(linux\|darwin\|windows\)/\(amd64\|arm64\)"}
 
