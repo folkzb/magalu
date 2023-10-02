@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -283,7 +282,7 @@ func sign(req *http.Request, accessKey, secretKey string, unsignedPayload bool, 
 	canonicalStr := buildCanonicalString(
 		req.Method,
 		req.URL.EscapedPath(),
-		url.QueryEscape(req.URL.RawQuery),
+		req.URL.RawQuery,
 		signedHeadersStr,
 		canonicalHeaderStr,
 		payloadHash,
