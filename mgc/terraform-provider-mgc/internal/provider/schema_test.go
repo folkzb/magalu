@@ -580,7 +580,7 @@ func TestMgcToTfSchemaDefaultValues(t *testing.T) {
 
 		m := attributeModifiers{
 			isComputed: true,
-			getChildModifiers: func(mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
+			getChildModifiers: func(ctx context.Context, mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
 				return attributeModifiers{isComputed: true}
 			},
 		}
@@ -615,7 +615,7 @@ func TestMgcToTfSchemaDefaultValues(t *testing.T) {
 
 		m := attributeModifiers{
 			isComputed: true,
-			getChildModifiers: func(mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
+			getChildModifiers: func(ctx context.Context, mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
 				return attributeModifiers{}
 			},
 		}
@@ -643,7 +643,7 @@ func TestMgcToTfSchemaDefaultValues(t *testing.T) {
 
 		m := attributeModifiers{
 			isComputed: true,
-			getChildModifiers: func(mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
+			getChildModifiers: func(ctx context.Context, mgcSchema *sdk.Schema, mgcName mgcName) attributeModifiers {
 				return attributeModifiers{isComputed: true}
 			},
 		}
@@ -684,10 +684,10 @@ func TestMgcToTfSchemaDefaultValues(t *testing.T) {
 
 		m := attributeModifiers{
 			isComputed: true,
-			getChildModifiers: func(mgcSchema *sdk.Schema, n mgcName) attributeModifiers {
+			getChildModifiers: func(ctx context.Context, mgcSchema *sdk.Schema, n mgcName) attributeModifiers {
 				return attributeModifiers{
 					isComputed: true,
-					getChildModifiers: func(mgcSchema *sdk.Schema, m mgcName) attributeModifiers {
+					getChildModifiers: func(ctx context.Context, mgcSchema *sdk.Schema, m mgcName) attributeModifiers {
 						return attributeModifiers{isComputed: true}
 					},
 				}

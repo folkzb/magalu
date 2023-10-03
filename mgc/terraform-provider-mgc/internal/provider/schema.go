@@ -97,13 +97,13 @@ type attributeModifiers struct {
 	isComputed                 bool
 	useStateForUnknown         bool
 	requiresReplaceWhenChanged bool
-	getChildModifiers          func(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers
+	getChildModifiers          func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers
 }
 
 func addMgcSchemaAttributes(
 	attributes mgcAttributes,
 	mgcSchema *mgcSdk.Schema,
-	getModifiers func(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers,
+	getModifiers func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers,
 	resourceName string,
 	ctx context.Context,
 ) error {
@@ -120,7 +120,7 @@ func addMgcSchemaAttributes(
 			continue
 		}
 
-		tfSchema, childAttributes, err := mgcToTFSchema(mgcPropSchema, getModifiers(mgcSchema, mgcName), resourceName, ctx)
+		tfSchema, childAttributes, err := mgcToTFSchema(mgcPropSchema, getModifiers(ctx, mgcSchema, mgcName), resourceName, ctx)
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("[resource] schema for %q attribute %q schema: %+v; error: %s", resourceName, k, mgcPropSchema, err))
 			return fmt.Errorf("attribute %q, error=%s", k, err)
@@ -140,7 +140,7 @@ func addMgcSchemaAttributes(
 	return nil
 }
 
-func getInputChildModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func getInputChildModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	k := string(mgcName)
 	isRequired := slices.Contains(mgcSchema.Required, k)
 	return attributeModifiers{
@@ -153,7 +153,7 @@ func getInputChildModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attribute
 	}
 }
 
-func (r *MgcResource) getCreateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	k := string(mgcName)
 	isRequired := slices.Contains(mgcSchema.Required, k)
 	isComputed := !isRequired
@@ -177,7 +177,7 @@ func (r *MgcResource) getCreateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName
 	}
 }
 
-func (r *MgcResource) getUpdateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	k := string(mgcName)
 	isCreated := r.create.ResultSchema().Properties[k] != nil
 	required := slices.Contains(mgcSchema.Required, k)
@@ -192,7 +192,7 @@ func (r *MgcResource) getUpdateParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName
 	}
 }
 
-func (r *MgcResource) getDeleteParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	// For now we consider all delete params as optionals, we need to think a way for the user to define
 	// required delete params
 	return attributeModifiers{
@@ -205,7 +205,7 @@ func (r *MgcResource) getDeleteParamsModifiers(mgcSchema *mgcSdk.Schema, mgcName
 	}
 }
 
-func getResultModifiers(mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	return attributeModifiers{
 		isRequired:                 false,
 		isOptional:                 false,
@@ -454,7 +454,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		}, nil, nil
 	case "array":
 		mgcItemSchema := (*core.Schema)(mgcSchema.Items.Value)
-		elemAttr, elemAttrs, err := mgcToTFSchema(mgcItemSchema, m.getChildModifiers(mgcItemSchema, "0"), resourceName, ctx)
+		elemAttr, elemAttrs, err := mgcToTFSchema(mgcItemSchema, m.getChildModifiers(ctx, mgcItemSchema, "0"), resourceName, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
