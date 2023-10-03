@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -18,6 +19,7 @@ type openapiLinker struct {
 	link                 *openapi3.Link
 	additionalParameters *core.Schema
 	additionalConfigs    *core.Schema
+	target               core.Executor
 }
 
 func insertParameterCb(
@@ -171,9 +173,6 @@ func opParameterValueResolver(op *Operation, paramData core.Parameters) func(loc
 // START: Linker
 
 func (l *openapiLinker) Name() string {
-	if l.Target() == nil {
-		return "missing"
-	}
 	return l.name
 }
 
@@ -185,9 +184,6 @@ func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 	if l.additionalParameters == nil {
 		// TODO: Handle errors in a better, safer way
 		target := l.Target()
-		if target == nil {
-			return nil
-		}
 		op, ok := core.ExecutorAs[*Operation](target)
 		if !ok {
 			return nil
@@ -241,10 +237,6 @@ func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 func (l *openapiLinker) AdditionalConfigsSchema() *core.Schema {
 	if l.additionalConfigs == nil {
 		target := l.Target()
-		if target == nil {
-			return nil
-		}
-
 		targetConfigs := target.ConfigsSchema()
 		props := map[string]*core.Schema{}
 		required := []string{}
@@ -271,11 +263,12 @@ func (l *openapiLinker) PrepareLink(
 	additionalConfigs core.Configs,
 ) (core.Parameters, core.Configs, error) {
 	target := l.Target()
-	if target == nil {
-		return nil, nil, fmt.Errorf("missing target")
-	}
 	op, ok := core.ExecutorAs[*Operation](target)
 	if !ok {
+		if _, ok := core.ExecutorAs[*core.StaticExecute](target); ok {
+			// This means that the target is an unresolved link, let be executed to return the correct error
+			return nil, nil, nil
+		}
 		return nil, nil, fmt.Errorf("link '%s' has unexpected target type. Expected *Operation", l.Name())
 	}
 
@@ -317,14 +310,35 @@ func (l *openapiLinker) PrepareLink(
 }
 
 func (l *openapiLinker) Target() core.Executor {
-	exec := l.owner.execResolver.get(l.link.OperationID)
-	if exec == nil {
-		exec, _ = l.owner.execResolver.resolve(l.link.OperationRef)
-		if exec == nil {
-			return nil
+	if l.target == nil {
+		if l.link.OperationID != "" {
+			l.target = l.owner.execResolver.get(l.link.OperationID)
+			if l.target == nil {
+				l.target = newUnresolvedOapiLink(fmt.Errorf("unable to find an operation with ID %q", l.link.OperationID))
+			}
+		} else if l.link.OperationRef != "" {
+			var err error
+			l.target, err = l.owner.execResolver.resolve(l.link.OperationRef)
+			if err != nil {
+				l.target = newUnresolvedOapiLink(err)
+			}
+		} else {
+			l.target = newUnresolvedOapiLink(fmt.Errorf("link %q has no Operation ID or Ref!", l.name))
 		}
 	}
-	return exec
+	return l.target
+}
+
+func newUnresolvedOapiLink(underlyingErr error) core.Executor {
+	err := fmt.Errorf("This is an unresolved link. It cannot be executed, as the target operation was not found: %w", underlyingErr)
+	return core.NewStaticExecuteSimple(
+		"UNRESOLVED",
+		"",
+		err.Error(),
+		func(_ context.Context) (core.Result, error) {
+			return nil, err
+		},
+	)
 }
 
 var _ core.Linker = (*openapiLinker)(nil)
