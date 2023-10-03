@@ -64,7 +64,14 @@ func newDelete() core.Executor {
 		delete,
 	)
 
-	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
+	msg := "This command will delete bucket {{.parameters.name}}, and it's result is NOT reversible."
+
+	cExecutor := core.NewConfirmableExecutor(
+		executor,
+		core.ConfirmPromptWithTemplate(msg),
+	)
+
+	return core.NewExecuteResultOutputOptions(cExecutor, func(exec core.Executor, result core.Result) string {
 		return "template=Deleted bucket {{.name}}\n"
 	})
 }

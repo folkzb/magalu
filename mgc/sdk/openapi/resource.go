@@ -22,6 +22,10 @@ type waitTermination struct {
 	JSONPathQuery     string        `json:"jsonPathQuery"`
 }
 
+type confirmation struct {
+	Message string `json:"message"`
+}
+
 var defaultWaitTermination = waitTermination{MaxRetries: 30, IntervalInSeconds: time.Second}
 
 // Source -> Module -> Resource -> Operation
@@ -262,11 +266,12 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 		}
 
 		outputFlag, _ := getExtensionString(o.extensionPrefix, "output-flag", desc.op.Extensions, "")
+		method := strings.ToUpper(desc.method)
 
 		var operation core.Executor = &Operation{
 			name:            opName,
 			key:             desc.key,
-			method:          strings.ToUpper(desc.method),
+			method:          method,
 			path:            desc.path,
 			operation:       desc.op,
 			doc:             o.doc,
@@ -275,6 +280,17 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 			logger:          o.logger.Named(opName),
 			outputFlag:      outputFlag,
 			execResolver:    o.execResolver,
+		}
+
+		isDelete := method == "DELETE"
+		cExt, ok := getExtensionObject(o.extensionPrefix, "confirmable", desc.op.Extensions, nil)
+
+		if (ok && cExt != nil) || isDelete {
+			cExec, err := o.wrapInConfirmableExecutor(cExt, isDelete, operation)
+			if err != nil {
+				return false, err
+			}
+			operation = cExec
 		}
 
 		if wtExt, ok := getExtensionObject(o.extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
@@ -309,6 +325,18 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 	})
 
 	return o.operations, o.operationsByName, nil
+}
+
+func (o *Resource) wrapInConfirmableExecutor(cExt map[string]any, isDelete bool, exec core.Executor) (core.ConfirmableExecutor, error) {
+	c := &confirmation{}
+
+	if cExt != nil {
+		if err := core.DecodeValue(cExt, c); err != nil {
+			return nil, fmt.Errorf("error decoding confirmable extension: %w", err)
+		}
+	}
+
+	return core.NewConfirmableExecutor(exec, core.ConfirmPromptWithTemplate(c.Message)), nil
 }
 
 func (o *Resource) wrapInTerminatorExecutor(wtExt map[string]any, exec core.Executor) (core.TerminatorExecutor, error) {

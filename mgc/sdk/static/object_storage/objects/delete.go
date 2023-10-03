@@ -15,11 +15,18 @@ type DeleteObjectParams struct {
 }
 
 func newDelete() core.Executor {
-	return core.NewStaticExecute(
+	exec := core.NewStaticExecute(
 		"delete",
 		"",
 		"Delete an object from a bucket",
 		Delete,
+	)
+
+	msg := "This command will delete the object at {{.parameters.dst}}, and it's result is NOT reversible."
+
+	return core.NewConfirmableExecutor(
+		exec,
+		core.ConfirmPromptWithTemplate(msg),
 	)
 }
 
