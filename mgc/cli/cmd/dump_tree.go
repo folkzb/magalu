@@ -10,10 +10,10 @@ import (
 
 func newDumpTreeCmd(sdk *mgcSdk.Sdk) *cobra.Command {
 	return &cobra.Command{
-		Use:   "dump-tree",
-		Short: "Print command tree",
-		Long: `Walks through the command tree, and prints name, description, version, children
-		and schema for parameters and configs`,
+		Use:     "dump-tree",
+		Short:   "Print command tree",
+		Long:    `Walks through the command tree, and prints name, description, version, children and schema for parameters and configs. Defaults to YAML output, but "-o json" and other formats may be used`,
+		GroupID: "other",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			root := sdk.Group()
 
