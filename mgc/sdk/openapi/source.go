@@ -34,6 +34,7 @@ type Source struct {
 	ExtensionPrefix *string
 	modules         []*Module
 	byName          map[string]*Module
+	moduleResolver  moduleResolver
 }
 
 // BEGIN: Descriptor interface:
@@ -75,6 +76,7 @@ func (o *Source) getModules() (modules []*Module, byName map[string]*Module, err
 
 	o.modules = make([]*Module, len(index.Modules))
 	o.byName = make(map[string]*Module, len(index.Modules))
+	o.moduleResolver = moduleResolver{}
 
 	for i, item := range index.Modules {
 		module := &Module{
@@ -89,6 +91,7 @@ func (o *Source) getModules() (modules []*Module, byName map[string]*Module, err
 		}
 		o.modules[i] = module
 		o.byName[module.Name()] = module
+		o.moduleResolver.add(module)
 	}
 
 	slices.SortFunc(o.modules, func(a, b *Module) int {
