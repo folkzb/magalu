@@ -26,6 +26,10 @@ func (*jsonpathFileOutputFormatter) Format(value any, options string) error {
 	return enc.Encode(target)
 }
 
+func (*jsonpathFileOutputFormatter) Description() string {
+	return `Same as jsonpath, but reads the expression from the given file: "jsonpath-file=path-to-file-with-jsonpath-expression".`
+}
+
 func init() {
 	outputFormatters["jsonpath-file"] = &jsonpathFileOutputFormatter{}
 }

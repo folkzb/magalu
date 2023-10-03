@@ -19,6 +19,11 @@ func (*templateOutputFormatter) Format(value any, options string) error {
 	return tmpl.Execute(os.Stdout, value)
 }
 
+func (*templateOutputFormatter) Description() string {
+	return `Format using https://pkg.go.dev/text/template. Use "template=your-template-here."` +
+		` For more complex specifications, see "template-file".`
+}
+
 func init() {
 	outputFormatters["template"] = &templateOutputFormatter{}
 }

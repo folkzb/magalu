@@ -26,6 +26,12 @@ func (*tableFileOutputFormatter) Format(value any, options string) error {
 	return formatTableWithOptions(value, tableOpts)
 }
 
+func (*tableFileOutputFormatter) Description() string {
+	return `Format as table using https://github.com/jedib0t/go-pretty/#table using "table-file=path-to-YAML-file-with-table-configuration".` +
+		` The YAML file should contain "columns" array with elements specifying "name" and "jsonpath",` +
+		` optionally may include column configuration. Other top-level configuration include "format", "style" and "rowLength".`
+}
+
 func init() {
 	outputFormatters["table-file"] = &tableFileOutputFormatter{}
 }

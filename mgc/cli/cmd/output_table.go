@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -451,12 +450,7 @@ func configureWriter(w table.Writer, options *tableOptions) {
 	if options.RowLength != 0 {
 		w.SetAllowedRowLength(options.RowLength)
 	} else {
-		maxLength := os.Getenv("MAX_ROW_LENGTH")
-		num, err := strconv.Atoi(maxLength)
-		if err != nil || num == 0 {
-			num = 150
-		}
-		w.SetAllowedRowLength(num)
+		w.SetAllowedRowLength(getTermColumns())
 	}
 
 	if options.Style != nil {
@@ -572,6 +566,13 @@ func (f *tableOutputFormatter) Format(val any, options string) error {
 	tableOptions := &tableOptions{Columns: columns}
 
 	return formatTableWithOptions(val, tableOptions)
+}
+
+func (*tableOutputFormatter) Description() string {
+	return `Format as table using https://github.com/jedib0t/go-pretty/#table.` +
+		` May be used as "table=COLNAME1:jsonpath-expression1,COLNAME2:jsonpath-expression2",` +
+		` otherwise columns are automatically inferred from data layout.` +
+		` For more complex specifications, see "table-file".`
 }
 
 func init() {

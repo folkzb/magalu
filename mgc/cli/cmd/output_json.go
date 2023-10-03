@@ -17,6 +17,11 @@ func (*jsonOutputFormatter) Format(value any, options string) error {
 	return enc.Encode(value)
 }
 
+func (*jsonOutputFormatter) Description() string {
+	return `Format as JSON.` +
+		` Use "json=compact" to use the compact encoding without spaces and indentation.`
+}
+
 func init() {
 	outputFormatters["json"] = &jsonOutputFormatter{}
 }

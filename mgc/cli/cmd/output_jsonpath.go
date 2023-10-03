@@ -22,6 +22,11 @@ func (*jsonpathOutputFormatter) Format(value any, options string) error {
 	return enc.Encode(target)
 }
 
+func (*jsonpathOutputFormatter) Description() string {
+	return `Use JSON Path expression to select elements: "jsonpath=jsonpath-expression".` +
+		` For more complex specifications, see "jsonpath-file".`
+}
+
 func init() {
 	outputFormatters["jsonpath"] = &jsonpathOutputFormatter{}
 }

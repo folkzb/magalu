@@ -641,6 +641,10 @@ can generate a command line on-demand for Rest manipulation`,
 	addWaitTerminationFlag(rootCmd)
 	addRetryUntilFlag(rootCmd)
 
+	if hasOutputFormatHelp(rootCmd) {
+		return nil
+	}
+
 	sdk := &mgcSdk.Sdk{}
 	if err = initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {
 		return err

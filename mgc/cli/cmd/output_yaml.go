@@ -22,6 +22,10 @@ func (*yamlOutputFormatter) Format(value any, options string) error {
 	return enc.Encode(value)
 }
 
+func (*yamlOutputFormatter) Description() string {
+	return fmt.Sprintf(`Format as YAML. Use "yaml=2" to change indentation to 2 (default is %d).`, defaultIndent)
+}
+
 func init() {
 	outputFormatters["yaml"] = &yamlOutputFormatter{}
 }

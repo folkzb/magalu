@@ -23,6 +23,10 @@ func (*templateFileOutputFormatter) Format(value any, options string) error {
 	return tmpl.Execute(os.Stdout, value)
 }
 
+func (*templateFileOutputFormatter) Description() string {
+	return `Same as template, but reads the value from the given file: "template-file=path-to-file-with-template"`
+}
+
 func init() {
 	outputFormatters["template-file"] = &templateFileOutputFormatter{}
 }

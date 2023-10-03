@@ -16,6 +16,7 @@ require (
 	github.com/stoewer/go-strcase v1.3.0
 	go.uber.org/zap v1.25.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
+	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
 	gopkg.in/yaml.v3 v3.0.1
 	moul.io/zapfilter v1.7.0
 )
