@@ -6,7 +6,7 @@ modules:
 -   description: DBaaS Api Product
     name: dbaas
     path: dbaas.openapi.yaml
-    version: 1.8.1
+    version: 1.10.1
 -   description: APIs referentes ao produto de kubernetes
     name: mke
     path: mke.openapi.yaml

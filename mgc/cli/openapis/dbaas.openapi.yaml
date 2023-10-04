@@ -1799,15 +1799,18 @@ components:
         ErrorResponse:
             type: object
             properties:
-                slug:
-                    type: string
-                    example: bad_request
                 message:
+                    title: Message
                     type: string
-                    example: Bad Request
+                slug:
+                    title: Slug
+                    type: string
             required:
             - slug
             - message
+            example:
+                message: Unauthorized
+                slug: Unauthorized
         InstanceResizeRequest:
             title: InstanceResizeRequest
             type: object
