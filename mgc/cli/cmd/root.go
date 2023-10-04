@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 
 	"magalu.cloud/core"
+	mgcHttp "magalu.cloud/core/http"
 	mgcLogger "magalu.cloud/core/logger"
 	mgcSdk "magalu.cloud/sdk"
 
@@ -619,6 +621,22 @@ func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	return pflag.NormalizedName(name)
 }
 
+func showHelpForError(cmd *cobra.Command, args []string, err error) {
+	switch {
+	case errors.Is(err, &mgcHttp.HttpError{}),
+		errors.Is(err, core.FailedTerminationError{}),
+		errors.Is(err, &url.Error{}),
+		errors.Is(err, context.Canceled),
+		errors.Is(err, context.DeadlineExceeded):
+		break
+
+	default:
+		// we can't call UsageString() on the root, we need to find the actual leaf command that failed:
+		subCmd, _, _ := cmd.Find(args)
+		cmd.PrintErrln(subCmd.UsageString())
+	}
+}
+
 func Execute() (err error) {
 	rootCmd := &cobra.Command{
 		Use:     "mgc",
@@ -626,7 +644,9 @@ func Execute() (err error) {
 		Short:   "CLI tool for OpenAPI integration",
 		Long: `This CLI is a dynamic processor of OpenAPI files that
 can generate a command line on-demand for Rest manipulation`,
-		RunE: runHelpE,
+		SilenceErrors: true,
+		SilenceUsage:  true,
+		RunE:          runHelpE,
 	}
 	rootCmd.SetGlobalNormalizationFunc(normalizeFlagName)
 	rootCmd.AddGroup(&cobra.Group{
@@ -664,5 +684,7 @@ can generate a command line on-demand for Rest manipulation`,
 	}()
 
 	rootCmd.SetArgs(mainArgs)
-	return rootCmd.Execute()
+	err = rootCmd.Execute()
+	showHelpForError(rootCmd, mainArgs, err) // since we SilenceUsage and SilenceErrors
+	return err
 }
