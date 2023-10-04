@@ -324,14 +324,20 @@ func (l *openapiLinker) Target() core.Executor {
 				l.target = newUnresolvedOapiLink(err)
 			}
 		} else {
-			l.target = newUnresolvedOapiLink(fmt.Errorf("link %q has no Operation ID or Ref!", l.name))
+			l.target = newUnresolvedOapiLink(fmt.Errorf("link %q has no Operation ID or Ref", l.name))
+		}
+
+		if wtExt, ok := getExtensionObject(l.owner.extensionPrefix, "wait-termination", l.link.Extensions, nil); ok && wtExt != nil {
+			if tExec, err := wrapInTerminatorExecutor(l.owner.logger, wtExt, l.target); err == nil {
+				l.target = tExec
+			}
 		}
 	}
 	return l.target
 }
 
 func newUnresolvedOapiLink(underlyingErr error) core.Executor {
-	err := fmt.Errorf("This is an unresolved link. It cannot be executed, as the target operation was not found: %w", underlyingErr)
+	err := fmt.Errorf("this is an unresolved link. It cannot be executed, as the target operation was not found: %w", underlyingErr)
 	return core.NewStaticExecuteSimple(
 		"UNRESOLVED",
 		"",

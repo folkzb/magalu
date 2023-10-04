@@ -37,8 +37,20 @@ func (o *executeTerminatorWithCheck) ExecuteUntilTermination(context context.Con
 }
 
 func (o *executeTerminatorWithCheck) executeUntilTermination(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
+	var exec func() (Result, error)
+	if tExec, ok := ExecutorAs[TerminatorExecutor](o.Unwrap()); ok {
+		exec = func() (result Result, err error) {
+			r, e := tExec.ExecuteUntilTermination(context, parameters, configs)
+			return ExecutorWrapResult(o, r, e)
+		}
+	} else {
+		exec = func() (result Result, err error) {
+			return o.Execute(context, parameters, configs)
+		}
+	}
+
 	for i := 0; i < o.maxRetries; i++ {
-		result, err = o.Execute(context, parameters, configs)
+		result, err = exec()
 		if err != nil {
 			return result, err
 		}
