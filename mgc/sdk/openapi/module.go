@@ -18,6 +18,7 @@ import (
 
 type Module struct {
 	name            string
+	url             string
 	path            string
 	version         string
 	description     string

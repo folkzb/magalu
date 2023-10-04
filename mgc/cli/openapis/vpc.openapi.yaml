@@ -3337,3 +3337,4 @@ tags:
 -   name: quotas
     description: Rotas relacionadas as apis da VPC API Product para Quotas
     x-cli-description: VPC Quotas
+$id: https://vpc.jaxyendy.com/openapi.json

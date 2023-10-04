@@ -11,6 +11,7 @@ import (
 
 type IndexModule struct {
 	Name        string
+	Url         string
 	Path        string
 	Version     string
 	Description string
@@ -78,6 +79,7 @@ func (o *Source) getModules() (modules []*Module, byName map[string]*Module, err
 	for i, item := range index.Modules {
 		module := &Module{
 			name:            item.Name,
+			url:             item.Url,
 			path:            item.Path,
 			version:         item.Version,
 			description:     item.Description,

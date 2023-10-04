@@ -25,6 +25,10 @@ def sync_request_body(internal_spec: OAPISchema, external_spec: OAPISchema):
                 ext_action["requestBody"] = internal_action["requestBody"]
 
 
+def add_canonical_url_id(spec: OAPISchema, url: str):
+    spec["$id"] = url
+
+
 def fetch_and_parse(json_oapi_url: str) -> OAPISchema:
     with urllib.request.urlopen(json_oapi_url, timeout=5) as response:
         return json.loads(response.read())
@@ -92,6 +96,11 @@ if __name__ == "__main__":
         help="URL to fetch current internal OpenAPI spec, which will "
         "come in JSON format",
     )
+    parser.add_argument(
+        "canonical_url",
+        type=str,
+        help="Canonical URL used to identify the spec",
+    )
     # External = Viveiro in MGC context, intermediate between product and Kong
     parser.add_argument(
         "--ext",
@@ -111,6 +120,7 @@ if __name__ == "__main__":
     internal_spec = fetch_and_parse(args.internal_spec_url)
     # Load yaml into dict
     external_spec = load_yaml(args.ext) if args.ext else internal_spec
+    add_canonical_url_id(external_spec, args.canonical_url)
 
     # Replace requestBody from external to the internal value if they mismatch
     if args.ext:

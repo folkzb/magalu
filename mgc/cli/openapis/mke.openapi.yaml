@@ -2792,3 +2792,4 @@ path:
                             parameters:
                             -   cluster_id: $request.path.cluster_id
                             -   node_pool_id: $request.path.node_pool_id
+$id: https://mke.br-ne-1.com/docs/openapi-with-snippets.json

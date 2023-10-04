@@ -13,6 +13,7 @@ CUSTOM_PATH=$ROOTDIR/$CUSTOM_DIR
 
 API_NAME=$1
 API_URL=$2
+CANONICAL_URL=$3
 SPEC_FILE="$API_NAME.openapi.yaml"
 
 if ! test -f $CUSTOM_PATH/$SPEC_FILE; then
@@ -50,6 +51,6 @@ servers:
 EOF
 fi
 
-python3 $BASEDIR/sync_oapi.py $API_URL --ext $OAPI_PATH/$SPEC_FILE
+python3 $BASEDIR/sync_oapi.py $API_URL $CANONICAL_URL --ext $OAPI_PATH/$SPEC_FILE
 python3 $BASEDIR/remove_tenant_id.py $OAPI_PATH/$SPEC_FILE
 python3 $BASEDIR/yaml_merge.py --override $OAPI_PATH/$SPEC_FILE $CUSTOM_PATH/$SPEC_FILE

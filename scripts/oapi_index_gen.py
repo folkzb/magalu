@@ -12,6 +12,7 @@ OAPISchema = Dict[str, Any]
 
 class IndexModule(TypedDict):
     name: str
+    url: str
     path: str
     version: str
     description: str
@@ -62,11 +63,13 @@ def load_mods(
 
         data = load_yaml(filepath)
         info = data["info"]
+        url = data["$id"]
         name = match.group("name")
         full_mods[filename] = data
         mods.append(
             IndexModule(
                 name=name,
+                url=url,
                 path=relpath,
                 description=info.get("x-cli-description", info.get("description", "")),
                 version=info.get("version", ""),

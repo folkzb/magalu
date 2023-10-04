@@ -1420,3 +1420,4 @@ servers:
                     to: ''
                 -   from: pre-prod
                     to: .pre-prod
+$id: https://virtual-machine.jaxyendy.com/openapi.json
