@@ -332,7 +332,7 @@ func (o *Resource) wrapInConfirmableExecutor(cExt map[string]any, isDelete bool,
 	c := &confirmation{}
 
 	if cExt != nil {
-		if err := core.DecodeValue(cExt, c); err != nil {
+		if err := utils.DecodeValue(cExt, c); err != nil {
 			return nil, fmt.Errorf("error decoding confirmable extension: %w", err)
 		}
 	}
