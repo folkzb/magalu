@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"io"
 	"mime"
@@ -13,6 +12,7 @@ import (
 	"strings"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/xml"
 )
 
 // contextKey is an unexported type for keys defined in this package.
@@ -56,11 +56,12 @@ func DecodeJSON[T core.Value](resp *http.Response, data *T) error {
 func DecodeXML[T core.Value](resp *http.Response, data *T) error {
 	defer resp.Body.Close()
 	decoder := xml.NewDecoder(resp.Body)
+	decoder.DisallowUnknownFields()
 	err := decoder.Decode(data)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling XML body: %w", err)
+		return fmt.Errorf("error decoding XML response body: %w", err)
 	}
-	return err
+	return nil
 }
 
 type HttpError struct {

@@ -277,37 +277,34 @@ more dummy text
 			t.Fatalf("expected result struct to have 'strValue' in 'str' field, got '%s' instead", result.Str)
 		}
 
-		// TODO: These tests aren't producing the intended behavior. What's wrong with XMLDecoder? Why is it not failing?
-		// type invalidDummyRespStruct struct {
-		// 	Field string
-		// }
-		// resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		// _, err = UnwrapResponse[invalidDummyRespStruct](resp)
-		// if err == nil {
-		// 	t.Fatalf("unwrapping response with text '%s' to invalid struct should fail, error was %v instead", bodyText, err)
-		// }
-		// resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		// _, err = UnwrapResponse[any](resp)
-		// if err != nil {
-		// 	t.Fatalf("error when unwrapping xml response to any: %v", err)
-		// }
-		// fmt.Println("about to unwrap to int")
-		// resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		// _, err = UnwrapResponse[int](resp)
-		// if err == nil {
-		// 	t.Fatalf("should return error when T is not 'any' or a decodable struct, got nil instead for int")
-		// }
-		// fmt.Println("about to unwrap to string")
-		// resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		// _, err = UnwrapResponse[string](resp)
-		// if err == nil {
-		// 	t.Fatalf("should return error when T is not 'any' or a decodable struct, got nil instead for string")
-		// }
-		// resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		// _, err = UnwrapResponse[bool](resp)
-		// if err == nil {
-		// 	t.Fatalf("should return error when T is not 'any' or a decodable struct, got nil instead for bool")
-		// }
+		type invalidDummyRespStruct struct {
+			Field string
+		}
+		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
+		_, err = UnwrapResponse[invalidDummyRespStruct](resp)
+		if err == nil {
+			t.Fatalf("unwrapping response with text '%s' to invalid struct should fail, error was %v instead", bodyText, err)
+		}
+		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
+		_, err = UnwrapResponse[any](resp)
+		if err != nil {
+			t.Fatalf("error when unwrapping xml response to any: %v", err)
+		}
+		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
+		_, err = UnwrapResponse[string](resp)
+		if err != nil {
+			t.Fatalf("error when unwrapping xml response to string: %v", err)
+		}
+		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
+		_, err = UnwrapResponse[int](resp)
+		if err == nil {
+			t.Fatalf("should return error when T is not 'any', a decodable struct or a slice got nil instead for int")
+		}
+		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
+		_, err = UnwrapResponse[bool](resp)
+		if err == nil {
+			t.Fatalf("should return error when T is not 'any', a decodable struct or a slice, got nil instead for bool")
+		}
 	})
 
 	t.Run("default body", func(t *testing.T) {
