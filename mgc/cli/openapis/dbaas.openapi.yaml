@@ -283,7 +283,7 @@ paths:
             x-cli-wait-termination:
                 maxRetries: 30
                 intervalInSeconds: 10s
-                jsonPathQuery: $.status == "ACTIVE" || $.status == "ERROR"
+                jsonPathQuery: $.result.status == "ACTIVE" || $.result.status == "ERROR"
         patch:
             operationId: instances_v1_patch
             tags:

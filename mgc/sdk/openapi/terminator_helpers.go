@@ -26,14 +26,18 @@ func jsonPathTerminationCheck(wt *waitTermination, exec core.Executor, logger *z
 	jp, err := builder.NewEvaluable(wt.JSONPathQuery)
 	if err == nil {
 		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
-			value := result.Value()
-			v, err := jp(ctx, value)
+			data := map[string]any{
+				"result":     result.Value(),
+				"parameters": result.Source().Parameters,
+				"configs":    result.Source().Configs,
+			}
+			v, err := jp(ctx, data)
 			if err != nil {
-				logger.Warnw("error evaluating jsonpath query", "query", wt.JSONPathQuery, "target", value, "error", err)
+				logger.Warnw("error evaluating jsonpath query", "query", wt.JSONPathQuery, "target", data, "error", err)
 				return false, err
 			}
 
-			logger.Debugf("jsonpath expression %#v result is %#v", wt.JSONPathQuery, value)
+			logger.Debugf("jsonpath expression %#v data is %#v", wt.JSONPathQuery, data)
 			if v == nil {
 				return false, nil
 			} else if lst, ok := v.([]any); ok {
@@ -43,8 +47,8 @@ func jsonPathTerminationCheck(wt *waitTermination, exec core.Executor, logger *z
 			} else if b, ok := v.(bool); ok {
 				return b, nil
 			} else {
-				logger.Warnw("unknown jsonpath result. Expected list, map or boolean", "result", value)
-				return false, fmt.Errorf("unknown jsonpath result. Expected list, map or boolean. Got %+v", value)
+				logger.Warnw("unknown jsonpath result. Expected list, map or boolean", "data", data)
+				return false, fmt.Errorf("unknown jsonpath data. Expected list, map or boolean. Got %+v", v)
 			}
 		})
 		return tExec, nil
@@ -61,15 +65,19 @@ func templateTerminationCheck(wt *waitTermination, exec core.Executor, logger *z
 	}
 
 	tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
-		value := result.Value()
+		data := map[string]any{
+			"result":     result.Value(),
+			"parameters": result.Source().Parameters,
+			"configs":    result.Source().Configs,
+		}
 		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, value)
+		err = tmpl.Execute(&buf, data)
 		if err != nil {
-			logger.Warnw("error evaluating template query", "query", wt.TemplateQuery, "target", value, "error", err)
+			logger.Warnw("error evaluating template query", "query", wt.TemplateQuery, "target", data, "error", err)
 			return false, err
 		}
 
-		logger.Debugf("template expression %#v data is %#v", wt.TemplateQuery, value)
+		logger.Debugf("template expression %#v data is %#v", wt.TemplateQuery, data)
 		s := buf.String()
 		s = strings.Trim(s, " \t\n\r")
 		return slices.Contains(terminateTemplateStrings, s), nil

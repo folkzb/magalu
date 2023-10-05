@@ -104,7 +104,7 @@ paths:
                             x-cli-wait-termination:
                                 maxRetries: 2
                                 intervalInSeconds: 15s
-                                jsonPathQuery: $.attachments[*]
+                                jsonPathQuery: $.result.attachments[*]
     /v0/volumes/{id}/detach/{virtual_machine_id}:
         post:
             x-cli-name: detach

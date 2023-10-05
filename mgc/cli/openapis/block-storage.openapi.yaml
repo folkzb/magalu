@@ -487,7 +487,7 @@ paths:
                             x-cli-wait-termination:
                                 maxRetries: 2
                                 intervalInSeconds: 15s
-                                jsonPathQuery: $.attachments[*]
+                                jsonPathQuery: $.result.attachments[*]
                 '422':
                     description: Validation Error
                     content:
