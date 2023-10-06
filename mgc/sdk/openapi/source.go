@@ -7,6 +7,7 @@ import (
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 	"magalu.cloud/core"
+	"magalu.cloud/core/dataloader"
 )
 
 type IndexModule struct {
@@ -30,7 +31,7 @@ const indexVersion = "1.0.0"
 // -- ROOT: Source
 
 type Source struct {
-	Loader          Loader
+	Loader          dataloader.Loader
 	ExtensionPrefix *string
 	modules         []*Module
 	byName          map[string]*Module

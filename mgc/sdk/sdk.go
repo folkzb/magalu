@@ -11,6 +11,7 @@ import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
 	"magalu.cloud/core/config"
+	"magalu.cloud/core/dataloader"
 	coreHttp "magalu.cloud/core/http"
 	"magalu.cloud/sdk/openapi"
 	"magalu.cloud/sdk/static"
@@ -113,13 +114,13 @@ func (o *Sdk) newOpenApiSource() *openapi.Source {
 			openApiDir = filepath.Join(cwd, "openapis")
 		}
 	}
-	fileLoader := &openapi.FileLoader{
+	fileLoader := &dataloader.FileLoader{
 		Dir: openApiDir,
 	}
 
-	var loader openapi.Loader
+	var loader dataloader.Loader
 	if embedLoader != nil {
-		loader = openapi.NewMergeLoader(fileLoader, embedLoader)
+		loader = dataloader.NewMergeLoader(fileLoader, embedLoader)
 	} else {
 		loader = fileLoader
 	}

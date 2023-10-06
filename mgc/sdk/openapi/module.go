@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
+	"magalu.cloud/core/dataloader"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -24,7 +25,7 @@ type Module struct {
 	description     string
 	extensionPrefix *string
 	doc             *openapi3.T
-	loader          Loader
+	loader          dataloader.Loader
 	logger          *zap.SugaredLogger
 	resourcesByName map[string]*Resource
 	resources       []*Resource

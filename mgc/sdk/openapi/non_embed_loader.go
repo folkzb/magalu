@@ -2,6 +2,8 @@
 
 package openapi
 
-func GetEmbedLoader() Loader {
+import "magalu.cloud/core/dataloader"
+
+func GetEmbedLoader() dataloader.Loader {
 	return nil
 }

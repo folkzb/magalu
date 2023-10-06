@@ -103,11 +103,12 @@ package openapi
 import (
 \t"os"
 \t"syscall"
+\t"magalu.cloud/core/dataloader"
 )
 
 type embedLoader map[string][]byte
 
-func GetEmbedLoader() Loader {
+func GetEmbedLoader() dataloader.Loader {
 \treturn embedLoaderInstance
 }
 
