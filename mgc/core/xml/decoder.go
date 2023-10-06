@@ -26,6 +26,7 @@ func (d *Decoder) DisallowUnknownFields() {
 func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 	t := value.Type()
 	structFields := make([]reflect.StructField, t.NumField())
+	hasXmlnsCatcher := false
 	hasExtraElemCatcher := false
 	hasExtraAttrCatcher := false
 	for i := 0; i < t.NumField(); i++ {
@@ -40,9 +41,13 @@ func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 			continue
 		}
 		xmlTagValues := strings.Split(xmlTag, ",")
+		hasXmlnsTag := slices.Contains(xmlTagValues, "xmlns")
 		hasAnyTag := slices.Contains(xmlTagValues, "any")
 		hasAttrTag := slices.Contains(xmlTagValues, "attr")
 
+		if hasXmlnsTag {
+			hasXmlnsCatcher = true
+		}
 		// These need to be mutually exclusive
 		if hasAnyTag && hasAttrTag {
 			hasExtraAttrCatcher = true
@@ -53,6 +58,11 @@ func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 
 	extraType := reflect.SliceOf(reflect.TypeOf(byte(0)))
 	// These fields will capture any remaining XML elements and attributes.
+	if !hasXmlnsCatcher {
+		// Xmlns will avoid failures due to lack of Xmlns catching in original struct. Most structs won't have this, as it's
+		// not very useful, we shouldn't fail because of the lack of Xmlns catches...
+		structFields = append(structFields, reflect.StructField{Name: "ExtraXmlns__", Type: extraType, Tag: `xml:"xmlns,attr"`})
+	}
 	if !hasExtraElemCatcher {
 		structFields = append(structFields, reflect.StructField{Name: "ExtraElem__", Type: extraType, Tag: `xml:",any"`})
 	}
