@@ -36,7 +36,7 @@ func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
 	zapConfig := newLogConfig()
 
 	if err := sdk.Config().Get(loggerConfigKey, &zapConfig); err != nil {
-		return err
+		return fmt.Errorf("unable to get logger configuration: %w", err)
 	}
 
 	logger, err := zapConfig.Build()
