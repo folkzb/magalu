@@ -36,6 +36,17 @@ It might be necessary to set the access_token TF variable.
 the TF variable prompt, so use the TF_VAR_access_token to set the variable
 value.
 
+### Generate docs
+
+To automatically generate the documentation for the Provider and it's Resources, run the command below. The documentation will be found at `terraform-provider-mgc/docs`.
+
+```
+cd ../../
+./scripts/tf_generate_docs.sh
+```
+
+This script is integrated into the `build_release.sh` script. This ensures that all releases have up to date TF documentation
+
 ## SDK
 
 ### OpenAPIs
