@@ -49,7 +49,12 @@ func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 	extraElem := newStructValue.FieldByName("ExtraElem__").Interface().([]byte)
 	extraAttr := newStructValue.FieldByName("ExtraAttr__").Interface().([]byte)
 	if len(extraElem) != 0 || len(extraAttr) != 0 {
-		return fmt.Errorf("struct does not properly match structure of XML document. Missing elements: %v Missing attributes: %v", extraElem, extraAttr)
+		return fmt.Errorf(
+			"struct %T does not properly match structure of XML document. Missing elements: %v Missing attributes: %v",
+			value.Interface(),
+			string(extraElem[:]),
+			string(extraAttr[:]),
+		)
 	}
 
 	for i := 0; i < value.NumField(); i++ {
