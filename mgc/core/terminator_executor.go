@@ -31,6 +31,11 @@ func (o *executeTerminatorWithCheck) Unwrap() Executor {
 	return o.Executor
 }
 
+func (o *executeTerminatorWithCheck) Execute(ctx context.Context, parameters Parameters, configs Configs) (result Result, err error) {
+	result, err = o.Executor.Execute(ctx, parameters, configs)
+	return ExecutorWrapResult(o, result, err)
+}
+
 func (o *executeTerminatorWithCheck) ExecuteUntilTermination(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
 	result, err = o.executeUntilTermination(context, parameters, configs)
 	return ExecutorWrapResult(o, result, err)

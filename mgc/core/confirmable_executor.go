@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"strings"
@@ -32,6 +33,11 @@ func NewConfirmableExecutor(
 type confirmableExecutor struct {
 	Executor
 	confirmPrompt func(parameters Parameters, configs Configs) (message string)
+}
+
+func (o *confirmableExecutor) Execute(ctx context.Context, parameters Parameters, configs Configs) (result Result, err error) {
+	result, err = o.Executor.Execute(ctx, parameters, configs)
+	return ExecutorWrapResult(o, result, err)
 }
 
 func (o *confirmableExecutor) Unwrap() Executor {
