@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 type Decoder struct {
@@ -23,6 +26,8 @@ func (d *Decoder) DisallowUnknownFields() {
 func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 	t := value.Type()
 	structFields := make([]reflect.StructField, t.NumField())
+	hasExtraElemCatcher := false
+	hasExtraAttrCatcher := false
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		structFields[i] = reflect.StructField{
@@ -30,12 +35,30 @@ func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 			Type: field.Type,
 			Tag:  field.Tag,
 		}
+		xmlTag, ok := field.Tag.Lookup("xml")
+		if !ok {
+			continue
+		}
+		xmlTagValues := strings.Split(xmlTag, ",")
+		hasAnyTag := slices.Contains(xmlTagValues, "any")
+		hasAttrTag := slices.Contains(xmlTagValues, "attr")
+
+		// These need to be mutually exclusive
+		if hasAnyTag && hasAttrTag {
+			hasExtraAttrCatcher = true
+		} else if hasAnyTag {
+			hasExtraElemCatcher = true
+		}
 	}
 
 	extraType := reflect.SliceOf(reflect.TypeOf(byte(0)))
 	// These fields will capture any remaining XML elements and attributes.
-	structFields = append(structFields, reflect.StructField{Name: "ExtraElem__", Type: extraType, Tag: `xml:",any"`})
-	structFields = append(structFields, reflect.StructField{Name: "ExtraAttr__", Type: extraType, Tag: `xml:",any,attr"`})
+	if !hasExtraElemCatcher {
+		structFields = append(structFields, reflect.StructField{Name: "ExtraElem__", Type: extraType, Tag: `xml:",any"`})
+	}
+	if !hasExtraAttrCatcher {
+		structFields = append(structFields, reflect.StructField{Name: "ExtraAttr__", Type: extraType, Tag: `xml:",any,attr"`})
+	}
 
 	newStructType := reflect.StructOf(structFields)
 	newStructPtrValue := reflect.New(newStructType)
@@ -46,8 +69,13 @@ func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 	}
 
 	newStructValue := newStructPtrValue.Elem()
-	extraElem := newStructValue.FieldByName("ExtraElem__").Interface().([]byte)
-	extraAttr := newStructValue.FieldByName("ExtraAttr__").Interface().([]byte)
+	var extraElem, extraAttr []byte
+	if !hasExtraElemCatcher {
+		extraElem = newStructValue.FieldByName("ExtraElem__").Interface().([]byte)
+	}
+	if !hasExtraAttrCatcher {
+		extraAttr = newStructValue.FieldByName("ExtraAttr__").Interface().([]byte)
+	}
 	if len(extraElem) != 0 || len(extraAttr) != 0 {
 		return fmt.Errorf(
 			"struct %T does not properly match structure of XML document. Missing elements: %v Missing attributes: %v",
