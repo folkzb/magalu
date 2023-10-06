@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -xe
 
@@ -11,9 +11,12 @@ CGO_ENABLED=${CGO_ENABLED:-0}
 LDFLAGS=${LDFLAGS:-"-s -w"}
 DESIRED_DIST_REGEXP=${DESIRED_DIST_REGEXP:-"^\(linux\|darwin\|windows\)/\(amd64\|arm64\)"}
 
+
 if [ -z "$VERSION" ]; then
     VERSION=`git log -1 --pretty=format:%h`
 fi
+
+source ./scripts/tf_generate_docs.sh
 
 mkdir -p "$BUILDDIR"
 
@@ -28,3 +31,4 @@ cp mgc/cli/RUNNING.md "$BUILDDIR/README.md"
 cp -a mgc/cli/openapis "$BUILDDIR"
 cp -a mgc/cli/examples "$BUILDDIR"
 cp mgc/sdk/openapi/README.md "$BUILDDIR/OPENAPI.md"
+cp -r mgc/terraform-provider-mgc/docs "$BUILDDIR"
