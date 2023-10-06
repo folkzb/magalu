@@ -57,6 +57,7 @@ var create = core.NewRawStaticExecute(
 		[]string{"id"},
 	),
 	nil,
+	nil,
 	func(context context.Context, parameters core.Parameters, configs core.Configs) (result any, err error) {
 		return nil, nil
 	},
@@ -92,6 +93,7 @@ var read = core.NewRawStaticExecute(
 		[]string{"id", "image", "name", "count", "createdAt", "extra_field"},
 	),
 	nil,
+	nil,
 	func(context context.Context, parameters core.Parameters, configs core.Configs) (result any, err error) {
 		return nil, nil
 	},
@@ -125,6 +127,7 @@ var update = core.NewRawStaticExecute(
 		[]string{},
 	),
 	nil,
+	nil,
 	func(context context.Context, parameters core.Parameters, configs core.Configs) (result any, err error) {
 		return nil, nil
 	},
@@ -142,6 +145,7 @@ var delete = core.NewRawStaticExecute(
 	),
 	nil,
 	mgc.NewNullSchema(),
+	nil,
 	nil,
 	func(context context.Context, parameters core.Parameters, configs core.Configs) (result any, err error) {
 		return nil, nil

@@ -54,6 +54,7 @@ type Operation struct {
 	resultSchema        *core.Schema
 	responseSchemas     map[string]*core.Schema
 	links               map[string]core.Linker
+	related             map[string]core.Executor
 	transformParameters func(value map[string]any) (map[string]any, error)
 	transformConfigs    func(value map[string]any) (map[string]any, error)
 	transformResult     func(value any) (any, error)
@@ -714,9 +715,10 @@ func (o *Operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
 }
 
 // This map should not be altered externally
-func (o *Operation) Links() map[string]core.Linker {
+func (o *Operation) initLinksAndRelated() map[string]core.Linker {
 	if o.links == nil {
 		o.links = map[string]core.Linker{}
+		o.related = map[string]core.Executor{}
 		// TODO: Handle 'default' status code
 		for _, respRef := range o.operation.Responses {
 			resp := respRef.Value
@@ -725,12 +727,13 @@ func (o *Operation) Links() map[string]core.Linker {
 				name := getNameExtension(o.extensionPrefix, link.Extensions, key)
 				description := getDescriptionExtension(o.extensionPrefix, link.Extensions, link.Description)
 
-				target, err := o.resolveLink(link)
+				originalTarget, err := o.resolveLink(link)
 				if err != nil {
 					o.logger.Warnw("ignored broken link", "link", name, "error", err)
 					continue
 				}
 
+				target := originalTarget
 				if wtExt, ok := getExtensionObject(o.extensionPrefix, "wait-termination", link.Extensions, nil); ok && wtExt != nil {
 					if tExec, err := wrapInTerminatorExecutor(o.logger, wtExt, target); err == nil {
 						target = tExec
@@ -744,10 +747,23 @@ func (o *Operation) Links() map[string]core.Linker {
 					link:        linkRef.Value,
 					target:      target,
 				}
+				o.related[name] = originalTarget
 			}
 		}
 	}
 	return o.links
+}
+
+// This map should not be altered externally
+func (o *Operation) Links() map[string]core.Linker {
+	o.initLinksAndRelated()
+	return o.links
+}
+
+// This map should not be altered externally
+func (o *Operation) Related() map[string]core.Executor {
+	o.initLinksAndRelated()
+	return o.related
 }
 
 func (o *Operation) getTransformResult() func(value any) (any, error) {

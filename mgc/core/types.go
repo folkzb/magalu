@@ -87,8 +87,18 @@ type Executor interface {
 	// The general schema this executor can produce. It may be oneOf/anyOf with multiple schemas.
 	// The Result.Schema() may be a subset of the schema, if multiple were available.
 	ResultSchema() *Schema
-	// This map should not be altered externally
+	// Linkers wrap executors that can operate on the result of this executor.
+	//
+	// For other executors that may be associated or operate together with this one, see Related().
+	//
+	// NOTE: This map should not be altered externally.
 	Links() map[string]Linker
+	// Executors that may be associated or operate together with this one.
+	//
+	// For executors that can operate on the returned value, see Links().
+	//
+	// NOTE: This map should not be altered externally.
+	Related() map[string]Executor
 	// The maps for the parameters and configs should NOT be modified inside the implementation of 'Execute'
 	Execute(context context.Context, parameters Parameters, configs Configs) (result Result, err error)
 }
