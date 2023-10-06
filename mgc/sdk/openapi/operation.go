@@ -699,6 +699,20 @@ func (o *Operation) ResultSchema() *core.Schema {
 	return o.resultSchema
 }
 
+func (o *Operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
+	if link.OperationID != "" {
+		exec := o.execResolver.get(link.OperationID)
+		if exec == nil {
+			return nil, fmt.Errorf("linked operationId=%q was not found", link.OperationID)
+		}
+		return exec, nil
+	} else if link.OperationRef != "" {
+		return o.execResolver.resolve(link.OperationRef)
+	} else {
+		return nil, errors.New("link has no Operation ID or Ref")
+	}
+}
+
 // This map should not be altered externally
 func (o *Operation) Links() map[string]core.Linker {
 	if o.links == nil {
@@ -711,11 +725,24 @@ func (o *Operation) Links() map[string]core.Linker {
 				name := getNameExtension(o.extensionPrefix, link.Extensions, key)
 				description := getDescriptionExtension(o.extensionPrefix, link.Extensions, link.Description)
 
+				target, err := o.resolveLink(link)
+				if err != nil {
+					o.logger.Warnw("ignored broken link", "link", name, "error", err)
+					continue
+				}
+
+				if wtExt, ok := getExtensionObject(o.extensionPrefix, "wait-termination", link.Extensions, nil); ok && wtExt != nil {
+					if tExec, err := wrapInTerminatorExecutor(o.logger, wtExt, target); err == nil {
+						target = tExec
+					}
+				}
+
 				o.links[name] = &openapiLinker{
 					name:        name,
 					description: description,
 					owner:       o,
 					link:        linkRef.Value,
+					target:      target,
 				}
 			}
 		}

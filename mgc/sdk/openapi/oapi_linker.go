@@ -1,7 +1,6 @@
 package openapi
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -266,10 +265,6 @@ func (l *openapiLinker) PrepareLink(
 	target := l.Target()
 	op, ok := core.ExecutorAs[*Operation](target)
 	if !ok {
-		if _, ok := core.ExecutorAs[*core.StaticExecute](target); ok {
-			// This means that the target is an unresolved link, let be executed to return the correct error
-			return nil, nil, nil
-		}
 		return nil, nil, fmt.Errorf("link '%s' has unexpected target type. Expected *Operation", l.Name())
 	}
 
@@ -311,44 +306,7 @@ func (l *openapiLinker) PrepareLink(
 }
 
 func (l *openapiLinker) Target() core.Executor {
-	if l.target == nil {
-		if l.link.OperationID != "" {
-			l.target = l.owner.execResolver.get(l.link.OperationID)
-			if l.target == nil {
-				l.target = newUnresolvedOapiLink(fmt.Errorf("unable to find an operation with ID %q", l.link.OperationID))
-				return l.target
-			}
-		} else if l.link.OperationRef != "" {
-			var err error
-			l.target, err = l.owner.execResolver.resolve(l.link.OperationRef)
-			if err != nil {
-				l.target = newUnresolvedOapiLink(err)
-				return l.target
-			}
-		} else {
-			l.target = newUnresolvedOapiLink(fmt.Errorf("link %q has no Operation ID or Ref", l.name))
-			return l.target
-		}
-
-		if wtExt, ok := getExtensionObject(l.owner.extensionPrefix, "wait-termination", l.link.Extensions, nil); ok && wtExt != nil {
-			if tExec, err := wrapInTerminatorExecutor(l.owner.logger, wtExt, l.target); err == nil {
-				l.target = tExec
-			}
-		}
-	}
 	return l.target
-}
-
-func newUnresolvedOapiLink(underlyingErr error) core.Executor {
-	err := fmt.Errorf("this is an unresolved link. It cannot be executed, as the target operation was not found: %w", underlyingErr)
-	return core.NewStaticExecuteSimple(
-		"UNRESOLVED",
-		"",
-		err.Error(),
-		func(_ context.Context) (core.Result, error) {
-			return nil, err
-		},
-	)
 }
 
 var _ core.Linker = (*openapiLinker)(nil)
