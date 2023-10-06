@@ -27,7 +27,7 @@ class IndexFile(TypedDict):
 
 
 modname_re = re.compile("^(?P<name>[a-z0-9-]+)[.]openapi[.]yaml$")
-index_filename = "index.yaml"
+index_filename = "index.openapi.yaml"
 index_version = "1.0.0"
 
 
@@ -52,6 +52,8 @@ def load_mods(
     full_mods = {}
     mods = []
     for filename in sorted(os.listdir(oapiDir)):
+        if filename == index_filename:
+            continue
         match = modname_re.match(filename)
         if not match:
             if filename != index_filename:

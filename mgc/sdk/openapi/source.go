@@ -23,7 +23,7 @@ type IndexFile struct {
 	Modules []IndexModule
 }
 
-const indexFile = "index.yaml"
+const indexFile = "index.openapi.yaml"
 const indexVersion = "1.0.0"
 
 // Source -> Module -> Resource -> Operation

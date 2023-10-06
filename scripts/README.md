@@ -72,7 +72,7 @@ python3 ./scripts/yaml_merge.py --override ./mgc/cli/openapis/block-storage.open
 ### [oapi_index_gen.py](./oapi_index_gen.py)
 
 Generates an index file for the MGC_SDK consumption, the SDK used by the
-interfaces will only load specs defined in the `index.yaml` file, specs will
+interfaces will only load specs defined in the `index.openapi.yaml` file, specs will
 reference each other based on their SPEC_UID (see `transforms.py` for more info).
 
 The `--embed` options will insert the specs into the Go binary, allowing the

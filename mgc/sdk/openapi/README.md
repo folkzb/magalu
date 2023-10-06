@@ -8,8 +8,8 @@ where each schema file is mapped to a module, each module is composed of
 resources (OpenAPI tag), each composed by actions (OpenAPI operation).
 
 ```
-index.yaml   -> module-name.openapi.yaml -> tag        -> operation
-[entrypoint]    [module: module-name]       [resource]    [action]
+index.openapi.yaml   -> module-name.openapi.yaml -> tag        -> operation
+[entrypoint]         [module: module-name]       [resource]    [action]
 ```
 
 ## Reading
@@ -21,14 +21,14 @@ environment variable `$MGC_SDK_OPENAPI_DIR` or `./openapis` it not set.
 > **NOTE:**
 > if using a binary with embedded files, one may still provide overrides
 > by using a file `./openapis/file-to-be-overridden.openapi.yaml`.
-> In order to add a new file, one must create the `index.yaml`
+> In order to add a new file, one must create the `index.openapi.yaml`
 > including that file.
 
 
-## Entry Point (index.yaml)
+## Entry Point (index.openapi.yaml)
 
 The entrypoint listing all the desired schema files using the format below.
-This file is a JSON or YAML file with the name `index.yaml`
+This file is a JSON or YAML file with the name `index.openapi.yaml`
 (regardless if it's JSON or YAML, always use this **exact** filename).
 
 ```yaml
