@@ -27,9 +27,10 @@ func DecodeValue[T any, U any](input T, output *U) (err error) {
 // Structs can be converted to maps and vice-versa, strings to integers, etc...
 // The Tag used for specifying how to decode/encode is centralized in 'json', no need to use
 // 'mapstructure'.
-func DecodeNewValue[T any](input any) (result *T, err error) {
+func DecodeNewValue[T any](input any) (*T, error) {
+	result := new(T)
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:           &result,
+		Result:           result,
 		TagName:          "json",
 		WeaklyTypedInput: true,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
@@ -38,8 +39,8 @@ func DecodeNewValue[T any](input any) (result *T, err error) {
 		),
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
 	err = decoder.Decode(input)
-	return
+	return result, err
 }
