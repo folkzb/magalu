@@ -183,11 +183,11 @@ func (l *openapiLinker) Description() string {
 
 func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 	if l.additionalParameters == nil {
-		// TODO: Handle errors in a better, safer way
 		target := l.Target()
 		op, ok := core.ExecutorAs[*Operation](target)
 		if !ok {
-			return nil
+			l.additionalParameters = schema.NewObjectSchema(nil, nil)
+			return l.additionalParameters
 		}
 
 		targetParameters := target.ParametersSchema()
@@ -316,15 +316,18 @@ func (l *openapiLinker) Target() core.Executor {
 			l.target = l.owner.execResolver.get(l.link.OperationID)
 			if l.target == nil {
 				l.target = newUnresolvedOapiLink(fmt.Errorf("unable to find an operation with ID %q", l.link.OperationID))
+				return l.target
 			}
 		} else if l.link.OperationRef != "" {
 			var err error
 			l.target, err = l.owner.execResolver.resolve(l.link.OperationRef)
 			if err != nil {
 				l.target = newUnresolvedOapiLink(err)
+				return l.target
 			}
 		} else {
 			l.target = newUnresolvedOapiLink(fmt.Errorf("link %q has no Operation ID or Ref", l.name))
+			return l.target
 		}
 
 		if wtExt, ok := getExtensionObject(l.owner.extensionPrefix, "wait-termination", l.link.Extensions, nil); ok && wtExt != nil {
