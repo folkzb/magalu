@@ -63,7 +63,7 @@ type Operation struct {
 	servers             openapi3.Servers
 	parameters          *[]*parameterWithName
 	logger              *zap.SugaredLogger
-	execResolver        *executorResolver
+	module              *Module
 }
 
 // BEGIN: Descriptor interface:
@@ -702,13 +702,13 @@ func (o *Operation) ResultSchema() *core.Schema {
 
 func (o *Operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
 	if link.OperationID != "" {
-		exec := o.execResolver.get(link.OperationID)
+		exec := o.module.execResolver.get(link.OperationID)
 		if exec == nil {
 			return nil, fmt.Errorf("linked operationId=%q was not found", link.OperationID)
 		}
 		return exec, nil
 	} else if link.OperationRef != "" {
-		return o.execResolver.resolve(link.OperationRef)
+		return o.module.execResolver.resolve(link.OperationRef)
 	} else {
 		return nil, errors.New("link has no Operation ID or Ref")
 	}
@@ -717,6 +717,7 @@ func (o *Operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
 // This map should not be altered externally
 func (o *Operation) initLinksAndRelated() map[string]core.Linker {
 	if o.links == nil {
+		o.module.loadRecursive()
 		o.links = map[string]core.Linker{}
 		o.related = map[string]core.Executor{}
 		// TODO: Handle 'default' status code

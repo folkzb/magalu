@@ -29,6 +29,7 @@ type Module struct {
 	resourcesByName map[string]*Resource
 	resources       []*Resource
 	execResolver    executorResolver
+	loaded          bool
 }
 
 // BEGIN: Descriptor interface:
@@ -92,7 +93,7 @@ func (m *Module) getResources() (resources []*Resource, byName map[string]*Resou
 			extensionPrefix: m.extensionPrefix,
 			servers:         doc.Servers,
 			logger:          m.logger.Named(tag.Name),
-			execResolver:    &m.execResolver,
+			module:          m,
 		}
 
 		m.resources = append(m.resources, resource)
@@ -104,6 +105,22 @@ func (m *Module) getResources() (resources []*Resource, byName map[string]*Resou
 	})
 
 	return m.resources, m.resourcesByName, nil
+}
+
+func (m *Module) loadRecursive() {
+	if m.loaded {
+		return
+	}
+	// Recursively load the whole module to guarantee resolverTree is known
+	var loadRecursive func(child core.Descriptor) (run bool, err error)
+	loadRecursive = func(child core.Descriptor) (run bool, err error) {
+		if group, ok := child.(core.Grouper); ok {
+			return group.VisitChildren(loadRecursive)
+		}
+		return true, nil
+	}
+	_, _ = m.VisitChildren(loadRecursive)
+	m.loaded = true
 }
 
 func (m *Module) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {

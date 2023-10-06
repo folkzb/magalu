@@ -39,7 +39,7 @@ type Resource struct {
 	operations       []core.Executor
 	operationsByName map[string]core.Executor
 	logger           *zap.SugaredLogger
-	execResolver     *executorResolver
+	module           *Module
 }
 
 // BEGIN: Descriptor interface:
@@ -278,7 +278,7 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 			servers:         servers,
 			logger:          o.logger.Named(opName),
 			outputFlag:      outputFlag,
-			execResolver:    o.execResolver,
+			module:          o.module,
 		}
 
 		isDelete := method == "DELETE"
@@ -300,7 +300,7 @@ func (o *Resource) getOperations() (operations []core.Executor, byName map[strin
 			}
 		}
 
-		err = o.execResolver.add(
+		err = o.module.execResolver.add(
 			desc.op.OperationID,
 			[]string{"paths", desc.key, desc.method},
 			operation,

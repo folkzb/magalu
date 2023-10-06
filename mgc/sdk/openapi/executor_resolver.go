@@ -8,41 +8,22 @@ import (
 	"magalu.cloud/core"
 )
 
-type moduleResolverEntry struct {
-	m      *Module
-	loaded bool
-}
-
-type moduleResolver map[string]*moduleResolverEntry
+type moduleResolver map[string]*Module
 
 func (r moduleResolver) add(m *Module) {
-	r[m.url] = &moduleResolverEntry{m, false}
+	r[m.url] = m
 	m.execResolver.moduleResolver = r
 }
 
 func (r moduleResolver) get(url string) (m *Module, err error) {
-	e, ok := r[url]
+	m, ok := r[url]
 	if !ok {
 		return nil, fmt.Errorf("unknown module %q", url)
 	}
 
-	if !e.loaded {
-		// Recursively load the whole module to guarantee resolverTree is known
-		var loadRecursive func(child core.Descriptor) (run bool, err error)
-		loadRecursive = func(child core.Descriptor) (run bool, err error) {
-			if group, ok := child.(core.Grouper); ok {
-				return group.VisitChildren(loadRecursive)
-			}
-			return true, nil
-		}
-		_, err = e.m.VisitChildren(loadRecursive)
-		if err != nil {
-			return
-		}
-		e.loaded = true
-	}
+	m.loadRecursive()
 
-	return e.m, nil
+	return m, nil
 }
 
 type executorTree struct {
