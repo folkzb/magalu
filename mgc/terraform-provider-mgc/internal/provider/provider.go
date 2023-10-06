@@ -19,7 +19,7 @@ import (
 
 var _ provider.Provider = (*MgcProvider)(nil)
 
-const providerTypeName = "magalu"
+const providerTypeName = "mgc"
 
 type apiSpec struct {
 	name    string

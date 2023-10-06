@@ -1,18 +1,18 @@
 terraform {
     required_providers {
-        magalu = {
+        mgc = {
             version = "0.1"
             source = "magalucloud/mgc"
         }
     }
 }
 
-provider "magalu" {
+provider "mgc" {
     # This will be used later on to test the SDK loading functions
-    apis = ["virtual-machine@1.60.0"]
+    apis = ["virtual-machine@1.60.0", "block-storage@1.52.0"]
 }
 
-resource "magalu_virtual-machine_instances" "myvm" {
+resource "mgc_virtual-machine_instances" "myvm" {
   name = "my-tf-vm"
   type = "cloud-bs1.xsmall"
   desired_image = "cloud-ubuntu-22.04 LTS"
@@ -22,7 +22,7 @@ resource "magalu_virtual-machine_instances" "myvm" {
   allocate_fip = false
 }
 
-resource "magalu_block-storage_volume" "myvmvolume" {
+resource "mgc_block-storage_volume" "myvmvolume" {
     name = "myvmvolume"
     description = "myvmvolumedescription"
     size = 20
