@@ -424,11 +424,6 @@ func AddLink(
 			fmt.Println(t.Render())
 			fmt.Println()
 
-			target := link.Target()
-			if target == nil {
-				return fmt.Errorf("unable to resolve link %s", link.Name())
-			}
-
 			additionalParameters := core.Parameters{}
 			additionalConfigs := core.Configs{}
 
@@ -440,17 +435,17 @@ func AddLink(
 				return err
 			}
 
-			preparedParameters, preparedConfigs, err := link.PrepareLink(originalResult, additionalParameters, additionalConfigs)
+			exec, err := link.CreateExecutor(originalResult)
+			if err != nil {
+				return fmt.Errorf("unable to resolve link %s: %w", link.Name(), err)
+			}
+
+			result, err := handleExecutor(ctx, cmd, exec, additionalParameters, additionalConfigs)
 			if err != nil {
 				return err
 			}
 
-			result, err := handleExecutor(ctx, cmd, target, preparedParameters, preparedConfigs)
-			if err != nil {
-				return err
-			}
-
-			return handleLinkArgs(ctx, cmd, followingLinkArgs, target.Links(), config, result)
+			return handleLinkArgs(ctx, cmd, followingLinkArgs, exec.Links(), config, result)
 		},
 	}
 

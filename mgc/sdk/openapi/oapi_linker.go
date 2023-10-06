@@ -5,7 +5,6 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/jsonpointer"
-	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/http"
@@ -257,52 +256,43 @@ func (l *openapiLinker) AdditionalConfigsSchema() *core.Schema {
 	return l.additionalConfigs
 }
 
-func (l *openapiLinker) PrepareLink(
-	originalResult core.Result,
-	additionalParameters core.Parameters,
-	additionalConfigs core.Configs,
-) (core.Parameters, core.Configs, error) {
+func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executor, error) {
 	target := l.Target()
 	op, ok := core.ExecutorAs[*Operation](target)
 	if !ok {
-		return nil, nil, fmt.Errorf("link '%s' has unexpected target type. Expected *Operation", l.Name())
+		return nil, fmt.Errorf("link '%s' has unexpected target type. Expected *Operation", l.Name())
 	}
 
-	err := l.AdditionalParametersSchema().VisitJSON(additionalParameters, openapi3.MultiErrors())
-	if err != nil {
-		return nil, nil, fmt.Errorf("additional parameters passed to PrepareLink are invalid: %w", err)
-	}
-
-	err = l.AdditionalConfigsSchema().VisitJSON(additionalConfigs, openapi3.MultiErrors())
-	if err != nil {
-		return nil, nil, fmt.Errorf("additional configs passed to PrepareLink are invalid: %w", err)
+	httpResult, ok := core.ResultAs[http.HttpResult](originalResult)
+	if !ok {
+		return nil, fmt.Errorf("result passed to PrepareLink has unexpected type. Expected HttpResult for link '%s'", l.Name())
 	}
 
 	preparedParams := core.Parameters{}
 	preparedConfigs := core.Configs{}
 
-	httpResult, ok := core.ResultAs[http.HttpResult](originalResult)
-	if !ok {
-		return nil, nil, fmt.Errorf("result passed to PrepareLink has unexpected type. Expected HttpResult for link '%s'", l.Name())
-	}
-
 	parameterValueResolver := opParameterValueResolver(op, originalResult.Source().Parameters)
 	specResolver := linkSpecResolver{httpResult, parameterValueResolver}
 
 	if err := l.addParameters(op, &specResolver, preparedParams, preparedConfigs); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if err := l.addReqBodyParameters(op, &specResolver, preparedParams); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	fillMissingConfigs(preparedConfigs, target.ConfigsSchema(), originalResult.Source().Configs)
 
-	maps.Copy(preparedParams, additionalParameters)
-	maps.Copy(preparedConfigs, additionalConfigs)
+	var exec core.LinkExecutor = core.NewLinkExecutor(target, preparedParams, preparedConfigs, l.additionalParameters, l.additionalConfigs)
+	if _, ok := core.ExecutorAs[core.TerminatorExecutor](target); ok {
+		exec = core.NewLinkTerminatorExecutor(exec)
+	}
+	if _, ok := core.ExecutorAs[core.ConfirmableExecutor](target); ok {
+		exec = core.NewLinkConfirmableExecutor(exec)
+	}
 
-	return preparedParams, preparedConfigs, nil
+	return exec, nil
 }
 
 func (l *openapiLinker) Target() core.Executor {

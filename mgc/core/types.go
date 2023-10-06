@@ -65,10 +65,19 @@ type Configs = Parameters
 type Linker interface {
 	Name() string
 	Description() string
+	// Describes the additional parameters required by the created executor.
+	//
+	// This will match CreateExecutor().ParametersSchema()
 	AdditionalParametersSchema() *Schema
+	// Describes the additional configuration required by the created executor.
+	//
+	// This will match CreateExecutor().ConfigsSchema()
 	AdditionalConfigsSchema() *Schema
-	PrepareLink(originalResult Result, additionalParameters Parameters, additionalConfigs Configs) (preparedParams Parameters, preparedConfigs Configs, err error)
-	Target() Executor
+	// Create an executor based on a result.
+	//
+	// The returned executor will have ParametersSchema() matching AdditionalParametersSchema()
+	// and ConfigsSchema() matching AdditionalConfigsSchema()
+	CreateExecutor(originalResult Result) (exec Executor, err error)
 }
 
 type Executor interface {
@@ -91,9 +100,18 @@ type ExecutorWrapper interface {
 	Unwrap() Executor
 }
 
+// The new Result with have Source().Executor set back to executorWrapper
 func ExecutorWrapResult(executorWrapper ExecutorWrapper, result Result, err error) (Result, error) {
 	if result != nil {
 		result = NewResultWithOriginalExecutor(executorWrapper, result)
+	}
+	return result, err
+}
+
+// The new Result with have Source() set back to source
+func ExecutorWrapResultSource(source ResultSource, result Result, err error) (Result, error) {
+	if result != nil {
+		result = NewResultWithOriginalSource(source, result)
 	}
 	return result, err
 }

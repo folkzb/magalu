@@ -172,25 +172,19 @@ func (r *MgcResource) applyStateAfter(
 			return
 		}
 
-		target := readLink.Target()
-		if target == nil {
-			diag.AddError("Read link failed", fmt.Sprintf("Unable to resolve Read link for applying new state on resource '%s'", r.name))
-			return
-		}
-
 		additionalParametersSchema := readLink.AdditionalParametersSchema()
 		if len(additionalParametersSchema.Required) > 0 {
 			diag.AddError("Read link failed", fmt.Sprintf("Unable to resolve parameters on Read link for applying new state on resource '%s'", r.name))
 			return
 		}
 
-		preparedParams, preparedConfigs, err := readLink.PrepareLink(result, core.Parameters{}, core.Configs{})
+		exec, err := readLink.CreateExecutor(result)
 		if err != nil {
-			diag.AddError("Read link failed", fmt.Sprintf("Link preparation returned error: %s", err.Error()))
+			diag.AddError("Read link failed", fmt.Sprintf("Unable to create Read link executor for applying new state on resource '%s': %s", r.name, err))
 			return
 		}
 
-		result := r.execute(ctx, target, preparedParams, preparedConfigs, diag)
+		result := r.execute(ctx, exec, core.Parameters{}, core.Configs{}, diag)
 		if diag.HasError() {
 			return
 		}
