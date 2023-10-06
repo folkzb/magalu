@@ -34,7 +34,7 @@ repos:
         stages: [pre-commit, pre-push]
 
 -   repo: https://github.com/golangci/golangci-lint
-    rev: v1.53.3
+    rev: v1.54.2
     hooks:
     -   id: golangci-lint
         stages: [pre-commit]
@@ -43,7 +43,7 @@ repos:
         entry: bash -c "go list -f '{{.Dir}}/...' -m | xargs golangci-lint run --fix --new-from-rev HEAD"
 
 -   repo: https://github.com/golangci/golangci-lint
-    rev: v1.53.3
+    rev: v1.54.2
     hooks:
     -   id: golangci-lint
         stages: [pre-push]
@@ -58,13 +58,13 @@ repos:
         stages: [pre-commit]
 
 -   repo: https://github.com/commitizen-tools/commitizen
-    rev: v3.5.2
+    rev: 3.10.0
     hooks:
     -   id: commitizen
         stages: [commit-msg]
 
 -   repo: https://github.com/pycqa/flake8
-    rev: 5.0.0
+    rev: 6.1.0
     hooks:
     -   id: flake8
         stages: [pre-commit, pre-push]
@@ -80,7 +80,7 @@ repos:
           - flake8-tidy-imports
 
 -   repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.9.1
     hooks:
     -   id: black
         stages: [pre-commit, pre-push]
