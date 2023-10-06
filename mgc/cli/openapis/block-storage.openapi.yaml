@@ -485,9 +485,9 @@ paths:
                             parameters:
                                 id: $path.id
                             x-cli-wait-termination:
-                                maxRetries: 3
-                                intervalInSeconds: 20s
-                                jsonPathQuery: $.attachments[*].virtual_machine_id
+                                maxRetries: 2
+                                intervalInSeconds: 15s
+                                jsonPathQuery: $.attachments[*]
                 '422':
                     description: Validation Error
                     content:

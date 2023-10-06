@@ -319,8 +319,7 @@ paths:
             x-cli-wait-termination:
                 maxRetries: 30
                 intervalInSeconds: 1s
-                jsonPathQuery: $.status == "active" || $.status == "shutoff" || $.status
-                    == "error"
+                jsonPathQuery: $.status == "active" || $.status == "shutoff" || $.status == "error"
         delete:
             tags:
             - instances
