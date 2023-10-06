@@ -639,6 +639,9 @@ func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
 
 func showHelpForError(cmd *cobra.Command, args []string, err error) {
 	switch {
+	case err == nil:
+		break
+
 	case errors.Is(err, &mgcHttp.HttpError{}),
 		errors.Is(err, core.FailedTerminationError{}),
 		errors.As(err, &core.UserDeniedConfirmationError{}),
