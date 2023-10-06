@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
@@ -31,30 +30,6 @@ type MgcResource struct {
 	inputAttr  mgcAttributes
 	outputAttr mgcAttributes
 	tfschema   *schema.Schema
-}
-
-// TODO: remove once we translate directly from mgcSdk.Schema
-type VirtualMachineResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	InstanceID      types.String `tfsdk:"instance_id"`
-	Name            types.String `tfsdk:"name"`
-	Type            types.String `tfsdk:"type"`
-	DesiredImage    types.String `tfsdk:"desired_image"`
-	SSHKey          types.String `tfsdk:"key_name"`
-	AllocFip        types.Bool   `tfsdk:"allocate_fip"`
-	VCPUs           types.Int64  `tfsdk:"vcpus"`
-	Memory          types.Int64  `tfsdk:"memory"`
-	RootStorage     types.Int64  `tfsdk:"root_storage"`
-	UserData        types.String `tfsdk:"user_data"`
-	Zone            types.String `tfsdk:"availability_zone"`
-	CurrentStatus   types.String `tfsdk:"current_status"`
-	DesiredStatus   types.String `tfsdk:"desired_status"`
-	PowerState      types.Int64  `tfsdk:"power_state"`
-	PowerStateLabel types.String `tfsdk:"power_state_label"`
-	CreatedAt       types.String `tfsdk:"created_at"`
-	UpdatedAt       types.String `tfsdk:"updated_at"`
-	Error           types.String `tfsdk:"error"`
-	// Net      types.List   `tfsdk:"network_interfaces"`
 }
 
 func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
