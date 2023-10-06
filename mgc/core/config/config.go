@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -113,7 +112,8 @@ func stringToMapOrStructHook(f reflect.Value, t reflect.Value) (interface{}, err
 	}
 
 	o := reflect.New(target).Interface()
-	err := json.Unmarshal([]byte(str), o)
+	err := yaml.Unmarshal([]byte(str), o)
+
 	return o, err
 }
 
