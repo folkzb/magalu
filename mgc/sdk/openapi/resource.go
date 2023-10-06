@@ -341,7 +341,7 @@ func (o *Resource) wrapInConfirmableExecutor(cExt map[string]any, isDelete bool,
 }
 
 func (o *Resource) wrapInTerminatorExecutor(wtExt map[string]any, exec core.Executor) (core.TerminatorExecutor, error) {
-	wt := &defaultWaitTermination
+	wt := &waitTermination{}
 	if err := utils.DecodeValue(wtExt, wt); err != nil {
 		o.logger.Warnw("error decoding extension wait-termination", "data", wtExt, "error", err)
 	}
