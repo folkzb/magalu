@@ -31,11 +31,11 @@ func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 	hasExtraAttrCatcher := false
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		structFields[i] = reflect.StructField{
-			Name: field.Name,
-			Type: field.Type,
-			Tag:  field.Tag,
-		}
+		fieldVal := reflect.ValueOf(field)
+		fieldCopy := reflect.New(fieldVal.Type()).Elem()
+		fieldCopy.Set(fieldVal)
+		structFields[i] = fieldCopy.Interface().(reflect.StructField)
+
 		xmlTag, ok := field.Tag.Lookup("xml")
 		if !ok {
 			continue
