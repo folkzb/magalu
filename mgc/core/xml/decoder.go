@@ -20,7 +20,12 @@ func NewDecoder(r io.Reader) *Decoder {
 }
 
 func (d *Decoder) DisallowUnknownFields() {
-	d.disallowUnknownFields = true
+	// TODO: Set this to true. The code in 'decodeStructRigid' currently does work and is functional,
+	// but it makes life harder by requiring every single element and attribute to be specified in the
+	// struct (XML can have tons of attributes per element), and it's not even recursive yet. Leave
+	// this unused until a better, more general solution is found
+	d.disallowUnknownFields = false
+	// d.disallowUnknownFields = true
 }
 
 func (d *Decoder) decodeStructRigid(value reflect.Value) error {
@@ -29,6 +34,7 @@ func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 	hasXmlnsCatcher := false
 	hasExtraElemCatcher := false
 	hasExtraAttrCatcher := false
+	// TODO: Make this recursive
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		fieldVal := reflect.ValueOf(field)
@@ -98,7 +104,8 @@ func (d *Decoder) decodeStructRigid(value reflect.Value) error {
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Field(i)
 		if !field.CanSet() {
-			return fmt.Errorf("unable to decode")
+			// This means that it's an unexported field.
+			continue
 		}
 
 		field.Set(newStructValue.Field(i))
