@@ -249,6 +249,24 @@ success(c) in their respective orders `r,i,c`.
 }
 ```
 
+## State Transition
+
+Some request also have terminate conditions already defined by the developers.
+Those conditions can be integrations with websockets, callback urls, pub/sub,
+retry until and similar systems.
+
+For the commands where the terminate information is already defined, we can
+provide the `-w` flag to wait for the condition.
+
+```sh
+./mgc virtual-machine instances get --id=111e3457-9013-40bf-b117-de23fc34a38c -w
+... Wait until the `get` request output status be "active", "shutoff" or "error"...
+{
+ "id": "111e3457-9013-40bf-b117-de23fc34a38c",
+ ...
+ "status": "error",
+}```
+
 ## Examples
 
 Under the folder [examples/](./examples), there are some shell scripts chaining multiple
