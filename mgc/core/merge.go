@@ -7,10 +7,12 @@ type MergeGroup struct {
 	version     string
 	description string
 	merge       []Grouper
+	children    []Descriptor
+	childByName map[string]Descriptor
 }
 
 func NewMergeGroup(name string, version string, description string, merge []Grouper) *MergeGroup {
-	return &MergeGroup{name, version, description, merge}
+	return &MergeGroup{name, version, description, merge, nil, nil}
 }
 
 // BEGIN: Descriptor interface:
@@ -48,63 +50,79 @@ func (o *MergeGroup) mergeAfter(target Grouper, start int) []Grouper {
 	return result
 }
 
-func (o *MergeGroup) VisitChildren(visitor DescriptorVisitor) (finished bool, err error) {
-	used := map[string]bool{}
+func (o *MergeGroup) getChildren() (children []Descriptor, byName map[string]Descriptor, err error) {
+	if o.children != nil {
+		return o.children, o.childByName, nil
+	}
+
+	o.children = make([]Descriptor, 0)
+	o.childByName = make(map[string]Descriptor)
 
 	for i, c := range o.merge {
 		finished, err := c.VisitChildren(func(child Descriptor) (run bool, err error) {
 			name := child.Name()
 
-			if used[name] {
+			if o.childByName[name] != nil {
 				return true, nil
 			}
 
 			if group, ok := child.(Grouper); ok {
 				merge := o.mergeAfter(group, i+1)
 				if len(merge) > 1 {
-					used[name] = true
-					return visitor(&MergeGroup{
+					child = &MergeGroup{
 						name:        name,
 						version:     group.Version(),
 						description: group.Description(),
 						merge:       merge,
-					})
+					}
 				}
 			}
 
-			return visitor(child)
+			o.children = append(o.children, child)
+			o.childByName[name] = child
+			return true, nil
 		})
 
 		if err != nil {
-			return false, err
+			return nil, nil, err
 		}
 		if !finished {
-			return false, nil
+			return nil, nil, err
 		}
 	}
 
+	return o.children, o.childByName, nil
+}
+
+func (o *MergeGroup) VisitChildren(visitor DescriptorVisitor) (finished bool, err error) {
+	children, _, err := o.getChildren()
+	if err != nil {
+		return false, err
+	}
+
+	for _, res := range children {
+		run, err := visitor(res)
+		if err != nil {
+			return false, err
+		}
+		if !run {
+			return false, nil
+		}
+	}
 	return true, nil
 }
 
 func (o *MergeGroup) GetChildByName(name string) (child Descriptor, err error) {
-	var found Descriptor
-	finished, err := o.VisitChildren(func(child Descriptor) (run bool, err error) {
-		if child.Name() == name {
-			found = child
-			return false, nil
-		}
-		return true, nil
-	})
-
+	_, byName, err := o.getChildren()
 	if err != nil {
 		return nil, err
 	}
-
-	if finished {
-		return nil, fmt.Errorf("Child not found: %s", name)
+	res, ok := byName[name]
+	if !ok {
+		return nil, fmt.Errorf("child not found: %s", name)
 	}
 
-	return found, err
+	return res, nil
 }
 
 var _ Grouper = (*MergeGroup)(nil)
