@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -73,6 +74,33 @@ func (r *MgcResource) applyMgcInputMap(mgcMap map[string]any, ctx context.Contex
 func (r *MgcResource) applyMgcOutputMap(mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
 	conv := newTFStateConverter(ctx, diag, r.tfschema)
 	conv.applyMgcMap(mgcMap, r.outputAttr, ctx, tfState, path.Empty())
+}
+
+func (r *MgcResource) verifyCurrentDesiredMismatch(inputMgcMap map[string]any, outputMgcMap map[string]any, diag *diag.Diagnostics) {
+	for _, splitAttr := range r.splitAttr {
+		input, ok := inputMgcMap[string(splitAttr.desired.mgcName)]
+		if !ok {
+			continue
+		}
+
+		output, ok := outputMgcMap[string(splitAttr.current.mgcName)]
+		if !ok {
+			continue
+		}
+
+		if !reflect.DeepEqual(input, output) {
+			diag.AddWarning(
+				"current/desired attribute mismatch",
+				fmt.Sprintf(
+					"Terraform isn't able to verify the equality between %q (%v) and %q (%v) because their structures are different. Assuming success.",
+					splitAttr.current.tfName,
+					output,
+					splitAttr.desired.tfName,
+					input,
+				),
+			)
+		}
+	}
 }
 
 // Does not return error, check for 'diag.HasError' to see if operation was successful
@@ -201,6 +229,7 @@ func (r *MgcResource) applyStateAfter(
 	}
 
 	r.applyMgcOutputMap(resultMap, ctx, tfState, diag)
+	r.verifyCurrentDesiredMismatch(result.Source().Parameters, resultMap, diag)
 }
 
 func getConfigs(schema *core.Schema) core.Configs {
@@ -253,6 +282,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 	r.applyMgcOutputMap(resultMap, ctx, &resp.State, &resp.Diagnostics)
+	r.verifyCurrentDesiredMismatch(params, resultMap, &resp.Diagnostics)
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
