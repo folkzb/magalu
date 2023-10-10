@@ -223,6 +223,32 @@ instances:
 ID:12db59e3-8715-47af-a15f-1a595f6647ec%
 ```
 
+## Retry/Pooling
+
+To execute a command it is possible to define its finish condition.
+
+For this we can use the `-U` flag, which consists of 3 parts, the number of
+retries(r), the interval between attempts(i) and a condition to validate the
+success(c) in their respective orders `r,i,c`.
+
+```sh
+./mgc virtual-machine instances get --id=111e3457-9013-40bf-b117-de23fc34a38c -U=3,30s,jsonpath='$.status == "active"'
+... pooling until the `get` request output matches the condition ...
+{
+ "id": "111e3457-9013-40bf-b117-de23fc34a38c",
+ ...
+ "status": "active",
+}
+
+./mgc virtual-machine instances get --id=111e3457-9013-40bf-b117-de23fc34a38c -U=3,30s,template='{{if eq .status "active"}}true{{end}}'
+... pooling until the `get` request output matches the condition ...
+{
+ "id": "111e3457-9013-40bf-b117-de23fc34a38c",
+ ...
+ "status": "active",
+}
+```
+
 ## Examples
 
 Under the folder [examples/](./examples), there are some shell scripts chaining multiple
