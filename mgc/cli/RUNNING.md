@@ -151,6 +151,77 @@ The environment variable configuration has precedence over other logger configur
 > `Authorization` headers are redacted. If you want to see the sensitive
 > parts, export `MGC_SDK_LOG_SENSITIVE=1`.
 
+## Output formats
+
+The CLI can output the requests in the following formats using the `-o` flag:
+
+- json
+- yaml
+- table
+- jsonpath
+- template
+
+Some commands have a default output format defined in the OpenAPI spec using an
+`x-cli` extension. The format will be overridden if the user specify a new
+output format.
+
+### JSON
+
+```sh
+./mgc virtual-machine instances list -o json
+
+{
+ "instances": [
+    {
+      "id": "12db59e3-8715-47af-a15f-1a595f6647ec",
+      ...
+    }
+  ]
+}
+
+```
+
+### YAML
+
+```sh
+./mgc virtual-machine instances list -o yaml
+
+instances:
+    - id: 12db59e3-8715-47af-a15f-1a595f6647ec
+      created_at: "2023-10-04T18:00:45Z"
+      error: null
+      ...
+```
+
+### Table
+
+```sh
+./mgc virtual-machine instances list -o table='ID:$.instances[*].id,PWR_STATE:$.instances[*].power_state'
+
++--------------------------------------+-----------+
+| ID                                   | PWR_STATE |
++--------------------------------------+-----------+
+| 12db59e3-8715-47af-a15f-1a595f6647ec | 4         |
++--------------------------------------+-----------+
+```
+
+### JSONPath
+
+```sh
+./mgc virtual-machine instances list -o jsonpath='$.instances[*].id'
+
+[
+ "12db59e3-8715-47af-a15f-1a595f6647ec"
+]
+```
+
+### Template
+
+```sh
+./mgc virtual-machine instances list -o template='{{range .instances}}ID:{{.id}}{{end}}'
+
+ID:12db59e3-8715-47af-a15f-1a595f6647ec%
+```
 
 ## Examples
 
