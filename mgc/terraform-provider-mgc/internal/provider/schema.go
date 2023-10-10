@@ -333,6 +333,15 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]
 				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", r.name, name, is, os))
 				iattr.tfName = iattr.tfName.asDesired()
 				oattr.tfName = oattr.tfName.asCurrent()
+
+				if r.splitAttr == nil {
+					r.splitAttr = []splitMgcAttribute{}
+				}
+
+				r.splitAttr = append(r.splitAttr, splitMgcAttribute{
+					current: oattr,
+					desired: iattr,
+				})
 			}
 		}
 

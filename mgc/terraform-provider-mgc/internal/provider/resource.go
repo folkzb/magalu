@@ -18,6 +18,11 @@ import (
 var _ resource.Resource = &MgcResource{}
 var _ resource.ResourceWithImportState = &MgcResource{}
 
+type splitMgcAttribute struct {
+	current *attribute
+	desired *attribute
+}
+
 // MgcResource defines the resource implementation.
 type MgcResource struct {
 	sdk        *mgcSdk.Sdk
@@ -29,6 +34,7 @@ type MgcResource struct {
 	delete     mgcSdk.Executor
 	inputAttr  mgcAttributes
 	outputAttr mgcAttributes
+	splitAttr  []splitMgcAttribute
 	tfschema   *schema.Schema
 }
 
