@@ -47,6 +47,13 @@ cd ../../
 
 This script is integrated into the `build_release.sh` script. This ensures that all releases have up to date TF documentation
 
+## OpenTofu
+To use OpenTofu for install scripts, set the environment variable `MGC_OPENTF` to one
+
+```
+export MGC_OPENTF=1
+```
+
 ## SDK
 
 ### OpenAPIs
