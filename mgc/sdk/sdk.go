@@ -23,6 +23,7 @@ type DescriptorVisitor = core.DescriptorVisitor
 type Example = core.Example
 type Executor = core.Executor
 type Grouper = core.Grouper
+type Linker = core.Linker
 type Schema = core.Schema
 type Value = core.Value
 type Result = core.Result
