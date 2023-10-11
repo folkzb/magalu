@@ -228,6 +228,11 @@ func (r *MgcResource) applyStateAfter(
 		}
 	}
 
+	// We must apply the input parameters in the state, considering that the request went successfully.
+	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
+	// Also, this must come BEFORE applying the result to the state, as that should override these values when valid.
+	r.applyMgcInputMap(result.Source().Parameters, ctx, tfState, diag)
+
 	r.applyMgcOutputMap(resultMap, ctx, tfState, diag)
 	r.verifyCurrentDesiredMismatch(result.Source().Parameters, resultMap, diag)
 }
@@ -258,10 +263,6 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	r.applyStateAfter(result, ctx, &resp.State, &resp.Diagnostics)
-
-	// We must apply the input parameters in the state
-	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
-	r.applyMgcInputMap(params, ctx, &resp.State, &resp.Diagnostics)
 	tflog.Info(ctx, fmt.Sprintf("[resource] created a %s resource", r.name))
 
 }
