@@ -442,15 +442,15 @@ func TestGenerateTFAttributes(t *testing.T) {
 	// comparisons (unless both functions are nil)
 	// TODO: investigate lib reporting false negatives/positives on deep comparisons...
 	for _, testCase := range testCases {
-		testCase.res.readInputAttributes(ctx)
+		testCase.res.ReadInputAttributes(ctx)
 		if diff := deep.Equal(testCase.res.inputAttr, testCase.expectedInput); diff != nil {
 			t.Errorf("MgcResource.readInputAttributes failed. Diff list: %v", diff)
 		}
-		testCase.res.readOutputAttributes(ctx)
+		testCase.res.ReadOutputAttributes(ctx)
 		if diff := deep.Equal(testCase.res.outputAttr, testCase.expectedOutput); diff != nil {
 			t.Errorf("MgcResource.readOutputAttributes failed. Diff list: %v", diff)
 		}
-		finalAttr, _ := testCase.res.generateTFAttributes(ctx)
+		finalAttr, _ := generateTFAttributes(testCase.res, ctx)
 		if diff := deep.Equal(finalAttr, testCase.expectedFinal); diff != nil {
 			t.Errorf("MgcResource.generateTFAttributes failed. Diff list: %v", diff)
 		}

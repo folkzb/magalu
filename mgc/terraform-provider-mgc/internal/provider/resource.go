@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -39,6 +40,168 @@ type MgcResource struct {
 	tfschema   *schema.Schema
 }
 
+// BEGIN: tfSchemaHandler implementation
+
+func (r *MgcResource) Name() string {
+	return r.name
+}
+
+func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	k := string(mgcName)
+	isRequired := slices.Contains(mgcSchema.Required, k)
+	isComputed := !isRequired
+	if isComputed {
+		readSchema := r.read.ResultSchema().Properties[k]
+		if readSchema == nil {
+			isComputed = false
+		} else {
+			// If not required and present in read it can be compute
+			isComputed = checkSimilarJsonSchemas((*core.Schema)(readSchema.Value), (*core.Schema)(mgcSchema.Properties[string(mgcName)].Value))
+		}
+	}
+
+	return attributeModifiers{
+		isRequired:                 isRequired,
+		isOptional:                 !isRequired,
+		isComputed:                 isComputed,
+		useStateForUnknown:         false,
+		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil,
+		getChildModifiers:          getInputChildModifiers,
+	}
+}
+
+func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	k := string(mgcName)
+	isCreated := r.create.ResultSchema().Properties[k] != nil
+	required := slices.Contains(mgcSchema.Required, k)
+
+	return attributeModifiers{
+		isRequired:                 required && !isCreated,
+		isOptional:                 !required && !isCreated,
+		isComputed:                 !required || isCreated,
+		useStateForUnknown:         true,
+		requiresReplaceWhenChanged: false,
+		getChildModifiers:          getInputChildModifiers,
+	}
+}
+
+func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	// For now we consider all delete params as optionals, we need to think a way for the user to define
+	// required delete params
+	return attributeModifiers{
+		isRequired:                 false,
+		isOptional:                 true,
+		isComputed:                 false,
+		useStateForUnknown:         true,
+		requiresReplaceWhenChanged: false,
+		getChildModifiers:          getInputChildModifiers,
+	}
+}
+
+func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics {
+	d := diag.Diagnostics{}
+	if len(r.inputAttr) != 0 {
+		return d
+	}
+	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading input attributes", r.name))
+
+	input := mgcAttributes{}
+	err := addMgcSchemaAttributes(
+		input,
+		r.create.ParametersSchema(),
+		r.getCreateParamsModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF input attributes", err.Error())
+		return d
+	}
+
+	err = addMgcSchemaAttributes(
+		input,
+		r.update.ParametersSchema(),
+		r.getUpdateParamsModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF input attributes", err.Error())
+		return d
+	}
+
+	err = addMgcSchemaAttributes(
+		input,
+		r.delete.ParametersSchema(),
+		r.getDeleteParamsModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF input attributes", err.Error())
+		return d
+	}
+
+	r.inputAttr = input
+	return d
+}
+
+func (r *MgcResource) ReadOutputAttributes(ctx context.Context) diag.Diagnostics {
+	d := diag.Diagnostics{}
+	if len(r.outputAttr) != 0 {
+		return d
+	}
+	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading output attributes", r.name))
+
+	output := mgcAttributes{}
+	err := addMgcSchemaAttributes(
+		output,
+		r.create.ResultSchema(),
+		getResultModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF output attributes", err.Error())
+		return d
+	}
+	err = addMgcSchemaAttributes(
+		output,
+		r.read.ResultSchema(),
+		getResultModifiers,
+		r.name,
+		ctx,
+	)
+	if err != nil {
+		d.AddError("could not create TF output attributes", err.Error())
+		return d
+	}
+
+	r.outputAttr = output
+	return d
+}
+
+func (r *MgcResource) InputAttributes() mgcAttributes {
+	return r.inputAttr
+}
+
+func (r *MgcResource) OutputAttributes() mgcAttributes {
+	return r.outputAttr
+}
+
+func (r *MgcResource) AppendSplitAttribute(split splitMgcAttribute) {
+	if r.splitAttr == nil {
+		r.splitAttr = []splitMgcAttribute{}
+	}
+	r.splitAttr = append(r.splitAttr, split)
+}
+
+var _ tfSchemaHandler = (*MgcResource)(nil)
+
+// END: tfSchemaHandler implementation
+
+// BEGIN: Resource implementation
+
 func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = r.name
 }
@@ -48,7 +211,7 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 	tflog.Debug(ctx, fmt.Sprintf("[resource] generating schema for `%s`", r.name))
 
 	if r.tfschema == nil {
-		tfs, d := r.generateTFSchema(ctx)
+		tfs, d := generateTFSchema(r, ctx)
 		resp.Diagnostics.Append(d...)
 		if d.HasError() {
 			return
@@ -275,6 +438,8 @@ func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 func (r *MgcResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
+
+// END: Resource implemenation
 
 func validateResult(d *diag.Diagnostics, result core.ResultWithValue) error {
 	err := result.ValidateSchema()

@@ -43,6 +43,18 @@ type attribute struct {
 
 type mgcAttributes map[mgcName]*attribute
 
+type tfSchemaHandler interface {
+	Name() string
+
+	ReadInputAttributes(context.Context) diag.Diagnostics
+	ReadOutputAttributes(context.Context) diag.Diagnostics
+
+	InputAttributes() mgcAttributes
+	OutputAttributes() mgcAttributes
+
+	AppendSplitAttribute(splitMgcAttribute)
+}
+
 // Similar schemas are those with the same type and, depending on the type,
 // similar properties or restrictions.
 func checkSimilarJsonSchemas(a, b *mgcSdk.Schema) bool {
@@ -153,58 +165,6 @@ func getInputChildModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcNa
 	}
 }
 
-func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
-	k := string(mgcName)
-	isRequired := slices.Contains(mgcSchema.Required, k)
-	isComputed := !isRequired
-	if isComputed {
-		readSchema := r.read.ResultSchema().Properties[k]
-		if readSchema == nil {
-			isComputed = false
-		} else {
-			// If not required and present in read it can be compute
-			isComputed = checkSimilarJsonSchemas((*core.Schema)(readSchema.Value), (*core.Schema)(mgcSchema.Properties[string(mgcName)].Value))
-		}
-	}
-
-	return attributeModifiers{
-		isRequired:                 isRequired,
-		isOptional:                 !isRequired,
-		isComputed:                 isComputed,
-		useStateForUnknown:         false,
-		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil,
-		getChildModifiers:          getInputChildModifiers,
-	}
-}
-
-func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
-	k := string(mgcName)
-	isCreated := r.create.ResultSchema().Properties[k] != nil
-	required := slices.Contains(mgcSchema.Required, k)
-
-	return attributeModifiers{
-		isRequired:                 required && !isCreated,
-		isOptional:                 !required && !isCreated,
-		isComputed:                 !required || isCreated,
-		useStateForUnknown:         true,
-		requiresReplaceWhenChanged: false,
-		getChildModifiers:          getInputChildModifiers,
-	}
-}
-
-func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
-	// For now we consider all delete params as optionals, we need to think a way for the user to define
-	// required delete params
-	return attributeModifiers{
-		isRequired:                 false,
-		isOptional:                 true,
-		isComputed:                 false,
-		useStateForUnknown:         true,
-		requiresReplaceWhenChanged: false,
-		getChildModifiers:          getInputChildModifiers,
-	}
-}
-
 func getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	return attributeModifiers{
 		isRequired:                 false,
@@ -216,92 +176,9 @@ func getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName m
 	}
 }
 
-func (r *MgcResource) readInputAttributes(ctx context.Context) diag.Diagnostics {
-	d := diag.Diagnostics{}
-	if len(r.inputAttr) != 0 {
-		return d
-	}
-	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading input attributes", r.name))
-
-	input := mgcAttributes{}
-	err := addMgcSchemaAttributes(
-		input,
-		r.create.ParametersSchema(),
-		r.getCreateParamsModifiers,
-		r.name,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF input attributes", err.Error())
-		return d
-	}
-
-	err = addMgcSchemaAttributes(
-		input,
-		r.update.ParametersSchema(),
-		r.getUpdateParamsModifiers,
-		r.name,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF input attributes", err.Error())
-		return d
-	}
-
-	err = addMgcSchemaAttributes(
-		input,
-		r.delete.ParametersSchema(),
-		r.getDeleteParamsModifiers,
-		r.name,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF input attributes", err.Error())
-		return d
-	}
-
-	r.inputAttr = input
-	return d
-}
-
-func (r *MgcResource) readOutputAttributes(ctx context.Context) diag.Diagnostics {
-	d := diag.Diagnostics{}
-	if len(r.outputAttr) != 0 {
-		return d
-	}
-	tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: reading output attributes", r.name))
-
-	output := mgcAttributes{}
-	err := addMgcSchemaAttributes(
-		output,
-		r.create.ResultSchema(),
-		getResultModifiers,
-		r.name,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF output attributes", err.Error())
-		return d
-	}
-	err = addMgcSchemaAttributes(
-		output,
-		r.read.ResultSchema(),
-		getResultModifiers,
-		r.name,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF output attributes", err.Error())
-		return d
-	}
-
-	r.outputAttr = output
-	return d
-}
-
-func (r *MgcResource) generateTFSchema(ctx context.Context) (tfSchema schema.Schema, d diag.Diagnostics) {
+func generateTFSchema(handler tfSchemaHandler, ctx context.Context) (tfSchema schema.Schema, d diag.Diagnostics) {
 	var tfsa map[tfName]schema.Attribute
-	tfsa, d = r.generateTFAttributes(ctx)
+	tfsa, d = generateTFAttributes(handler, ctx)
 	if d.HasError() {
 		return
 	}
@@ -313,32 +190,28 @@ func (r *MgcResource) generateTFSchema(ctx context.Context) (tfSchema schema.Sch
 	return
 }
 
-func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]schema.Attribute, d diag.Diagnostics) {
-	d.Append(r.readInputAttributes(ctx)...)
+func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map[tfName]schema.Attribute, d diag.Diagnostics) {
+	d.Append(handler.ReadInputAttributes(ctx)...)
 	if d.HasError() {
 		return
 	}
-	d.Append(r.readOutputAttributes(ctx)...)
+	d.Append(handler.ReadOutputAttributes(ctx)...)
 	if d.HasError() {
 		return
 	}
 
 	tfa = map[tfName]schema.Attribute{}
-	for name, iattr := range r.inputAttr {
+	for name, iattr := range handler.InputAttributes() {
 		// Split attributes that differ between input/output
-		if oattr := r.outputAttr[name]; oattr != nil {
+		if oattr := handler.OutputAttributes()[name]; oattr != nil {
 			if !checkSimilarJsonSchemas(oattr.mgcSchema, iattr.mgcSchema) {
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()
-				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", r.name, name, is, os))
+				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", handler.Name(), name, is, os))
 				iattr.tfName = iattr.tfName.asDesired()
 				oattr.tfName = oattr.tfName.asCurrent()
 
-				if r.splitAttr == nil {
-					r.splitAttr = []splitMgcAttribute{}
-				}
-
-				r.splitAttr = append(r.splitAttr, splitMgcAttribute{
+				handler.AppendSplitAttribute(splitMgcAttribute{
 					current: oattr,
 					desired: iattr,
 				})
@@ -348,7 +221,7 @@ func (r *MgcResource) generateTFAttributes(ctx context.Context) (tfa map[tfName]
 		tfa[iattr.tfName] = iattr.tfSchema
 	}
 
-	for _, oattr := range r.outputAttr {
+	for _, oattr := range handler.OutputAttributes() {
 		// If they don't differ and it's already created skip
 		if _, ok := tfa[oattr.tfName]; ok {
 			continue
