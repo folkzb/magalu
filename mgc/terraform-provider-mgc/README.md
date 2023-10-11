@@ -30,11 +30,11 @@ OR
 ./run.sh provider apply
 ```
 
-It might be necessary to set the access_token TF variable.
+Running this command requires authentication to the magalu cloud
 
-> For now the access token is bigger than the amount of chars that is allowed in
-the TF variable prompt, so use the TF_VAR_access_token to set the variable
-value.
+```
+cli auth login
+```
 
 ### Generate docs
 
