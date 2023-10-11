@@ -70,6 +70,11 @@ func getJsonType(v *mgcSdk.Schema) (string, error) {
 }
 
 func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcValue any, isKnown bool) {
+	tflog.Debug(
+		c.ctx,
+		"[convert] starting conversion from TF state value to mgc value",
+		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
+	)
 	mgcSchema := atinfo.mgcSchema
 	if mgcSchema == nil {
 		c.diag.AddError("Invalid schema", "null schema provided to convert state to go values")
@@ -119,6 +124,7 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 			)
 			return nil, true
 		}
+		tflog.Debug(c.ctx, "[convert] finished conversion to string", map[string]any{"resulting value": state})
 		return state, true
 	case "number":
 		var state big.Float
@@ -139,6 +145,7 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 			)
 			return nil, true
 		}
+		tflog.Debug(c.ctx, "[convert] finished conversion to number", map[string]any{"resulting value": result})
 		return result, true
 	case "integer":
 		var state big.Float
@@ -159,6 +166,7 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 			)
 			return nil, true
 		}
+		tflog.Debug(c.ctx, "[convert] finished conversion to integer", map[string]any{"resulting value": result})
 		return result, true
 	case "boolean":
 		var state bool
@@ -170,6 +178,7 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 			)
 			return nil, true
 		}
+		tflog.Debug(c.ctx, "[convert] finished conversion to bool", map[string]any{"resulting value": state})
 		return state, true
 	case "array":
 		return c.toMgcSchemaArray(atinfo, tfValue, ignoreUnknown, filterUnset)
@@ -182,6 +191,11 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 }
 
 func (c *tfStateConverter) toMgcSchemaArray(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any, isKnown bool) {
+	tflog.Debug(
+		c.ctx,
+		"[convert] starting conversion from TF state value to mgc array",
+		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
+	)
 	mgcSchema := atinfo.mgcSchema
 	var tfArray []tftypes.Value
 	err := tfValue.As(&tfArray)
@@ -211,10 +225,16 @@ func (c *tfStateConverter) toMgcSchemaArray(atinfo *attribute, tfValue tftypes.V
 		}
 		mgcArray[i] = mgcItem
 	}
+	tflog.Debug(c.ctx, "[convert] finished conversion to array", map[string]any{"resulting value": mgcArray})
 	return
 }
 
 func (c *tfStateConverter) toMgcSchemaMap(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcMap map[string]any, isKnown bool) {
+	tflog.Debug(
+		c.ctx,
+		"[convert] starting conversion from TF state value to mgc map",
+		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
+	)
 	mgcSchema := atinfo.mgcSchema
 	var tfMap map[string]tftypes.Value
 	err := tfValue.As(&tfMap)
@@ -266,6 +286,7 @@ func (c *tfStateConverter) toMgcSchemaMap(atinfo *attribute, tfValue tftypes.Val
 
 		mgcMap[string(mgcName)] = mgcItem
 	}
+	tflog.Debug(c.ctx, "[convert] finished conversion to map", map[string]any{"resulting value": mgcMap})
 	return
 }
 
@@ -289,6 +310,8 @@ func (c *tfStateConverter) applyMgcMap(mgcMap map[string]any, attributes mgcAttr
 			// Ignore non existing values
 			continue
 		}
+
+		tflog.Debug(ctx, fmt.Sprintf("applying %q attribute in state", mgcName), map[string]any{"value": mgcValue})
 
 		attrPath := path.AtName(string(attr.tfName))
 		c.applyValueToState(mgcValue, attr, ctx, tfState, attrPath)
