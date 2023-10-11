@@ -295,6 +295,10 @@ func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executo
 	return exec, nil
 }
 
+func (l *openapiLinker) ResultSchema() *core.Schema {
+	return l.target.ResultSchema()
+}
+
 func (l *openapiLinker) Target() core.Executor {
 	return l.target
 }

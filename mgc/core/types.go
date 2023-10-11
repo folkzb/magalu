@@ -73,6 +73,7 @@ type Linker interface {
 	//
 	// This will match CreateExecutor().ConfigsSchema()
 	AdditionalConfigsSchema() *Schema
+	ResultSchema() *Schema
 	// Create an executor based on a result.
 	//
 	// The returned executor will have ParametersSchema() matching AdditionalParametersSchema()
