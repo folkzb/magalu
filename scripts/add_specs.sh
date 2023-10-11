@@ -5,6 +5,7 @@ set -e
 BASEDIR=$(dirname $0)
 ROOTDIR=$(builtin cd $BASEDIR/..; pwd)
 
+OAPIEMBED=${OAPIEMBED:-"mgc/sdk/openapi/embed_loader.go"}
 OAPIDIR=${OAPIDIR:-"mgc/cli/openapis"}
 CUSTOM_DIR=${CUSTOM_DIR:-"openapi-customizations"}
 
@@ -12,8 +13,8 @@ OAPI_PATH=$ROOTDIR/$OAPIDIR
 CUSTOM_PATH=$ROOTDIR/$CUSTOM_DIR
 
 API_NAME=$1
-API_URL=$2
-CANONICAL_URL=$3
+API_SPEC_FILE=$2
+SPEC_UID=$3
 SPEC_FILE="$API_NAME.openapi.yaml"
 
 if ! test -f $CUSTOM_PATH/$SPEC_FILE; then
@@ -51,6 +52,6 @@ servers:
 EOF
 fi
 
-python3 $BASEDIR/sync_oapi.py $API_URL $CANONICAL_URL --ext $OAPI_PATH/$SPEC_FILE
-python3 $BASEDIR/remove_tenant_id.py $OAPI_PATH/$SPEC_FILE
+python3 $BASEDIR/transformers/transform.py $API_SPEC_FILE $SPEC_UID -o $OAPI_PATH/$SPEC_FILE
 python3 $BASEDIR/yaml_merge.py --override $OAPI_PATH/$SPEC_FILE $CUSTOM_PATH/$SPEC_FILE
+python3 $BASEDIR/oapi_index_gen.py "--embed=$OAPIEMBED" $OAPI_PATH

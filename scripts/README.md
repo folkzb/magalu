@@ -29,67 +29,38 @@ Creates the `build` directory with:
 - `openapis` directory with the required OpenAPI Descriptions;
 - `docs` directory with TF documentation.
 
-### [add_all_specs.sh](./add_all_specs.sh)
+### [transform.py](./transformers/transform.py)
 
-Run [add_specs.sh](./add_specs.sh) with all supported specifications.
+Loads a product's openapi spec file or fetch from an URL and transforms or
+removes internal structures (before the Gateway) to prepare it for
+"external/public" usage.
 
-### [add_specs.sh](./add_specs.sh)
-
-Usage:
-
-```shell
-./scripts/add_specs.sh <API_NAME> <API_URL> <CANONICAL_URL>
-```
-
-Example:
-
-```shell
-./scripts/add_specs.sh block-storage https://block-storage.br-ne-1.jaxyendy.com/openapi.json https://block-storage.jaxyendy.com/openapi.json
-```
-
-Shell script to add OpenAPI specifications from remote. It will fetch, parse, create
-customizations and leave ready for usage of CLI.
-
-It also creates a new customization file if it doesn't exist.
-
-
-### [sync_oapi.py](./sync_oapi.py)
+The CLI and TF solutions are based on public openapi specifications, this
+scripts allows internal specs to be used by them.
 
 Usage:
 
 ```shell
-python3 ./scripts/sync_oapi.py  [-h] [--ext EXT] [-o OUTPUT] <INTERNAL_SPEC_URL> <CANONICAL_URL>
+python3 ./transformers/transform.py $SPEC_FILE $SPEC_UID -o $SPEC_OUTPUT_FILE
 ```
-Example:
 
 ```shell
-python3 ./scripts/sync_oapi.py https://block-storage.br-ne-1.jaxyendy.com/openapi.json https://block-storage.jaxyendy.com/openapi.json --ext ./mgc/cli/openapis/block-storage.openapi.yaml
+python3 ./transformers/transform.py $SPEC_FILE_URL $SPEC_UID -o $SPEC_OUTPUT_FILE
 ```
-
-Sync external OAPI schema with the internal schema by fixing any mismatch of requestBody between external and internal implementation. After that, we change the server URL to Kong and adjust schema of error returns.
-
-### [remove_tenant_id.py](./remove_tenant_id.py)
-
-Usage:
-
-```shell
-python3 ./scripts/remove_tenant_id.py [-h] [-o OUTPUT] <PATH>
-```
-
-Example:
-
-```shell
-python3 ./scripts/remove_tenant_id.py ./mgc/cli/openapis/block-storage.openapi.yaml
-```
-
-Remove `x-tenant-id` param from OpenAPI spec actions.
 
 ### [yaml_merge.py](./yaml_merge.py)
 
+Merges spec customizations created for the CLI/TF interfaces into an already
+existing spec, the existing spec can be overriden or a new spec can be generated
+from the output.
+
+> Make sure a raw product spec goes through the transformations before merging
+the customizations.
+
 Usage:
 
 ```shell
-python3 ./scripts/yaml_merge.py [-h] [--override] [-o OUTPUT] <BASE> <EXTRA>
+python3 ./scripts/yaml_merge.py [-h] [--override] [-o OUTPUT] <BASE> <CUSTOMIZATIONS>
 ```
 
 Example:
@@ -98,9 +69,14 @@ Example:
 python3 ./scripts/yaml_merge.py --override ./mgc/cli/openapis/block-storage.openapi.yaml ./openapi-customizations/block-storage.openapi.yaml
 ```
 
-Merge `EXTRA` YAML file on top of `BASE` YAML file.
-
 ### [oapi_index_gen.py](./oapi_index_gen.py)
+
+Generates an index file for the MGC_SDK consumption, the SDK used by the
+interfaces will only load specs defined in the `index.yaml` file, specs will
+reference each other based on their SPEC_UID (see `transforms.py` for more info).
+
+The `--embed` options will insert the specs into the Go binary, allowing the
+user to use the SDK without having `.openapi.yaml` files in a specific folder.
 
 Usage:
 
@@ -114,7 +90,41 @@ Example:
 python3 ./scripts/oapi_index_gen.py "--embed=mgc/sdk/openapi/embed_loader.go" mgc/cli/openapis
 ```
 
-Generate index file indexing all OAPI YAML files in `dir`.
+### [add_specs.sh](./add_specs.sh)
+
+Shell script to add new OpenAPI specifications into the command line. It will
+receive a yaml file, parse, transform, customize and insert into the index file
+for the SDK usage.
+
+If no customization file exists for the current spec, a new one will be created.
+
+Usage:
+
+```shell
+./scripts/add_specs.sh $API_NAME $API_SPEC_FILE $SPEC_UID
+```
+
+Example:
+
+```shell
+./scripts/add_specs.sh block-storage ./block-storage.openapi.json https://block-storage.jaxyendy.com/openapi.json
+```
+
+### [sync_oapi.py](./sync_oapi.py)
+
+Sync external OAPI schema with the internal schema by fixing any mismatch of
+requestBody between external and internal implementation.
+
+Usage:
+
+```shell
+python3 ./scripts/sync_oapi.py  [-h] [--ext EXT] [-o OUTPUT] <INTERNAL_SPEC_URL> <SPEC_UID>
+```
+Example:
+
+```shell
+python3 ./scripts/sync_oapi.py https://block-storage.br-ne-1.jaxyendy.com/openapi.json https://block-storage.jaxyendy.com/openapi.json --ext ./mgc/cli/openapis/block-storage.openapi.yaml
+```
 
 ### [spec_stats.py](./spec_stats.py)
 

@@ -25,10 +25,6 @@ def sync_request_body(internal_spec: OAPISchema, external_spec: OAPISchema):
                 ext_action["requestBody"] = internal_action["requestBody"]
 
 
-def add_canonical_url_id(spec: OAPISchema, url: str):
-    spec["$id"] = url
-
-
 def fetch_and_parse(json_oapi_url: str) -> OAPISchema:
     with urllib.request.urlopen(json_oapi_url, timeout=5) as response:
         return json.loads(response.read())
@@ -42,42 +38,6 @@ def load_yaml(path: str) -> OAPISchema:
 def save_external(spec: OAPISchema, path: str):
     with open(path, "w") as fd:
         yaml.dump(spec, fd, sort_keys=False, indent=4, allow_unicode=True)
-
-
-def change_error_response(spec: OAPISchema):
-    """
-    Kong modifies the error messages. Instead of the default object with details
-    key with an array of items, it simplifies the error response with an object
-    containing `message` and `slug`:
-
-    Internal Error:
-    {
-        "detail": [
-            "loc": ["string", 1]
-            "msg": "foo",
-            "type":  "bar"
-        ]
-    }
-
-    Kong Error:
-    {
-        "message": "foo",
-        "slug": "bar
-    }
-
-    This function patches any component in the schema markes as error and replace
-    with `message` and `slug` object definition
-    """
-    components_schema = spec.get("components", {}).get("schemas", {})
-    for coponent_name, schema in components_schema.items():
-        if "error" not in coponent_name.lower():
-            continue
-        schema["type"] = "object"
-        schema["properties"] = {
-            "message": {"title": "Message", "type": "string"},
-            "slug": {"title": "Slug", "type": "string"},
-        }
-        schema["example"] = {"message": "Unauthorized", "slug": "Unauthorized"}
 
 
 if __name__ == "__main__":
@@ -120,14 +80,10 @@ if __name__ == "__main__":
     internal_spec = fetch_and_parse(args.internal_spec_url)
     # Load yaml into dict
     external_spec = load_yaml(args.ext) if args.ext else internal_spec
-    add_canonical_url_id(external_spec, args.canonical_url)
 
     # Replace requestBody from external to the internal value if they mismatch
     if args.ext:
         sync_request_body(internal_spec, external_spec)
-
-    # Replace Error Object
-    change_error_response(external_spec)
 
     # Write external to file
     output_path = args.output or args.ext
