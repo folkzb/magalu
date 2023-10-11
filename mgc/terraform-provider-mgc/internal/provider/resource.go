@@ -161,31 +161,6 @@ func (r *MgcResource) execute(
 	return resultWithValue
 }
 
-// Does not return error, check for 'diag.HasError' to see if operation was successful
-func (r *MgcResource) readResource(ctx context.Context, mgcState map[string]any, configs map[string]any, diag *diag.Diagnostics) map[string]any {
-	exec := r.read
-
-	params := map[string]any{}
-	for k := range exec.ParametersSchema().Properties {
-		if value, ok := mgcState[k]; ok {
-			params[k] = value
-		}
-	}
-
-	result := r.execute(ctx, r.read, params, configs, diag)
-	if diag.HasError() {
-		return nil
-	}
-
-	resultMap := castToMap(result, diag)
-	if diag.HasError() {
-		return nil
-	}
-
-	tflog.Debug(ctx, fmt.Sprintf("[resource] received new %s resource information: %#v", r.name, resultMap))
-	return resultMap
-}
-
 func (r *MgcResource) applyStateAfter(
 	result core.ResultWithValue,
 	ctx context.Context,
@@ -248,68 +223,53 @@ func getConfigs(schema *core.Schema) core.Configs {
 	return result
 }
 
-func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// Make request
-	configs := getConfigs(r.create.ConfigsSchema())
-	params := r.readMgcMap(r.create.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+func (r *MgcResource) performOperation(ctx context.Context, exec core.Executor, inState tfsdk.State, outState *tfsdk.State, diag *diag.Diagnostics) {
 	ctx = r.sdk.WrapContext(ctx)
-	result := r.execute(ctx, r.create, params, configs, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
+
+	configs := getConfigs(exec.ConfigsSchema())
+	params := r.readMgcMap(exec.ParametersSchema(), ctx, inState, diag)
+	if diag.HasError() {
 		return
 	}
 
-	r.applyStateAfter(result, ctx, &resp.State, &resp.Diagnostics)
-	tflog.Info(ctx, fmt.Sprintf("[resource] created a %s resource", r.name))
+	result := r.execute(ctx, exec, params, configs, diag)
+	if diag.HasError() {
+		return
+	}
 
+	r.applyStateAfter(result, ctx, outState, diag)
+}
+
+func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	r.performOperation(ctx, r.create, tfsdk.State(req.Plan), &resp.State, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Info(ctx, fmt.Sprintf("[resource] created a %q resource", r.name))
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Info(ctx, fmt.Sprintf("[resource] reading `%s`", r.name))
-
-	// Make request
-	configs := getConfigs(r.read.ConfigsSchema())
-	params := r.readMgcMap(r.read.ParametersSchema(), ctx, req.State, &resp.Diagnostics)
+	r.performOperation(ctx, r.read, req.State, &resp.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	ctx = r.sdk.WrapContext(ctx)
-	resultMap := r.readResource(ctx, params, configs, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	r.applyMgcOutputMap(resultMap, ctx, &resp.State, &resp.Diagnostics)
-	r.verifyCurrentDesiredMismatch(params, resultMap, &resp.Diagnostics)
+	tflog.Info(ctx, fmt.Sprintf("[resource] read a %q resource", r.name))
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	configs := getConfigs(r.update.ConfigsSchema())
-	params := r.readMgcMap(r.update.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
+	r.performOperation(ctx, r.update, tfsdk.State(req.Plan), &resp.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	ctx = r.sdk.WrapContext(ctx)
-	result := r.execute(ctx, r.update, params, configs, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	r.applyStateAfter(result, ctx, &resp.State, &resp.Diagnostics)
+	tflog.Info(ctx, fmt.Sprintf("[resource] updated a %q resource", r.name))
 }
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	configs := getConfigs(r.delete.ConfigsSchema())
-	params := r.readMgcMap(r.delete.ParametersSchema(), ctx, tfsdk.State(req.State), &resp.Diagnostics)
+	r.performOperation(ctx, r.delete, req.State, &resp.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	ctx = r.sdk.WrapContext(ctx)
-	_ = r.execute(ctx, r.delete, params, configs, &resp.Diagnostics)
+	tflog.Info(ctx, fmt.Sprintf("[resource] deleted a %q resource", r.name))
 }
 
 func (r *MgcResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
