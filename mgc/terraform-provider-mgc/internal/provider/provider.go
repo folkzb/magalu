@@ -210,7 +210,63 @@ func collectGroupResources(
 		resources = append(resources, func() resource.Resource { return res })
 	}
 
+	if read != nil {
+		actionResources := collectActionResources(ctx, sdk, read, path)
+		resources = append(resources, actionResources...)
+	}
+
 	return resources, err
+}
+
+func collectActionResources(ctx context.Context, sdk *mgcSdk.Sdk, owner mgcSdk.Executor, path []string) []func() resource.Resource {
+	type actionLinks struct {
+		create mgcSdk.Linker
+		read   mgcSdk.Linker
+		update mgcSdk.Linker
+		delete mgcSdk.Linker
+	}
+
+	actions := map[string]*actionLinks{}
+
+	for linkName, link := range owner.Links() {
+		if action, actionName, found := strings.Cut(linkName, "/"); found {
+			if _, ok := actions[actionName]; !ok {
+				actions[actionName] = &actionLinks{}
+			}
+
+			switch action {
+			case "create":
+				actions[actionName].create = link
+			case "read":
+				actions[actionName].read = link
+			case "update":
+				actions[actionName].update = link
+			case "delete":
+				actions[actionName].delete = link
+			}
+		}
+	}
+
+	result := []func() resource.Resource{}
+	for actionName, links := range actions {
+		if links.read != nil && links.create != nil && links.delete != nil {
+			linkPath := append(path, actionName)
+			name := strings.Join(linkPath, "_")
+			actionResource := &MgcActionResource{
+				sdk:       sdk,
+				name:      name,
+				readOwner: owner,
+				create:    links.create,
+				read:      links.read,
+				update:    links.update,
+				delete:    links.delete,
+			}
+			tflog.Debug(ctx, fmt.Sprintf("Export action resource %q", actionName))
+			result = append(result, func() resource.Resource { return actionResource })
+		}
+	}
+
+	return result
 }
 
 func (p *MgcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
