@@ -3,7 +3,7 @@
 # Build newest provider
 go build || exit
 
-TF_LOG=info
+export TF_LOG="${TF_LOG:-info}"
 
 tf_exec=terraform
 tf_args="${@:2}"
