@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -200,6 +199,24 @@ var _ tfSchemaHandler = (*MgcResource)(nil)
 
 // END: tfSchemaHandler implementation
 
+// BEGIN: tfStateHandler implementation
+
+func (r *MgcResource) SplitAttributes() []splitMgcAttribute {
+	return r.splitAttr
+}
+
+func (r *MgcResource) TFSchema() *schema.Schema {
+	return r.tfschema
+}
+
+func (r *MgcResource) ReadResultSchema() *mgcSdk.Schema {
+	return r.read.ResultSchema()
+}
+
+var _ tfStateHandler = (*MgcResource)(nil)
+
+// END: tfStateHandler implementation
+
 // BEGIN: Resource implementation
 
 func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -224,183 +241,21 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 	resp.Schema = *r.tfschema
 }
 
-func (r *MgcResource) readMgcMap(mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	conv := newTFStateConverter(ctx, diag, r.tfschema)
-	return conv.readMgcMap(mgcSchema, r.inputAttr, tfState)
-}
-
-func (r *MgcResource) applyMgcInputMap(mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
-	conv := newTFStateConverter(ctx, diag, r.tfschema)
-	conv.applyMgcMap(mgcMap, r.inputAttr, ctx, tfState, path.Empty())
-}
-
-func (r *MgcResource) applyMgcOutputMap(mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
-	conv := newTFStateConverter(ctx, diag, r.tfschema)
-	conv.applyMgcMap(mgcMap, r.outputAttr, ctx, tfState, path.Empty())
-}
-
-func (r *MgcResource) verifyCurrentDesiredMismatch(inputMgcMap map[string]any, outputMgcMap map[string]any, diag *diag.Diagnostics) {
-	for _, splitAttr := range r.splitAttr {
-		input, ok := inputMgcMap[string(splitAttr.desired.mgcName)]
-		if !ok {
-			continue
-		}
-
-		output, ok := outputMgcMap[string(splitAttr.current.mgcName)]
-		if !ok {
-			continue
-		}
-
-		if !reflect.DeepEqual(input, output) {
-			diag.AddWarning(
-				"current/desired attribute mismatch",
-				fmt.Sprintf(
-					"Terraform isn't able to verify the equality between %q (%v) and %q (%v) because their structures are different. Assuming success.",
-					splitAttr.current.tfName,
-					output,
-					splitAttr.desired.tfName,
-					input,
-				),
-			)
-		}
-	}
-}
-
-// Does not return error, check for 'diag.HasError' to see if operation was successful
-func castToMap(result core.ResultWithValue, diag *diag.Diagnostics) map[string]any {
-	resultMap, ok := result.Value().(map[string]any)
-	if !ok {
-		diag.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("Unable to convert %v to map.", result),
-		)
-	}
-	return resultMap
-}
-
-// Does not return error, check for 'diag.HasError' to see if operation was successful
-func (r *MgcResource) execute(
-	ctx context.Context,
-	exec core.Executor,
-	params core.Parameters,
-	configs core.Configs,
-	diag *diag.Diagnostics,
-) core.ResultWithValue {
-	var result core.Result
-	var err error
-
-	tflog.Debug(ctx, fmt.Sprintf("[resource] will %s new %s resource - request info with params: %#v and configs: %#v", exec.Name(), r.name, params, configs))
-	if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok {
-		tflog.Debug(ctx, "[resource] running as TerminatorExecutor")
-		result, err = tExec.ExecuteUntilTermination(ctx, params, configs)
-	} else {
-		tflog.Debug(ctx, "[resource] running as Executor")
-		result, err = exec.Execute(ctx, params, configs)
-	}
-	if err != nil {
-		diag.AddError(
-			fmt.Sprintf("Unable to %s resource", exec.Name()),
-			fmt.Sprintf("Service returned with error: %v", err),
-		)
-		return nil
-	}
-
-	resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
-	if !ok {
-		diag.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("result has no value %#v", result),
-		)
-		return nil
-	}
-
-	/* TODO:
-	if err := validateResult(diag, result); err != nil {
-		return
-	}
-	*/
-	_ = validateResult(diag, resultWithValue) // just ignore errors for now
-
-	return resultWithValue
-}
-
-func (r *MgcResource) applyStateAfter(
-	result core.ResultWithValue,
-	ctx context.Context,
-	tfState *tfsdk.State,
-	diag *diag.Diagnostics,
-) {
-	var resultMap map[string]any
-	resultSchema := result.Schema()
-
-	if checkSimilarJsonSchemas(resultSchema, r.read.ResultSchema()) {
-		if resultMap = castToMap(result, diag); diag.HasError() {
-			return
-		}
-	} else {
-		readLink, ok := result.Source().Executor.Links()["read"]
-		if !ok {
-			diag.AddError("Read link failed", fmt.Sprintf("Unable to resolve Read link for applying new state on resource '%s'", r.name))
-			return
-		}
-
-		additionalParametersSchema := readLink.AdditionalParametersSchema()
-		if len(additionalParametersSchema.Required) > 0 {
-			diag.AddError("Read link failed", fmt.Sprintf("Unable to resolve parameters on Read link for applying new state on resource '%s'", r.name))
-			return
-		}
-
-		exec, err := readLink.CreateExecutor(result)
-		if err != nil {
-			diag.AddError("Read link failed", fmt.Sprintf("Unable to create Read link executor for applying new state on resource '%s': %s", r.name, err))
-			return
-		}
-
-		result := r.execute(ctx, exec, core.Parameters{}, core.Configs{}, diag)
-		if diag.HasError() {
-			return
-		}
-
-		if resultMap = castToMap(result, diag); diag.HasError() {
-			return
-		}
-	}
-
-	// We must apply the input parameters in the state, considering that the request went successfully.
-	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
-	// Also, this must come BEFORE applying the result to the state, as that should override these values when valid.
-	r.applyMgcInputMap(result.Source().Parameters, ctx, tfState, diag)
-
-	r.applyMgcOutputMap(resultMap, ctx, tfState, diag)
-	r.verifyCurrentDesiredMismatch(result.Source().Parameters, resultMap, diag)
-}
-
-func getConfigs(schema *core.Schema) core.Configs {
-	result := core.Configs{}
-	for propName, propRef := range schema.Properties {
-		prop := (*core.Schema)(propRef.Value)
-		if prop.Default != nil {
-			result[propName] = prop.Default
-		}
-	}
-	return result
-}
-
 func (r *MgcResource) performOperation(ctx context.Context, exec core.Executor, inState tfsdk.State, outState *tfsdk.State, diag *diag.Diagnostics) {
 	ctx = r.sdk.WrapContext(ctx)
 
 	configs := getConfigs(exec.ConfigsSchema())
-	params := r.readMgcMap(exec.ParametersSchema(), ctx, inState, diag)
+	params := readMgcMap(r, exec.ParametersSchema(), ctx, inState, diag)
 	if diag.HasError() {
 		return
 	}
 
-	result := r.execute(ctx, exec, params, configs, diag)
+	result := execute(r.name, ctx, exec, params, configs, diag)
 	if diag.HasError() {
 		return
 	}
 
-	r.applyStateAfter(result, ctx, outState, diag)
+	applyStateAfter(r, result, ctx, outState, diag)
 }
 
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -440,14 +295,3 @@ func (r *MgcResource) ImportState(ctx context.Context, req resource.ImportStateR
 }
 
 // END: Resource implemenation
-
-func validateResult(d *diag.Diagnostics, result core.ResultWithValue) error {
-	err := result.ValidateSchema()
-	if err != nil {
-		d.AddWarning(
-			"Operation output mismatch",
-			fmt.Sprintf("Result has invalid structure: %v", err),
-		)
-	}
-	return err
-}
