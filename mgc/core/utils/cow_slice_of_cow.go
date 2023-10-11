@@ -99,10 +99,11 @@ func (c *COWSliceOfCOW[V, C]) ForEachCOW(cb func(index int, cow C) (run bool)) (
 //
 // May be called on nil COW handle, returns the empty value of C and ok == false.
 func (c *COWSliceOfCOW[V, C]) GetCOW(i int) (cow C, ok bool) {
-	if i >= c.Len() {
+	if i < 0 || i >= c.Len() {
 		return
 	}
 	cow = c.cow[i]
+	ok = true
 	return cow, ok
 }
 
@@ -216,7 +217,7 @@ func (c *COWSliceOfCOW[V, C]) Set(i int, value V) (mutated bool) {
 //
 // May be called on nil COW handle, nothing is done
 func (c *COWSliceOfCOW[V, C]) Delete(i int) (mutated bool) {
-	if i >= c.Len() {
+	if i < 0 || i >= c.Len() {
 		return
 	}
 

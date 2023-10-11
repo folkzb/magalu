@@ -40,7 +40,7 @@ func (c *COWSlice[V]) ForEach(cb func(index int, value V) (run bool)) (finished 
 //
 // May be called on nil COW handle, returns the empty value of V and ok == false.
 func (c *COWSlice[V]) Get(i int) (value V, ok bool) {
-	if i >= c.Len() {
+	if i < 0 || i >= c.Len() {
 		return
 	}
 	return c.s[i], true
@@ -110,7 +110,7 @@ func (c *COWSlice[V]) ExistsAt(i int, value V) bool {
 	if c == nil || c.equals == nil {
 		return false
 	}
-	if i >= c.Len() {
+	if i < 0 || i >= c.Len() {
 		return false
 	}
 	existing := c.s[i]
@@ -129,7 +129,7 @@ func (c *COWSlice[V]) Set(i int, value V) (mutated bool) {
 		return
 	}
 
-	if i >= c.Len() {
+	if i < 0 || i >= c.Len() {
 		c.Resize(i + 1)
 	}
 	c.copyIfNeeded()
@@ -141,7 +141,7 @@ func (c *COWSlice[V]) Set(i int, value V) (mutated bool) {
 //
 // May be called on nil COW handle, nothing is done
 func (c *COWSlice[V]) Delete(i int) (mutated bool) {
-	if i >= c.Len() {
+	if i < 0 || i >= c.Len() {
 		return
 	}
 
