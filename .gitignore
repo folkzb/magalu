@@ -9,6 +9,9 @@
 # VIM
 *.swp
 
+# Python
+__pycache__
+
 # Builds
 mgc/cli/cli
 mgc/cli/mgc
