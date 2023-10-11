@@ -3,23 +3,23 @@
 # Build newest provider
 go build || exit
 
-case $2 in
-    plan)
-        (cd examples/$1 && TF_LOG=debug terraform plan)
-        ;;
-    apply)
-        (cd examples/$1 && TF_LOG=debug terraform apply)
-        ;;
-    clear)
-        (cd examples/$1 && TF_LOG=info terraform state rm "$3")
-        ;;
-    *)
-        echo "Invalid arguments."
-        echo "Usage: $0 <example_folder> <command>"
-        echo ""
-        echo "Possible commands:"
-        echo -e "apply:\tExecutes \`terraform apply\`"
-        echo -e "plan:\tExecutes \`terraform plan\`"
-        echo -e "clear:\tExecutes \`terraform clear <module>\`"
-        ;;
-esac
+TF_LOG=info
+
+tf_exec=terraform
+tf_args="${@:2}"
+
+if [[ "$MGC_OPENTF" ]]; then
+    tf_exec=tofu
+fi
+
+if [ -z $tf_args ]; then
+    echo "Invalid arguments."
+    echo "Usage: $0 <example_folder> <command>"
+    echo ""
+    echo "Possible commands:"
+    echo -e "apply:\tExecutes \`$tf_exec apply\`"
+    echo -e "plan:\tExecutes \`$tf_exec plan\`"
+    echo -e "clear:\tExecutes \`$tf_exec clear <module>\`"
+else
+    (cd examples/$1 && $tf_exec "$tf_args")
+fi

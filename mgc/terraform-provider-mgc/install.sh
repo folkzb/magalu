@@ -1,14 +1,21 @@
 #!/bin/bash
 
-cat > ~/.terraformrc <<- EOM
+config_file=~/.terraformrc
+registry=registry.terraform.io
+if [[ "$MGC_OPENTF" ]]; then
+    config_file=~/.tofurc
+    registry=registry.opentofu.org
+fi
+
+cat > $config_file <<- EOM
 provider_installation {
   dev_overrides {
-    "registry.terraform.io/magalucloud/mgc" = "$PWD"
+    "$registry/magalucloud/mgc" = "$PWD"
   }
 
   direct {}
 }
 EOM
 
-echo "File .terraformrc writen to $HOME:"
-cat ~/.terraformrc
+echo "File $config_file writen to $HOME:"
+cat $config_file
