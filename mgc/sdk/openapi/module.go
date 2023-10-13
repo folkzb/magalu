@@ -2,11 +2,8 @@ package openapi
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/dataloader"
 
@@ -17,98 +14,78 @@ import (
 
 // Module
 
-type Module struct {
-	name            string
-	url             string
-	path            string
-	version         string
-	description     string
-	extensionPrefix *string
-	doc             *openapi3.T
-	loader          dataloader.Loader
-	logger          *zap.SugaredLogger
-	resourcesByName map[string]*Resource
-	resources       []*Resource
-	execResolver    executorResolver
-	loaded          bool
+type module struct {
+	indexModule  indexModuleSpec
+	execResolver executorResolver
+	loaded       bool
+	*core.GrouperLazyChildren[*Resource]
 }
 
 // BEGIN: Descriptor interface:
 
-func (m *Module) Name() string {
-	return m.name
+func (m *module) Name() string {
+	return m.indexModule.Name
 }
 
-func (m *Module) Version() string {
-	return m.version
+func (m *module) Version() string {
+	return m.indexModule.Version
 }
 
-func (m *Module) Description() string {
-	return m.description
+func (m *module) Description() string {
+	return m.indexModule.Description
 }
 
 // END: Descriptor interface
 
 // BEGIN: Grouper interface:
 
-func (m *Module) getDoc() (*openapi3.T, error) {
-	if m.doc == nil {
-		ctx := context.Background()
-		mData, err := m.loader.Load(m.path)
-		if err != nil {
-			return nil, err
-		}
+func newModule(
+	indexModule indexModuleSpec,
+	extensionPrefix *string,
+	loader dataloader.Loader,
+	logger *zap.SugaredLogger,
+) (m *module) {
+	logger = logger.Named(indexModule.Name)
+	m = &module{
+		indexModule: indexModule,
+		GrouperLazyChildren: core.NewGrouperLazyChildren[*Resource](func() (resources []*Resource, err error) {
+			ctx := context.Background()
+			mData, err := loader.Load(indexModule.Path)
+			if err != nil {
+				return nil, err
+			}
 
-		oapiLoader := openapi3.Loader{Context: ctx, IsExternalRefsAllowed: false}
-		doc, err := oapiLoader.LoadFromData(mData)
-		if err != nil {
-			return nil, err
-		}
-		m.doc = doc
+			oapiLoader := openapi3.Loader{Context: ctx, IsExternalRefsAllowed: false}
+			doc, err := oapiLoader.LoadFromData(mData)
+			if err != nil {
+				return nil, err
+			}
+
+			resources = make([]*Resource, 0, len(doc.Tags))
+
+			for _, tag := range doc.Tags {
+				if getHiddenExtension(extensionPrefix, tag.Extensions) {
+					continue
+				}
+
+				resource := newResource(
+					tag,
+					doc,
+					extensionPrefix,
+					logger,
+					m,
+				)
+
+				resources = append(resources, resource)
+			}
+
+			return resources, nil
+		}),
 	}
-
-	return m.doc, nil
+	return m
 }
 
-func (m *Module) getResources() (resources []*Resource, byName map[string]*Resource, err error) {
-	if m.resources != nil {
-		return m.resources, m.resourcesByName, nil
-	}
-
-	doc, err := m.getDoc()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	m.resources = make([]*Resource, 0, len(doc.Tags))
-	m.resourcesByName = make(map[string]*Resource, len(doc.Tags))
-
-	for _, tag := range doc.Tags {
-		if getHiddenExtension(m.extensionPrefix, tag.Extensions) {
-			continue
-		}
-
-		resource := &Resource{
-			tag:             tag,
-			doc:             doc,
-			extensionPrefix: m.extensionPrefix,
-			servers:         doc.Servers,
-			logger:          m.logger.Named(tag.Name),
-			module:          m,
-		}
-
-		m.resources = append(m.resources, resource)
-		m.resourcesByName[resource.Name()] = resource
-	}
-
-	slices.SortFunc(m.resources, func(a, b *Resource) int {
-		return strings.Compare(a.Name(), b.Name())
-	})
-
-	return m.resources, m.resourcesByName, nil
-}
-
-func (m *Module) loadRecursive() {
+func (m *module) loadRecursive() {
 	if m.loaded {
 		return
 	}
@@ -124,37 +101,7 @@ func (m *Module) loadRecursive() {
 	m.loaded = true
 }
 
-func (m *Module) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {
-	resources, _, err := m.getResources()
-	if err != nil {
-		return false, err
-	}
-
-	for _, res := range resources {
-		run, err := visitor(res)
-		if err != nil {
-			return false, err
-		}
-		if !run {
-			return false, nil
-		}
-	}
-	return true, nil
-}
-
-func (m *Module) GetChildByName(name string) (child core.Descriptor, err error) {
-	_, byName, err := m.getResources()
-	if err != nil {
-		return nil, err
-	}
-	res, ok := byName[name]
-	if !ok {
-		return nil, fmt.Errorf("resource not found: %s", name)
-	}
-
-	return res, nil
-}
-
-var _ core.Grouper = (*Module)(nil)
+// implemented by embedded GrouperLazyChildren
+var _ core.Grouper = (*module)(nil)
 
 // END: Grouper interface

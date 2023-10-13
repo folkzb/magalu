@@ -8,14 +8,14 @@ import (
 	"magalu.cloud/core"
 )
 
-type moduleResolver map[string]*Module
+type moduleResolver map[string]*module
 
-func (r moduleResolver) add(m *Module) {
-	r[m.url] = m
+func (r moduleResolver) add(m *module) {
+	r[m.indexModule.Url] = m
 	m.execResolver.moduleResolver = r
 }
 
-func (r moduleResolver) get(url string) (m *Module, err error) {
+func (r moduleResolver) get(url string) (m *module, err error) {
 	m, ok := r[url]
 	if !ok {
 		return nil, fmt.Errorf("unknown module %q", url)

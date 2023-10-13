@@ -102,7 +102,7 @@ func (o *Sdk) WrapContext(ctx context.Context) context.Context {
 	return ctx
 }
 
-func (o *Sdk) newOpenApiSource() *openapi.Source {
+func (o *Sdk) newOpenApiSource() core.Grouper {
 	embedLoader := openapi.GetEmbedLoader()
 
 	// TODO: are these going to be fixed? configurable?
@@ -125,10 +125,7 @@ func (o *Sdk) newOpenApiSource() *openapi.Source {
 		loader = fileLoader
 	}
 
-	return &openapi.Source{
-		Loader:          loader,
-		ExtensionPrefix: &extensionPrefix,
-	}
+	return openapi.NewSource(loader, &extensionPrefix)
 }
 
 func (o *Sdk) Group() core.Grouper {

@@ -32,20 +32,15 @@ var defaultWaitTermination = waitTermination{MaxRetries: 30, Interval: time.Seco
 // Resource
 
 type Resource struct {
-	tag              *openapi3.Tag
-	doc              *openapi3.T
-	extensionPrefix  *string
-	servers          openapi3.Servers
-	operations       []core.Executor
-	operationsByName map[string]core.Executor
-	logger           *zap.SugaredLogger
-	module           *Module
+	name        string
+	description string
+	*core.GrouperLazyChildren[core.Executor]
 }
 
 // BEGIN: Descriptor interface:
 
 func (o *Resource) Name() string {
-	return getNameExtension(o.extensionPrefix, o.tag.Extensions, o.tag.Name)
+	return o.name
 }
 
 func (o *Resource) Version() string {
@@ -53,7 +48,7 @@ func (o *Resource) Version() string {
 }
 
 func (o *Resource) Description() string {
-	return getDescriptionExtension(o.extensionPrefix, o.tag.Extensions, o.tag.Description)
+	return o.description
 }
 
 // END: Descriptor interface
@@ -207,10 +202,15 @@ func getFullOperationName(httpMethod string, pathName string) []string {
 	return name
 }
 
-func (o *Resource) collectOperations() *operationTree {
+func collectOperations(
+	tag *openapi3.Tag,
+	doc *openapi3.T,
+	extensionPrefix *string,
+	logger *zap.SugaredLogger,
+) *operationTree {
 	tree := &operationTree{}
-	for key, path := range o.doc.Paths {
-		if getHiddenExtension(o.extensionPrefix, path.Extensions) {
+	for key, path := range doc.Paths {
+		if getHiddenExtension(extensionPrefix, path.Extensions) {
 			continue
 		}
 
@@ -223,17 +223,17 @@ func (o *Resource) collectOperations() *operationTree {
 		}
 
 		for method, op := range pathOps {
-			if op == nil || getHiddenExtension(o.extensionPrefix, op.Extensions) {
+			if op == nil || getHiddenExtension(extensionPrefix, op.Extensions) {
 				continue
 			}
 
-			if !slices.Contains(op.Tags, o.tag.Name) {
+			if !slices.Contains(op.Tags, tag.Name) {
 				continue
 			}
 
 			name := getFullOperationName(method, key)
 			if err := tree.Add(name, &operationDesc{path, op, method, key}); err != nil {
-				o.logger.Warnw("failed to add operation", "method", method, "key", key, "error", err)
+				logger.Warnw("failed to add operation", "method", method, "key", key, "error", err)
 			}
 		}
 	}
@@ -241,92 +241,89 @@ func (o *Resource) collectOperations() *operationTree {
 	return tree
 }
 
-func (o *Resource) getOperations() (operations []core.Executor, byName map[string]core.Executor, err error) {
-	if o.operations != nil {
-		return o.operations, o.operationsByName, nil
+func newResource(
+	tag *openapi3.Tag,
+	doc *openapi3.T,
+	extensionPrefix *string,
+	logger *zap.SugaredLogger,
+	module *module,
+) (r *Resource) {
+	logger = logger.Named(tag.Name)
+	r = &Resource{
+		name:        getNameExtension(extensionPrefix, tag.Extensions, tag.Name),
+		description: getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description),
+		GrouperLazyChildren: core.NewGrouperLazyChildren[core.Executor](func() (operations []core.Executor, err error) {
+			operations = []core.Executor{}
+			operationsByName := map[string]core.Executor{}
+			opTree := collectOperations(tag, doc, extensionPrefix, logger)
+
+			_, err = opTree.VisitDesc([]operationTreePath{}, func(path []operationTreePath, desc *operationDesc) (bool, error) {
+				opName := getNameExtension(extensionPrefix, desc.op.Extensions, "")
+				if opName == "" {
+					opName = strings.Join(getCoalescedPath(path), "-")
+					if _, ok := operationsByName[opName]; ok {
+						opName = strings.Join(getFullPath(path), "-")
+					}
+				}
+
+				servers := getServers(desc.path, desc.op)
+				if servers == nil {
+					servers = doc.Servers
+				}
+
+				outputFlag, _ := getExtensionString(extensionPrefix, "output-flag", desc.op.Extensions, "")
+				method := strings.ToUpper(desc.method)
+
+				var operation core.Executor = newOperation(
+					opName,
+					desc,
+					method,
+					extensionPrefix,
+					servers,
+					logger,
+					outputFlag,
+					module,
+				)
+
+				isDelete := method == "DELETE"
+				cExt, ok := getExtensionObject(extensionPrefix, "confirmable", desc.op.Extensions, nil)
+
+				if (ok && cExt != nil) || isDelete {
+					cExec, err := wrapInConfirmableExecutor(cExt, isDelete, operation)
+					if err != nil {
+						return false, err
+					}
+					operation = cExec
+				}
+
+				if wtExt, ok := getExtensionObject(extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
+					if tExec, err := wrapInTerminatorExecutor(logger, wtExt, operation); err == nil {
+						operation = tExec
+					} else {
+						return false, err
+					}
+				}
+
+				err = module.execResolver.add(
+					desc.op.OperationID,
+					[]string{"paths", desc.key, desc.method},
+					operation,
+				)
+				if err != nil {
+					return false, err
+				}
+				operations = append(operations, operation)
+				operationsByName[opName] = operation
+				return true, nil
+			})
+
+			return operations, nil
+		}),
 	}
-
-	o.operations = []core.Executor{}
-	o.operationsByName = map[string]core.Executor{}
-	opTree := o.collectOperations()
-
-	_, err = opTree.VisitDesc([]operationTreePath{}, func(path []operationTreePath, desc *operationDesc) (bool, error) {
-		opName := getNameExtension(o.extensionPrefix, desc.op.Extensions, "")
-		if opName == "" {
-			opName = strings.Join(getCoalescedPath(path), "-")
-			if _, ok := o.operationsByName[opName]; ok {
-				opName = strings.Join(getFullPath(path), "-")
-			}
-		}
-
-		servers := getServers(desc.path, desc.op)
-		if servers == nil {
-			servers = o.servers
-		}
-
-		outputFlag, _ := getExtensionString(o.extensionPrefix, "output-flag", desc.op.Extensions, "")
-		method := strings.ToUpper(desc.method)
-
-		var operation core.Executor = &Operation{
-			name:            opName,
-			key:             desc.key,
-			method:          method,
-			path:            desc.path,
-			operation:       desc.op,
-			doc:             o.doc,
-			extensionPrefix: o.extensionPrefix,
-			servers:         servers,
-			logger:          o.logger.Named(opName),
-			outputFlag:      outputFlag,
-			module:          o.module,
-		}
-
-		isDelete := method == "DELETE"
-		cExt, ok := getExtensionObject(o.extensionPrefix, "confirmable", desc.op.Extensions, nil)
-
-		if (ok && cExt != nil) || isDelete {
-			cExec, err := o.wrapInConfirmableExecutor(cExt, isDelete, operation)
-			if err != nil {
-				return false, err
-			}
-			operation = cExec
-		}
-
-		if wtExt, ok := getExtensionObject(o.extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
-			if tExec, err := wrapInTerminatorExecutor(o.logger, wtExt, operation); err == nil {
-				operation = tExec
-			} else {
-				return false, err
-			}
-		}
-
-		err = o.module.execResolver.add(
-			desc.op.OperationID,
-			[]string{"paths", desc.key, desc.method},
-			operation,
-		)
-		if err != nil {
-			return false, err
-		}
-		o.operations = append(o.operations, operation)
-		o.operationsByName[opName] = operation
-		return true, nil
-	})
-
-	if err != nil {
-		o.operations = nil
-		o.operationsByName = nil
-		return nil, nil, err
-	}
-
-	slices.SortFunc(o.operations, func(a, b core.Executor) int {
-		return strings.Compare(a.Name(), b.Name())
-	})
-
-	return o.operations, o.operationsByName, nil
+	return r
 }
 
-func (o *Resource) wrapInConfirmableExecutor(cExt map[string]any, isDelete bool, exec core.Executor) (core.ConfirmableExecutor, error) {
+func wrapInConfirmableExecutor(cExt map[string]any, isDelete bool, exec core.Executor) (core.ConfirmableExecutor, error) {
 	c := &confirmation{}
 
 	if cExt != nil {
@@ -338,38 +335,7 @@ func (o *Resource) wrapInConfirmableExecutor(cExt map[string]any, isDelete bool,
 	return core.NewConfirmableExecutor(exec, core.ConfirmPromptWithTemplate(c.Message)), nil
 }
 
-func (o *Resource) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {
-	operations, _, err := o.getOperations()
-	if err != nil {
-		return false, err
-	}
-
-	for _, op := range operations {
-		run, err := visitor(op)
-		if err != nil {
-			return false, err
-		}
-		if !run {
-			return false, nil
-		}
-	}
-	return true, nil
-}
-
-func (o *Resource) GetChildByName(name string) (child core.Descriptor, err error) {
-	_, operationsByName, err := o.getOperations()
-	if err != nil {
-		return nil, err
-	}
-
-	op, ok := operationsByName[name]
-	if !ok {
-		return nil, fmt.Errorf("Action not found: %s", name)
-	}
-
-	return op, nil
-}
-
+// implemented by embedded GrouperLazyChildren
 var _ core.Grouper = (*Resource)(nil)
 
 // END: Grouper interface

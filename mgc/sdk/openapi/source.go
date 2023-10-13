@@ -2,15 +2,13 @@ package openapi
 
 import (
 	"fmt"
-	"strings"
 
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 	"magalu.cloud/core"
 	"magalu.cloud/core/dataloader"
 )
 
-type IndexModule struct {
+type indexModuleSpec struct {
 	Name        string
 	Url         string
 	Path        string
@@ -18,37 +16,34 @@ type IndexModule struct {
 	Description string
 }
 
-type IndexFile struct {
+type indexFileSpec struct {
 	Version string
-	Modules []IndexModule
+	Modules []indexModuleSpec
 }
 
-const indexFile = "index.openapi.yaml"
+const indexFileName = "index.openapi.yaml"
 const indexVersion = "1.0.0"
 
 // Source -> Module -> Resource -> Operation
 
 // -- ROOT: Source
 
-type Source struct {
-	Loader          dataloader.Loader
-	ExtensionPrefix *string
-	modules         []*Module
-	byName          map[string]*Module
-	moduleResolver  moduleResolver
+type source struct {
+	Loader dataloader.Loader
+	*core.GrouperLazyChildren[*module]
 }
 
 // BEGIN: Descriptor interface:
 
-func (o *Source) Name() string {
+func (o *source) Name() string {
 	return "OpenApis"
 }
 
-func (o *Source) Version() string {
+func (o *source) Version() string {
 	return ""
 }
 
-func (o *Source) Description() string {
+func (o *source) Description() string {
 	return fmt.Sprintf("OpenApis loaded using %v", o.Loader)
 }
 
@@ -56,84 +51,45 @@ func (o *Source) Description() string {
 
 // BEGIN: Grouper interface:
 
-func (o *Source) getModules() (modules []*Module, byName map[string]*Module, err error) {
-	if len(o.modules) > 0 {
-		return o.modules, o.byName, nil
-	}
+func NewSource(loader dataloader.Loader, extensionPrefix *string) *source {
+	return &source{
+		Loader: loader,
+		GrouperLazyChildren: core.NewGrouperLazyChildren[*module](
+			func() (modules []*module, err error) {
+				data, err := loader.Load(indexFileName)
+				if err != nil {
+					return nil, err
+				}
 
-	data, err := o.Loader.Load(indexFile)
-	if err != nil {
-		return nil, nil, err
-	}
+				var index indexFileSpec
+				err = yaml.Unmarshal(data, &index)
+				if err != nil {
+					return nil, err
+				}
+				if index.Version != indexVersion {
+					return nil, fmt.Errorf("unsupported %q version %q, expected %q", indexFileName, index.Version, indexVersion)
+				}
 
-	var index IndexFile
-	err = yaml.Unmarshal(data, &index)
-	if err != nil {
-		return nil, nil, err
-	}
-	if index.Version != indexVersion {
-		return nil, nil, fmt.Errorf("Unsupported %q version %q, expected %q", indexFile, index.Version, indexVersion)
-	}
+				modules = make([]*module, len(index.Modules))
+				moduleResolver := moduleResolver{}
 
-	o.modules = make([]*Module, len(index.Modules))
-	o.byName = make(map[string]*Module, len(index.Modules))
-	o.moduleResolver = moduleResolver{}
+				for i, item := range index.Modules {
+					module := newModule(
+						item,
+						extensionPrefix,
+						loader,
+						logger(),
+					)
+					modules[i] = module
+					moduleResolver.add(module)
+				}
 
-	for i, item := range index.Modules {
-		module := &Module{
-			name:            item.Name,
-			url:             item.Url,
-			path:            item.Path,
-			version:         item.Version,
-			description:     item.Description,
-			extensionPrefix: o.ExtensionPrefix,
-			loader:          o.Loader,
-			logger:          logger().Named(item.Name),
-		}
-		o.modules[i] = module
-		o.byName[module.Name()] = module
-		o.moduleResolver.add(module)
-	}
-
-	slices.SortFunc(o.modules, func(a, b *Module) int {
-		return strings.Compare(a.Name(), b.Name())
-	})
-
-	return o.modules, o.byName, nil
-}
-
-func (o *Source) VisitChildren(visitor core.DescriptorVisitor) (finished bool, err error) {
-	modules, _, err := o.getModules()
-	if err != nil {
-		return false, err
-	}
-
-	for _, module := range modules {
-		run, err := visitor(module)
-		if err != nil {
-			return false, err
-		}
-		if !run {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
-
-func (o *Source) GetChildByName(name string) (child core.Descriptor, err error) {
-	_, byName, err := o.getModules()
-	if err != nil {
-		return nil, err
-	}
-
-	if module, ok := byName[name]; ok {
-		return module, nil
-	} else {
-		return nil, fmt.Errorf("Module not found: %s", name)
+				return modules, nil
+			}),
 	}
 }
 
-var _ core.Grouper = (*Source)(nil)
+// implemented by embedded GrouperLazyChildren
+var _ core.Grouper = (*source)(nil)
 
 // END: Grouper interface

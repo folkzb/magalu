@@ -48,7 +48,6 @@ type Operation struct {
 	method              string
 	path                *openapi3.PathItem
 	operation           *openapi3.Operation
-	doc                 *openapi3.T
 	paramsSchema        *core.Schema
 	configsSchema       *core.Schema
 	resultSchema        *core.Schema
@@ -63,7 +62,32 @@ type Operation struct {
 	servers             openapi3.Servers
 	parameters          *[]*parameterWithName
 	logger              *zap.SugaredLogger
-	module              *Module
+	module              *module
+}
+
+func newOperation(
+	name string,
+	desc *operationDesc,
+	method string,
+	extensionPrefix *string,
+	servers openapi3.Servers,
+	logger *zap.SugaredLogger,
+	outputFlag string,
+	module *module,
+) *Operation {
+	logger = logger.Named(name)
+	return &Operation{
+		name:            name,
+		key:             desc.key,
+		method:          method,
+		path:            desc.path,
+		operation:       desc.op,
+		extensionPrefix: extensionPrefix,
+		servers:         servers,
+		logger:          logger,
+		outputFlag:      outputFlag,
+		module:          module,
+	}
 }
 
 // BEGIN: Descriptor interface:
