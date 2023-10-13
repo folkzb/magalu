@@ -229,7 +229,7 @@ func (o *Operation) forEachSchemaProperty(schema *openapi3.Schema, getExternalNa
 	}
 
 	if schema.Type != openapi3.TypeObject {
-		return false, errors.New("must provide a schema with type 'object'!")
+		return false, errors.New("must provide a schema with type 'object'")
 	}
 
 	for internalName, propRef := range schema.Properties {
@@ -329,7 +329,7 @@ func (o *Operation) createRequestBodyJson(mediaType *openapi3.MediaType, pValues
 	bodyBuf := new(bytes.Buffer)
 	err = json.NewEncoder(bodyBuf).Encode(body)
 	if err != nil {
-		err = fmt.Errorf("Error encoding body content for request: %w", err)
+		err = fmt.Errorf("error encoding body content for request: %w", err)
 		return
 	}
 
@@ -404,7 +404,7 @@ func (o *Operation) createRequestBodyUploadMultipart(
 			for _, e := range uploads {
 				_ = e.file.Close()
 			}
-			return false, fmt.Errorf("Failed required parameter: %w", cerr)
+			return false, fmt.Errorf("failed required parameter: %w", cerr)
 		}
 		return true, nil
 	})
@@ -933,13 +933,13 @@ func getFileFromParameter(
 
 	v, ok := pValues[name]
 	if !ok {
-		err = fmt.Errorf("Missing parameter %q", name)
+		err = fmt.Errorf("missing parameter %q", name)
 		return
 	}
 
 	filename, ok = v.(string)
 	if !ok {
-		err = fmt.Errorf("Parameter %q: not a string", name)
+		err = fmt.Errorf("parameter %q: not a string", name)
 		return
 	}
 
@@ -1199,12 +1199,12 @@ func (o *Operation) Execute(
 
 	client := coreHttp.ClientFromContext(ctx)
 	if client == nil {
-		return nil, fmt.Errorf("No HTTP client configured")
+		return nil, fmt.Errorf("no HTTP client configured")
 	}
 
 	auth := auth.FromContext(ctx)
 	if auth == nil {
-		return nil, fmt.Errorf("No Auth configured")
+		return nil, fmt.Errorf("no Auth configured")
 	}
 
 	if err = parametersSchema.VisitJSON(parameters, openapi3.MultiErrors()); err != nil {

@@ -25,7 +25,7 @@ func jsonPathTerminationCheck(wt *waitTermination, exec core.Executor, logger *z
 	builder := gval.Full(jsonpath.PlaceholderExtension())
 	jp, err := builder.NewEvaluable(wt.JSONPathQuery)
 	if err == nil {
-		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
+		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.Interval, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
 			data := map[string]any{
 				"result":     result.Value(),
 				"parameters": result.Source().Parameters,
@@ -64,7 +64,7 @@ func templateTerminationCheck(wt *waitTermination, exec core.Executor, logger *z
 		return nil, err
 	}
 
-	tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.IntervalInSeconds, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
+	tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.Interval, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
 		data := map[string]any{
 			"result":     result.Value(),
 			"parameters": result.Source().Parameters,
@@ -94,8 +94,8 @@ func wrapInTerminatorExecutor(logger *zap.SugaredLogger, wtExt map[string]any, e
 	if wt.MaxRetries <= 0 {
 		wt.MaxRetries = defaultWaitTermination.MaxRetries
 	}
-	if wt.IntervalInSeconds <= 0 {
-		wt.IntervalInSeconds = defaultWaitTermination.IntervalInSeconds
+	if wt.Interval <= 0 {
+		wt.Interval = defaultWaitTermination.Interval
 	}
 
 	if wt.JSONPathQuery != "" {

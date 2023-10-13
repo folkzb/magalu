@@ -15,17 +15,17 @@ import (
 )
 
 type waitTermination struct {
-	MaxRetries        int           `json:"maxRetries,omitempty"`
-	IntervalInSeconds time.Duration `json:"intervalInSeconds,omitempty"`
-	JSONPathQuery     string        `json:"jsonPathQuery,omitempty"`
-	TemplateQuery     string        `json:"templateQuery,omitempty"`
+	MaxRetries    int           `json:"maxRetries,omitempty"`
+	Interval      time.Duration `json:"intervalInSeconds,omitempty"`
+	JSONPathQuery string        `json:"jsonPathQuery,omitempty"`
+	TemplateQuery string        `json:"templateQuery,omitempty"`
 }
 
 type confirmation struct {
 	Message string `json:"message"`
 }
 
-var defaultWaitTermination = waitTermination{MaxRetries: 30, IntervalInSeconds: time.Second}
+var defaultWaitTermination = waitTermination{MaxRetries: 30, Interval: time.Second}
 
 // Source -> Module -> Resource -> Operation
 
