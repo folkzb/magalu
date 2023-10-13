@@ -8,6 +8,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/stoewer/go-strcase"
+	"go.uber.org/zap"
 	"magalu.cloud/core"
 	schemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
@@ -126,29 +127,29 @@ func doTransformSchema(spec *transformSpec, value *schemaPkg.COWSchema) (*schema
 	}
 }
 
-func doTransformsToValue(specs []*transformSpec, value any) (result any, err error) {
+func doTransformsToValue(logger *zap.SugaredLogger, specs []*transformSpec, value any) (result any, err error) {
 	result = value
 	for _, spec := range specs {
 		result, err = doTransformValue(spec, result)
 		if err != nil {
-			logger().Debugf("attempted to transform %#v but failed. Transformation type was %s", value, spec.Type)
+			logger.Debugf("attempted to transform %#v but failed. Transformation type was %s", value, spec.Type)
 			return
 		}
 	}
-	logger().Debugf("transformed %#v into %#v", value, result)
+	logger.Debugf("transformed %#v into %#v", value, result)
 	return
 }
 
-func doTransformsToSchema(specs []*transformSpec, value *schemaPkg.COWSchema) (result *schemaPkg.COWSchema, err error) {
+func doTransformsToSchema(logger *zap.SugaredLogger, specs []*transformSpec, value *schemaPkg.COWSchema) (result *schemaPkg.COWSchema, err error) {
 	result = value
 	for _, spec := range specs {
 		result, err = doTransformSchema(spec, result)
 		if err != nil {
-			logger().Debugf("attempted to transform %#v but failed. Transformation type was %s", value, spec.Type)
+			logger.Debugf("attempted to transform %#v but failed. Transformation type was %s", value, spec.Type)
 			return
 		}
 	}
-	logger().Debugf("transformed schema %#v into %#v", value, result)
+	logger.Debugf("transformed schema %#v into %#v", value, result)
 	return
 }
 
@@ -214,7 +215,7 @@ func getTransformationSpecs(extensions map[string]any, transformationKey string)
 
 // The returned function does NOT and should NOT alter the value that was passed by it
 // (maps, for example, when passed as input, won't be altered, a new copy will be made)
-func createTransform[T any](schema *core.Schema, extensionPrefix *string) (func(value T) (T, error), *core.Schema, error) {
+func createTransform[T any](logger *zap.SugaredLogger, schema *core.Schema, extensionPrefix *string) (func(value T) (T, error), *core.Schema, error) {
 	transformationKey := getTransformKey(extensionPrefix)
 	if transformationKey == "" {
 		return nil, schema, nil
@@ -228,13 +229,13 @@ func createTransform[T any](schema *core.Schema, extensionPrefix *string) (func(
 		return nil, schema, nil
 	}
 
-	transformedSchema, err := transformSchema(schema, transformationKey, schema)
+	transformedSchema, err := transformSchema(logger, schema, transformationKey, schema)
 	if err != nil {
 		return nil, schema, err
 	}
 
 	return func(value T) (converted T, err error) {
-		r, err := transformValue(schema, transformationKey, value)
+		r, err := transformValue(logger, schema, transformationKey, value)
 		if err != nil {
 			return
 		}
@@ -338,10 +339,10 @@ func transformConstraintsNeedsTransformation(t schemaPkg.Transformer[bool], kind
 
 // Recursively transforms the value based on the schema that may contain transformations
 // If the schema doesn't contain any transformation, then the value is unchanged
-func transformValue(schema *core.Schema, transformationKey string, value any) (any, error) {
+func transformValue(logger *zap.SugaredLogger, schema *core.Schema, transformationKey string, value any) (any, error) {
 	t := &commonSchemaTransformer[any]{
 		tKey:                 transformationKey,
-		transformSpecs:       doTransformsToValue,
+		transformSpecs:       func(specs []*transformSpec, value any) (any, error) { return doTransformsToValue(logger, specs, value) },
 		transformArray:       transformArrayValue,
 		transformObject:      transformObjectValue,
 		transformConstraints: transformConstraintsValue,
@@ -404,10 +405,12 @@ func transformConstraintsValue(t schemaPkg.Transformer[any], kind schemaPkg.Cons
 	return schemaPkg.TransformSchemasArray(t, schemaRefs, value)
 }
 
-func transformSchema(schema *core.Schema, transformationKey string, value *core.Schema) (*core.Schema, error) {
+func transformSchema(logger *zap.SugaredLogger, schema *core.Schema, transformationKey string, value *core.Schema) (*core.Schema, error) {
 	t := &commonSchemaTransformer[*schemaPkg.COWSchema]{
-		tKey:                 transformationKey,
-		transformSpecs:       doTransformsToSchema,
+		tKey: transformationKey,
+		transformSpecs: func(specs []*transformSpec, value *schemaPkg.COWSchema) (*schemaPkg.COWSchema, error) {
+			return doTransformsToSchema(logger, specs, value)
+		},
 		transformArray:       transformArraySchema,
 		transformObject:      transformObjectSchema,
 		transformConstraints: transformConstraintsSchema,

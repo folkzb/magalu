@@ -631,7 +631,7 @@ func (o *Operation) ParametersSchema() *core.Schema {
 		o.addSecurityParameters(rootSchema)
 
 		var err error
-		o.transformParameters, o.paramsSchema, err = createTransform[map[string]any](rootSchema, o.extensionPrefix)
+		o.transformParameters, o.paramsSchema, err = createTransform[map[string]any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
 			o.logger.Warnw("error while loading parameters schema", "error", err)
 		}
@@ -648,7 +648,7 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 		o.addNetworkConfig(rootSchema)
 
 		var err error
-		o.transformConfigs, o.configsSchema, err = createTransform[map[string]any](rootSchema, o.extensionPrefix)
+		o.transformConfigs, o.configsSchema, err = createTransform[map[string]any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
 			o.logger.Warnw("error while loading configs schema", "error", err)
 		}
@@ -688,7 +688,7 @@ func (o *Operation) initResultSchema() {
 		}
 
 		var err error
-		o.transformResult, o.resultSchema, err = createTransform[any](rootSchema, o.extensionPrefix)
+		o.transformResult, o.resultSchema, err = createTransform[any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
 			o.logger.Warnw("error while initializing result schema", "error", err)
 		}
