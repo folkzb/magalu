@@ -1203,6 +1203,33 @@ func (o *operation) getResponseSchema(resp *http.Response) *core.Schema {
 	return o.ResultSchema()
 }
 
+func isVisitJSONMultiErrFatal(multi openapi3.MultiError) bool {
+	for _, err := range multi {
+		if isVisitJSONErrFatal(err) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isVisitJSONErrFatal(err error) bool {
+	var multiErr openapi3.MultiError
+	ok := errors.As(err, &multiErr)
+	if ok {
+		return isVisitJSONMultiErrFatal(multiErr)
+	}
+
+	var schemaErr *openapi3.SchemaError
+	ok = errors.As(err, &schemaErr)
+	if ok {
+		// Extra parameters are not fatal
+		return !strings.Contains(schemaErr.Reason, "is unsupported")
+	}
+
+	return true
+}
+
 func (o *operation) Execute(
 	ctx context.Context,
 	parameters core.Parameters,
@@ -1232,7 +1259,11 @@ func (o *operation) Execute(
 	}
 
 	if err = parametersSchema.VisitJSON(parameters, openapi3.MultiErrors()); err != nil {
-		return nil, err
+		if isVisitJSONErrFatal(err) {
+			return nil, err
+		} else {
+			o.logger.Warn(err)
+		}
 	}
 	if o.transformParameters != nil {
 		o.logger.Debugw("Starting parameter transforms", "parameters", parameters)
@@ -1245,7 +1276,11 @@ func (o *operation) Execute(
 	}
 
 	if err = configsSchema.VisitJSON(configs, openapi3.MultiErrors()); err != nil {
-		return nil, err
+		if isVisitJSONErrFatal(err) {
+			return nil, err
+		} else {
+			o.logger.Warn(err)
+		}
 	}
 	if o.transformConfigs != nil {
 		o.logger.Debugw("Starting config transforms", "configs", configs)
