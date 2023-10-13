@@ -24,6 +24,12 @@ func getExtensionObject(prefix *string, name string, extensions map[string]any, 
 	return
 }
 
+func getExtensionArray(prefix *string, name string, extensions map[string]any, def []any) (m []any, ok bool) {
+	value, _ := getExtension(prefix, name, extensions, def)
+	m, ok = value.([]any)
+	return
+}
+
 func getExtensionBool(prefix *string, name string, extensions map[string]any, def bool) (b bool, ok bool) {
 	value, _ := getExtension(prefix, name, extensions, def)
 	b, ok = value.(bool)

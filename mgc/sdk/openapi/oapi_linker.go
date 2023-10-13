@@ -9,6 +9,7 @@ import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/http"
 	"magalu.cloud/core/schema"
+	"magalu.cloud/core/utils"
 )
 
 type openapiLinker struct {
@@ -19,6 +20,12 @@ type openapiLinker struct {
 	additionalParameters *core.Schema
 	additionalConfigs    *core.Schema
 	target               core.Executor
+}
+
+type extraParameterExtension struct {
+	Name     string
+	Required bool
+	Schema   *core.Schema
 }
 
 func insertParameterCb(
@@ -179,6 +186,46 @@ func (l *openapiLinker) Description() string {
 	return l.description
 }
 
+// Add all extra parameters defined via 'extra-paramters' extension in the Link object. The extension must be an array of
+// objects, and each object must match the 'extraParameterExtension' struct. If a parameter has the same name as a
+// standard parameter in the target request, it will NOT be added, since that would overshadow the standard parameter
+func (l *openapiLinker) addExtraParametersExtension(dst map[string]*core.Schema, required *[]string) {
+	if extraParams, ok := getExtensionArray(l.owner.extensionPrefix, "extra-parameters", l.link.Extensions, nil); ok {
+		for _, extraSpec := range extraParams {
+			param, err := utils.DecodeNewValue[extraParameterExtension](extraSpec)
+			if err != nil {
+				l.owner.logger.Warnf(
+					"unable to decode extra parameter spec for link",
+					"link", l.name,
+					"spec data", extraSpec,
+				)
+				continue
+			}
+
+			if _, ok := dst[param.Name]; ok {
+				l.owner.logger.Debugw(
+					"ignoring extra parameter spec, since it overshadows target parameters",
+					"link", l.name,
+					"parameter name", param.Name,
+				)
+				continue
+			}
+
+			dst[param.Name] = param.Schema
+			if param.Required {
+				*required = append(*required, param.Name)
+			}
+
+			l.owner.logger.Debugw(
+				"added extra parameter to link AdditionalParameters schema",
+				"link", l.name,
+				"parameter name", param.Name,
+			)
+		}
+	}
+
+}
+
 func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 	if l.additionalParameters == nil {
 		target := l.Target()
@@ -228,6 +275,9 @@ func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 
 			return true, nil
 		})
+
+		l.addExtraParametersExtension(props, &required)
+
 		l.additionalParameters = schema.NewObjectSchema(props, required)
 	}
 	return l.additionalParameters
