@@ -14,7 +14,7 @@ import (
 type openapiLinker struct {
 	name                 string
 	description          string
-	owner                *Operation
+	owner                *operation
 	link                 *openapi3.Link
 	additionalParameters *core.Schema
 	additionalConfigs    *core.Schema
@@ -48,7 +48,7 @@ func insertParameterCb(
 }
 
 func insertParameter(
-	op *Operation,
+	op *operation,
 	oapiName string,
 	value core.Value,
 	dstParams core.Parameters,
@@ -76,7 +76,7 @@ func fillMissingConfigs(preparedConfigs core.Configs, schema *core.Schema, sourc
 }
 
 func (l *openapiLinker) addParameters(
-	operation *Operation,
+	o *operation,
 	specResolver *linkSpecResolver,
 	preparedParams core.Parameters,
 	preparedConfigs core.Configs,
@@ -95,7 +95,7 @@ func (l *openapiLinker) addParameters(
 			continue
 		}
 
-		insertParameter(operation, paramOAPIName, resolved, preparedParams, preparedConfigs)
+		insertParameter(o, paramOAPIName, resolved, preparedParams, preparedConfigs)
 	}
 
 	return nil
@@ -103,7 +103,7 @@ func (l *openapiLinker) addParameters(
 
 // TODO: This function only deals with one-level deep JSON Pointers, we should handle arbitrary depths later on
 func (l *openapiLinker) addReqBodyParameters(
-	operation *Operation,
+	o *operation,
 	specResolver *linkSpecResolver,
 	preparedParams core.Parameters,
 ) error {
@@ -111,7 +111,7 @@ func (l *openapiLinker) addReqBodyParameters(
 	// the parameters and, thus, unusable. The issue can be tracked here: https://github.com/OAI/OpenAPI-Specification/issues/1594
 	// Until a version of OAPI fixes this, the extension specified by @anentropic will be used.
 	// Ref: https://apigraph.readthedocs.io/en/latest/reference/openapi-extensions.html#x-apigraph-requestbodyparameters
-	if reqBodyParamsSpec, ok := getExtensionObject(operation.extensionPrefix, "requestBodyParameters", l.link.Extensions, nil); ok {
+	if reqBodyParamsSpec, ok := getExtensionObject(o.extensionPrefix, "requestBodyParameters", l.link.Extensions, nil); ok {
 		reqBodyParams := map[string]core.Value{}
 		for jpStr, rtExpStr := range reqBodyParamsSpec {
 			resolved, found, err := specResolver.resolve(rtExpStr)
@@ -137,7 +137,7 @@ func (l *openapiLinker) addReqBodyParameters(
 		}
 
 		// Translate names to set to 'preparedParams'
-		_, _ = operation.forEachParameterName(func(externalName, internalName, location string) (run bool, err error) {
+		_, _ = o.forEachParameterName(func(externalName, internalName, location string) (run bool, err error) {
 			if value, ok := reqBodyParams[internalName]; ok {
 				preparedParams[externalName] = value
 			}
@@ -148,7 +148,7 @@ func (l *openapiLinker) addReqBodyParameters(
 	return nil
 }
 
-func opParameterValueResolver(op *Operation, paramData core.Parameters) func(location, name string) (core.Value, bool) {
+func opParameterValueResolver(op *operation, paramData core.Parameters) func(location, name string) (core.Value, bool) {
 	return func(location, name string) (core.Value, bool) {
 		var result core.Value
 		notFound, err := op.forEachParameterWithValue(
@@ -182,7 +182,7 @@ func (l *openapiLinker) Description() string {
 func (l *openapiLinker) AdditionalParametersSchema() *core.Schema {
 	if l.additionalParameters == nil {
 		target := l.Target()
-		op, ok := core.ExecutorAs[*Operation](target)
+		op, ok := core.ExecutorAs[*operation](target)
 		if !ok {
 			l.additionalParameters = schema.NewObjectSchema(nil, nil)
 			return l.additionalParameters
@@ -258,7 +258,7 @@ func (l *openapiLinker) AdditionalConfigsSchema() *core.Schema {
 
 func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executor, error) {
 	target := l.Target()
-	op, ok := core.ExecutorAs[*Operation](target)
+	op, ok := core.ExecutorAs[*operation](target)
 	if !ok {
 		return nil, fmt.Errorf("link '%s' has unexpected target type. Expected *Operation", l.Name())
 	}

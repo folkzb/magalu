@@ -31,7 +31,7 @@ var defaultWaitTermination = waitTermination{MaxRetries: 30, Interval: time.Seco
 
 // Resource
 
-type Resource struct {
+type resource struct {
 	name        string
 	description string
 	*core.GrouperLazyChildren[core.Executor]
@@ -39,15 +39,15 @@ type Resource struct {
 
 // BEGIN: Descriptor interface:
 
-func (o *Resource) Name() string {
+func (o *resource) Name() string {
 	return o.name
 }
 
-func (o *Resource) Version() string {
+func (o *resource) Version() string {
 	return ""
 }
 
-func (o *Resource) Description() string {
+func (o *resource) Description() string {
 	return o.description
 }
 
@@ -247,9 +247,9 @@ func newResource(
 	extensionPrefix *string,
 	logger *zap.SugaredLogger,
 	module *module,
-) (r *Resource) {
+) (r *resource) {
 	logger = logger.Named(tag.Name)
-	r = &Resource{
+	r = &resource{
 		name:        getNameExtension(extensionPrefix, tag.Extensions, tag.Name),
 		description: getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description),
 		GrouperLazyChildren: core.NewGrouperLazyChildren[core.Executor](func() (operations []core.Executor, err error) {
@@ -336,6 +336,6 @@ func wrapInConfirmableExecutor(cExt map[string]any, isDelete bool, exec core.Exe
 }
 
 // implemented by embedded GrouperLazyChildren
-var _ core.Grouper = (*Resource)(nil)
+var _ core.Grouper = (*resource)(nil)
 
 // END: Grouper interface

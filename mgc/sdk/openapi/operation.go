@@ -42,7 +42,7 @@ type parameterWithName struct {
 	parameter *openapi3.Parameter
 }
 
-type Operation struct {
+type operation struct {
 	name                string
 	key                 string
 	method              string
@@ -74,9 +74,9 @@ func newOperation(
 	logger *zap.SugaredLogger,
 	outputFlag string,
 	module *module,
-) *Operation {
+) *operation {
 	logger = logger.Named(name)
-	return &Operation{
+	return &operation{
 		name:            name,
 		key:             desc.key,
 		method:          method,
@@ -92,15 +92,15 @@ func newOperation(
 
 // BEGIN: Descriptor interface:
 
-func (o *Operation) Name() string {
+func (o *operation) Name() string {
 	return o.name
 }
 
-func (o *Operation) Version() string {
+func (o *operation) Version() string {
 	return ""
 }
 
-func (o *Operation) Description() string {
+func (o *operation) Description() string {
 	return getDescriptionExtension(o.extensionPrefix, o.operation.Extensions, o.operation.Description)
 }
 
@@ -108,7 +108,7 @@ func (o *Operation) Description() string {
 
 // BEGIN: Executor interface:
 
-func (o *Operation) collectParameters(byNameAndLocation map[string]map[string]*parameterWithName, parameters openapi3.Parameters) {
+func (o *operation) collectParameters(byNameAndLocation map[string]map[string]*parameterWithName, parameters openapi3.Parameters) {
 	for _, ref := range parameters {
 		// "A unique parameter is defined by a combination of a name and location."
 		parameter := ref.Value
@@ -124,7 +124,7 @@ func (o *Operation) collectParameters(byNameAndLocation map[string]map[string]*p
 	}
 }
 
-func (o *Operation) finalizeParameters(byNameAndLocation map[string]map[string]*parameterWithName) *[]*parameterWithName {
+func (o *operation) finalizeParameters(byNameAndLocation map[string]map[string]*parameterWithName) *[]*parameterWithName {
 	parameters := []*parameterWithName{}
 
 	for name, byLocation := range byNameAndLocation {
@@ -143,7 +143,7 @@ func (o *Operation) finalizeParameters(byNameAndLocation map[string]map[string]*
 	return &parameters
 }
 
-func (o *Operation) getParameters() []*parameterWithName {
+func (o *operation) getParameters() []*parameterWithName {
 	if o.parameters == nil {
 		// operation parameters take precedence over path:
 		// https://spec.openapis.org/oas/latest.html#fixed-fields-7
@@ -159,7 +159,7 @@ func (o *Operation) getParameters() []*parameterWithName {
 
 type cbForEachParameter func(externalName string, parameter *openapi3.Parameter) (run bool, err error)
 
-func (o *Operation) forEachParameter(locations []string, cb cbForEachParameter) (finished bool, err error) {
+func (o *operation) forEachParameter(locations []string, cb cbForEachParameter) (finished bool, err error) {
 	for _, pn := range o.getParameters() {
 		name := pn.name
 		parameter := pn.parameter
@@ -189,7 +189,7 @@ func (o *Operation) forEachParameter(locations []string, cb cbForEachParameter) 
 
 type cbForEachParameterWithValue func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error)
 
-func (o *Operation) forEachParameterWithValue(values map[string]any, locations []string, cb cbForEachParameterWithValue) (finished bool, err error) {
+func (o *operation) forEachParameterWithValue(values map[string]any, locations []string, cb cbForEachParameterWithValue) (finished bool, err error) {
 	return o.forEachParameter(locations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
 		value, ok := values[externalName]
 		if !ok {
@@ -202,7 +202,7 @@ func (o *Operation) forEachParameterWithValue(values map[string]any, locations [
 	})
 }
 
-func (o *Operation) addParameters(schema *core.Schema, locations []string) {
+func (o *operation) addParameters(schema *core.Schema, locations []string) {
 	_, err := o.forEachParameter(locations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
 		paramSchemaRef := schemaPkg.NewCOWSchemaRef(parameter.Schema)
 		paramSchema := paramSchemaRef.ValueCOW()
@@ -247,7 +247,7 @@ type cbForEachSchemaProperty func(
 // with the same getExternalName function
 //
 // NOTE: getExternalName is only called if no extension provides the specific name
-func (o *Operation) forEachSchemaProperty(schema *openapi3.Schema, getExternalName cbGetName, cb cbForEachSchemaProperty) (finished bool, err error) {
+func (o *operation) forEachSchemaProperty(schema *openapi3.Schema, getExternalName cbGetName, cb cbForEachSchemaProperty) (finished bool, err error) {
 	if schema == nil {
 		return false, errors.New("missing schema")
 	}
@@ -287,18 +287,18 @@ func (o *Operation) forEachSchemaProperty(schema *openapi3.Schema, getExternalNa
 	return true, nil
 }
 
-func (o *Operation) forEachSchemaRefParameter(schemaRef *openapi3.SchemaRef, getExternalName cbGetName, cb cbForEachSchemaProperty) (finished bool, err error) {
+func (o *operation) forEachSchemaRefParameter(schemaRef *openapi3.SchemaRef, getExternalName cbGetName, cb cbForEachSchemaProperty) (finished bool, err error) {
 	if schemaRef == nil {
 		return false, errors.New("missing schemaRef")
 	}
 	return o.forEachSchemaProperty(schemaRef.Value, getExternalName, cb)
 }
 
-func (o *Operation) forEachMediaTypeProperty(mediaType *openapi3.MediaType, getExternalName cbGetName, cb cbForEachSchemaProperty) (finished bool, err error) {
+func (o *operation) forEachMediaTypeProperty(mediaType *openapi3.MediaType, getExternalName cbGetName, cb cbForEachSchemaProperty) (finished bool, err error) {
 	return o.forEachSchemaRefParameter(mediaType.Schema, getExternalName, cb)
 }
 
-func (o *Operation) forEachBodyJsonParameter(mediaType *openapi3.MediaType, cb cbForEachSchemaProperty) (finished bool, err error) {
+func (o *operation) forEachBodyJsonParameter(mediaType *openapi3.MediaType, cb cbForEachSchemaProperty) (finished bool, err error) {
 	names := map[string]bool{}
 	finished, err = o.forEachMediaTypeProperty(mediaType, nil, func(externalName, internalName string, propRef *openapi3.SchemaRef, containerSchema *openapi3.Schema) (run bool, err error) {
 		for {
@@ -319,7 +319,7 @@ func (o *Operation) forEachBodyJsonParameter(mediaType *openapi3.MediaType, cb c
 	return finished, err
 }
 
-func (o *Operation) addRequestBodyJsonParameters(mediaType *openapi3.MediaType, schema *core.Schema) (err error) {
+func (o *operation) addRequestBodyJsonParameters(mediaType *openapi3.MediaType, schema *core.Schema) (err error) {
 	_, err = o.forEachBodyJsonParameter(mediaType, func(externalName, internalName string, propRef *openapi3.SchemaRef, containerSchema *openapi3.Schema) (run bool, err error) {
 		// NOTE: keep this paired with createRequestBodyJson()
 
@@ -333,7 +333,7 @@ func (o *Operation) addRequestBodyJsonParameters(mediaType *openapi3.MediaType, 
 	return
 }
 
-func (o *Operation) createRequestBodyJson(mediaType *openapi3.MediaType, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
+func (o *operation) createRequestBodyJson(mediaType *openapi3.MediaType, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	size = -1
 
 	body := map[string]core.Value{}
@@ -368,7 +368,7 @@ func getBodyUploadMultipartExternalName(internalName string, propSchema *openapi
 	return fileUploadPrefix + internalName
 }
 
-func (o *Operation) forEachBodyUploadMultipartParameter(mediaType *openapi3.MediaType, cb cbForEachSchemaProperty) (finished bool, err error) {
+func (o *operation) forEachBodyUploadMultipartParameter(mediaType *openapi3.MediaType, cb cbForEachSchemaProperty) (finished bool, err error) {
 	finished, err = o.forEachMediaTypeProperty(mediaType, getBodyUploadMultipartExternalName, cb)
 	if err != nil {
 		err = fmt.Errorf("multipart/form-data %w", err)
@@ -376,7 +376,7 @@ func (o *Operation) forEachBodyUploadMultipartParameter(mediaType *openapi3.Medi
 	return finished, err
 }
 
-func (o *Operation) addRequestBodyUploadMultipartParameters(mediaType *openapi3.MediaType, schema *core.Schema) (err error) {
+func (o *operation) addRequestBodyUploadMultipartParameters(mediaType *openapi3.MediaType, schema *core.Schema) (err error) {
 	_, err = o.forEachBodyUploadMultipartParameter(mediaType, func(externalName, internalName string, propRef *openapi3.SchemaRef, containerSchema *openapi3.Schema) (run bool, err error) {
 		// NOTE: keep this paired with createRequestBodyUploadMultipart()
 
@@ -393,7 +393,7 @@ func (o *Operation) addRequestBodyUploadMultipartParameters(mediaType *openapi3.
 	return
 }
 
-func (o *Operation) createRequestBodyUploadMultipart(
+func (o *operation) createRequestBodyUploadMultipart(
 	mediaType *openapi3.MediaType,
 	content openapi3.Content,
 	pValues core.Parameters,
@@ -464,7 +464,7 @@ func (o *Operation) createRequestBodyUploadMultipart(
 	return
 }
 
-func (o *Operation) addRequestBodyUploadFormParameters(mediaType *openapi3.MediaType, schema *core.Schema) (err error) {
+func (o *operation) addRequestBodyUploadFormParameters(mediaType *openapi3.MediaType, schema *core.Schema) (err error) {
 	// NOTE: keep this paired with createRequestBodyUploadForm()
 
 	err = fmt.Errorf("application/x-www-form-urlencoded not implemented")
@@ -473,7 +473,7 @@ func (o *Operation) addRequestBodyUploadFormParameters(mediaType *openapi3.Media
 	return
 }
 
-func (o *Operation) createRequestBodyUploadForm(mediaType *openapi3.MediaType, content openapi3.Content, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
+func (o *operation) createRequestBodyUploadForm(mediaType *openapi3.MediaType, content openapi3.Content, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep this paired with addRequestBodyUploadFormParameters()
 
 	size = -1
@@ -482,7 +482,7 @@ func (o *Operation) createRequestBodyUploadForm(mediaType *openapi3.MediaType, c
 	return
 }
 
-func (o *Operation) addRequestBodyUploadSimpleParameters(content openapi3.Content, schema *core.Schema) (err error) {
+func (o *operation) addRequestBodyUploadSimpleParameters(content openapi3.Content, schema *core.Schema) (err error) {
 	// NOTE: keep this paired with createRequestBodyUploadSimple()
 
 	mimeTypes := make([]string, 0, len(content))
@@ -513,13 +513,13 @@ func (o *Operation) addRequestBodyUploadSimpleParameters(content openapi3.Conten
 	return
 }
 
-func (o *Operation) createRequestBodyUploadSimple(content openapi3.Content, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
+func (o *operation) createRequestBodyUploadSimple(content openapi3.Content, pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep in sync with addRequestBodyUploadSimpleParameters
 	_, mimeType, size, reader, err = getFileFromParameter(fileUploadParam, pValues)
 	return mimeType, size, reader, nil, err
 }
 
-func (o *Operation) hasBody() bool {
+func (o *operation) hasBody() bool {
 	switch o.method {
 	case http.MethodPost, http.MethodPut, http.MethodPatch:
 		return true
@@ -528,7 +528,7 @@ func (o *Operation) hasBody() bool {
 	}
 }
 
-func (o *Operation) createRequestBody(pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
+func (o *operation) createRequestBody(pValues core.Parameters) (mimeType string, size int64, reader io.Reader, requestBody core.Value, err error) {
 	// NOTE: keep in sync with addRequestBodyParameters()
 
 	size = -1
@@ -563,7 +563,7 @@ func (o *Operation) createRequestBody(pValues core.Parameters) (mimeType string,
 	}
 }
 
-func (o *Operation) addRequestBodyParameters(schema *core.Schema) {
+func (o *operation) addRequestBodyParameters(schema *core.Schema) {
 	// NOTE: keep in sync with createRequestBody()
 
 	if !o.hasBody() {
@@ -609,7 +609,7 @@ var (
 type cbForEachParameterName func(externalName, internalName, location string) (run bool, err error)
 
 // Must match ParametersSchema!
-func (o *Operation) forEachParameterName(cb cbForEachParameterName) (finished bool, err error) {
+func (o *operation) forEachParameterName(cb cbForEachParameterName) (finished bool, err error) {
 	finished, err = o.forEachParameter(parametersLocations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
 		return cb(externalName, parameter.Name, parameter.In)
 	})
@@ -645,7 +645,7 @@ func (o *Operation) forEachParameterName(cb cbForEachParameterName) (finished bo
 	return
 }
 
-func (o *Operation) ParametersSchema() *core.Schema {
+func (o *operation) ParametersSchema() *core.Schema {
 	if o.paramsSchema == nil {
 		rootSchema := schemaPkg.NewObjectSchema(map[string]*core.Schema{}, []string{})
 
@@ -663,7 +663,7 @@ func (o *Operation) ParametersSchema() *core.Schema {
 	return o.paramsSchema
 }
 
-func (o *Operation) ConfigsSchema() *core.Schema {
+func (o *operation) ConfigsSchema() *core.Schema {
 	if o.configsSchema == nil {
 		rootSchema := schemaPkg.NewObjectSchema(map[string]*core.Schema{}, []string{})
 
@@ -680,7 +680,7 @@ func (o *Operation) ConfigsSchema() *core.Schema {
 	return o.configsSchema
 }
 
-func (o *Operation) initResultSchema() {
+func (o *operation) initResultSchema() {
 	if o.resultSchema == nil {
 		rootSchema := schemaPkg.NewAnyOfSchema()
 		responses := o.operation.Responses
@@ -719,12 +719,12 @@ func (o *Operation) initResultSchema() {
 	}
 }
 
-func (o *Operation) ResultSchema() *core.Schema {
+func (o *operation) ResultSchema() *core.Schema {
 	o.initResultSchema()
 	return o.resultSchema
 }
 
-func (o *Operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
+func (o *operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
 	if link.OperationID != "" {
 		exec := o.module.execResolver.get(link.OperationID)
 		if exec == nil {
@@ -739,7 +739,7 @@ func (o *Operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
 }
 
 // This map should not be altered externally
-func (o *Operation) initLinksAndRelated() map[string]core.Linker {
+func (o *operation) initLinksAndRelated() map[string]core.Linker {
 	if o.links == nil {
 		o.module.loadRecursive()
 		o.links = map[string]core.Linker{}
@@ -780,24 +780,24 @@ func (o *Operation) initLinksAndRelated() map[string]core.Linker {
 }
 
 // This map should not be altered externally
-func (o *Operation) Links() map[string]core.Linker {
+func (o *operation) Links() map[string]core.Linker {
 	o.initLinksAndRelated()
 	return o.links
 }
 
 // This map should not be altered externally
-func (o *Operation) Related() map[string]core.Executor {
+func (o *operation) Related() map[string]core.Executor {
 	o.initLinksAndRelated()
 	return o.related
 }
 
-func (o *Operation) getTransformResult() func(value any) (any, error) {
+func (o *operation) getTransformResult() func(value any) (any, error) {
 	// do this before checking o.transformResult as it will be initialized there
 	o.initResultSchema()
 	return o.transformResult
 }
 
-func (o *Operation) getResponseSchemas() map[string]*core.Schema {
+func (o *operation) getResponseSchemas() map[string]*core.Schema {
 	// do this before checking o.responseSchemas as it will be initialized there
 	o.initResultSchema()
 	return o.responseSchemas
@@ -805,7 +805,7 @@ func (o *Operation) getResponseSchemas() map[string]*core.Schema {
 
 type cbForEachVariable func(externalName string, internalName string, spec *openapi3.ServerVariable, server *openapi3.Server) (run bool, err error)
 
-func (o *Operation) forEachServerVariable(cb cbForEachVariable) (finished bool, err error) {
+func (o *operation) forEachServerVariable(cb cbForEachVariable) (finished bool, err error) {
 	var s *openapi3.Server
 	if len(o.servers) > 0 {
 		s = o.servers[0]
@@ -829,7 +829,7 @@ func (o *Operation) forEachServerVariable(cb cbForEachVariable) (finished bool, 
 	return true, nil
 }
 
-func (o *Operation) addServerVariables(schema *core.Schema) {
+func (o *operation) addServerVariables(schema *core.Schema) {
 	_, err := o.forEachServerVariable(func(externalName, internalName string, spec *openapi3.ServerVariable, server *openapi3.Server) (run bool, err error) {
 		varSchema := openapi3.NewStringSchema()
 		varSchema.Default = spec.Default
@@ -849,12 +849,12 @@ func (o *Operation) addServerVariables(schema *core.Schema) {
 	}
 }
 
-func (o *Operation) addNetworkConfig(schema *core.Schema) {
+func (o *operation) addNetworkConfig(schema *core.Schema) {
 	s := config.NetworkConfigSchema()
 	maps.Copy(schema.Properties, s.Properties)
 }
 
-func (o *Operation) getServerURL(configs core.Configs) (string, error) {
+func (o *operation) getServerURL(configs core.Configs) (string, error) {
 	nc, _ := utils.DecodeNewValue[config.NetworkConfig](configs)
 
 	if nc.ServerUrl != "" {
@@ -1005,7 +1005,7 @@ func closeIfCloser(reader io.Reader) {
 	}
 }
 
-func (o *Operation) getRequestUrl(
+func (o *operation) getRequestUrl(
 	paramValues core.Parameters,
 	configs core.Configs,
 ) (string, error) {
@@ -1040,7 +1040,7 @@ func (o *Operation) getRequestUrl(
 	return url, nil
 }
 
-func (o *Operation) configureRequest(
+func (o *operation) configureRequest(
 	req *http.Request,
 	configs core.Configs,
 ) (err error) {
@@ -1056,7 +1056,7 @@ func (o *Operation) configureRequest(
 	return
 }
 
-func (o *Operation) buildRequestFromParams(
+func (o *operation) buildRequestFromParams(
 	ctx context.Context,
 	paramValues core.Parameters,
 	configs core.Configs,
@@ -1092,7 +1092,7 @@ func (o *Operation) buildRequestFromParams(
 	return
 }
 
-func (o *Operation) forEachSecurityRequirement(cb func(scheme string, scopes []string) (run bool, err error)) (finished bool, err error) {
+func (o *operation) forEachSecurityRequirement(cb func(scheme string, scopes []string) (run bool, err error)) (finished bool, err error) {
 	if o.operation.Security != nil {
 		for _, reqRef := range *o.operation.Security {
 			for scheme, scopes := range reqRef {
@@ -1114,7 +1114,7 @@ func (o *Operation) forEachSecurityRequirement(cb func(scheme string, scopes []s
 	return true, nil
 }
 
-func (o *Operation) needsAuth() bool {
+func (o *operation) needsAuth() bool {
 	finished, _ := o.forEachSecurityRequirement(func(scheme string, scopes []string) (run bool, err error) {
 		return false, nil
 	})
@@ -1124,7 +1124,7 @@ func (o *Operation) needsAuth() bool {
 
 const forceAuthParameter = "force-authentication"
 
-func (o *Operation) addSecurityParameters(schema *core.Schema) {
+func (o *operation) addSecurityParameters(schema *core.Schema) {
 	if o.needsAuth() {
 		return
 	}
@@ -1145,7 +1145,7 @@ func isAuthForced(parameters core.Parameters) bool {
 	return b
 }
 
-func (o *Operation) setSecurityHeader(ctx context.Context, paramValues core.Parameters, req *http.Request, auth *auth.Auth) (err error) {
+func (o *operation) setSecurityHeader(ctx context.Context, paramValues core.Parameters, req *http.Request, auth *auth.Auth) (err error) {
 	if isAuthForced(paramValues) || o.needsAuth() {
 		// TODO: review needsAuth() usage if more security schemes are used. Assuming oauth2 + bearer
 		// If others are to be used, loop using forEachSecurityRequirement()
@@ -1161,7 +1161,7 @@ func (o *Operation) setSecurityHeader(ctx context.Context, paramValues core.Para
 }
 
 // TODO: refactor this closer to the client that comes from a context
-func (o *Operation) createHttpRequest(
+func (o *operation) createHttpRequest(
 	ctx context.Context,
 	auth *auth.Auth,
 	paramValues core.Parameters,
@@ -1184,14 +1184,14 @@ func (o *Operation) createHttpRequest(
 	return
 }
 
-func (o *Operation) getValueFromResponseBody(value core.Value) (core.Value, error) {
+func (o *operation) getValueFromResponseBody(value core.Value) (core.Value, error) {
 	if transform := o.getTransformResult(); transform != nil {
 		return transform(value)
 	}
 	return value, nil
 }
 
-func (o *Operation) getResponseSchema(resp *http.Response) *core.Schema {
+func (o *operation) getResponseSchema(resp *http.Response) *core.Schema {
 	responseSchemas := o.getResponseSchemas()
 	code := fmt.Sprint(resp.StatusCode)
 	if schema, ok := responseSchemas[code]; ok {
@@ -1203,7 +1203,7 @@ func (o *Operation) getResponseSchema(resp *http.Response) *core.Schema {
 	return o.ResultSchema()
 }
 
-func (o *Operation) Execute(
+func (o *operation) Execute(
 	ctx context.Context,
 	parameters core.Parameters,
 	configs core.Configs,
@@ -1284,6 +1284,6 @@ func (o *Operation) Execute(
 	return
 }
 
-var _ core.Executor = (*Operation)(nil)
+var _ core.Executor = (*operation)(nil)
 
 // END: Executor interface

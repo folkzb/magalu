@@ -18,7 +18,7 @@ type module struct {
 	indexModule  indexModuleSpec
 	execResolver executorResolver
 	loaded       bool
-	*core.GrouperLazyChildren[*Resource]
+	*core.GrouperLazyChildren[*resource]
 }
 
 // BEGIN: Descriptor interface:
@@ -48,7 +48,7 @@ func newModule(
 	logger = logger.Named(indexModule.Name)
 	m = &module{
 		indexModule: indexModule,
-		GrouperLazyChildren: core.NewGrouperLazyChildren[*Resource](func() (resources []*Resource, err error) {
+		GrouperLazyChildren: core.NewGrouperLazyChildren[*resource](func() (resources []*resource, err error) {
 			ctx := context.Background()
 			mData, err := loader.Load(indexModule.Path)
 			if err != nil {
@@ -61,7 +61,7 @@ func newModule(
 				return nil, err
 			}
 
-			resources = make([]*Resource, 0, len(doc.Tags))
+			resources = make([]*resource, 0, len(doc.Tags))
 
 			for _, tag := range doc.Tags {
 				if getHiddenExtension(extensionPrefix, tag.Extensions) {
