@@ -472,8 +472,8 @@ def is_tag_crud(tag: Optional[OAPITagInfo]) -> bool:
 
 
 def single_item_xofs(schema: JSONSchema) -> List[str]:
-    def filterFn(xof: str) -> int:
-        return len(schema.get(xof, []))
+    def filterFn(xof: str) -> bool:
+        return len(schema.get(xof, [])) == 1
 
     return list(filter(filterFn, ["allOf", "anyOf", "oneOf"]))
 
