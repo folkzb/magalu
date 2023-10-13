@@ -41,7 +41,11 @@ func initLogger(sdk *mgcSdk.Sdk, filterRules string) error {
 
 	logger, err := zapConfig.Build()
 	if err != nil {
-		return fmt.Errorf("unable to build logger. Make sure a valid configuration was provided: %w", err)
+		return fmt.Errorf(
+			"unable to build logger with current configuration: %w\nTo fix this, you'll need to alter the configuration file manually: %s",
+			err,
+			sdk.Config().FilePath(),
+		)
 	}
 
 	filterOpt := zap.WrapCore(func(c zapcore.Core) zapcore.Core {

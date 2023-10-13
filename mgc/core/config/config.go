@@ -71,6 +71,10 @@ func (c *Config) init(dirname string, fs afero.Fs) {
 	c.fs = fs
 }
 
+func (c *Config) FilePath() string {
+	return c.path
+}
+
 func (c *Config) BuiltInConfigs() (map[string]*core.Schema, error) {
 	loggerConfigSchema, err := loggerSchema()
 	if err != nil {
