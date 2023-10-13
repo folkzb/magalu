@@ -671,9 +671,10 @@ def fill_responses_stats(
 
                 if filterer.should_include(XOF_SCHEMA_SINGLE_ITEM):
                     if len(which := single_item_xofs(schema)) > 0:
+                        keys = (path + " | " + xof for xof in which)
                         dst.setdefault(XOF_SCHEMA_SINGLE_ITEM, {}).setdefault(
                             op.key(), {}
-                        ).setdefault("response", {}).setdefault(code, []).extend(which)
+                        ).setdefault("response", {}).setdefault(code, []).extend(keys)
 
             traverse_all_subschemas("", s, resolve, visit_schema)
 
