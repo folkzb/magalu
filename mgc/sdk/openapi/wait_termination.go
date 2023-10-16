@@ -31,16 +31,28 @@ var terminateTemplateStrings = []string{
 	"true",
 }
 
-func jsonPathTerminationCheck(wt *waitTermination, exec core.Executor, logger *zap.SugaredLogger) (core.TerminatorExecutor, error) {
+func terminationResultData(result core.ResultWithValue, ownerResult core.Result) map[string]any {
+	data := map[string]any{
+		"result":     result.Value(),
+		"parameters": result.Source().Parameters,
+		"configs":    result.Source().Configs,
+	}
+	if ownerResult, ok := core.ResultAs[core.ResultWithValue](ownerResult); ok {
+		data["owner"] = map[string]any{
+			"result":     ownerResult.Value(),
+			"parameters": ownerResult.Source().Parameters,
+			"configs":    ownerResult.Source().Configs,
+		}
+	}
+	return data
+}
+
+func jsonPathTerminationCheck(wt *waitTermination, exec core.Executor, logger *zap.SugaredLogger, ownerResult core.Result) (core.TerminatorExecutor, error) {
 	builder := gval.Full(jsonpath.PlaceholderExtension())
 	jp, err := builder.NewEvaluable(wt.JSONPathQuery)
 	if err == nil {
 		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.Interval, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
-			data := map[string]any{
-				"result":     result.Value(),
-				"parameters": result.Source().Parameters,
-				"configs":    result.Source().Configs,
-			}
+			data := terminationResultData(result, ownerResult)
 			v, err := jp(ctx, data)
 			if err != nil {
 				logger.Warnw("error evaluating jsonpath query", "query", wt.JSONPathQuery, "target", data, "error", err)
@@ -68,18 +80,14 @@ func jsonPathTerminationCheck(wt *waitTermination, exec core.Executor, logger *z
 	}
 }
 
-func templateTerminationCheck(wt *waitTermination, exec core.Executor, logger *zap.SugaredLogger) (core.TerminatorExecutor, error) {
+func templateTerminationCheck(wt *waitTermination, exec core.Executor, logger *zap.SugaredLogger, ownerResult core.Result) (core.TerminatorExecutor, error) {
 	tmpl, err := template.New("core.wait-termination").Parse(wt.TemplateQuery)
 	if err != nil {
 		return nil, err
 	}
 
 	tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.Interval, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
-		data := map[string]any{
-			"result":     result.Value(),
-			"parameters": result.Source().Parameters,
-			"configs":    result.Source().Configs,
-		}
+		data := terminationResultData(result, ownerResult)
 		var buf bytes.Buffer
 		err = tmpl.Execute(&buf, data)
 		if err != nil {
@@ -96,6 +104,10 @@ func templateTerminationCheck(wt *waitTermination, exec core.Executor, logger *z
 }
 
 func wrapInTerminatorExecutor(logger *zap.SugaredLogger, wtExt map[string]any, exec core.Executor) (core.TerminatorExecutor, error) {
+	return wrapInTerminatorExecutorWithOwnerResult(logger, wtExt, exec, nil)
+}
+
+func wrapInTerminatorExecutorWithOwnerResult(logger *zap.SugaredLogger, wtExt map[string]any, exec core.Executor, ownerResult core.Result) (core.TerminatorExecutor, error) {
 	wt := &waitTermination{}
 	if err := utils.DecodeValue(wtExt, wt); err != nil {
 		logger.Warnw("error decoding extension wait-termination", "data", wtExt, "error", err)
@@ -109,11 +121,11 @@ func wrapInTerminatorExecutor(logger *zap.SugaredLogger, wtExt map[string]any, e
 	}
 
 	if wt.JSONPathQuery != "" {
-		return jsonPathTerminationCheck(wt, exec, logger)
+		return jsonPathTerminationCheck(wt, exec, logger, ownerResult)
 	}
 
 	if wt.TemplateQuery != "" {
-		return templateTerminationCheck(wt, exec, logger)
+		return templateTerminationCheck(wt, exec, logger, ownerResult)
 	}
 
 	return nil, fmt.Errorf("no termination check expression provided")
