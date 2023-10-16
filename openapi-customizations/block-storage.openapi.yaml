@@ -118,6 +118,9 @@ paths:
                             description: Delete snapshot
                             parameters:
                                 snapshot_id: $response.body#/id
+    /v0/snapshots/{snapshot_id}:
+        post:
+            x-cli-name: restore
 
 
 tags:

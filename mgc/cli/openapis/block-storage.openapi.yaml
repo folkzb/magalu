@@ -214,6 +214,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.write
+            x-cli-name: restore
         delete:
             tags:
             - snapshots
