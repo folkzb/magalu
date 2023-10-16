@@ -187,13 +187,12 @@ func collectGroupResources(
 			tflog.Warn(ctx, fmt.Sprintf("Resource %s misses read", name))
 			return resources, nil
 		}
-		if update == nil {
-			tflog.Warn(ctx, fmt.Sprintf("Resource %s misses update", name))
-			return resources, nil
-		}
 		if delete == nil {
 			tflog.Warn(ctx, fmt.Sprintf("Resource %s misses delete", name))
 			return resources, nil
+		}
+		if update == nil {
+			update = core.NoOpExecutor()
 		}
 		res := &MgcResource{
 			sdk:    sdk,
