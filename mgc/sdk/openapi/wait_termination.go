@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"strings"
+	"time"
 
 	"github.com/PaesslerAG/gval"
 	"github.com/PaesslerAG/jsonpath"
@@ -14,6 +15,15 @@ import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 )
+
+type waitTermination struct {
+	MaxRetries    int           `json:"maxRetries,omitempty"`
+	Interval      time.Duration `json:"intervalInSeconds,omitempty"`
+	JSONPathQuery string        `json:"jsonPathQuery,omitempty"`
+	TemplateQuery string        `json:"templateQuery,omitempty"`
+}
+
+var defaultWaitTermination = waitTermination{MaxRetries: 30, Interval: time.Second}
 
 var terminateTemplateStrings = []string{
 	"finished",
