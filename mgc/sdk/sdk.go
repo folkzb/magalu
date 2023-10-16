@@ -151,6 +151,8 @@ func newHttpTransport() http.RoundTripper {
 		DisableCompression: true,
 	}
 	transport = coreHttp.NewDefaultClientLogger(transport)
+	userAgent := "MgcCLI/" + Version
+	transport = newDefaultSdkTransport(transport, userAgent)
 	return transport
 }
 
