@@ -752,17 +752,10 @@ func (o *operation) initLinksAndRelated() map[string]core.Linker {
 				name := getNameExtension(o.extensionPrefix, link.Extensions, key)
 				description := getDescriptionExtension(o.extensionPrefix, link.Extensions, link.Description)
 
-				originalTarget, err := o.resolveLink(link)
+				target, err := o.resolveLink(link)
 				if err != nil {
 					o.logger.Warnw("ignored broken link", "link", name, "error", err)
 					continue
-				}
-
-				target := originalTarget
-				if wtExt, ok := getExtensionObject(o.extensionPrefix, "wait-termination", link.Extensions, nil); ok && wtExt != nil {
-					if tExec, err := wrapInTerminatorExecutor(o.logger, wtExt, target); err == nil {
-						target = tExec
-					}
 				}
 
 				o.links[name] = &openapiLinker{
@@ -772,7 +765,7 @@ func (o *operation) initLinksAndRelated() map[string]core.Linker {
 					link:        linkRef.Value,
 					target:      target,
 				}
-				o.related[name] = originalTarget
+				o.related[name] = target
 			}
 		}
 	}

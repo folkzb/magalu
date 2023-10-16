@@ -334,6 +334,12 @@ func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executo
 
 	fillMissingConfigs(preparedConfigs, target.ConfigsSchema(), originalResult.Source().Configs)
 
+	if wtExt, ok := getExtensionObject(l.owner.extensionPrefix, "wait-termination", l.link.Extensions, nil); ok && wtExt != nil {
+		if tExec, err := wrapInTerminatorExecutorWithOwnerResult(l.owner.logger, wtExt, target, originalResult); err == nil {
+			target = tExec
+		}
+	}
+
 	var exec core.LinkExecutor = core.NewLinkExecutor(target, preparedParams, preparedConfigs, l.additionalParameters, l.additionalConfigs)
 	if _, ok := core.ExecutorAs[core.TerminatorExecutor](target); ok {
 		exec = core.NewLinkTerminatorExecutor(exec)
