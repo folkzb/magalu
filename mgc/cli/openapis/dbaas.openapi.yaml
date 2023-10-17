@@ -208,17 +208,17 @@ paths:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
                             parameters:
-                                instance_id: $response.body#/id
+                                id: $response.body#/id
                         update:
                             operationId: instances_v1_patch
                             description: Update Database instance
                             parameters:
-                                instance_id: $response.body#/id
+                                id: $response.body#/id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                instance_id: $response.body#/id
+                                id: $response.body#/id
                 '400':
                     $ref: '#/components/responses/RequiredField'
                 '401':
@@ -232,7 +232,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}:
+    /v1/instances/{id}:
         get:
             operationId: instances_v1_get_by_id
             tags:
@@ -245,7 +245,7 @@ paths:
                     title: Database Instance Id
                     type: string
                     format: uuid
-                name: instance_id
+                name: id
                 in: path
                 description: Database Instance Unique Id.
             -   $ref: '#/components/parameters/instance_expand'
@@ -261,12 +261,12 @@ paths:
                             operationId: instances_v1_patch
                             description: Update Database instance
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                 '400':
                     $ref: '#/components/responses/RequiredField'
                 '401':
@@ -298,7 +298,7 @@ paths:
                     title: Database Instance Id
                     type: string
                     format: uuid
-                name: instance_id
+                name: id
                 in: path
                 description: Database Instance Unique Id.
             requestBody:
@@ -319,12 +319,12 @@ paths:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                 '400':
                     $ref: '#/components/responses/RequiredField'
                 '401':
@@ -352,7 +352,7 @@ paths:
                     title: Database Instance Id
                     type: string
                     format: uuid
-                name: instance_id
+                name: id
                 in: path
                 description: Database Instance Unique Id.
             responses:
@@ -373,7 +373,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/resize:
+    /v1/instances/{id}/resize:
         post:
             tags:
             - instances
@@ -386,7 +386,7 @@ paths:
                     title: Database Instance Id
                     type: string
                     format: uuid
-                name: instance_id
+                name: id
                 in: path
                 description: Database Instance Unique Id.
             requestBody:
@@ -417,7 +417,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/start:
+    /v1/instances/{id}/start:
         post:
             tags:
             - instances
@@ -430,7 +430,7 @@ paths:
                     title: Database Instance Id
                     type: string
                     format: uuid
-                name: instance_id
+                name: id
                 in: path
                 description: Database Instance Unique Id.
             responses:
@@ -455,7 +455,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/stop:
+    /v1/instances/{id}/stop:
         post:
             tags:
             - instances
@@ -468,7 +468,7 @@ paths:
                     title: Database Instance Id
                     type: string
                     format: uuid
-                name: instance_id
+                name: id
                 in: path
                 description: Database Instance Unique Id.
             responses:
@@ -493,7 +493,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/backups:
+    /v1/instances/{id}/backups:
         get:
             tags:
             - instances
@@ -501,7 +501,7 @@ paths:
             description: List all backups.
             operationId: backups_list_v1_instances__instance_id__backups_get
             parameters:
-            -   $ref: '#/components/parameters/instance_id'
+            -   $ref: '#/components/parameters/id'
             -   $ref: '#/components/parameters/offset'
             -   $ref: '#/components/parameters/limit'
             -   $ref: '#/components/parameters/backup_type'
@@ -534,7 +534,7 @@ paths:
             description: Creates a new backup asynchronously.
             operationId: backup_create_v1_instances__instance_id__backups_post
             parameters:
-            -   $ref: '#/components/parameters/instance_id'
+            -   $ref: '#/components/parameters/id'
             requestBody:
                 content:
                     application/json:
@@ -553,13 +553,13 @@ paths:
                             operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
                             description: Read a Backup
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                                 backup_id: $response.body#/id
                         delete:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                                 backup_id: $response.body#/id
                 '400':
                     $ref: '#/components/responses/RequiredField'
@@ -576,7 +576,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/backups/{backup_id}:
+    /v1/instances/{id}/backups/{backup_id}:
         get:
             tags:
             - instances
@@ -584,7 +584,7 @@ paths:
             description: Get a backup detail.
             operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
             parameters:
-            -   $ref: '#/components/parameters/instance_id'
+            -   $ref: '#/components/parameters/id'
             -   $ref: '#/components/parameters/backup_id'
             responses:
                 '200':
@@ -598,7 +598,7 @@ paths:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                                 backup_id: request.path.id
                 '400':
                     $ref: '#/components/responses/RequiredField'
@@ -622,7 +622,7 @@ paths:
             description: Deletes a database backup.
             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
             parameters:
-            -   $ref: '#/components/parameters/instance_id'
+            -   $ref: '#/components/parameters/id'
             -   $ref: '#/components/parameters/backup_id'
             responses:
                 '202':
@@ -979,7 +979,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/restores:
+    /v1/instances/{id}/restores:
         post:
             tags:
             - instances
@@ -987,7 +987,7 @@ paths:
             description: Restores a backup for an instance asynchronously.
             operationId: instances_v1_restore
             parameters:
-            -   $ref: '#/components/parameters/instance_id'
+            -   $ref: '#/components/parameters/id'
             requestBody:
                 content:
                     application/json:
@@ -1054,8 +1054,8 @@ components:
                 format: uuid
             example: 1b65c0e4-94a1-4385-aedb-c1b34f6e8935
             description: Value referring to backup Id.
-        instance_id:
-            name: instance_id
+        id:
+            name: id
             in: path
             required: true
             style: simple

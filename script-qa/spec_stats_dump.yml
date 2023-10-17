@@ -90,7 +90,7 @@ dbaas.openapi:
               - size
               - type
               - user
-    - POST /v1/instances/{instance_id}/resize:
+    - POST /v1/instances/{id}/resize:
         - '200':
             computed:
               - addresses
@@ -99,7 +99,6 @@ dbaas.openapi:
               - created_at
               - datastore_id
               - finished_at
-              - id
               - name
               - password
               - replicas
@@ -110,9 +109,9 @@ dbaas.openapi:
               - user
             non-computed:
               - flavor_id
-              - instance_id
+              - id
               - size
-    - POST /v1/instances/{instance_id}/start:
+    - POST /v1/instances/{id}/start:
         - '200':
             computed:
               - addresses
@@ -122,7 +121,6 @@ dbaas.openapi:
               - datastore_id
               - finished_at
               - flavor_id
-              - id
               - name
               - password
               - replicas
@@ -133,8 +131,8 @@ dbaas.openapi:
               - updated_at
               - user
             non-computed:
-              - instance_id
-    - POST /v1/instances/{instance_id}/stop:
+              - id
+    - POST /v1/instances/{id}/stop:
         - '200':
             computed:
               - addresses
@@ -144,7 +142,6 @@ dbaas.openapi:
               - datastore_id
               - finished_at
               - flavor_id
-              - id
               - name
               - password
               - replicas
@@ -155,21 +152,7 @@ dbaas.openapi:
               - updated_at
               - user
             non-computed:
-              - instance_id
-    - POST /v1/instances/{instance_id}/backups:
-        - '202':
-            computed:
               - id
-            non-computed:
-              - instance_id
-              - mode
-    - POST /v1/instances/{instance_id}/restores:
-        - '202':
-            computed:
-              - id
-            non-computed:
-              - backup_id
-              - instance_id
     - POST /v1/replicas:
         - '202':
             computed:

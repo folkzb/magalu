@@ -5,7 +5,7 @@
 # such as "x-cli-name" or "x-cli-description"
 
 paths:
-    /v1/instances/{instance_id}/backups:
+    /v1/instances/{id}/backups:
         post:
             responses:
                 '202':
@@ -14,18 +14,18 @@ paths:
                             operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
                             description: Read a Backup
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                                 backup_id: $response.body#/id
                         delete:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                                 backup_id: $response.body#/id
             security:
                 -   OAuth2:
                     - dbaas.write
-    /v1/instances/{instance_id}/backups/{backup_id}:
+    /v1/instances/{id}/backups/{backup_id}:
         get:
             responses:
                 '200':
@@ -34,7 +34,7 @@ paths:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                instance_id: $request.path.instance_id
+                                id: $request.path.id
                                 backup_id: request.path.id
             security:
             -   OAuth2:
@@ -76,21 +76,21 @@ paths:
                           operationId: instances_v1_get_by_id
                           description: Read Database instance
                           parameters:
-                              instance_id: $response.body#/id
+                              id: $response.body#/id
                       update:
                           operationId: instances_v1_patch
                           description: Update Database instance
                           parameters:
-                              instance_id: $response.body#/id
+                              id: $response.body#/id
                       delete:
                           operationId: instances_v1_delete
                           description: Delete Database instance
                           parameters:
-                              instance_id: $response.body#/id
+                              id: $response.body#/id
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}:
+    /v1/instances/{id}:
         get:
             responses:
               '200':
@@ -99,12 +99,12 @@ paths:
                           operationId: instances_v1_patch
                           description: Update Database instance
                           parameters:
-                              instance_id: $request.path.instance_id
+                              id: $request.path.id
                       delete:
                           operationId: instances_v1_delete
                           description: Delete Database instance
                           parameters:
-                              instance_id: $request.path.instance_id
+                              id: $request.path.id
             security:
             -   OAuth2:
                 - dbaas.read
@@ -124,26 +124,26 @@ paths:
                           operationId: instances_v1_get_by_id
                           description: Read Database instance
                           parameters:
-                              instance_id: $request.path.instance_id
+                              id: $request.path.id
                       delete:
                           operationId: instances_v1_delete
                           description: Delete Database instance
                           parameters:
-                              instance_id: $request.path.instance_id
+                              id: $request.path.id
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/resize:
+    /v1/instances/{id}/resize:
         post:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/start:
+    /v1/instances/{id}/start:
         post:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{instance_id}/stop:
+    /v1/instances/{id}/stop:
         post:
             security:
             -   OAuth2:
