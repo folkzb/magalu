@@ -10,7 +10,6 @@ require (
 )
 
 require (
-	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/erikgeiser/promptkit v0.9.0
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/stoewer/go-strcase v1.3.0
@@ -23,6 +22,7 @@ require (
 
 require (
 	github.com/PaesslerAG/gval v1.2.2 // indirect
+	github.com/PaesslerAG/jsonpath v0.1.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/bubbles v0.16.1 // indirect

@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PaesslerAG/gval"
-	"github.com/PaesslerAG/jsonpath"
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
@@ -47,8 +45,7 @@ func terminationResultData(result core.ResultWithValue, ownerResult core.Result)
 }
 
 func jsonPathTerminationCheck(wt *waitTermination, exec core.Executor, logger *zap.SugaredLogger, ownerResult core.Result) (core.TerminatorExecutor, error) {
-	builder := gval.Full(jsonpath.PlaceholderExtension())
-	jp, err := builder.NewEvaluable(wt.JSONPathQuery)
+	jp, err := utils.NewJsonPath(wt.JSONPathQuery)
 	if err == nil {
 		tExec := core.NewTerminatorExecutorWithCheck(exec, wt.MaxRetries, wt.Interval, func(ctx context.Context, exec core.Executor, result core.ResultWithValue) (bool, error) {
 			data := terminationResultData(result, ownerResult)

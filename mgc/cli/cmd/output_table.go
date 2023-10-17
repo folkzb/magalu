@@ -8,9 +8,9 @@ import (
 	"strings"
 	"text/scanner"
 
-	"github.com/PaesslerAG/jsonpath"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
+	"magalu.cloud/core/utils"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -498,7 +498,7 @@ func formatTableWithOptions(val any, options *tableOptions) error {
 	}
 
 	for colIdx, col := range options.Columns {
-		result, err := jsonpath.Get(col.JSONPath, val)
+		result, err := utils.GetJsonPath(col.JSONPath, val)
 
 		if err != nil {
 			return err

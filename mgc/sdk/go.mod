@@ -3,8 +3,6 @@ module magalu.cloud/sdk
 go 1.20
 
 require (
-	github.com/PaesslerAG/gval v1.2.2
-	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/go-openapi/jsonpointer v0.20.0
 	github.com/jedib0t/go-pretty/v6 v6.4.6
@@ -18,6 +16,8 @@ require (
 )
 
 require (
+	github.com/PaesslerAG/gval v1.2.2 // indirect
+	github.com/PaesslerAG/jsonpath v0.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

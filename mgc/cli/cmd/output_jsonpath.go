@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/PaesslerAG/jsonpath"
+	"magalu.cloud/core/utils"
 )
 
 type jsonpathOutputFormatter struct{}
 
 func (*jsonpathOutputFormatter) Format(value any, options string) error {
 	path := options
-	target, err := jsonpath.Get(path, value)
+	target, err := utils.GetJsonPath(path, value)
 	if err != nil {
 		return fmt.Errorf("jsonpath output formatter: %w", err)
 	}
