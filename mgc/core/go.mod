@@ -3,6 +3,8 @@ module magalu.cloud/core
 go 1.20
 
 require (
+	github.com/PaesslerAG/gval v1.2.2
+	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/invopop/jsonschema v0.7.0
 	github.com/mitchellh/mapstructure v1.5.0
@@ -27,6 +29,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

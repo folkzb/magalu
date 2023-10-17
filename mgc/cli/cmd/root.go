@@ -347,7 +347,7 @@ func handleExecutor(
 	}
 
 	waitTermination := getWaitTerminationFlag(cmd)
-	var cb retryUntilCb
+	var cb core.RetryUntilCb
 	if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok && waitTermination {
 		cb = func() (result core.Result, err error) {
 			return tExec.ExecuteUntilTermination(ctx, parameters, configs)
@@ -363,7 +363,7 @@ func handleExecutor(
 		return nil, err
 	}
 
-	result, err := retry.run(ctx, cb)
+	result, err := retry.Run(ctx, cb)
 
 	err = handleExecutorResult(ctx, cmd, result, err)
 	if err != nil {
