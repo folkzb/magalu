@@ -68,6 +68,9 @@ func verifyCurrentDesiredMismatch(handler tfStateHandler, inputMgcMap map[string
 
 // Does not return error, check for 'diag.HasError' to see if operation was successful
 func castToMap(result core.ResultWithValue, diag *diag.Diagnostics) map[string]any {
+	if result == nil {
+		return map[string]any{}
+	}
 	resultMap, ok := result.Value().(map[string]any)
 	if !ok {
 		diag.AddError(
