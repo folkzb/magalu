@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 	"strings"
 	"time"
 
@@ -81,7 +80,7 @@ func jsonPathTerminationCheck(wt *waitTermination, exec core.Executor, logger *z
 }
 
 func templateTerminationCheck(wt *waitTermination, exec core.Executor, logger *zap.SugaredLogger, ownerResult core.Result) (core.TerminatorExecutor, error) {
-	tmpl, err := template.New("core.wait-termination").Parse(wt.TemplateQuery)
+	tmpl, err := utils.NewTemplate(wt.TemplateQuery)
 	if err != nil {
 		return nil, err
 	}

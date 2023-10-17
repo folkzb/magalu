@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"text/template"
+	"magalu.cloud/core/utils"
 )
 
 type templateFileOutputFormatter struct{}
@@ -15,7 +15,7 @@ func (*templateFileOutputFormatter) Format(value any, options string) error {
 	if err != nil {
 		return fmt.Errorf("template-file output formatter: %w", err)
 	}
-	tmpl, err := template.New(filename).Parse(string(text))
+	tmpl, err := utils.NewTemplateFilename(string(text), filename)
 	if err != nil {
 		return fmt.Errorf("template-file output formatter: %w", err)
 	}

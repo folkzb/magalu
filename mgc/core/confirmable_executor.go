@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 	"strings"
+
+	"magalu.cloud/core/utils"
 )
 
 const defaultPromptMessage = "This action requires confirmation from the user."
@@ -59,7 +60,7 @@ func ConfirmPromptWithTemplate(msg string) func(parameters Parameters, configs C
 		return DefaultConfirmPrompt
 	}
 
-	tmpl, err := template.New("template").Parse(msg)
+	tmpl, err := utils.NewTemplate(msg)
 	if err != nil {
 		return DefaultConfirmPrompt
 	}

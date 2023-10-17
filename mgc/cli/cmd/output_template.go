@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	"text/template"
+	"magalu.cloud/core/utils"
 )
 
 type templateOutputFormatter struct{}
 
 func (*templateOutputFormatter) Format(value any, options string) error {
 	text := options
-	tmpl, err := template.New("template").Parse(text)
+	tmpl, err := utils.NewTemplate(text)
 	if err != nil {
 		return fmt.Errorf("template output formatter: %w", err)
 	}
