@@ -28,7 +28,6 @@ type completionRequest struct {
 }
 
 type bigFileUploader struct {
-	ctx      context.Context
 	cfg      Config
 	dst      string
 	mimeType string
@@ -38,8 +37,8 @@ type bigFileUploader struct {
 
 var _ uploader = (*bigFileUploader)(nil)
 
-func (u *bigFileUploader) newPreparationRequest() (*http.Request, error) {
-	req, err := newUploadRequest(u.ctx, u.cfg, u.dst, nil)
+func (u *bigFileUploader) newPreparationRequest(ctx context.Context) (*http.Request, error) {
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -52,14 +51,14 @@ func (u *bigFileUploader) newPreparationRequest() (*http.Request, error) {
 	return req, nil
 }
 
-func (u *bigFileUploader) getUploadId() (string, error) {
+func (u *bigFileUploader) getUploadId(ctx context.Context) (string, error) {
 	if u.uploadId == "" {
-		req, err := u.newPreparationRequest()
+		req, err := u.newPreparationRequest(ctx)
 		if err != nil {
 			return "", err
 		}
 
-		response, _, err := SendRequest[preparationResponse](u.ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
+		response, _, err := SendRequest[preparationResponse](ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
 		if err != nil {
 			return "", err
 		}
@@ -68,12 +67,12 @@ func (u *bigFileUploader) getUploadId() (string, error) {
 	return u.uploadId, nil
 }
 
-func (u *bigFileUploader) createMultipartRequest(index int, body io.Reader) (*http.Request, error) {
-	uploadId, err := u.getUploadId()
+func (u *bigFileUploader) createMultipartRequest(ctx context.Context, index int, body io.Reader) (*http.Request, error) {
+	uploadId, err := u.getUploadId(ctx)
 	if err != nil {
 		return nil, err
 	}
-	req, err := newUploadRequest(u.ctx, u.cfg, u.dst, body)
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, body)
 	if err != nil {
 		return nil, err
 	}
@@ -87,8 +86,8 @@ func (u *bigFileUploader) createMultipartRequest(index int, body io.Reader) (*ht
 	return req, nil
 }
 
-func (u *bigFileUploader) sendCompletionRequest(etags []string) error {
-	uploadId, err := u.getUploadId()
+func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, etags []string) error {
+	uploadId, err := u.getUploadId(ctx)
 	if err != nil {
 		return err
 	}
@@ -113,7 +112,7 @@ func (u *bigFileUploader) sendCompletionRequest(etags []string) error {
 		return err
 	}
 
-	req, err := newUploadRequest(u.ctx, u.cfg, u.dst, bytes.NewReader(parsed))
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, bytes.NewReader(parsed))
 	if err != nil {
 		return err
 	}
@@ -131,7 +130,7 @@ func (u *bigFileUploader) sendCompletionRequest(etags []string) error {
 		delete(excludedHeaders, "Content-MD5")
 	}()
 
-	_, _, err = SendRequest[any](u.ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
+	_, _, err = SendRequest[any](ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
 	if err != nil {
 		return err
 	}
@@ -139,22 +138,22 @@ func (u *bigFileUploader) sendCompletionRequest(etags []string) error {
 	return nil
 }
 
-func (u *bigFileUploader) Upload() error {
+func (u *bigFileUploader) Upload(ctx context.Context) error {
 	etags := make([]string, len(u.readers))
 	for i, reader := range u.readers {
 		// TODO Add retry to error handling so it doesn't block others if error
-		req, err := u.createMultipartRequest(i, reader)
+		req, err := u.createMultipartRequest(ctx, i, reader)
 		if err != nil {
 			return err
 		}
 
 		fmt.Printf("Sending %d of %d\n", i+1, len(u.readers))
-		_, res, err := SendRequest[any](u.ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
+		_, res, err := SendRequest[any](ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
 		if err != nil {
 			return err
 		}
 		etags[i] = res.Header.Get("etag")
 	}
 	fmt.Println("All file parts uploaded, sending completion")
-	return u.sendCompletionRequest(etags)
+	return u.sendCompletionRequest(ctx, etags)
 }

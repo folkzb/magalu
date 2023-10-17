@@ -47,12 +47,12 @@ func upload(ctx context.Context, params uploadParams, cfg s3.Config) (*uploadTem
 		dst = path.Join(dst, fileName)
 	}
 
-	uploader, err := s3.NewS3Uploader(ctx, cfg, params.Source, dst)
+	uploader, err := s3.NewS3Uploader(cfg, params.Source, dst)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = uploader.Upload(); err != nil {
+	if err = uploader.Upload(ctx); err != nil {
 		return nil, err
 	}
 

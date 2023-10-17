@@ -6,7 +6,6 @@ import (
 )
 
 type smallFileUploader struct {
-	ctx      context.Context
 	cfg      Config
 	dst      string
 	mimeType string
@@ -15,15 +14,15 @@ type smallFileUploader struct {
 
 var _ uploader = (*smallFileUploader)(nil)
 
-func (u *smallFileUploader) Upload() error {
-	req, err := newUploadRequest(u.ctx, u.cfg, u.dst, u.reader)
+func (u *smallFileUploader) Upload(ctx context.Context) error {
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, u.reader)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Set("Content-Type", u.mimeType)
 
-	_, _, err = SendRequest[any](u.ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
+	_, _, err = SendRequest[any](ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
 	if err != nil {
 		return err
 	}

@@ -14,10 +14,10 @@ import (
 )
 
 type uploader interface {
-	Upload() error
+	Upload(context.Context) error
 }
 
-func NewS3Uploader(ctx context.Context, cfg Config, src, dst string) (uploader, error) {
+func NewS3Uploader(cfg Config, src, dst string) (uploader, error) {
 	reader, fileInfo, err := readContent(src)
 	if err != nil {
 		return nil, fmt.Errorf("error reading object: %w", err)
@@ -30,7 +30,6 @@ func NewS3Uploader(ctx context.Context, cfg Config, src, dst string) (uploader, 
 	if chunkN > 1 {
 		readers := splitReader(reader, CHUNK_SIZE, chunkN)
 		return &bigFileUploader{
-			ctx:      ctx,
 			cfg:      cfg,
 			dst:      dst,
 			mimeType: mimeType,
@@ -38,7 +37,6 @@ func NewS3Uploader(ctx context.Context, cfg Config, src, dst string) (uploader, 
 		}, nil
 	} else {
 		return &smallFileUploader{
-			ctx:      ctx,
 			cfg:      cfg,
 			dst:      dst,
 			mimeType: mimeType,
