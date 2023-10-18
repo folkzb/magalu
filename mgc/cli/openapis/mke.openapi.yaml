@@ -1796,8 +1796,8 @@ components:
                     - v1.22.9
                     - v1.24.10
                     - v1.26.1
-                    - v1.28.2           # This v1.28.2 version is a temporary patch so the request
-                    default: v1.28.2    # does not fail we should warn Magalu's team and ask for a correction
+                    - v1.28.2
+                    default: v1.28.2
                 description:
                     type: string
                     description: Descrição do cluster
