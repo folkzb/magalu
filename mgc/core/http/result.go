@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -19,9 +20,9 @@ type HttpResult interface {
 
 type httpResult struct {
 	SourceData       core.ResultSource
-	RequestData      *http.Request
+	RequestData      *MarshalableRequest
 	RequestBodyData  any // pre-Marshal, the original structured body data, if any. If request used an io.Reader, this is nil
-	ResponseData     *http.Response
+	ResponseData     *MarshalableResponse
 	ResponseBodyData any // post-Unmarshal, the decoded structured body data, if any; or io.Reader if not a structured body data
 }
 
@@ -61,8 +62,8 @@ func NewHttpResult(
 ) (r HttpResult, err error) {
 	result := httpResult{
 		SourceData:      source,
-		RequestData:     request,
-		ResponseData:    response,
+		RequestData:     (*MarshalableRequest)(request),
+		ResponseData:    (*MarshalableResponse)(response),
 		RequestBodyData: requestBody,
 	}
 
@@ -95,7 +96,7 @@ func (r *httpResult) Source() core.ResultSource {
 }
 
 func (r *httpResult) Request() *http.Request {
-	return r.RequestData
+	return (*http.Request)(r.RequestData)
 }
 
 func (r *httpResult) RequestBody() any {
@@ -103,11 +104,19 @@ func (r *httpResult) RequestBody() any {
 }
 
 func (r *httpResult) Response() *http.Response {
-	return r.ResponseData
+	return (*http.Response)(r.ResponseData)
 }
 
 func (r *httpResult) ResponseBody() any {
 	return r.ResponseBodyData
+}
+
+func (r *httpResult) Encode() ([]byte, error) {
+	return json.Marshal(*r)
+}
+
+func (r *httpResult) Decode(data []byte) error {
+	return json.Unmarshal(data, &r)
 }
 
 var _ HttpResult = (*httpResult)(nil)

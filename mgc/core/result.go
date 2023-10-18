@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"mime/multipart"
 
@@ -9,8 +10,10 @@ import (
 )
 
 type ResultSource struct {
-	Executor   Executor
-	Context    context.Context
+	// Will be nil if Result was decoded
+	Executor Executor `json:"-"`
+	// Will be nil if Result was decoded
+	Context    context.Context `json:"-"`
 	Parameters Parameters
 	Configs    Configs
 }
@@ -18,6 +21,9 @@ type ResultSource struct {
 type Result interface {
 	// What was used to produce this result
 	Source() ResultSource
+
+	Encode() ([]byte, error)
+	Decode([]byte) error
 }
 
 type ResultWithValue interface {
@@ -86,6 +92,14 @@ func (s SimpleResult) ValidateSchema() error {
 
 func (s SimpleResult) Value() Value {
 	return s.ResultValue
+}
+
+func (s SimpleResult) Encode() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s *SimpleResult) Decode(data []byte) error {
+	return json.Unmarshal(data, &s)
 }
 
 var _ ResultWithValue = (*SimpleResult)(nil)

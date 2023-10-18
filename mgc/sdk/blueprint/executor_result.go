@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"maps"
@@ -36,6 +37,14 @@ type executorResult struct {
 
 func (r *executorResult) Source() core.ResultSource {
 	return r.ResultSource
+}
+
+func (r *executorResult) Encode() ([]byte, error) {
+	return json.Marshal(*r)
+}
+
+func (r *executorResult) Decode(data []byte) error {
+	return json.Unmarshal(data, &r)
 }
 
 func (r *executorResult) Schema() *core.Schema {
