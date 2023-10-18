@@ -18,27 +18,27 @@ type HttpResult interface {
 }
 
 type httpResult struct {
-	source       core.ResultSource
-	request      *http.Request
-	requestBody  any // pre-Marshal, the original structured body data, if any. If request used an io.Reader, this is nil
-	response     *http.Response
-	responseBody any // post-Unmarshal, the decoded structured body data, if any; or io.Reader if not a structured body data
+	SourceData       core.ResultSource
+	RequestData      *http.Request
+	RequestBodyData  any // pre-Marshal, the original structured body data, if any. If request used an io.Reader, this is nil
+	ResponseData     *http.Response
+	ResponseBodyData any // post-Unmarshal, the decoded structured body data, if any; or io.Reader if not a structured body data
 }
 
 type httpResultWithValue struct {
 	httpResult
-	schema *core.Schema
-	value  core.Value
+	ResultSchema *core.Schema
+	ResultValue  core.Value
 }
 
 type httpResultWithReader struct {
 	httpResult
-	reader io.Reader
+	BodyReader io.Reader
 }
 
 type httpResultWithMultipart struct {
 	httpResult
-	multipart *multipart.Part
+	BodyMultipart *multipart.Part
 }
 
 // Takes over a response, unwrap it and create a Result based on it.
@@ -60,18 +60,18 @@ func NewHttpResult(
 	getValueFromResponseBody func(responseBody any) (core.Value, error),
 ) (r HttpResult, err error) {
 	result := httpResult{
-		source:      source,
-		request:     request,
-		response:    response,
-		requestBody: requestBody,
+		SourceData:      source,
+		RequestData:     request,
+		ResponseData:    response,
+		RequestBodyData: requestBody,
 	}
 
-	result.responseBody, err = UnwrapResponse[any](response)
+	result.ResponseBodyData, err = UnwrapResponse[any](response)
 	if err != nil {
 		return
 	}
 
-	switch v := result.responseBody.(type) {
+	switch v := result.ResponseBodyData.(type) {
 	case *multipart.Part:
 		return &httpResultWithMultipart{result, v}, nil
 	case io.Reader:
@@ -91,23 +91,23 @@ func NewHttpResult(
 }
 
 func (r *httpResult) Source() core.ResultSource {
-	return r.source
+	return r.SourceData
 }
 
 func (r *httpResult) Request() *http.Request {
-	return r.request
+	return r.RequestData
 }
 
 func (r *httpResult) RequestBody() any {
-	return r.requestBody
+	return r.RequestBodyData
 }
 
 func (r *httpResult) Response() *http.Response {
-	return r.response
+	return r.ResponseData
 }
 
 func (r *httpResult) ResponseBody() any {
-	return r.responseBody
+	return r.ResponseBodyData
 }
 
 var _ HttpResult = (*httpResult)(nil)
@@ -117,15 +117,15 @@ func (r *httpResultWithValue) Unwrap() core.Result {
 }
 
 func (r *httpResultWithValue) Schema() *core.Schema {
-	return r.schema
+	return r.ResultSchema
 }
 
 func (r *httpResultWithValue) ValidateSchema() error {
-	return r.schema.VisitJSON(r.value, openapi3.MultiErrors())
+	return r.ResultSchema.VisitJSON(r.ResultValue, openapi3.MultiErrors())
 }
 
 func (r *httpResultWithValue) Value() core.Value {
-	return r.value
+	return r.ResultValue
 }
 
 var _ HttpResult = (*httpResultWithValue)(nil)
@@ -137,7 +137,7 @@ func (r *httpResultWithReader) Unwrap() core.Result {
 }
 
 func (r *httpResultWithReader) Reader() io.Reader {
-	return r.reader
+	return r.BodyReader
 }
 
 var _ HttpResult = (*httpResultWithReader)(nil)
@@ -149,7 +149,7 @@ func (r *httpResultWithMultipart) Unwrap() core.Result {
 }
 
 func (r *httpResultWithMultipart) Multipart() *multipart.Part {
-	return r.multipart
+	return r.BodyMultipart
 }
 
 var _ HttpResult = (*httpResultWithMultipart)(nil)
