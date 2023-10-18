@@ -34,6 +34,7 @@ var _ linkRtExpResolver = (*linkRtExpression)(nil)
 
 type linkRtExpSource struct {
 	s                  *scanner.Scanner
+	str                string
 	findParameterValue func(location, name string) (any, bool)
 	header             http.Header
 	body               core.Value
@@ -43,6 +44,7 @@ var _ linkRtExpResolver = (*linkRtExpSource)(nil)
 
 type linkRtExpHeader struct {
 	s      *scanner.Scanner
+	str    string
 	header http.Header
 }
 
@@ -50,6 +52,7 @@ var _ linkRtExpResolver = (*linkRtExpHeader)(nil)
 
 type linkRtExpQuery struct {
 	s                  *scanner.Scanner
+	str                string
 	filter             string
 	findParameterValue func(location, name string) (any, bool)
 }
@@ -60,50 +63,54 @@ type linkRtExpPath = linkRtExpQuery
 
 type linkRtExpBody struct {
 	s    *scanner.Scanner
+	str  string
 	data core.Value
 }
 
 var _ linkRtExpResolver = (*linkRtExpBody)(nil)
 
 func (o *linkRtExpHeader) resolveChild() (any, bool, error) {
+	var latestTok string
 Loop:
 	for tok := o.s.Scan(); tok != scanner.EOF; tok = o.s.Scan() {
-		text := o.s.TokenText()
-		switch text {
+		latestTok = o.s.TokenText()
+		switch latestTok {
 		case ".":
 			break Loop
 		default:
-			result := o.header.Get(text)
+			result := o.header.Get(latestTok)
 			if result == "" {
 				return nil, false, nil
 			}
 			return result, true, nil
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpHeader) resolve() (any, bool, error) {
+	var latestTok string
 Loop:
 	for tok := o.s.Scan(); tok != scanner.EOF; tok = o.s.Scan() {
-		text := o.s.TokenText()
-		switch text {
+		latestTok = o.s.TokenText()
+		switch latestTok {
 		case ".":
 			return o.resolveChild()
 		default:
 			break Loop
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpBody) resolveChild() (any, bool, error) {
+	var latestTok string
 Loop:
 	for tok := o.s.Scan(); tok != scanner.EOF; tok = o.s.Scan() {
-		text := o.s.TokenText()
-		switch text {
+		latestTok = o.s.TokenText()
+		switch latestTok {
 		case "/":
-			jpStr := text + getRemainder(o.s)
+			jpStr := latestTok + getRemainder(o.s)
 			jpHandler, err := jsonpointer.New(jpStr)
 			if err != nil {
 				return nil, false, fmt.Errorf("malformed json pointer on link runtime expression: %s", jpStr)
@@ -118,32 +125,34 @@ Loop:
 			break Loop
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpBody) resolve() (any, bool, error) {
+	var latestTok string
 Loop:
 	for tok := o.s.Scan(); tok != scanner.EOF; tok = o.s.Scan() {
-		text := o.s.TokenText()
-		switch text {
+		latestTok = o.s.TokenText()
+		switch latestTok {
 		case "#":
 			return o.resolveChild()
 		default:
 			break Loop
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpQuery) resolveChild() (any, bool, error) {
+	var latestTok string
 Loop:
 	for tok := o.s.Scan(); tok != scanner.EOF; tok = o.s.Scan() {
-		text := o.s.TokenText()
-		switch text {
+		latestTok = o.s.TokenText()
+		switch latestTok {
 		case ".":
 			break Loop
 		default:
-			resolved, ok := o.findParameterValue(o.filter, text)
+			resolved, ok := o.findParameterValue(o.filter, latestTok)
 			if !ok {
 				return nil, false, nil
 			}
@@ -151,61 +160,66 @@ Loop:
 			return resolved, true, nil
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpQuery) resolve() (any, bool, error) {
+	var latestTok string
 Loop:
 	for tok := o.s.Scan(); tok != scanner.EOF; tok = o.s.Scan() {
-		text := o.s.TokenText()
-		switch text {
+		latestTok = o.s.TokenText()
+		switch latestTok {
 		case ".":
 			return o.resolveChild()
 		default:
 			break Loop
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpSource) resolveChild() (any, bool, error) {
+	var latestTok string
 Loop:
 	for tok := o.s.Scan(); tok != scanner.EOF; tok = o.s.Scan() {
-		text := o.s.TokenText()
-		switch text {
+		latestTok = o.s.TokenText()
+		switch latestTok {
 		case "header":
-			return (&linkRtExpHeader{o.s, o.header}).resolve()
+			return (&linkRtExpHeader{o.s, o.str, o.header}).resolve()
 		case "query":
-			return (&linkRtExpQuery{o.s, openapi3.ParameterInQuery, o.findParameterValue}).resolve()
+			return (&linkRtExpQuery{o.s, o.str, openapi3.ParameterInQuery, o.findParameterValue}).resolve()
 		case "path":
-			return (&linkRtExpPath{o.s, openapi3.ParameterInPath, o.findParameterValue}).resolve()
+			return (&linkRtExpPath{o.s, o.str, openapi3.ParameterInPath, o.findParameterValue}).resolve()
 		case "body":
-			return (&linkRtExpBody{o.s, o.body}).resolve()
+			return (&linkRtExpBody{o.s, o.str, o.body}).resolve()
 		default:
 			break Loop
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpSource) resolve() (any, bool, error) {
+	var latestTok string
 Loop:
 	for tok := o.s.Scan(); tok != scanner.EOF; tok = o.s.Scan() {
-		text := o.s.TokenText()
-		switch text {
+		latestTok = o.s.TokenText()
+		switch latestTok {
 		case ".":
 			return o.resolveChild()
 		default:
 			break Loop
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpression) resolveChild(s *scanner.Scanner) (any, bool, error) {
+	var latestTok string
+Loop:
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
-		text := s.TokenText()
-		switch text {
+		latestTok = s.TokenText()
+		switch latestTok {
 		case "url":
 			return o.httpResult.Request().URL.String(), true, nil
 		case "method":
@@ -213,22 +227,25 @@ func (o *linkRtExpression) resolveChild(s *scanner.Scanner) (any, bool, error) {
 		case "statusCode":
 			return o.httpResult.Response().StatusCode, true, nil
 		case "request":
-			return (&linkRtExpSource{s, o.findParameterValue, o.httpResult.Request().Header, o.httpResult.RequestBody()}).resolve()
+			return (&linkRtExpSource{s, o.str, o.findParameterValue, o.httpResult.Request().Header, o.httpResult.RequestBody()}).resolve()
 		case "response":
-			return (&linkRtExpSource{s, o.findParameterValue, o.httpResult.Response().Header, o.httpResult.ResponseBody()}).resolve()
+			return (&linkRtExpSource{s, o.str, o.findParameterValue, o.httpResult.Response().Header, o.httpResult.ResponseBody()}).resolve()
+		default:
+			break Loop
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
 
 func (o *linkRtExpression) resolve() (any, bool, error) {
 	s := &scanner.Scanner{}
 	s.Init(strings.NewReader(o.str))
 
+	var latestTok string
 Loop:
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
-		text := s.TokenText()
-		switch text {
+		latestTok = s.TokenText()
+		switch latestTok {
 		case "$":
 			return o.resolveChild(s)
 		default:
@@ -242,5 +259,5 @@ Loop:
 			return o.str, true, nil
 		}
 	}
-	return nil, false, fmt.Errorf("malformed link runtime expression")
+	return nil, false, fmt.Errorf("malformed link runtime expression: %q at %q", o.str, latestTok)
 }
