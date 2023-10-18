@@ -16,7 +16,7 @@ func double(ctx context.Context, value int) (int, pipeline.ProcessStatus) {
 func TestSimplePipeline(t *testing.T) {
 	inputSize := 4
 	ctx := context.Background()
-	genChan := pipeline.RangeGenerator(inputSize)
+	genChan := pipeline.RangeGenerator(ctx, inputSize)
 
 	pipe := pipeline.Process(ctx, genChan, double, nil)
 	pipe = pipeline.Process(ctx, pipe, double, nil)
@@ -40,7 +40,7 @@ func TestSimplePipeline(t *testing.T) {
 func TestParallelPipeline(t *testing.T) {
 	inputSize := 4
 	ctx := context.Background()
-	genChan := pipeline.RangeGenerator(inputSize)
+	genChan := pipeline.RangeGenerator(ctx, inputSize)
 
 	pipe := pipeline.ParallelProcess(ctx, 4, genChan, double, nil)
 	pipe = pipeline.ParallelProcess(ctx, 4, pipe, double, nil)
@@ -63,7 +63,7 @@ func TestParallelPipeline(t *testing.T) {
 
 func TestSimplePipelineWithSlice(t *testing.T) {
 	ctx := context.Background()
-	genChan := pipeline.SliceItemGenerator([]int{1, 2, 3})
+	genChan := pipeline.SliceItemGenerator(ctx, []int{1, 2, 3})
 
 	pipe := pipeline.Process(ctx, genChan, double, nil)
 	pipe = pipeline.Process(ctx, pipe, double, nil)
@@ -85,7 +85,7 @@ func TestSimplePipelineWithSlice(t *testing.T) {
 
 func TestBatchPipeline(t *testing.T) {
 	ctx := context.Background()
-	genChan := pipeline.RangeGenerator(12)
+	genChan := pipeline.RangeGenerator(ctx, 12)
 	batchSize := 3
 
 	batches := pipeline.Batch(ctx, genChan, batchSize)

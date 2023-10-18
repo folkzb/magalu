@@ -32,7 +32,7 @@ var OddFilterInstance = pipeline.FilterRuleNot[int]{Not: EvenFilter[int]{}}
 
 func TestFilter(t *testing.T) {
 	ctx := context.Background()
-	genChan := pipeline.RangeGenerator(10)
+	genChan := pipeline.RangeGenerator(ctx, 10)
 
 	filteredChan := pipeline.Filter[int](ctx, genChan, EvenFilter[int]{})
 
@@ -45,7 +45,7 @@ func TestFilter(t *testing.T) {
 
 func TestNotFilter(t *testing.T) {
 	ctx := context.Background()
-	genChan := pipeline.RangeGenerator(10)
+	genChan := pipeline.RangeGenerator(ctx, 10)
 
 	filteredChan := pipeline.Filter[int](ctx, genChan, OddFilterInstance)
 
@@ -60,7 +60,7 @@ func TestAllFilter(t *testing.T) {
 	// TODO this test has been started but is not working properly
 	t.Skip()
 	ctx := context.Background()
-	genChan := pipeline.RangeGenerator(15)
+	genChan := pipeline.RangeGenerator(ctx, 15)
 
 	filter := pipeline.FilterRuleAll[int]{
 		All: []pipeline.FilterRule[int]{
