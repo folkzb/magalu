@@ -132,6 +132,7 @@ func collectGroupResources(
 	tflog.Debug(ctx, "Collecting resources", debugMap)
 	var resources []func() resource.Resource
 	var create, read, update, delete, list mgcSdk.Executor
+	var connectionExecs []mgcSdk.Executor
 	_, err := group.VisitChildren(func(child mgcSdk.Descriptor) (run bool, err error) {
 		if group.IsInternal() {
 			return true, nil
@@ -161,7 +162,7 @@ func collectGroupResources(
 			case "list":
 				list = exec
 			default:
-				tflog.Warn(ctx, fmt.Sprintf("TODO: uncovered action %s", exec.Name()), debugMap)
+				connectionExecs = append(connectionExecs, exec)
 			}
 			return true, nil
 		} else {
@@ -183,6 +184,24 @@ func collectGroupResources(
 
 	tflog.Debug(ctx, fmt.Sprintf("export resource %q", resourceName), debugMap)
 	resources = append(resources, func() resource.Resource { return res })
+
+	for _, connectionCreate := range connectionExecs {
+		path = append(path, connectionCreate.Name())
+		name := strings.Join(path, "_")
+		if strings.Contains(name, "get") {
+			tflog.Debug(ctx, fmt.Sprintf("connection creation %s is a non-modifying action, it can't be turned into a resource", name))
+			continue
+		}
+
+		connectionResource, err := newMgcConnectionResource(ctx, sdk, name, connectionCreate.Description(), connectionCreate, delete)
+		if err != nil {
+			tflog.Warn(ctx, err.Error(), debugMap)
+			continue
+		}
+
+		resources = append(resources, func() resource.Resource { return connectionResource })
+		tflog.Debug(ctx, fmt.Sprintf("export connection resource %q", resourceName), debugMap)
+	}
 
 	if read != nil {
 		actionResources := collectActionResources(ctx, sdk, read, path)
