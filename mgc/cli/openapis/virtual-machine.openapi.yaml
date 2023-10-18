@@ -391,6 +391,10 @@ paths:
                             operationId: instance_details_v0_instances__id__get
                             parameters:
                                 id: $request.path.id
+                            x-cli-wait-termination:
+                                maxRetries: 4
+                                intervalInSeconds: 5s
+                                jsonPathQuery: $.result.status == $.owner.parameters.status
                         delete:
                             description: Delete Virtual Machine instance
                             operationId: instance_delete_v0_instances__id__delete
