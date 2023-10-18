@@ -7,7 +7,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"go.uber.org/zap"
 )
+
+var deleteBucketsLogger *zap.SugaredLogger
+
+func bigfileUploaderLogger() *zap.SugaredLogger {
+	if deleteBucketsLogger == nil {
+		deleteBucketsLogger = logger().Named("bigfileUploader")
+	}
+	return deleteBucketsLogger
+}
 
 type preparationResponse struct {
 	XMLName  xml.Name `xml:"InitiateMultipartUploadResult"`
@@ -136,6 +147,7 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 
 func (u *bigFileUploader) Upload(ctx context.Context) error {
 	etags := make([]completionPart, len(u.readers))
+	bigfileUploaderLogger().Debug("start")
 	for i, reader := range u.readers {
 		// TODO Add retry to error handling so it doesn't block others if error
 		req, err := u.createMultipartRequest(ctx, i, reader)
@@ -143,13 +155,13 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 			return err
 		}
 
-		fmt.Printf("Sending %d of %d\n", i+1, len(u.readers))
+		bigfileUploaderLogger().Debugf("Sending %d of %d", i+1, len(u.readers))
 		_, res, err := SendRequest[any](ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
 		if err != nil {
 			return err
 		}
 		etags[i] = NewCompletionPart(i+1, res.Header.Get("etag"))
 	}
-	fmt.Println("All file parts uploaded, sending completion")
+	bigfileUploaderLogger().Debugw("All file parts uploaded, sending completion", "etags", etags)
 	return u.sendCompletionRequest(ctx, etags)
 }
