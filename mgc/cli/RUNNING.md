@@ -2,6 +2,18 @@
 
 First download or build the `mgc` cli.
 
+## Flag usage guidelines
+
+Running `./mgc` will provide a list of available `--cli.` flags, such as `--cli.log`,
+`--cli.output` and more. These are global flags that can be used to specify certain
+behaviors for each command, such as producing logs in the case of `--cli.log`. Further
+instructions will be provided beside each flag. Due to how groups and executors are
+handled, **for any given command, these flags should always be placed before any flags
+that are specific to the command itself in order to ensure proper functionality**.
+For example:
+`./mgc virtual-machine instances delete --cli.log "*:*" --id ...`. Notice how
+`--cli.log` is going before `--id`.
+
 ## Input handling with prefixes
 
 When providing flags to a command, we can use one of the following prefixes to get the
@@ -104,6 +116,12 @@ the `file:line` of the caller:
 Then one can run commands using `--cli.log` or `-l` followed by a [pattern](https://github.com/moul/zapfilter), which takes one of the forms below:
 - `levels:namespaces`
 - `namespaces`
+
+> **NOTE:**
+> Always add the log flag before any of the command's flags, for example:
+> `./mgc virtual-machine instances delete --cli.log "*:*" --id ...`. Notice
+> how  `--cli.log` is going before `--id`. For more information, see the
+> [flag usage guidelines](#flag-usage-guidelines).
 
 Where `levels` is a comma-separated list of level names or `*` to show all.
 Note that level names are **exact**, if you want to use that level or greater,
