@@ -63,9 +63,9 @@ func ResultAs[T Result](result Result) (T, bool) {
 }
 
 type SimpleResult struct {
-	source ResultSource
-	schema *Schema
-	value  Value
+	SourceData   ResultSource
+	ResultSchema *Schema
+	ResultValue  Value
 }
 
 func NewSimpleResult(source ResultSource, schema *Schema, value Value) *SimpleResult {
@@ -73,19 +73,19 @@ func NewSimpleResult(source ResultSource, schema *Schema, value Value) *SimpleRe
 }
 
 func (s SimpleResult) Source() ResultSource {
-	return s.source
+	return s.SourceData
 }
 
 func (s SimpleResult) Schema() *Schema {
-	return s.schema
+	return s.ResultSchema
 }
 
 func (s SimpleResult) ValidateSchema() error {
-	return s.schema.VisitJSON(s.value, openapi3.MultiErrors())
+	return s.ResultSchema.VisitJSON(s.ResultValue, openapi3.MultiErrors())
 }
 
 func (s SimpleResult) Value() Value {
-	return s.value
+	return s.ResultValue
 }
 
 var _ ResultWithValue = (*SimpleResult)(nil)
