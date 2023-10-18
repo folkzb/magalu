@@ -21,6 +21,13 @@ type completionPart struct {
 	PartNumber int
 }
 
+func NewCompletionPart(partNumber int, etag string) completionPart {
+	return completionPart{
+		Etag:       fmt.Sprintf("<ETag>%s</ETag>", etag),
+		PartNumber: partNumber,
+	}
+}
+
 type completionRequest struct {
 	XMLName   xml.Name         `xml:"CompleteMultipartUpload"`
 	Namespace string           `xml:"xmlns,attr"`
@@ -86,23 +93,12 @@ func (u *bigFileUploader) createMultipartRequest(ctx context.Context, index int,
 	return req, nil
 }
 
-func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, etags []string) error {
+func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []completionPart) error {
 	uploadId, err := u.getUploadId(ctx)
 	if err != nil {
 		return err
 	}
 
-	parts := make([]completionPart, len(etags))
-	for i, etag := range etags {
-		// Manual string is needed here because content has double quotes.
-		// Using xml.Marshal normally, the quotes are escaped, which cannot happen
-		// Using `xml:",innerxml"` in struct solves this but removes tags
-		parsedTag := fmt.Sprintf("<ETag>%s</ETag>", etag)
-		parts[i] = completionPart{
-			Etag:       parsedTag,
-			PartNumber: i + 1,
-		}
-	}
 	body := completionRequest{
 		Parts:     parts,
 		Namespace: "http://s3.amazonaws.com/doc/2006-03-01/",
@@ -139,7 +135,7 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, etags []str
 }
 
 func (u *bigFileUploader) Upload(ctx context.Context) error {
-	etags := make([]string, len(u.readers))
+	etags := make([]completionPart, len(u.readers))
 	for i, reader := range u.readers {
 		// TODO Add retry to error handling so it doesn't block others if error
 		req, err := u.createMultipartRequest(ctx, i, reader)
@@ -152,7 +148,7 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		etags[i] = res.Header.Get("etag")
+		etags[i] = NewCompletionPart(i+1, res.Header.Get("etag"))
 	}
 	fmt.Println("All file parts uploaded, sending completion")
 	return u.sendCompletionRequest(ctx, etags)
