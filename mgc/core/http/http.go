@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -43,11 +44,24 @@ func ClientFromContext(context context.Context) *Client {
 	return client
 }
 
+func bodyReaderSafe(resp *http.Response) (io.ReadCloser, error) {
+	bodyContents, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	resp.Body.Close()
+	resp.Body = io.NopCloser(bytes.NewBuffer(bodyContents))
+	return io.NopCloser(bytes.NewBuffer(bodyContents)), nil
+}
+
 func DecodeJSON[T core.Value](resp *http.Response, data *T) error {
-	defer resp.Body.Close()
-	decoder := json.NewDecoder(resp.Body)
+	body, err := bodyReaderSafe(resp)
+	if err != nil {
+		return fmt.Errorf("error when reading response body: %w", err)
+	}
+	decoder := json.NewDecoder(body)
 	decoder.DisallowUnknownFields()
-	err := decoder.Decode(data)
+	err = decoder.Decode(data)
 	if err != nil {
 		return fmt.Errorf("error decoding JSON response body: %w", err)
 	}
@@ -55,10 +69,13 @@ func DecodeJSON[T core.Value](resp *http.Response, data *T) error {
 }
 
 func DecodeXML[T core.Value](resp *http.Response, data *T) error {
-	defer resp.Body.Close()
-	decoder := xml.NewDecoder(resp.Body)
+	body, err := bodyReaderSafe(resp)
+	if err != nil {
+		return fmt.Errorf("error when reading response body: %w", err)
+	}
+	decoder := xml.NewDecoder(body)
 	decoder.DisallowUnknownFields()
-	err := decoder.Decode(data)
+	err = decoder.Decode(data)
 	if err != nil {
 		return fmt.Errorf("error decoding XML response body: %w", err)
 	}
@@ -167,10 +184,15 @@ func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
 		err = assignToT(&result, resp.Body)
 		return
 	case strings.HasPrefix(contentType, "multipart/"):
+		body, bodyErr := bodyReaderSafe(resp)
+		if bodyErr != nil {
+			err = fmt.Errorf("error when reading response body: %w", bodyErr)
+			return
+		}
 		// TODO: do we have multi-part downloads? or just single?
 		// If multi, then we need to return a multipart reader...
 		// return multipart.NewReader(resp.Body, params["boundary"]), nil
-		r := multipart.NewReader(resp.Body, params["boundary"])
+		r := multipart.NewReader(body, params["boundary"])
 		nextPart, npErr := r.NextPart()
 		err = npErr
 		if err != nil {
