@@ -176,28 +176,41 @@ func (o *operation) ConfigsSchema() *core.Schema {
 	return o.configsSchema
 }
 
+type cbForEachSuccessResponse func(code string, resp *openapi3.Response) (bool, error)
+
+func (o *operation) forEachSuccessResponse(cb cbForEachSuccessResponse) (finished bool, err error) {
+	for code, ref := range o.operation.Responses {
+		if !(len(code) == 3 && strings.HasPrefix(code, "2")) && code != defaultResponseStatusCode {
+			continue
+		}
+
+		run, err := cb(code, ref.Value)
+		if err != nil {
+			return false, err
+		}
+		if !run {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 func (o *operation) initResultSchema() {
 	if o.resultSchema == nil {
 		rootSchema := mgcSchemaPkg.NewAnyOfSchema()
-		responses := o.operation.Responses
 		o.responseSchemas = make(map[string]*core.Schema)
 
-		for code, ref := range responses {
-			if !(len(code) == 3 && strings.HasPrefix(code, "2")) && code != defaultResponseStatusCode {
-				continue
-			}
-
-			response := ref.Value
-
+		_, _ = o.forEachSuccessResponse(func(code string, response *openapi3.Response) (bool, error) {
 			// TODO: Handle other media types
 			content := response.Content.Get("application/json")
 			if content == nil {
-				continue
+				return true, nil
 			}
 
 			rootSchema.AnyOf = append(rootSchema.AnyOf, openapi3.NewSchemaRef(content.Schema.Ref, content.Schema.Value))
 			o.responseSchemas[code] = (*core.Schema)(content.Schema.Value)
-		}
+			return true, nil
+		})
 
 		switch len(rootSchema.AnyOf) {
 		default:
