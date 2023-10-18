@@ -1,9 +1,11 @@
 package schema
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/exp/slices"
 )
 
 // NOTE: TODO: should we duplicate this, or find a more generic package?
@@ -131,4 +133,90 @@ func IsSchemaNullable(schema *Schema) bool {
 		}
 	}
 	return false
+}
+
+func GetJsonEnumType(v *Schema) (string, error) {
+	types := []string{}
+	for _, v := range v.Enum {
+		var t string
+		switch v.(type) {
+		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+			t = "integer"
+		case float32, float64:
+			t = "number"
+		case string:
+			t = "string"
+		case bool:
+			t = "boolean"
+		default:
+			return "", fmt.Errorf("unsupported enum value: %+v", v)
+		}
+		if !slices.Contains(types, t) {
+			types = append(types, t)
+		}
+	}
+	if len(types) != 1 {
+		return "", fmt.Errorf("must provide values of a single type in a enum, got %+v", types)
+	}
+
+	return types[0], nil
+}
+
+func GetJsonType(v *Schema) (string, error) {
+	if v.Type == "" {
+		if len(v.Enum) != 0 {
+			return GetJsonEnumType(v)
+		}
+
+		return "", fmt.Errorf("unable to find schema %+v type", v)
+	}
+	return v.Type, nil
+}
+
+// Similar schemas are those with the same type and, depending on the type,
+// similar properties or restrictions.
+func CheckSimilarJsonSchemas(a, b *Schema) bool {
+	if a == b {
+		return true
+	}
+
+	tA, err := GetJsonType(a)
+	if err != nil {
+		return false
+	}
+
+	tB, err := GetJsonType(b)
+	if err != nil {
+		return false
+	}
+
+	if tA != tB {
+		return false
+	}
+
+	switch tA {
+	default:
+		return true
+	case "string":
+		// Relax if one of them doesn't specify a format
+		return a.Format == b.Format || a.Format == "" || b.Format == ""
+	case "array":
+		return CheckSimilarJsonSchemas((*Schema)(a.Items.Value), (*Schema)(b.Items.Value))
+	case "object":
+		// TODO: should we compare Required? I don't think so, but it may be a problem
+		if len(a.Properties) != len(b.Properties) {
+			return false
+		}
+		for k, refA := range a.Properties {
+			refB := b.Properties[k]
+			if refB == nil {
+				return false
+			}
+			if !CheckSimilarJsonSchemas((*Schema)(refA.Value), (*Schema)(refB.Value)) {
+				return false
+			}
+		}
+		// TODO: handle additionalProperties and property patterns
+		return true
+	}
 }

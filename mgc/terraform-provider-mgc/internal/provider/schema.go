@@ -27,6 +27,7 @@ import (
 	"github.com/stoewer/go-strcase"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -55,54 +56,6 @@ type tfSchemaHandler interface {
 	AppendSplitAttribute(splitMgcAttribute)
 }
 
-// Similar schemas are those with the same type and, depending on the type,
-// similar properties or restrictions.
-func checkSimilarJsonSchemas(a, b *mgcSdk.Schema) bool {
-	if a == b {
-		return true
-	}
-
-	tA, err := getJsonType(a)
-	if err != nil {
-		return false
-	}
-
-	tB, err := getJsonType(b)
-	if err != nil {
-		return false
-	}
-
-	if tA != tB {
-		return false
-	}
-
-	switch tA {
-	default:
-		return true
-	case "string":
-		// Relax if one of them doesn't specify a format
-		return a.Format == b.Format || a.Format == "" || b.Format == ""
-	case "array":
-		return checkSimilarJsonSchemas((*mgcSdk.Schema)(a.Items.Value), (*mgcSdk.Schema)(b.Items.Value))
-	case "object":
-		// TODO: should we compare Required? I don't think so, but it may be a problem
-		if len(a.Properties) != len(b.Properties) {
-			return false
-		}
-		for k, refA := range a.Properties {
-			refB := b.Properties[k]
-			if refB == nil {
-				return false
-			}
-			if !checkSimilarJsonSchemas((*mgcSdk.Schema)(refA.Value), (*mgcSdk.Schema)(refB.Value)) {
-				return false
-			}
-		}
-		// TODO: handle additionalProperties and property patterns
-		return true
-	}
-}
-
 type attributeModifiers struct {
 	isRequired                 bool
 	isOptional                 bool
@@ -123,7 +76,7 @@ func addMgcSchemaAttributes(
 		mgcName := mgcName(k)
 		mgcPropSchema := (*mgcSdk.Schema)(ref.Value)
 		if ca, ok := attributes[mgcName]; ok {
-			if !checkSimilarJsonSchemas(ca.mgcSchema, mgcPropSchema) {
+			if !mgcSchemaPkg.CheckSimilarJsonSchemas(ca.mgcSchema, mgcPropSchema) {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
 				tflog.Error(ctx, fmt.Sprintf("[resource] schema for `%s`: ignoring DIFFERENT attribute `%s`:\nOLD=%+v\nNEW=%+v", resourceName, k, ca.mgcSchema, mgcPropSchema))
 				continue
@@ -204,7 +157,7 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map
 	for name, iattr := range handler.InputAttributes() {
 		// Split attributes that differ between input/output
 		if oattr := handler.OutputAttributes()[name]; oattr != nil {
-			if !checkSimilarJsonSchemas(oattr.mgcSchema, iattr.mgcSchema) {
+			if !mgcSchemaPkg.CheckSimilarJsonSchemas(oattr.mgcSchema, iattr.mgcSchema) {
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()
 				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for `%s`: attribute `%s` differs between input and output. input: %s - output %s", handler.Name(), name, is, os))
@@ -236,7 +189,7 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map
 func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName string, ctx context.Context) (schema.Attribute, mgcAttributes, error) {
 	// TODO: Handle default values
 
-	t, err := getJsonType(mgcSchema)
+	t, err := mgcSchemaPkg.GetJsonType(mgcSchema)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -496,7 +449,7 @@ func attrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType attr
 		return nil, false, nil
 	}
 
-	t, err := getJsonType(s)
+	t, err := mgcSchemaPkg.GetJsonType(s)
 	if err != nil {
 		return nil, false, err
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"golang.org/x/exp/slices"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -29,44 +28,6 @@ func newTFStateConverter(ctx context.Context, diag *diag.Diagnostics, tfSchema *
 		diag:     diag,
 		tfSchema: tfSchema,
 	}
-}
-
-func getJsonEnumType(v *mgcSdk.Schema) (string, error) {
-	types := []string{}
-	for _, v := range v.Enum {
-		var t string
-		switch v.(type) {
-		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-			t = "integer"
-		case float32, float64:
-			t = "number"
-		case string:
-			t = "string"
-		case bool:
-			t = "boolean"
-		default:
-			return "", fmt.Errorf("unsupported enum value: %+v", v)
-		}
-		if !slices.Contains(types, t) {
-			types = append(types, t)
-		}
-	}
-	if len(types) != 1 {
-		return "", fmt.Errorf("must provide values of a single type in a enum, got %+v", types)
-	}
-
-	return types[0], nil
-}
-
-func getJsonType(v *mgcSdk.Schema) (string, error) {
-	if v.Type == "" {
-		if len(v.Enum) != 0 {
-			return getJsonEnumType(v)
-		}
-
-		return "", fmt.Errorf("unable to find schema %+v type", v)
-	}
-	return v.Type, nil
 }
 
 func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcValue any, isKnown bool) {
@@ -107,7 +68,7 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 		return nil, true
 	}
 
-	t, err := getJsonType(mgcSchema)
+	t, err := mgcSchemaPkg.GetJsonType(mgcSchema)
 	if err != nil {
 		c.diag.AddError(fmt.Sprintf("Unable to get schema type for attribute %q", atinfo.mgcName), err.Error())
 		return nil, false
@@ -345,7 +306,7 @@ func (c *tfStateConverter) applyMgcList(mgcList []any, attributes mgcAttributes,
 
 func (c *tfStateConverter) applyValueToState(mgcValue any, attr *attribute, ctx context.Context, tfState *tfsdk.State, path path.Path) {
 	rv := reflect.ValueOf(mgcValue)
-	t, err := getJsonType(attr.mgcSchema)
+	t, err := mgcSchemaPkg.GetJsonType(attr.mgcSchema)
 	if err != nil {
 		c.diag.AddError("Unable to retrieve type", fmt.Sprintf("found an untyped nil attribute `%#v` without valid mgc schema type. Error: %#v", path, err))
 	}

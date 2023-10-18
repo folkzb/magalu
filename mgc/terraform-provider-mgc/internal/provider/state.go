@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"magalu.cloud/core"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -91,7 +92,7 @@ func applyStateAfter(
 	var resultMap map[string]any
 	resultSchema := result.Schema()
 
-	if checkSimilarJsonSchemas(resultSchema, handler.ReadResultSchema()) {
+	if mgcSchemaPkg.CheckSimilarJsonSchemas(resultSchema, handler.ReadResultSchema()) {
 		if resultMap = castToMap(result, diag); diag.HasError() {
 			return
 		}
