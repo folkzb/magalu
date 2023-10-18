@@ -111,6 +111,10 @@ func (e *SimpleExecutor) PositionalArgs() []string {
 	return e.positionalArgs
 }
 
+func (*SimpleExecutor) EmptyResult() Result {
+	return NewSimpleResult(ResultSource{}, nil, nil)
+}
+
 func (e *SimpleExecutor) Execute(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
 	return e.execute(e, context, parameters, configs)
 }

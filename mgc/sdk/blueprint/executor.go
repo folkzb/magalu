@@ -227,4 +227,8 @@ func (e *executor) Related() map[string]core.Executor {
 	return e.spec.relatedExecutors
 }
 
+func (e *executor) EmptyResult() core.Result {
+	return &executorResult{}
+}
+
 var _ core.Executor = (*executor)(nil)

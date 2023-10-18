@@ -78,6 +78,8 @@ type Executor interface {
 	Related() map[string]Executor
 	// The maps for the parameters and configs should NOT be modified inside the implementation of 'Execute'
 	Execute(context context.Context, parameters Parameters, configs Configs) (result Result, err error)
+	// A zero value instantiation of the concrete Result type used by each Executor. Useful for Encoding/Decoding the Result
+	EmptyResult() Result
 }
 
 // NOTE: whenever you wrap an executor remember to also wrap the result with

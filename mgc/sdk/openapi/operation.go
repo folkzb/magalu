@@ -708,5 +708,22 @@ func (o *operation) Execute(
 	return
 }
 
+func (o *operation) EmptyResult() core.Result {
+	var result core.Result = mgcHttpPkg.NewZeroHttpResult()
+	_, _ = o.forEachSuccessResponse(func(code string, resp *openapi3.Response) (bool, error) {
+		if mt := resp.Content.Get("multipart/*"); mt != nil {
+			result = mgcHttpPkg.NewZeroHttpResultWithMultipart()
+			return false, nil
+		} else if resp.Content.Get("application/json") != nil || resp.Content.Get("application/xml") != nil {
+			result = mgcHttpPkg.NewZeroHttpResultWithValue()
+			return false, nil
+		} else {
+			result = mgcHttpPkg.NewZeroHttpResultWithReader()
+			return false, nil
+		}
+	})
+	return result
+}
+
 // implemented by embedded SimpleDescriptor
 var _ core.Executor = (*operation)(nil)

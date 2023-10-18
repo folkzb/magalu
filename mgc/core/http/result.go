@@ -26,10 +26,18 @@ type httpResult struct {
 	ResponseBodyData any // post-Unmarshal, the decoded structured body data, if any; or io.Reader if not a structured body data
 }
 
+func NewZeroHttpResult() *httpResult {
+	return &httpResult{}
+}
+
 type httpResultWithValue struct {
 	httpResult
 	ResultSchema *core.Schema
 	ResultValue  core.Value
+}
+
+func NewZeroHttpResultWithValue() *httpResultWithValue {
+	return &httpResultWithValue{}
 }
 
 type httpResultWithReader struct {
@@ -37,9 +45,17 @@ type httpResultWithReader struct {
 	BodyReader io.Reader
 }
 
+func NewZeroHttpResultWithReader() *httpResultWithReader {
+	return &httpResultWithReader{}
+}
+
 type httpResultWithMultipart struct {
 	httpResult
 	BodyMultipart *multipart.Part
+}
+
+func NewZeroHttpResultWithMultipart() *httpResultWithMultipart {
+	return &httpResultWithMultipart{}
 }
 
 // Takes over a response, unwrap it and create a Result based on it.
