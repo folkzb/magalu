@@ -506,17 +506,18 @@ paths:
                             description: Detach from a Virtual Machine instance
                             operationId: detach_volume_v0_volumes__id__detach__virtual_machine_id__post
                             parameters:
-                                id: $path.id
+                                id: $request.path.id
                         read:
                             description: Check if block storage is attached to Virtual
                                 Machine instance
                             operationId: volume_details_v0_volumes__id__get
                             parameters:
-                                id: $path.id
+                                id: $request.path.id
                             x-cli-wait-termination:
-                                maxRetries: 2
-                                intervalInSeconds: 15s
-                                jsonPathQuery: $.result.attachments[*]
+                                maxRetries: 1
+                                intervalInSeconds: 5s
+                                jsonPathQuery: $.result.attachments[?(@.virtual_machine_id
+                                    == $.owner.parameters.virtual_machine_id)]
                 '422':
                     description: Validation Error
                     content:
