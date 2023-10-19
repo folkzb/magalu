@@ -26,7 +26,7 @@ func logger() *zap.SugaredLogger {
 
 func logfilterSchema() *core.Schema {
 	s := schema.NewStringSchema()
-	s.Pattern = "^(((((((debug|info|warn|error|panic|dpanic|fatal)\\+?)|\\*),?)+(:\\S+)?)\\s?)+)$"
+	s.Pattern = "^((((((debug|info|warn|error|panic|dpanic|fatal)\\+?)(,(debug|info|warn|error|panic|dpanic|fatal)\\+?)*)|\\*)(:\\S+)?\\s?)*)$"
 	s.Description = "Default log filter to be used. See https://github.com/moul/zapfilter#zapfilter for reference and examples"
 	return s
 }
