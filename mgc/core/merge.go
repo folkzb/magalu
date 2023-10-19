@@ -1,16 +1,30 @@
 package core
 
+import "errors"
+
 type MergeGroup struct {
 	name        string
 	version     string
 	description string
+	toMerge     []Grouper
 	*GrouperLazyChildren[Descriptor]
 }
 
-func NewMergeGroup(name string, version string, description string, merge []Grouper) *MergeGroup {
-	return &MergeGroup{name, version, description, NewGrouperLazyChildren[Descriptor](func() ([]Descriptor, error) {
-		return createChildren(merge)
+func NewMergeGroup(name string, version string, description string, toMerge []Grouper) (o *MergeGroup) {
+	o = &MergeGroup{name, version, description, toMerge, NewGrouperLazyChildren[Descriptor](func() (merged []Descriptor, err error) {
+		merged, err = createChildren(o.toMerge)
+		o.toMerge = nil
+		return merged, err
 	})}
+	return o
+}
+
+func (o *MergeGroup) Add(child Grouper) error {
+	if o.toMerge == nil {
+		return errors.New("cannot add children after the group's children were accessed")
+	}
+	o.toMerge = append(o.toMerge, child)
+	return nil
 }
 
 // BEGIN: Descriptor interface:
