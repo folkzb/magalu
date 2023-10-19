@@ -14,7 +14,7 @@ type ListObjectsParams struct {
 	Destination string `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/"`
 }
 
-type bucketContent struct {
+type BucketContent struct {
 	Key          string `xml:"Key"`
 	LastModified string `xml:"LastModified"`
 	Size         int    `xml:"Size"`
@@ -26,7 +26,7 @@ type prefix struct {
 
 type ListObjectsResponse struct {
 	Name           string           `xml:"Name"`
-	Contents       []*bucketContent `xml:"Contents"`
+	Contents       []*BucketContent `xml:"Contents"`
 	CommonPrefixes []*prefix        `xml:"CommonPrefixes" json:"SubDirectories"`
 }
 
