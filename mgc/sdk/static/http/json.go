@@ -61,7 +61,7 @@ func jsonExecute(ctx context.Context, params httpParams, configs httpConfig) (re
 	var resultBody any
 	if len(r.Body) > 0 {
 		contentType, _, _ := mime.ParseMediaType(r.Headers.Get("Content-Type"))
-		err = json.Unmarshal(([]byte)(r.Body), &resultBody)
+		err = json.Unmarshal([]byte(r.Body), &resultBody)
 		if err != nil {
 			err = fmt.Errorf("unable to decode JSON response (Content-Type: %q): %w", contentType, err)
 			return

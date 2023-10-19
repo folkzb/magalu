@@ -58,3 +58,7 @@ The result is a YAML file called `<API_NAME>.openapi.yaml` stored in `$OAPIDIR` 
 >```
 
 Alternatively, use [add_all_specs.sh](../../scripts/README.md#add_all_specssh) by editing it (add a line executing [add_specs.sh](../../scripts/README.md#add_specssh)) and runing it.
+
+## How to add Blueprints
+
+See [sdk/blueprint/README.md](../sdk/blueprint/README.md)
