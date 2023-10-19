@@ -30,15 +30,23 @@ func CreateTemplateChecker(expression string) (checker func(document any) (bool,
 	return CreateTemplateCheckerFromTemplate(jp), nil
 }
 
+func ExecuteTemplateTrimmed(tmpl *template.Template, doc any) (s string, err error) {
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, doc)
+	if err != nil {
+		return "", err
+	}
+	s = buf.String()
+	s = strings.Trim(s, " \t\n\r")
+	return s, nil
+}
+
 func CreateTemplateCheckerFromTemplate(tmpl *template.Template) (checker func(document any) (bool, error)) {
 	return func(value any) (ok bool, err error) {
-		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, value)
+		s, err := ExecuteTemplateTrimmed(tmpl, value)
 		if err != nil {
 			return false, err
 		}
-		s := buf.String()
-		s = strings.Trim(s, " \t\n\r")
 		return slices.Contains(finishedTemplateStrings, s), nil
 	}
 }
