@@ -315,7 +315,7 @@ func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executo
 
 	httpResult, ok := core.ResultAs[http.HttpResult](originalResult)
 	if !ok {
-		return nil, fmt.Errorf("result passed to PrepareLink has unexpected type. Expected HttpResult for link '%s'", l.Name())
+		return nil, fmt.Errorf("result passed to CreateExecutor has unexpected type. Expected HttpResult for link '%s'", l.Name())
 	}
 
 	preparedParams := core.Parameters{}

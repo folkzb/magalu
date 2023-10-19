@@ -16,7 +16,7 @@ index.openapi.yaml   -> module-name.openapi.yaml -> tag        -> operation
 
 The SDK may contain embedded OpenAPI files if built with `-tags "embed"`.
 In addition to that, it will look into the directory defined by the
-environment variable `$MGC_SDK_OPENAPI_DIR` or `./openapis` it not set.
+environment variable `$MGC_SDK_OPENAPI_DIR` or `./openapis` if not set.
 
 > **NOTE:**
 > if using a binary with embedded files, one may still provide overrides
