@@ -22,6 +22,7 @@ repos:
         stages: [pre-commit, pre-push]
     -   id: end-of-file-fixer
         stages: [pre-commit, pre-push]
+        exclude: mgc/sdk/version.txt
     -   id: check-yaml
         stages: [pre-commit, pre-push]
     -   id: check-added-large-files

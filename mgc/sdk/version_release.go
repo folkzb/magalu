@@ -1,3 +1,8 @@
+//go:build release
+
 package sdk
 
-const Version = "v0.7.1"
+import _ "embed"
+
+//go:embed version.txt
+var Version string
