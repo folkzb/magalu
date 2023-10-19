@@ -371,7 +371,7 @@ paths:
                                     format: uuid
                             x-cli-wait-termination:
                                 maxRetries: 2
-                                intervalInSeconds: 5s
+                                interval: 5s
                                 jsonPathQuery: $.result.attachments[?(@.virtual_machine_id
                                     == $.parameters.virtual_machine_id)]
                 '422':
@@ -515,7 +515,7 @@ paths:
                                 id: $request.path.id
                             x-cli-wait-termination:
                                 maxRetries: 1
-                                intervalInSeconds: 5s
+                                interval: 5s
                                 jsonPathQuery: $.result.attachments[?(@.virtual_machine_id
                                     == $.owner.parameters.virtual_machine_id)]
                 '422':

@@ -18,7 +18,7 @@ import (
 
 type waitTermination struct {
 	MaxRetries    int           `json:"maxRetries,omitempty"`
-	Interval      time.Duration `json:"intervalInSeconds,omitempty"`
+	Interval      time.Duration `json:"interval,omitempty"`
 	JSONPathQuery string        `json:"jsonPathQuery,omitempty"`
 	TemplateQuery string        `json:"templateQuery,omitempty"`
 }

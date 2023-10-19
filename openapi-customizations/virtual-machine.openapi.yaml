@@ -34,7 +34,7 @@ paths:
             x-cli-description: Get a Virtual Machine instance details
             x-cli-wait-termination:
                 maxRetries: 30
-                intervalInSeconds: 1s
+                interval: 1s
                 jsonPathQuery: $.result.status == "active" || $.result.status == "shutoff" || $.result.status == "error"
             responses:
                 '200':
@@ -63,7 +63,7 @@ paths:
                                 id: $request.path.id
                             x-cli-wait-termination:
                                 maxRetries: 4
-                                intervalInSeconds: 5s
+                                interval: 5s
                                 jsonPathQuery: $.result.status == $.owner.parameters.status
                         delete:
                             description: Delete Virtual Machine instance
