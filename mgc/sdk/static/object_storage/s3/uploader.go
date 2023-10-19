@@ -28,12 +28,13 @@ func NewS3Uploader(cfg Config, src, dst string) (uploader, error) {
 	chunkN := int(math.Ceil(float64(size) / float64(CHUNK_SIZE)))
 
 	if chunkN > 1 {
-		readers := splitReader(reader, CHUNK_SIZE, chunkN)
 		return &bigFileUploader{
 			cfg:      cfg,
 			dst:      dst,
 			mimeType: mimeType,
-			readers:  readers,
+			reader:   reader,
+			fileInfo: fileInfo,
+			workerN:  cfg.Workers,
 		}, nil
 	} else {
 		return &smallFileUploader{
@@ -52,14 +53,6 @@ func newUploadRequest(ctx context.Context, cfg Config, dst string, reader io.Rea
 		return nil, err
 	}
 	return http.NewRequestWithContext(ctx, http.MethodPut, url, reader)
-}
-
-func splitReader(reader io.ReaderAt, chunkSize, chunkN int) []io.Reader {
-	readers := make([]io.Reader, chunkN)
-	for i := range readers {
-		readers[i] = io.NewSectionReader(reader, int64(i*chunkSize), int64(chunkSize))
-	}
-	return readers
 }
 
 func readContent(path string) (*os.File, fs.FileInfo, error) {

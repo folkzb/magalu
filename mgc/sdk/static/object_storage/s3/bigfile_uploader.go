@@ -6,9 +6,13 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"io/fs"
+	"math"
 	"net/http"
+	"sort"
 
 	"go.uber.org/zap"
+	"magalu.cloud/core/pipeline"
 )
 
 var deleteBucketsLogger *zap.SugaredLogger
@@ -34,6 +38,9 @@ type completionPart struct {
 
 func NewCompletionPart(partNumber int, etag string) completionPart {
 	return completionPart{
+		// Manual string is needed here because content has double quotes.
+		// Using xml.Marshal normally, the quotes are escaped, which cannot happen
+		// Using `xml:",innerxml"` in struct solves this but removes tags
 		Etag:       fmt.Sprintf("<ETag>%s</ETag>", etag),
 		PartNumber: partNumber,
 	}
@@ -49,7 +56,9 @@ type bigFileUploader struct {
 	cfg      Config
 	dst      string
 	mimeType string
-	readers  []io.Reader
+	reader   io.ReaderAt
+	fileInfo fs.FileInfo
+	workerN  int
 	uploadId string
 }
 
@@ -85,7 +94,7 @@ func (u *bigFileUploader) getUploadId(ctx context.Context) (string, error) {
 	return u.uploadId, nil
 }
 
-func (u *bigFileUploader) createMultipartRequest(ctx context.Context, index int, body io.Reader) (*http.Request, error) {
+func (u *bigFileUploader) createMultipartRequest(ctx context.Context, partNumber int, body io.Reader) (*http.Request, error) {
 	uploadId, err := u.getUploadId(ctx)
 	if err != nil {
 		return nil, err
@@ -96,7 +105,7 @@ func (u *bigFileUploader) createMultipartRequest(ctx context.Context, index int,
 	}
 	q := req.URL.Query()
 	q.Set("uploadId", uploadId)
-	q.Set("partNumber", fmt.Sprint(index+1))
+	q.Set("partNumber", fmt.Sprint(partNumber))
 	req.URL.RawQuery = q.Encode()
 
 	req.Header.Set("Content-Type", u.mimeType)
@@ -104,12 +113,7 @@ func (u *bigFileUploader) createMultipartRequest(ctx context.Context, index int,
 	return req, nil
 }
 
-func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []completionPart) error {
-	uploadId, err := u.getUploadId(ctx)
-	if err != nil {
-		return err
-	}
-
+func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []completionPart, uploadId string) error {
 	body := completionRequest{
 		Parts:     parts,
 		Namespace: "http://s3.amazonaws.com/doc/2006-03-01/",
@@ -118,6 +122,10 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 	if err != nil {
 		return err
 	}
+
+	sort.Slice(parts, func(i, j int) bool {
+		return parts[i].PartNumber < parts[j].PartNumber
+	})
 
 	req, err := newUploadRequest(ctx, u.cfg, u.dst, bytes.NewReader(parsed))
 	if err != nil {
@@ -145,23 +153,46 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 	return nil
 }
 
-func (u *bigFileUploader) Upload(ctx context.Context) error {
-	etags := make([]completionPart, len(u.readers))
-	bigfileUploaderLogger().Debug("start")
-	for i, reader := range u.readers {
-		// TODO Add retry to error handling so it doesn't block others if error
-		req, err := u.createMultipartRequest(ctx, i, reader)
+func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFunc, totalParts int, uploadId string) pipeline.Processor[pipeline.Chunk, completionPart] {
+	return func(ctx context.Context, chunk pipeline.Chunk) (part completionPart, status pipeline.ProcessStatus) {
+		partNumber := int(chunk.StartOffset/CHUNK_SIZE) + 1
+		req, err := u.createMultipartRequest(ctx, partNumber, chunk.Reader)
 		if err != nil {
-			return err
+			cancel(err)
+			return part, pipeline.ProcessAbort
 		}
 
-		bigfileUploaderLogger().Debugf("Sending %d of %d", i+1, len(u.readers))
+		bigfileUploaderLogger().Debugw("Sending part", "part", partNumber, "total", totalParts)
 		_, res, err := SendRequest[any](ctx, req, u.cfg.AccessKeyID, u.cfg.SecretKey)
 		if err != nil {
-			return err
+			cancel(err)
+			return part, pipeline.ProcessAbort
 		}
-		etags[i] = NewCompletionPart(i+1, res.Header.Get("etag"))
+		return NewCompletionPart(partNumber, res.Header.Get("etag")), pipeline.ProcessOutput
 	}
-	bigfileUploaderLogger().Debugw("All file parts uploaded, sending completion", "etags", etags)
-	return u.sendCompletionRequest(ctx, etags)
+}
+
+func (u *bigFileUploader) Upload(ctx context.Context) error {
+	bigfileUploaderLogger().Debug("start")
+
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
+	uploadId, err := u.getUploadId(ctx)
+	if err != nil {
+		return err
+	}
+
+	totalParts := int(math.Ceil(float64(u.fileInfo.Size()) / float64(CHUNK_SIZE)))
+	chunkChan := pipeline.ReadChunks(ctx, u.reader, u.fileInfo.Size(), CHUNK_SIZE)
+
+	partChan := pipeline.ParallelProcess(ctx, u.workerN, chunkChan, u.createPartSenderProcessor(cancel, totalParts, uploadId), nil)
+
+	parts, err := pipeline.SliceItemConsumer(ctx, partChan)
+	if err != nil {
+		return err
+	}
+
+	bigfileUploaderLogger().Debugw("All file parts uploaded, sending completion", "etags", parts)
+	return u.sendCompletionRequest(ctx, parts, uploadId)
 }
