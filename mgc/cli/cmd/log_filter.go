@@ -8,11 +8,14 @@ import (
 
 const logFilterFlag = "cli.log"
 
-func addLogFilterFlag(cmd *cobra.Command) {
+func addLogFilterFlag(cmd *cobra.Command, def string) {
+	if def == "" {
+		def = "warn+:*"
+	}
 	cmd.Root().PersistentFlags().StringP(
 		logFilterFlag,
 		"l",
-		"warn+:*",
+		def,
 		"Format is \"levels:namespaces\". Use \"info+:*\" to show info for all levels, use \"*:*\" to show all logs. See more details about the filter syntax at https://github.com/moul/zapfilter",
 	)
 }

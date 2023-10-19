@@ -652,7 +652,19 @@ func showHelpForError(cmd *cobra.Command, args []string, err error) {
 	}
 }
 
+// TODO: Bind config to PFlag. Investigate how to make it work correctly
+func getLogFilterConfig(sdk *mgcSdk.Sdk) string {
+	var logfilter string
+	err := sdk.Config().Get("logfilter", &logfilter)
+	if err != nil {
+		return ""
+	}
+	return logfilter
+}
+
 func Execute() (err error) {
+	sdk := &mgcSdk.Sdk{}
+
 	rootCmd := &cobra.Command{
 		Use:     "mgc",
 		Version: "TODO",
@@ -671,7 +683,7 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.SetHelpCommandGroupID("other")
 	rootCmd.SetCompletionCommandGroupID("other")
 	addOutputFlag(rootCmd)
-	addLogFilterFlag(rootCmd)
+	addLogFilterFlag(rootCmd, getLogFilterConfig(sdk))
 	addTimeoutFlag(rootCmd)
 	addWaitTerminationFlag(rootCmd)
 	addRetryUntilFlag(rootCmd)
@@ -681,7 +693,6 @@ can generate a command line on-demand for Rest manipulation`,
 		return nil
 	}
 
-	sdk := &mgcSdk.Sdk{}
 	if err = initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {
 		return err
 	}
