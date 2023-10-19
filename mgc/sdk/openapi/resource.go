@@ -287,7 +287,7 @@ func newResource(
 				}
 
 				if wtExt, ok := getExtensionObject(extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
-					if tExec, err := wrapInTerminatorExecutor(logger, wtExt, operation); err == nil {
+					if tExec, err := wrapInTerminatorExecutor(operation, wtExt); err == nil {
 						operation = tExec
 					} else {
 						return false, err
