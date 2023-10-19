@@ -1,0 +1,7 @@
+modules:
+-   description: Operations for Block Storage API
+    name: block-storage
+    path: block-storage.blueprint.yaml
+    url: https://block-storage.magalu.cloud
+    version: 1.52.0
+version: 1.0.0
