@@ -110,7 +110,6 @@ func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics 
 		input,
 		r.create.ParametersSchema(),
 		r.getCreateParamsModifiers,
-		r.name,
 		ctx,
 	)
 	if err != nil {
@@ -122,7 +121,6 @@ func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics 
 		input,
 		r.update.ParametersSchema(),
 		r.getUpdateParamsModifiers,
-		r.name,
 		ctx,
 	)
 	if err != nil {
@@ -134,7 +132,6 @@ func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics 
 		input,
 		r.delete.ParametersSchema(),
 		r.getDeleteParamsModifiers,
-		r.name,
 		ctx,
 	)
 	if err != nil {
@@ -159,7 +156,6 @@ func (r *MgcResource) ReadOutputAttributes(ctx context.Context) diag.Diagnostics
 		output,
 		r.create.ResultSchema(),
 		getResultModifiers,
-		r.name,
 		ctx,
 	)
 	if err != nil {
@@ -170,7 +166,6 @@ func (r *MgcResource) ReadOutputAttributes(ctx context.Context) diag.Diagnostics
 		output,
 		r.read.ResultSchema(),
 		getResultModifiers,
-		r.name,
 		ctx,
 	)
 	if err != nil {

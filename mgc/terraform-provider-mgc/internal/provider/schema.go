@@ -69,10 +69,10 @@ func addMgcSchemaAttributes(
 	attributes mgcAttributes,
 	mgcSchema *mgcSdk.Schema,
 	getModifiers func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers,
-	resourceName string,
 	ctx context.Context,
 ) error {
 	for k, ref := range mgcSchema.Properties {
+		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("adding attribute %q", k))
 		mgcName := mgcName(k)
 		mgcPropSchema := (*mgcSdk.Schema)(ref.Value)
 		if ca, ok := attributes[mgcName]; ok {
@@ -80,14 +80,16 @@ func addMgcSchemaAttributes(
 				// Ignore update value in favor of create value (This is probably a bug with the API)
 				tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring DIFFERENT attribute %q:\nOLD=%+v\nNEW=%+v", k, ca.mgcSchema, mgcPropSchema))
 				continue
+			} else {
+				tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring already computed attribute %q ", k))
+				continue
 			}
-			tflog.SubsystemDebug(ctx, string(schemaGenSubsystem), fmt.Sprintf("[resource] schema for %q: ignoring already computed attribute %q ", resourceName, k))
-			continue
 		}
 
-		tfSchema, childAttributes, err := mgcToTFSchema(mgcPropSchema, getModifiers(ctx, mgcSchema, mgcName), resourceName, ctx)
+		tfSchema, childAttributes, err := mgcToTFSchema(mgcPropSchema, getModifiers(ctx, mgcSchema, mgcName), ctx)
+		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q generated tfSchema %#v", k, tfSchema))
 		if err != nil {
-			tflog.SubsystemError(ctx, string(schemaGenSubsystem), fmt.Sprintf("[resource] schema for %q attribute %q schema: %+v; error: %s", resourceName, k, mgcPropSchema, err))
+			tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q schema: %+v; error: %s", k, mgcPropSchema, err))
 			return fmt.Errorf("attribute %q, error=%s", k, err)
 		}
 
@@ -99,7 +101,7 @@ func addMgcSchemaAttributes(
 			attributes: childAttributes,
 		}
 		attributes[mgcName] = attr
-		tflog.SubsystemDebug(ctx, string(schemaGenSubsystem), fmt.Sprintf("[resource] schema for %q attribute %q: %+v", resourceName, k, attr))
+		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q: %+v", k, attr))
 	}
 
 	return nil
@@ -192,9 +194,7 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map
 	return
 }
 
-func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName string, ctx context.Context) (schema.Attribute, mgcAttributes, error) {
-	// TODO: Handle default values
-
+func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, ctx context.Context) (schema.Attribute, mgcAttributes, error) {
 	t, err := mgcSchemaPkg.GetJsonType(mgcSchema)
 	if err != nil {
 		return nil, nil, err
@@ -295,7 +295,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		}, nil, nil
 	case "array":
 		mgcItemSchema := (*core.Schema)(mgcSchema.Items.Value)
-		elemAttr, elemAttrs, err := mgcToTFSchema(mgcItemSchema, m.getChildModifiers(ctx, mgcItemSchema, "0"), resourceName, ctx)
+		elemAttr, elemAttrs, err := mgcToTFSchema(mgcItemSchema, m.getChildModifiers(ctx, mgcItemSchema, "0"), ctx)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -358,7 +358,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, resourceName 
 		}
 	case "object":
 		mgcAttributes := mgcAttributes{}
-		err := addMgcSchemaAttributes(mgcAttributes, mgcSchema, m.getChildModifiers, resourceName, ctx)
+		err := addMgcSchemaAttributes(mgcAttributes, mgcSchema, m.getChildModifiers, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
