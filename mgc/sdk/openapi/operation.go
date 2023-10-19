@@ -1306,7 +1306,7 @@ func (o *operation) Execute(
 	}
 	if o.outputFlag != "" {
 		if resultWithValue, ok := core.ResultAs[core.ResultWithValue](result); ok {
-			result = core.NewResultWithDefaultOutputOptions(resultWithValue, o.outputFlag)
+			result = core.NewResultWithOriginalSource(result.Source(), core.NewResultWithDefaultOutputOptions(resultWithValue, o.outputFlag))
 		}
 	}
 	return
