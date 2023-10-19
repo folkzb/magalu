@@ -63,20 +63,21 @@ func (r *MgcActionResource) getDeleteParamsModifiers(ctx context.Context, mgcSch
 	}
 }
 
-func (s *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics {
+func (r *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics {
+	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, actionResourceNameField, r.name)
 	d := diag.Diagnostics{}
-	if len(s.inputAttr) != 0 {
+	if len(r.inputAttr) != 0 {
 		return d
 	}
-	tflog.Debug(ctx, fmt.Sprintf("[action-resource] schema for %q: reading input attributes", s.name))
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading input attributes")
 
-	s.inputAttr = mgcAttributes{}
+	r.inputAttr = mgcAttributes{}
 
 	err := addMgcSchemaAttributes(
-		s.inputAttr,
-		s.create.AdditionalParametersSchema(),
-		s.getReadParamsModifiers,
-		s.name,
+		r.inputAttr,
+		r.create.AdditionalParametersSchema(),
+		r.getReadParamsModifiers,
+		r.name,
 		ctx,
 	)
 	if err != nil {
@@ -85,10 +86,10 @@ func (s *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagno
 	}
 
 	err = addMgcSchemaAttributes(
-		s.inputAttr,
-		s.readOwner.ParametersSchema(),
-		s.getReadParamsModifiers,
-		s.name,
+		r.inputAttr,
+		r.readOwner.ParametersSchema(),
+		r.getReadParamsModifiers,
+		r.name,
 		ctx,
 	)
 	if err != nil {
@@ -97,10 +98,10 @@ func (s *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagno
 	}
 
 	err = addMgcSchemaAttributes(
-		s.inputAttr,
-		s.read.AdditionalParametersSchema(),
-		s.getReadParamsModifiers,
-		s.name,
+		r.inputAttr,
+		r.read.AdditionalParametersSchema(),
+		r.getReadParamsModifiers,
+		r.name,
 		ctx,
 	)
 	if err != nil {
@@ -109,10 +110,10 @@ func (s *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagno
 	}
 
 	err = addMgcSchemaAttributes(
-		s.inputAttr,
-		s.delete.AdditionalParametersSchema(),
-		s.getDeleteParamsModifiers,
-		s.name,
+		r.inputAttr,
+		r.delete.AdditionalParametersSchema(),
+		r.getDeleteParamsModifiers,
+		r.name,
 		ctx,
 	)
 	if err != nil {
@@ -124,11 +125,12 @@ func (s *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagno
 }
 
 func (r *MgcActionResource) ReadOutputAttributes(ctx context.Context) diag.Diagnostics {
+	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, actionResourceNameField, r.name)
 	d := diag.Diagnostics{}
 	if len(r.outputAttr) != 0 {
 		return d
 	}
-	tflog.Debug(ctx, fmt.Sprintf("[action-resource] schema for %q: reading output attributes", r.name))
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading output attributes")
 
 	r.outputAttr = mgcAttributes{}
 	err := addMgcSchemaAttributes(
@@ -202,8 +204,9 @@ func (r *MgcActionResource) Metadata(ctx context.Context, req resource.MetadataR
 }
 
 func (r *MgcActionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	// TODO: Handle nullable values
-	tflog.Debug(ctx, fmt.Sprintf("[action-resource] generating schema for %q", r.name))
+	ctx = tflog.SetField(ctx, rpcField, "schema")
+	ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
+	tflog.Debug(ctx, "generating schema")
 
 	if r.tfschema == nil {
 		tfs, d := generateTFSchema(r, ctx)
@@ -221,7 +224,7 @@ func (r *MgcActionResource) Schema(ctx context.Context, req resource.SchemaReque
 		attributes = append(attributes, attrName)
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("[action-resource] generated tf schema for %q", r.name), map[string]any{"attributes": attributes})
+	tflog.Debug(ctx, "generated tf schema", map[string]any{"attributes": attributes})
 	resp.Schema = *r.tfschema
 }
 
@@ -262,25 +265,31 @@ func (r *MgcActionResource) performLinkOperation(ctx context.Context, link core.
 }
 
 func (r *MgcActionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx = tflog.SetField(ctx, rpcField, "create")
+	ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
 	r.performLinkOperation(ctx, r.create, tfsdk.State(req.Plan), &resp.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Info(ctx, fmt.Sprintf("[resource] created a %q resource", r.name))
+	tflog.Info(ctx, "resource created")
 }
 
 func (r *MgcActionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx = tflog.SetField(ctx, rpcField, "read")
+	ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
 	r.performLinkOperation(ctx, r.read, req.State, &resp.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		// When reading fails, that means that the resource was most likely altered outside of terraform.
 		resp.Diagnostics.AddError("reading the resource failed", "was the resource altered outside of terraform?")
 		return
 	}
-	tflog.Info(ctx, fmt.Sprintf("[resource] read a %q resource", r.name))
+	tflog.Info(ctx, "resource read")
 }
 
 // Update will most likely never be called, as we always require replace when changed
 func (r *MgcActionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx = tflog.SetField(ctx, rpcField, "update")
+	ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
 	if r.update == nil {
 		resp.Diagnostics.AddError(
 			"no 'update' operation was provided",
@@ -292,18 +301,22 @@ func (r *MgcActionResource) Update(ctx context.Context, req resource.UpdateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Info(ctx, fmt.Sprintf("[resource] updated a %q resource", r.name))
+	tflog.Info(ctx, "resource updated")
 }
 
 func (r *MgcActionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	ctx = tflog.SetField(ctx, rpcField, "delete")
+	ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
 	r.performLinkOperation(ctx, r.delete, req.State, &resp.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Info(ctx, fmt.Sprintf("[resource] deleted a %q resource", r.name))
+	tflog.Info(ctx, "resource deleted")
 }
 
 func (r *MgcActionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ctx = tflog.SetField(ctx, rpcField, "import-state")
+	ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 

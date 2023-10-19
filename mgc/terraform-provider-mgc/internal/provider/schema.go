@@ -78,16 +78,16 @@ func addMgcSchemaAttributes(
 		if ca, ok := attributes[mgcName]; ok {
 			if !mgcSchemaPkg.CheckSimilarJsonSchemas(ca.mgcSchema, mgcPropSchema) {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
-				tflog.Error(ctx, fmt.Sprintf("[resource] schema for %q: ignoring DIFFERENT attribute %q:\nOLD=%+v\nNEW=%+v", resourceName, k, ca.mgcSchema, mgcPropSchema))
+				tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring DIFFERENT attribute %q:\nOLD=%+v\nNEW=%+v", k, ca.mgcSchema, mgcPropSchema))
 				continue
 			}
-			tflog.Debug(ctx, fmt.Sprintf("[resource] schema for %q: ignoring already computed attribute %q ", resourceName, k))
+			tflog.SubsystemDebug(ctx, string(schemaGenSubsystem), fmt.Sprintf("[resource] schema for %q: ignoring already computed attribute %q ", resourceName, k))
 			continue
 		}
 
 		tfSchema, childAttributes, err := mgcToTFSchema(mgcPropSchema, getModifiers(ctx, mgcSchema, mgcName), resourceName, ctx)
 		if err != nil {
-			tflog.Error(ctx, fmt.Sprintf("[resource] schema for %q attribute %q schema: %+v; error: %s", resourceName, k, mgcPropSchema, err))
+			tflog.SubsystemError(ctx, string(schemaGenSubsystem), fmt.Sprintf("[resource] schema for %q attribute %q schema: %+v; error: %s", resourceName, k, mgcPropSchema, err))
 			return fmt.Errorf("attribute %q, error=%s", k, err)
 		}
 
@@ -99,7 +99,7 @@ func addMgcSchemaAttributes(
 			attributes: childAttributes,
 		}
 		attributes[mgcName] = attr
-		tflog.Debug(ctx, fmt.Sprintf("[resource] schema for %q attribute %q: %+v", resourceName, k, attr))
+		tflog.SubsystemDebug(ctx, string(schemaGenSubsystem), fmt.Sprintf("[resource] schema for %q attribute %q: %+v", resourceName, k, attr))
 	}
 
 	return nil
@@ -130,6 +130,8 @@ func getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName m
 }
 
 func generateTFSchema(handler tfSchemaHandler, ctx context.Context) (tfSchema schema.Schema, d diag.Diagnostics) {
+	ctx = tflog.NewSubsystem(ctx, schemaGenSubsystem)
+	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, handler.Name())
 	var tfsa map[tfName]schema.Attribute
 	tfsa, d = generateTFAttributes(handler, ctx)
 	if d.HasError() {
@@ -144,23 +146,26 @@ func generateTFSchema(handler tfSchemaHandler, ctx context.Context) (tfSchema sc
 }
 
 func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map[tfName]schema.Attribute, d diag.Diagnostics) {
+	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "reading input attributes")
 	d.Append(handler.ReadInputAttributes(ctx)...)
 	if d.HasError() {
 		return
 	}
+	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "reading output attributes")
 	d.Append(handler.ReadOutputAttributes(ctx)...)
 	if d.HasError() {
 		return
 	}
 
 	tfa = map[tfName]schema.Attribute{}
+	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "generating attributes using input")
 	for name, iattr := range handler.InputAttributes() {
 		// Split attributes that differ between input/output
 		if oattr := handler.OutputAttributes()[name]; oattr != nil {
 			if !mgcSchemaPkg.CheckSimilarJsonSchemas(oattr.mgcSchema, iattr.mgcSchema) {
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()
-				tflog.Debug(ctx, fmt.Sprintf("[resource] schema for %q: attribute %q differs between input and output. input: %s - output %s", handler.Name(), name, is, os))
+				tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q differs between input and output. input: %s - output %s", name, is, os))
 				iattr.tfName = iattr.tfName.asDesired()
 				oattr.tfName = oattr.tfName.asCurrent()
 
@@ -174,6 +179,7 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map
 		tfa[iattr.tfName] = iattr.tfSchema
 	}
 
+	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "generating attributes using output")
 	for _, oattr := range handler.OutputAttributes() {
 		// If they don't differ and it's already created skip
 		if _, ok := tfa[oattr.tfName]; ok {
