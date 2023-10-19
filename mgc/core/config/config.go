@@ -81,8 +81,11 @@ func (c *Config) BuiltInConfigs() (map[string]*core.Schema, error) {
 		return nil, fmt.Errorf("unable to get logger config schema: %w", err)
 	}
 
+	logfilterSchema := logfilterSchema()
+
 	configMap := map[string]*core.Schema{
-		"logging": loggerConfigSchema,
+		"logging":   loggerConfigSchema,
+		"logfilter": logfilterSchema,
 	}
 
 	return configMap, nil

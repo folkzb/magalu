@@ -24,6 +24,13 @@ func logger() *zap.SugaredLogger {
 	return pkgLogger
 }
 
+func logfilterSchema() *core.Schema {
+	s := schema.NewStringSchema()
+	s.Pattern = "^(((((((debug|info|warn|error|panic|dpanic|fatal)\\+?)|\\*),?)+:(\\S*|\\*))\\s?)+)$"
+	s.Description = "Default log filter to be used. Accepts pattern <levels>:<namespace> and *:*"
+	return s
+}
+
 func loggerSchema() (*core.Schema, error) {
 	reflector := jsonschema.Reflector{Mapper: zapMapper}
 	s, err := schema.ToCoreSchema(reflector.Reflect(zap.Config{}))
