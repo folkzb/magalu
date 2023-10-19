@@ -95,7 +95,7 @@ func NewHttpErrorFromResponse(resp *http.Response) *HttpError {
 
 	contentType, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 	if err != nil {
-		logger().Debugf("Ignored invalid response Content-Type %q: %s\n", resp.Header.Get("Content-Type"), err.Error())
+		logger().Debugw("ignored invalid response", "Content-Type", resp.Header.Get("Content-Type"), "error", err.Error())
 	}
 	if contentType == "application/json" {
 		data := BaseApiError{}

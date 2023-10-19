@@ -132,11 +132,11 @@ func doTransformsToValue(logger *zap.SugaredLogger, specs []*transformSpec, valu
 	for _, spec := range specs {
 		result, err = doTransformValue(spec, result)
 		if err != nil {
-			logger.Debugf("attempted to transform %#v but failed. Transformation type was %s", value, spec.Type)
+			logger.Debugw("transformation attempt failed", "value", value, "type", spec.Type)
 			return
 		}
 	}
-	logger.Debugf("transformed %#v into %#v", value, result)
+	logger.Debugw("transformed value", "input", value, "output", result)
 	return
 }
 
@@ -145,11 +145,11 @@ func doTransformsToSchema(logger *zap.SugaredLogger, specs []*transformSpec, val
 	for _, spec := range specs {
 		result, err = doTransformSchema(spec, result)
 		if err != nil {
-			logger.Debugf("attempted to transform %#v but failed. Transformation type was %s", value, spec.Type)
+			logger.Debugw("transformation attempt failed", "value", value, "type", spec.Type)
 			return
 		}
 	}
-	logger.Debugf("transformed schema %#v into %#v", value, result)
+	logger.Debugw("transformed schema", "input", value.Peek(), "output", result.Peek())
 	return
 }
 

@@ -133,7 +133,7 @@ func downloadMultipleFiles(ctx context.Context, cfg s3.Config, src, dst string) 
 	objError := NewDownloadObjectsError()
 	for _, obj := range objs.Contents {
 		objURI := path.Join(bucketRoot, obj.Key)
-		downloadLogger().Infof("Downloading %s", objURI)
+		downloadLogger().Infow("Downloading object", "uri", objURI)
 		req, err := newDownloadRequest(ctx, cfg, objURI)
 		if err != nil {
 			objError.Add(objURI, err)

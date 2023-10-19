@@ -102,7 +102,7 @@ func delete(ctx context.Context, params deleteParams, cfg s3.Config) (core.Value
 		if err != nil {
 			objErr.Add(uri, err)
 		} else {
-			deleteLogger().Infof("Deleted %s%s", s3.URIPrefix, uri)
+			deleteLogger().Infow("Deleted objects", "uri", s3.URIPrefix+uri)
 		}
 
 		done <- true

@@ -194,7 +194,7 @@ func (l *openapiLinker) addExtraParametersExtension(dst map[string]*core.Schema,
 		for _, extraSpec := range extraParams {
 			param, err := utils.DecodeNewValue[extraParameterExtension](extraSpec)
 			if err != nil {
-				l.owner.logger.Warnf(
+				l.owner.logger.Warnw(
 					"unable to decode extra parameter spec for link",
 					"link", l.name,
 					"spec data", extraSpec,

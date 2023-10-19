@@ -133,7 +133,12 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 
 		if slices.Contains(schema.Required, name) {
 			if err := cobra.MarkFlagRequired(flags, name); err != nil {
-				logger().Warnf("Error marking %s as required: %s\n", name, err)
+				// Will probably never happen
+				logger().Warnw(
+					"unable to mark flag as required, but it should be required",
+					"flag name", name,
+					"error", err.Error(),
+				)
 			}
 		}
 	}
@@ -260,7 +265,7 @@ func handleJsonResult(result core.ResultWithValue, output string) (err error) {
 
 	err = result.ValidateSchema()
 	if err != nil {
-		logger().Warnf("Warning: result validation failed: %v", err)
+		logger().Warnw("result validation failed", "error", err.Error())
 	}
 
 	name, options := parseOutputFormatter(output)
