@@ -27,13 +27,16 @@ type deleteParams struct {
 }
 
 type deleteObjectsError struct {
-	errorMap map[string]error
+	uri string
+	err error
 }
 
-func (o deleteObjectsError) Error() string {
+type deleteObjectsErrors []deleteObjectsError
+
+func (o deleteObjectsErrors) Error() string {
 	var errorMsg string
-	for file, err := range o.errorMap {
-		errorMsg += fmt.Sprintf("%s - %s, ", file, err)
+	for _, objError := range o {
+		errorMsg += fmt.Sprintf("%s - %s, ", objError.uri, objError.err)
 	}
 	// Remove trailing `, `
 	if len(errorMsg) != 0 {
@@ -42,18 +45,8 @@ func (o deleteObjectsError) Error() string {
 	return fmt.Sprintf("failed to delete objects from bucket: %s", errorMsg)
 }
 
-func (o deleteObjectsError) Add(uri string, err error) {
-	o.errorMap[uri] = err
-}
-
-func (o deleteObjectsError) HasError() bool {
-	return len(o.errorMap) != 0
-}
-
-func NewDeleteObjectsError() deleteObjectsError {
-	return deleteObjectsError{
-		errorMap: make(map[string]error),
-	}
+func (o deleteObjectsErrors) HasError() bool {
+	return len(o) != 0
 }
 
 func newDelete() core.Executor {
@@ -91,7 +84,7 @@ func delete(ctx context.Context, params deleteParams, cfg s3.Config) (core.Value
 		return nil, err
 	}
 
-	objErr := NewDeleteObjectsError()
+	objErr := deleteObjectsErrors{}
 	makeRequest := func(uri string, done chan<- core.Value) {
 		_, err := objects.Delete(
 			ctx,
@@ -100,7 +93,7 @@ func delete(ctx context.Context, params deleteParams, cfg s3.Config) (core.Value
 		)
 
 		if err != nil {
-			objErr.Add(uri, err)
+			objErr = append(objErr, deleteObjectsError{uri: uri, err: err})
 		} else {
 			deleteLogger().Infow("Deleted objects", "uri", s3.URIPrefix+uri)
 		}
