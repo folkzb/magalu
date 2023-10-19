@@ -1,23 +1,14 @@
 package core
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core/utils"
 )
-
-var retryUntilTemplateStrings = []string{
-	"finished",
-	"terminated",
-	"true",
-}
 
 var ErrorResultHasNoValue = errors.New("result has no value")
 
@@ -112,48 +103,26 @@ func (r *RetryUntil) Run(ctx context.Context, cb RetryUntilCb) (result Result, e
 }
 
 func NewRetryUntilCheckFromJsonPath(expression string) (check RetryUntilCheck, err error) {
-	jp, err := utils.NewJsonPath(expression)
+	jpChecker, err := utils.CreateJsonPathChecker(expression)
 	if err != nil {
 		return nil, err
 	}
 
 	check = func(ctx context.Context, value Value) (finished bool, err error) {
-		v, err := jp(ctx, value)
-		if err != nil {
-			return false, err
-		}
-
-		if v == nil {
-			return false, nil
-		} else if lst, ok := v.([]any); ok {
-			return len(lst) > 0, nil
-		} else if m, ok := v.(map[string]any); ok {
-			return len(m) > 0, nil
-		} else if b, ok := v.(bool); ok {
-			return b, nil
-		} else {
-			return false, fmt.Errorf("unknown jsonpath result. Expected list, map or boolean. Got %#v", value)
-		}
+		return jpChecker(value)
 	}
 
 	return
 }
 
 func NewRetryUntilCheckFromTemplate(expression string) (check RetryUntilCheck, err error) {
-	tmpl, err := utils.NewTemplate(expression)
+	tmplChecker, err := utils.CreateTemplateChecker(expression)
 	if err != nil {
 		return nil, err
 	}
 
 	check = func(ctx context.Context, value Value) (finished bool, err error) {
-		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, value)
-		if err != nil {
-			return false, err
-		}
-		s := buf.String()
-		s = strings.Trim(s, " \t\n\r")
-		return slices.Contains(retryUntilTemplateStrings, s), nil
+		return tmplChecker(value)
 	}
 
 	return
