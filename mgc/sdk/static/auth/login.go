@@ -31,7 +31,8 @@ type loginParameters struct {
 }
 
 type loginResult struct {
-	AccessToken string `json:"access_token,omitempty"`
+	AccessToken    string       `json:"access_token,omitempty"`
+	SelectedTenant *auth.Tenant `json:"selected_tenant,omitempty"`
 }
 
 const serverShutdownTimeout = 500 * time.Millisecond
@@ -87,7 +88,8 @@ func newLogin() *core.StaticExecute {
 				return nil, fmt.Errorf("error when trying to list tenants for selection: %w", err)
 			}
 
-			tenantResult, err := auth.SelectTenant(ctx, tenants[0].UUID)
+			defaultTenant := tenants[0]
+			tenantResult, err := auth.SelectTenant(ctx, defaultTenant.UUID)
 			if err != nil {
 				return nil, fmt.Errorf("error when trying to select default tenant: %w", err)
 			}
@@ -95,7 +97,7 @@ func newLogin() *core.StaticExecute {
 			fmt.Fprintf(os.Stderr, "Successfully logged in.\n")
 			loginLogger().Infow("sucessfully logged in")
 			if parameters.Show {
-				output = &loginResult{AccessToken: tenantResult.AccessToken}
+				output = &loginResult{AccessToken: tenantResult.AccessToken, SelectedTenant: defaultTenant}
 			}
 
 			return output, nil
