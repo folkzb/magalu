@@ -114,6 +114,9 @@ func (u *bigFileUploader) createMultipartRequest(ctx context.Context, partNumber
 }
 
 func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []completionPart, uploadId string) error {
+	sort.Slice(parts, func(i, j int) bool {
+		return parts[i].PartNumber < parts[j].PartNumber
+	})
 	body := completionRequest{
 		Parts:     parts,
 		Namespace: "http://s3.amazonaws.com/doc/2006-03-01/",
@@ -123,9 +126,7 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 		return err
 	}
 
-	sort.Slice(parts, func(i, j int) bool {
-		return parts[i].PartNumber < parts[j].PartNumber
-	})
+	bigfileUploaderLogger().Debugw("All file parts uploaded, sending completion", "etags", parts)
 
 	req, err := newUploadRequest(ctx, u.cfg, u.dst, bytes.NewReader(parsed))
 	if err != nil {
@@ -193,6 +194,5 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 		return err
 	}
 
-	bigfileUploaderLogger().Debugw("All file parts uploaded, sending completion", "etags", parts)
 	return u.sendCompletionRequest(ctx, parts, uploadId)
 }
