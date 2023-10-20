@@ -28,7 +28,8 @@ func newDelete() core.Executor {
 }
 
 func delete(ctx context.Context, params DeleteAttachVolumeParams, cfg core.Configs) (core.Result, error) {
-	exec, err := retrieveExecutor(ctx, []string{"block-storage", "volume", "detach"})
+	refResolver := core.RefPathResolverFromContext(ctx)
+	exec, err := core.ResolveExecutor(refResolver, "/block-storage/volume/detach")
 	if err != nil {
 		return nil, err
 	}

@@ -25,7 +25,8 @@ func newGet() core.Executor {
 }
 
 func get(ctx context.Context, params GetAttachVolumeParams, cfg core.Configs) (*AttachmentResult, error) {
-	exec, err := retrieveExecutor(ctx, []string{"block-storage", "volume", "get"})
+	refResolver := core.RefPathResolverFromContext(ctx)
+	exec, err := core.ResolveExecutor(refResolver, "/block-storage/volume/get")
 	if err != nil {
 		return nil, err
 	}

@@ -25,7 +25,8 @@ func newCreate() core.Executor {
 }
 
 func create(ctx context.Context, params CreateAttachVolumeParams, cfg core.Configs) (*AttachmentResult, error) {
-	exec, err := retrieveExecutor(ctx, []string{"block-storage", "volume", "attach"})
+	refResolver := core.RefPathResolverFromContext(ctx)
+	exec, err := core.ResolveExecutor(refResolver, "/block-storage/volume/attach")
 	if err != nil {
 		return nil, err
 	}
