@@ -9,6 +9,7 @@ import (
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
+	"magalu.cloud/core/pipeline"
 	"magalu.cloud/sdk/static/object_storage/objects"
 	"magalu.cloud/sdk/static/object_storage/s3"
 )
@@ -78,40 +79,38 @@ func newDeleteRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*
 	return http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 }
 
+// Deleting an object does not yield result except there is an error. So this processor will *Skip*
+// success results and *Output* errors
+func createObjectDeletionProcessor(cfg s3.Config, bucketName string) pipeline.Processor[*objects.BucketContent, deleteObjectsError] {
+	return func(ctx context.Context, obj *objects.BucketContent) (deleteObjectsError, pipeline.ProcessStatus) {
+		objURI := path.Join(bucketName, obj.Key)
+		_, err := objects.Delete(
+			ctx,
+			objects.DeleteObjectParams{Destination: objURI},
+			cfg,
+		)
+
+		if err != nil {
+			return deleteObjectsError{uri: objURI, err: err}, pipeline.ProcessOutput
+		} else {
+			deleteLogger().Infow("Deleted objects", "uri", s3.URIPrefix+objURI)
+			return deleteObjectsError{}, pipeline.ProcessSkip
+		}
+	}
+}
+
 func delete(ctx context.Context, params deleteParams, cfg s3.Config) (core.Value, error) {
 	objs, err := objects.List(ctx, objects.ListObjectsParams{Destination: params.Name}, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	objErr := deleteObjectsErrors{}
-	makeRequest := func(uri string, done chan<- core.Value) {
-		_, err := objects.Delete(
-			ctx,
-			objects.DeleteObjectParams{Destination: uri},
-			cfg,
-		)
+	objChan := pipeline.SliceItemGenerator(ctx, objs.Contents)
 
-		if err != nil {
-			objErr = append(objErr, deleteObjectsError{uri: uri, err: err})
-		} else {
-			deleteLogger().Infow("Deleted objects", "uri", s3.URIPrefix+uri)
-		}
+	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objChan, createObjectDeletionProcessor(cfg, params.Name), nil)
 
-		done <- true
-	}
-
-	done := make(chan core.Value)
-	defer close(done)
-
-	for _, obj := range objs.Contents {
-		objURI := path.Join(params.Name, obj.Key)
-		go makeRequest(objURI, done)
-	}
-
-	for range objs.Contents {
-		<-done
-	}
+	// This cannot error, there is no cancel call in processor
+	objErr, _ := pipeline.SliceItemConsumer[deleteObjectsErrors](ctx, deleteObjectsErrorChan)
 
 	if objErr.HasError() {
 		return nil, objErr
