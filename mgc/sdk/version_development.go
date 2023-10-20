@@ -6,12 +6,7 @@ package sdk
 import (
 	"fmt"
 	"runtime/debug"
-
-	_ "embed"
 )
-
-//go:embed version.txt
-var baseVersion string
 
 var Version = func() string {
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -30,9 +25,9 @@ var Version = func() string {
 		}
 
 		if vcs != "" {
-			return fmt.Sprintf("%s-%s-%s%s", baseVersion, vcs, rev, status)
+			return fmt.Sprintf("%s-%s-%s%s", version, vcs, rev, status)
 		}
 	}
 
-	return baseVersion + " (vcs-unknown, please 'go build -buildvcs=true')"
+	return version + " (vcs-unknown, please 'go build -buildvcs=true')"
 }()
