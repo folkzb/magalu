@@ -9,16 +9,12 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	mgcConfigPkg "magalu.cloud/core/config"
+	mgcUtilsPkg "magalu.cloud/core/utils"
 )
 
-var listLoggerInstance *zap.SugaredLogger
-
-func listLogger() *zap.SugaredLogger {
-	if listLoggerInstance == nil {
-		listLoggerInstance = logger().Named("list")
-	}
-	return listLoggerInstance
-}
+var listLogger = mgcUtilsPkg.NewLazyLoader(func() *zap.SugaredLogger {
+	return logger().Named("list")
+})
 
 func configListFormatter(exec core.Executor, result core.Result) string {
 	// it must be this, no need to check
@@ -49,12 +45,12 @@ func newList() core.Executor {
 func getAllConfigs(ctx context.Context) (map[string]*core.Schema, error) {
 	root := core.GrouperFromContext(ctx)
 	if root == nil {
-		return nil, fmt.Errorf("Couldn't get Group from context")
+		return nil, fmt.Errorf("couldn't get Group from context")
 	}
 
 	config := mgcConfigPkg.FromContext(ctx)
 	if config == nil {
-		return nil, fmt.Errorf("Couldn't get Config from context")
+		return nil, fmt.Errorf("couldn't get Config from context")
 	}
 
 	configMap, err := config.BuiltInConfigs()
