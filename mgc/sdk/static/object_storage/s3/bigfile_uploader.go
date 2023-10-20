@@ -189,7 +189,7 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 
 	partChan := pipeline.ParallelProcess(ctx, u.workerN, chunkChan, u.createPartSenderProcessor(cancel, totalParts, uploadId), nil)
 
-	parts, err := pipeline.SliceItemConsumer(ctx, partChan)
+	parts, err := pipeline.SliceItemConsumer[[]completionPart](ctx, partChan)
 	if err != nil {
 		return err
 	}

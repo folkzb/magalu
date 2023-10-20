@@ -22,7 +22,7 @@ func TestSliceItemConsumer(t *testing.T) {
 
 	}()
 
-	result, err := pipeline.SliceItemConsumer(ctx, ch)
+	result, err := pipeline.SliceItemConsumer[[]int](ctx, ch)
 	if err != nil {
 		t.Errorf("Did not expect Consumer to fail")
 	}
@@ -50,7 +50,7 @@ func TestSliceItemConsumerError(t *testing.T) {
 
 	}()
 
-	_, err := pipeline.SliceItemConsumer(ctx, ch)
+	_, err := pipeline.SliceItemConsumer[[]int](ctx, ch)
 	if err == nil {
 		t.Errorf("Expected Consumer to return error")
 	}
