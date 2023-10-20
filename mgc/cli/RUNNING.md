@@ -81,10 +81,22 @@ To ensure it is working, perform a CLI command that requires authentication:
 ./mgc config get --key=region
 ```
 
+Configurations can be stored in the configuration file or in environment variables. The `config set`
+command saves the key value pair in the file. The `config get` command will ALWAYS check if there's
+a environment variable set with the `MGC_` prefix first. This means that if there's a `foo` key in
+the file and a `MGC_FOO` environment variable set, `config get --key foo` will return the environment
+variable value.
+
 > **NOTE:**
 > The file `cli.yaml` is saved at a sub-folder `mgc` of
 > `$XDG_CONFIG_HOME` (on Unix, defaults to `$HOME/.config`)
 > or `%AppData%` (on Windows).
+
+> **NOTE:**
+> Case sensitivity is not supported for environment variables. This means
+> if one stored a configuration object in an environment variable it would
+> be case insensitive. Thus, it is recommended to save complex configurations
+> in the configuration file using the `config set` command.
 
 ## Logging
 
