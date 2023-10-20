@@ -48,6 +48,9 @@ func newList() core.Executor {
 }
 
 func parseURL(cfg s3.Config, bucketURI string) (*url.URL, error) {
+	// Bucket URI cannot end in '/' as this makes it search for a
+	// non existing directory
+	bucketURI = strings.TrimSuffix(bucketURI, "/")
 	dirs := strings.Split(bucketURI, "/")
 	path, err := url.JoinPath(s3.BuildHost(cfg), dirs[0])
 	if err != nil {
