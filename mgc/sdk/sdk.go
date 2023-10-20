@@ -29,10 +29,11 @@ type Result = core.Result
 type Config = config.Config
 
 type Sdk struct {
-	group      *core.MergeGroup
-	auth       *auth.Auth
-	httpClient *mgcHttpPkg.Client
-	config     *config.Config
+	group       *core.MergeGroup
+	auth        *auth.Auth
+	httpClient  *mgcHttpPkg.Client
+	config      *config.Config
+	refResolver core.RefPathResolver
 }
 
 type contextKey string
@@ -83,6 +84,7 @@ func (o *Sdk) NewContext() context.Context {
 }
 
 // The following values are added to the context:
+// - use RefPathResolverFromContext() to retrieve root Sdk.RefResolver()
 // - use GrouperFromContext() to retrieve Sdk.Group() (root group)
 // - use AuthFromContext() to retrieve Sdk.Auth()
 // - use HttpClientFromContext() to retrieve Sdk.HttpClient()
@@ -92,6 +94,7 @@ func (o *Sdk) WrapContext(ctx context.Context) context.Context {
 		return ctx
 	}
 
+	ctx = core.NewRefPathResolverContext(ctx, o.RefResolver())
 	ctx = core.NewGrouperContext(ctx, o.Group())
 	ctx = auth.NewContext(ctx, o.Auth())
 	// Needs to be called after Auth, because we need the refresh token callback for the interceptor
@@ -126,6 +129,13 @@ func (o *Sdk) newOpenApiSource() core.Grouper {
 	}
 
 	return openapi.NewSource(loader, &extensionPrefix)
+}
+
+func (o *Sdk) RefResolver() core.RefPathResolver {
+	if o.refResolver == nil {
+		o.refResolver = core.NewDocumentRefPathResolver(func() (any, error) { return o.group, nil })
+	}
+	return o.refResolver
 }
 
 func (o *Sdk) Group() core.Grouper {
