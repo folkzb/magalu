@@ -67,6 +67,7 @@ func newOperation(
 			Description: getDescriptionExtension(extensionPrefix, desc.op.Extensions, desc.op.Description),
 			Version:     version,
 			Summary:     desc.op.Summary,
+			IsInternal:  getHiddenExtension(extensionPrefix, desc.op.Extensions),
 		}},
 		key:             desc.key,
 		method:          method,

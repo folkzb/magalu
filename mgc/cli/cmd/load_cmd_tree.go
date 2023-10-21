@@ -45,6 +45,9 @@ func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 	}
 
 	return grouper.VisitChildren(func(child core.Descriptor) (run bool, err error) {
+		if child.IsInternal() && !getShowInternalFlag(cmd.Root()) {
+			return true, nil
+		}
 		_, _, err = addChildDesc(sdk, cmd, child)
 		return true, err
 	})
@@ -162,6 +165,7 @@ func addAction(
 
 	parentCmd.AddCommand(actionCmd)
 	logger().Debugw("Executor added to command tree", "name", exec.Name())
+	// TODO: Parse this command's flags right after its creation
 	return actionCmd, nil
 }
 
@@ -183,6 +187,7 @@ func addGroup(
 
 	parentCmd.AddCommand(moduleCmd)
 	logger().Debugw("Groupper added to command tree", "name", group.Name())
+	// TODO: Parse this command's flags right after its creation
 	return moduleCmd, nil
 }
 

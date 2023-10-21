@@ -50,6 +50,7 @@ can generate a command line on-demand for Rest manipulation`,
 	addRetryUntilFlag(rootCmd)
 	addBypassConfirmationFlag(rootCmd)
 	addHideProgressFlag(rootCmd)
+	addShowInternalFlag(rootCmd)
 
 	// Immediately parse flags for root command because we'll access the global flags prior
 	// to calling Execute (which is when Cobra parses the flags)

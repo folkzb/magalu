@@ -176,10 +176,6 @@ func collectOperations(
 ) *operationTree {
 	tree := &operationTree{}
 	for key, path := range doc.Paths {
-		if getHiddenExtension(extensionPrefix, path.Extensions) {
-			continue
-		}
-
 		pathOps := map[string]*openapi3.Operation{
 			"get":    path.Get,
 			"post":   path.Post,
@@ -189,7 +185,7 @@ func collectOperations(
 		}
 
 		for method, op := range pathOps {
-			if op == nil || getHiddenExtension(extensionPrefix, op.Extensions) {
+			if op == nil {
 				continue
 			}
 
@@ -221,6 +217,7 @@ func newResource(
 			Name:        getNameExtension(extensionPrefix, tag.Extensions, tag.Name),
 			Description: getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description),
 			Version:     version,
+			IsInternal:  getHiddenExtension(extensionPrefix, tag.Extensions),
 		},
 		func() (operations []core.Executor, err error) {
 			operations = []core.Executor{}

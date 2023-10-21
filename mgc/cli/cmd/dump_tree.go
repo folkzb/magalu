@@ -42,6 +42,7 @@ func collectAllChildren(child core.Descriptor) (map[string]any, error) {
 	node["name"] = child.Name()
 	node["description"] = child.Description()
 	node["version"] = child.Version()
+	node["isInternal"] = child.IsInternal()
 
 	if executor, ok := child.(core.Executor); ok {
 		node["parameters"] = executor.ParametersSchema()

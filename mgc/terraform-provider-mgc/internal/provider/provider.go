@@ -134,6 +134,10 @@ func collectGroupResources(
 	resources = make([]func() resource.Resource, 0)
 	var create, read, update, delete mgcSdk.Executor
 	_, err = group.VisitChildren(func(child mgcSdk.Descriptor) (run bool, err error) {
+		if group.IsInternal() {
+			return true, nil
+		}
+
 		if childGroup, ok := child.(mgcSdk.Grouper); ok {
 			oldLen := len(path)
 			path = append(path, childGroup.Name())
