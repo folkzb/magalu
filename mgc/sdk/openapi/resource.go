@@ -21,11 +21,6 @@ type confirmation struct {
 
 // Resource
 
-type resource struct {
-	core.SimpleDescriptor
-	*core.GrouperLazyChildren[core.Executor]
-}
-
 func getServers(p *openapi3.PathItem, op *openapi3.Operation) openapi3.Servers {
 	var servers openapi3.Servers
 	if op.Servers != nil && len(*op.Servers) > 0 {
@@ -218,14 +213,14 @@ func newResource(
 	extensionPrefix *string,
 	logger *zap.SugaredLogger,
 	module *module,
-) (r *resource) {
+) *core.SimpleGrouper[core.Executor] {
 	logger = logger.Named(tag.Name)
-	r = &resource{
-		SimpleDescriptor: core.SimpleDescriptor{Spec: core.DescriptorSpec{
+	return core.NewSimpleGrouper[core.Executor](
+		core.DescriptorSpec{
 			Name:        getNameExtension(extensionPrefix, tag.Extensions, tag.Name),
 			Description: getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description),
-		}},
-		GrouperLazyChildren: core.NewGrouperLazyChildren[core.Executor](func() (operations []core.Executor, err error) {
+		},
+		func() (operations []core.Executor, err error) {
 			operations = []core.Executor{}
 			operationsByName := map[string]core.Executor{}
 			opTree := collectOperations(tag, doc, extensionPrefix, logger)
@@ -290,10 +285,9 @@ func newResource(
 				return true, nil
 			})
 
-			return operations, nil
-		}),
-	}
-	return r
+			return operations, err
+		},
+	)
 }
 
 func wrapInConfirmableExecutor(cExt map[string]any, isDelete bool, exec core.Executor) (core.ConfirmableExecutor, error) {
@@ -307,6 +301,3 @@ func wrapInConfirmableExecutor(cExt map[string]any, isDelete bool, exec core.Exe
 
 	return core.NewConfirmableExecutor(exec, core.ConfirmPromptWithTemplate(c.Message)), nil
 }
-
-// implemented by embedded GrouperLazyChildren & SimpleDescriptor
-var _ core.Grouper = (*resource)(nil)

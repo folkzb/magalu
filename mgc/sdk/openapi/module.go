@@ -15,10 +15,9 @@ import (
 // Module
 
 type module struct {
-	core.SimpleDescriptor
+	*core.SimpleGrouper[core.Grouper]
 	execResolver executorResolver
 	loaded       bool
-	*core.GrouperLazyChildren[*resource]
 }
 
 func newModule(
@@ -29,40 +28,41 @@ func newModule(
 ) (m *module) {
 	logger = logger.Named(indexModule.Name)
 	m = &module{
-		SimpleDescriptor: core.SimpleDescriptor{Spec: indexModule.DescriptorSpec},
-		GrouperLazyChildren: core.NewGrouperLazyChildren[*resource](func() (resources []*resource, err error) {
-			ctx := context.Background()
-			mData, err := loader.Load(indexModule.Path)
-			if err != nil {
-				return nil, err
-			}
-
-			oapiLoader := openapi3.Loader{Context: ctx, IsExternalRefsAllowed: false}
-			doc, err := oapiLoader.LoadFromData(mData)
-			if err != nil {
-				return nil, err
-			}
-
-			resources = make([]*resource, 0, len(doc.Tags))
-
-			for _, tag := range doc.Tags {
-				if getHiddenExtension(extensionPrefix, tag.Extensions) {
-					continue
+		SimpleGrouper: core.NewSimpleGrouper[core.Grouper](
+			indexModule.DescriptorSpec,
+			func() (resources []core.Grouper, err error) {
+				ctx := context.Background()
+				mData, err := loader.Load(indexModule.Path)
+				if err != nil {
+					return nil, err
 				}
 
-				resource := newResource(
-					tag,
-					doc,
-					extensionPrefix,
-					logger,
-					m,
-				)
+				oapiLoader := openapi3.Loader{Context: ctx, IsExternalRefsAllowed: false}
+				doc, err := oapiLoader.LoadFromData(mData)
+				if err != nil {
+					return nil, err
+				}
 
-				resources = append(resources, resource)
-			}
+				resources = make([]core.Grouper, 0, len(doc.Tags))
 
-			return resources, nil
-		}),
+				for _, tag := range doc.Tags {
+					if getHiddenExtension(extensionPrefix, tag.Extensions) {
+						continue
+					}
+
+					resource := newResource(
+						tag,
+						doc,
+						extensionPrefix,
+						logger,
+						m,
+					)
+
+					resources = append(resources, resource)
+				}
+
+				return resources, nil
+			}),
 	}
 	return m
 }
@@ -83,5 +83,5 @@ func (m *module) loadRecursive() {
 	m.loaded = true
 }
 
-// implemented by embedded GrouperLazyChildren & SimpleDescriptor
+// implemented by embedded SimpleGrouper
 var _ core.Grouper = (*module)(nil)
