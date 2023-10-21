@@ -10,16 +10,7 @@ import (
 	"moul.io/zapfilter"
 )
 
-type pkgSymbol struct{}
-
-var loggerInstance *zap.SugaredLogger
-
-func logger() *zap.SugaredLogger {
-	if loggerInstance == nil {
-		loggerInstance = mgcLoggerPkg.New[pkgSymbol]()
-	}
-	return loggerInstance
-}
+var logger = mgcLoggerPkg.NewLazy[DynamicArgLoader]()
 
 func newLogConfig() zap.Config {
 	zapConfig := zap.NewProductionConfig()

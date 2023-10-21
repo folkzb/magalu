@@ -45,7 +45,7 @@ var (
 
 func loginLogger() *zap.SugaredLogger {
 	if loginLoggerInstance == nil {
-		loginLoggerInstance = initPkgLogger().Named("login")
+		loginLoggerInstance = logger().Named("login")
 	}
 	return loginLoggerInstance
 }

@@ -7,8 +7,6 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/invopop/jsonschema"
-	"go.uber.org/zap"
-	mgcLoggerPkg "magalu.cloud/core/logger"
 	"magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
@@ -23,15 +21,6 @@ type StaticExecute struct {
 	links       map[string]Linker
 	related     map[string]Executor
 	execute     func(ctx context.Context, parameters Parameters, configs Configs) (value Value, err error)
-}
-
-var corePkgLogger *zap.SugaredLogger
-
-func logger() *zap.SugaredLogger {
-	if corePkgLogger == nil {
-		corePkgLogger = mgcLoggerPkg.New[StaticExecute]()
-	}
-	return corePkgLogger
 }
 
 // Raw Parameter and Config JSON Schemas

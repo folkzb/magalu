@@ -13,16 +13,7 @@ import (
 	"magalu.cloud/core/schema"
 )
 
-type pkgSymbol struct{}
-
-var pkgLogger *zap.SugaredLogger
-
-func logger() *zap.SugaredLogger {
-	if pkgLogger == nil {
-		pkgLogger = mgcLoggerPkg.New[pkgSymbol]()
-	}
-	return pkgLogger
-}
+var logger = mgcLoggerPkg.NewLazy[Config]()
 
 func logfilterSchema() *core.Schema {
 	s := schema.NewStringSchema()
