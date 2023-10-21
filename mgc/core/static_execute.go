@@ -11,19 +11,74 @@ import (
 	"magalu.cloud/core/utils"
 )
 
-type StaticExecute struct {
-	SimpleDescriptor
-	parameters *Schema
-	config     *Schema
-	result     *Schema
-	links      map[string]Linker
-	related    map[string]Executor
-	execute    func(ctx context.Context, parameters Parameters, configs Configs) (value Value, err error)
+// Given a base spec and types to be reflected, populate with the schemas
+func ReflectExecutorSpecSchemas[ParamsT any, ConfigsT any, ResultT any](baseSpec ExecutorSpec) (spec ExecutorSpec, err error) {
+	spec = baseSpec
+
+	spec.ParametersSchema, err = schemaFromType[ParamsT]()
+	if err != nil {
+		err = &ChainedError{"ParamsT", err}
+		return
+	}
+	spec.ConfigsSchema, err = schemaFromType[ConfigsT]()
+	if err != nil {
+		err = &ChainedError{"ConfigsT", err}
+		return
+	}
+	spec.ResultSchema, err = schemaFromType[ResultT]()
+	if err != nil {
+		err = &ChainedError{"ResultT", err}
+		return
+	}
+
+	return spec, nil
 }
 
-// Raw Parameter and Config JSON Schemas
-func NewRawStaticExecute(spec DescriptorSpec, parameters *Schema, config *Schema, result *Schema, links map[string]Linker, related map[string]Executor, execute func(context context.Context, parameters Parameters, configs Configs) (value Value, err error)) *StaticExecute {
-	return &StaticExecute{SimpleDescriptor{spec}, parameters, config, result, links, related, execute}
+func ReflectExecutorSpecFn[ParamsT any, ConfigsT any, ResultT any](
+	typedExecute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
+) ExecutorSpecFn {
+	return func(executor Executor, ctx context.Context, parameters Parameters, configs Configs) (Result, error) {
+		typedParams, err := utils.DecodeNewValue[ParamsT](parameters)
+		if err != nil {
+			return nil, &ChainedError{"parameters", fmt.Errorf("decoding error. Did you forget to set 'json' struct flags for struct %T?: %w", typedParams, err)}
+		}
+
+		typedConfigs, err := utils.DecodeNewValue[ConfigsT](configs)
+		if err != nil {
+			return nil, &ChainedError{"configs", fmt.Errorf("decoding error. Did you forget to set 'json' struct flags for struct %T?: %w", typedConfigs, err)}
+		}
+
+		typedResult, err := typedExecute(ctx, *typedParams, *typedConfigs)
+		if err != nil {
+			return nil, err
+		}
+
+		value, err := utils.SimplifyAny(typedResult)
+		if err != nil {
+			return nil, &ChainedError{"result", fmt.Errorf("error simplifying %T: %w", typedResult, err)}
+		}
+
+		source := ResultSource{
+			Executor:   executor,
+			Context:    ctx,
+			Parameters: parameters,
+			Configs:    configs,
+		}
+		return NewSimpleResult(source, executor.ResultSchema(), value), nil
+	}
+}
+
+func ReflectExecutorSpec[ParamsT any, ConfigsT any, ResultT any](
+	baseSpec ExecutorSpec,
+	typedExecute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
+) (spec ExecutorSpec, err error) {
+	spec, err = ReflectExecutorSpecSchemas[ParamsT, ConfigsT, ResultT](baseSpec)
+	if err != nil {
+		return
+	}
+
+	spec.Execute = ReflectExecutorSpecFn[ParamsT, ConfigsT, ResultT](typedExecute)
+	return
 }
 
 func newAnySchema() *Schema {
@@ -74,51 +129,26 @@ func schemaFromType[T any]() (*Schema, error) {
 // See:
 // - https://pkg.go.dev/github.com/invopop/jsonschema
 // - https://pkg.go.dev/github.com/mitchellh/mapstructure
-func NewStaticExecuteWithLinksAndRelated[ParamsT any, ConfigsT any, ResultT any](
-	spec DescriptorSpec,
-	links map[string]Linker,
-	related map[string]Executor,
+func NewReflectedSimpleExecutor[ParamsT any, ConfigsT any, ResultT any](
+	baseSpec ExecutorSpec,
 	execute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
-) *StaticExecute {
-	ps, err := schemaFromType[ParamsT]()
+) *SimpleExecutor {
+	execSpec, err := ReflectExecutorSpec[ParamsT, ConfigsT, ResultT](baseSpec, execute)
 	if err != nil {
-		logger().Fatal(err)
+		logger().Fatalw("cannot reflect static executor", "err", err)
 	}
-	cs, err := schemaFromType[ConfigsT]()
+	return NewSimpleExecutor(execSpec)
+}
+
+// Version that generates the schema, but uses baseSpec.Execute as is
+func NewReflectedSimpleExecutorSchemas[ParamsT any, ConfigsT any, ResultT any](
+	baseSpec ExecutorSpec,
+) *SimpleExecutor {
+	execSpec, err := ReflectExecutorSpecSchemas[ParamsT, ConfigsT, ResultT](baseSpec)
 	if err != nil {
-		logger().Fatal(err)
+		logger().Fatalw("cannot reflect static executor", "err", err)
 	}
-	rs, err := schemaFromType[ResultT]()
-	if err != nil {
-		logger().Fatal(err)
-	}
-
-	return NewRawStaticExecute(
-		spec,
-		ps,
-		cs,
-		rs,
-		links,
-		related,
-		func(ctx context.Context, parameters Parameters, configs Configs) (Value, error) {
-			paramsStruct, err := utils.DecodeNewValue[ParamsT](parameters)
-			if err != nil {
-				return nil, fmt.Errorf("error when decoding parameters. Did you forget to set 'json' struct flags for struct %T?: %w", paramsStruct, err)
-			}
-
-			configsStruct, err := utils.DecodeNewValue[ConfigsT](configs)
-			if err != nil {
-				return nil, fmt.Errorf("error when decoding configs. Did you forget to set 'json' struct flags for struct %T?: %w", paramsStruct, err)
-			}
-
-			value, err := execute(ctx, *paramsStruct, *configsStruct)
-			if err != nil {
-				return nil, err
-			}
-
-			return utils.SimplifyAny(value)
-		},
-	)
+	return NewSimpleExecutor(execSpec)
 }
 
 // Go Parameter and Config structs
@@ -131,71 +161,22 @@ func NewStaticExecuteWithLinksAndRelated[ParamsT any, ConfigsT any, ResultT any]
 func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
 	spec DescriptorSpec,
 	execute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
-) *StaticExecute {
-	return NewStaticExecuteWithLinksAndRelated(spec, nil, nil, execute)
-}
-
-// No parameters or configs
-func NewStaticExecuteSimpleWithLinksAndRelated[ResultT any](
-	spec DescriptorSpec,
-	links map[string]Linker,
-	related map[string]Executor,
-	execute func(ctx context.Context) (result ResultT, err error),
-) *StaticExecute {
-	return NewStaticExecuteWithLinksAndRelated(
-		spec,
-		links,
-		nil,
-		func(ctx context.Context, _, _ struct{}) (ResultT, error) {
-			return execute(ctx)
-		},
-	)
+) *SimpleExecutor {
+	return NewReflectedSimpleExecutor(ExecutorSpec{DescriptorSpec: spec}, execute)
 }
 
 // No parameters or configs
 func NewStaticExecuteSimple[ResultT any](
 	spec DescriptorSpec,
 	execute func(context context.Context) (result ResultT, err error),
-) *StaticExecute {
-	return NewStaticExecuteSimpleWithLinksAndRelated(spec, nil, nil, execute)
+) *SimpleExecutor {
+	return NewReflectedSimpleExecutor(
+		ExecutorSpec{DescriptorSpec: spec},
+		func(context context.Context, _ struct{}, _ struct{}) (result ResultT, err error) {
+			return execute(context)
+		},
+	)
 }
-
-func (o *StaticExecute) ParametersSchema() *Schema {
-	return o.parameters
-}
-
-func (o *StaticExecute) ConfigsSchema() *Schema {
-	return o.config
-}
-
-func (o *StaticExecute) ResultSchema() *Schema {
-	return o.result
-}
-
-func (o *StaticExecute) Execute(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
-	value, err := o.execute(context, parameters, configs)
-	if err != nil {
-		return nil, err
-	}
-	source := ResultSource{
-		Executor:   o,
-		Context:    context,
-		Parameters: parameters,
-		Configs:    configs,
-	}
-	return NewSimpleResult(source, o.result, value), nil
-}
-
-func (o *StaticExecute) Links() map[string]Linker {
-	return o.links
-}
-
-func (o *StaticExecute) Related() map[string]Executor {
-	return o.related
-}
-
-// implemented by embedded SimpleDescriptor
-var _ Executor = (*StaticExecute)(nil)
 
 var schemaReflector *jsonschema.Reflector
 

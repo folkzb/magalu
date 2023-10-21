@@ -12,7 +12,7 @@ type configGetParams struct {
 	Key string `json:"key" validate:"required" jsonschema_description:"Name of the desired config"`
 }
 
-func newGet() *core.StaticExecute {
+func newGet() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "get",

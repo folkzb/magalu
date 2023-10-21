@@ -36,123 +36,127 @@ type testCase struct {
 	expectedFinal  map[tfName]schema.Attribute
 }
 
-var create = core.NewRawStaticExecute(
-	core.DescriptorSpec{
-		Name:    "mock create",
-		Version: "v1",
-	},
-	mgcSchemaPkg.NewObjectSchema(
-		map[string]*mgcSchemaPkg.Schema{
-			"image": mgcSchemaPkg.NewStringSchema(),
-			"name":  mgcSchemaPkg.NewStringSchema(),
-			"count": {
-				Type:        "number",
-				Description: "count description",
+var create = core.NewSimpleExecutor(
+	core.ExecutorSpec{
+		DescriptorSpec: core.DescriptorSpec{
+			Name:        "mock create",
+			Version:     "v1",
+			Description: "mock create",
+		},
+		ParametersSchema: mgcSchemaPkg.NewObjectSchema(
+			map[string]*mgcSchemaPkg.Schema{
+				"image": mgcSchemaPkg.NewStringSchema(),
+				"name":  mgcSchemaPkg.NewStringSchema(),
+				"count": {
+					Type:        "number",
+					Description: "count description",
+				},
 			},
+			[]string{"name", "image"},
+		),
+		ConfigsSchema: mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{}, []string{}),
+		ResultSchema: mgcSchemaPkg.NewObjectSchema(
+			map[string]*mgcSchemaPkg.Schema{"id": mgcSchemaPkg.NewStringSchema()},
+			[]string{"id"},
+		),
+		Execute: func(e core.Executor, context context.Context, parameters core.Parameters, configs core.Configs) (result core.Result, err error) {
+			return nil, nil
 		},
-		[]string{"name", "image"},
-	),
-	nil,
-	mgcSchemaPkg.NewObjectSchema(
-		map[string]*mgcSchemaPkg.Schema{"id": mgcSchemaPkg.NewStringSchema()},
-		[]string{"id"},
-	),
-	nil,
-	nil,
-	func(context context.Context, parameters core.Parameters, configs core.Configs) (result any, err error) {
-		return nil, nil
 	},
 )
 
-var read = core.NewRawStaticExecute(
-	core.DescriptorSpec{
-		Name:    "mock read",
-		Version: "v1",
-	},
-	mgcSchemaPkg.NewObjectSchema(
-		map[string]*mgcSchemaPkg.Schema{
-			"id": mgcSchemaPkg.NewStringSchema(),
+var read = core.NewSimpleExecutor(
+	core.ExecutorSpec{
+		DescriptorSpec: core.DescriptorSpec{
+			Name:        "mock read",
+			Version:     "v1",
+			Description: "mock read",
 		},
-		[]string{"id"},
-	),
-	nil,
-	mgcSchemaPkg.NewObjectSchema(
-		map[string]*mgcSchemaPkg.Schema{
-			"id":        mgcSchemaPkg.NewStringSchema(),
-			"image":     mgcSchemaPkg.NewStringSchema(),
-			"name":      mgcSchemaPkg.NewStringSchema(),
-			"count":     mgcSchemaPkg.NewIntegerSchema(),
-			"createdAt": mgcSchemaPkg.NewIntegerSchema(),
-			"extra_field": mgcSchemaPkg.NewArraySchema(
-				mgcSchemaPkg.NewObjectSchema(
-					map[string]*mgcSchemaPkg.Schema{
-						"value": mgcSchemaPkg.NewBooleanSchema(),
-					},
-					[]string{},
+		ParametersSchema: mgcSchemaPkg.NewObjectSchema(
+			map[string]*mgcSchemaPkg.Schema{
+				"id": mgcSchemaPkg.NewStringSchema(),
+			},
+			[]string{"id"},
+		),
+		ConfigsSchema: mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{}, []string{}),
+		ResultSchema: mgcSchemaPkg.NewObjectSchema(
+			map[string]*mgcSchemaPkg.Schema{
+				"id":        mgcSchemaPkg.NewStringSchema(),
+				"image":     mgcSchemaPkg.NewStringSchema(),
+				"name":      mgcSchemaPkg.NewStringSchema(),
+				"count":     mgcSchemaPkg.NewIntegerSchema(),
+				"createdAt": mgcSchemaPkg.NewIntegerSchema(),
+				"extra_field": mgcSchemaPkg.NewArraySchema(
+					mgcSchemaPkg.NewObjectSchema(
+						map[string]*mgcSchemaPkg.Schema{
+							"value": mgcSchemaPkg.NewBooleanSchema(),
+						},
+						[]string{},
+					),
 				),
-			),
+			},
+			[]string{"id", "image", "name", "count", "createdAt", "extra_field"},
+		),
+		Execute: func(e core.Executor, context context.Context, parameters core.Parameters, configs core.Configs) (result core.Result, err error) {
+			return nil, nil
 		},
-		[]string{"id", "image", "name", "count", "createdAt", "extra_field"},
-	),
-	nil,
-	nil,
-	func(context context.Context, parameters core.Parameters, configs core.Configs) (result any, err error) {
-		return nil, nil
 	},
 )
 
-var update = core.NewRawStaticExecute(
-	core.DescriptorSpec{
-		Name:    "mock update",
-		Version: "v1",
-	},
-	mgcSchemaPkg.NewObjectSchema(
-		map[string]*mgcSchemaPkg.Schema{
-			"id":    mgcSchemaPkg.NewStringSchema(),
-			"name":  mgcSchemaPkg.NewStringSchema(),
-			"count": mgcSchemaPkg.NewNumberSchema(),
-			"extra_field": mgcSchemaPkg.NewArraySchema(
-				mgcSchemaPkg.NewObjectSchema(
-					map[string]*mgcSchemaPkg.Schema{
-						"value": mgcSchemaPkg.NewBooleanSchema(),
-					},
-					[]string{},
+var update = core.NewSimpleExecutor(
+	core.ExecutorSpec{
+		DescriptorSpec: core.DescriptorSpec{
+			Name:        "mock update",
+			Version:     "v1",
+			Description: "mock update",
+		},
+		ParametersSchema: mgcSchemaPkg.NewObjectSchema(
+			map[string]*mgcSchemaPkg.Schema{
+				"id":    mgcSchemaPkg.NewStringSchema(),
+				"name":  mgcSchemaPkg.NewStringSchema(),
+				"count": mgcSchemaPkg.NewNumberSchema(),
+				"extra_field": mgcSchemaPkg.NewArraySchema(
+					mgcSchemaPkg.NewObjectSchema(
+						map[string]*mgcSchemaPkg.Schema{
+							"value": mgcSchemaPkg.NewBooleanSchema(),
+						},
+						[]string{},
+					),
 				),
-			),
+			},
+			[]string{"id"},
+		),
+		ConfigsSchema: mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{}, []string{}),
+		ResultSchema: mgcSchemaPkg.NewObjectSchema(
+			map[string]*mgcSchemaPkg.Schema{
+				"id": mgcSchemaPkg.NewStringSchema(),
+			},
+			[]string{},
+		),
+		Execute: func(e core.Executor, context context.Context, parameters core.Parameters, configs core.Configs) (result core.Result, err error) {
+			return nil, nil
 		},
-		[]string{"id"},
-	),
-	nil,
-	mgcSchemaPkg.NewObjectSchema(
-		map[string]*mgcSchemaPkg.Schema{
-			"id": mgcSchemaPkg.NewStringSchema(),
-		},
-		[]string{},
-	),
-	nil,
-	nil,
-	func(context context.Context, parameters core.Parameters, configs core.Configs) (result any, err error) {
-		return nil, nil
 	},
 )
 
-var delete = core.NewRawStaticExecute(
-	core.DescriptorSpec{
-		Name:    "mock delete",
-		Version: "v1",
-	},
-	mgcSchemaPkg.NewObjectSchema(
-		map[string]*mgcSchemaPkg.Schema{
-			"id": mgcSchemaPkg.NewStringSchema(),
+var delete = core.NewSimpleExecutor(
+	core.ExecutorSpec{
+		DescriptorSpec: core.DescriptorSpec{
+			Name:        "mock delete",
+			Version:     "v1",
+			Description: "mock delete",
 		},
-		[]string{"id"},
-	),
-	nil,
-	mgcSchemaPkg.NewNullSchema(),
-	nil,
-	nil,
-	func(context context.Context, parameters core.Parameters, configs core.Configs) (result any, err error) {
-		return nil, nil
+		ParametersSchema: mgcSchemaPkg.NewObjectSchema(
+			map[string]*mgcSchemaPkg.Schema{
+				"id": mgcSchemaPkg.NewStringSchema(),
+			},
+			[]string{"id"},
+		),
+		ConfigsSchema: mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{}, []string{}),
+		ResultSchema:  mgcSchemaPkg.NewNullSchema(),
+		Execute: func(e core.Executor, context context.Context, parameters core.Parameters, configs core.Configs) (result core.Result, err error) {
+			return nil, nil
+		},
 	},
 )
 

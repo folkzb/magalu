@@ -50,7 +50,7 @@ func loginLogger() *zap.SugaredLogger {
 	return loginLoggerInstance
 }
 
-func newLogin() *core.StaticExecute {
+func newLogin() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "login",
