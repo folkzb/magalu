@@ -16,8 +16,8 @@ import (
 	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/utils"
 
+	"github.com/invopop/yaml"
 	"golang.org/x/sync/singleflight"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -42,12 +42,12 @@ type validationResult struct {
 }
 
 type ConfigResult struct {
-	AccessToken     string `yaml:"access_token"`
-	RefreshToken    string `yaml:"refresh_token"`
-	CurrentTenantID string `yaml:"current_tenant_id"`
-	AccessKeyId     string `yaml:"access_key_id"`
-	SecretAccessKey string `yaml:"secret_access_key"`
-	CurrentEnv      string `yaml:"current_environment"` // ignored - used just for compatibility
+	AccessToken     string `json:"access_token"`
+	RefreshToken    string `json:"refresh_token"`
+	CurrentTenantID string `json:"current_tenant_id"`
+	AccessKeyId     string `json:"access_key_id"`
+	SecretAccessKey string `json:"secret_access_key"`
+	CurrentEnv      string `json:"current_environment"` // ignored - used just for compatibility
 }
 
 type Config struct {

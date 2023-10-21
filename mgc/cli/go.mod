@@ -11,6 +11,7 @@ require (
 
 require (
 	github.com/erikgeiser/promptkit v0.9.0
+	github.com/invopop/yaml v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/stoewer/go-strcase v1.3.0
 	go.uber.org/zap v1.25.0
@@ -37,7 +38,6 @@ require (
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/jsonschema v0.7.0 // indirect
-	github.com/invopop/yaml v0.2.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect

@@ -10,9 +10,9 @@ import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 
+	"github.com/invopop/yaml"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v3"
 )
 
 // contextKey is an unexported type for keys defined in this package.

@@ -3,7 +3,7 @@ package openapi
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v3"
+	"github.com/invopop/yaml"
 	"magalu.cloud/core"
 	"magalu.cloud/core/dataloader"
 )

@@ -9,7 +9,6 @@ import (
 	"text/scanner"
 
 	"golang.org/x/exp/slices"
-	"gopkg.in/yaml.v3"
 	"magalu.cloud/core/utils"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -20,8 +19,16 @@ type tableOutputFormatter struct{}
 
 type alignString text.Align
 
-func (a *alignString) UnmarshalYAML(node *yaml.Node) error {
-	switch strings.ToLower(node.Value) {
+var _ json.Unmarshaler = (*alignString)(nil)
+
+func (a *alignString) UnmarshalJSON(data []byte) (err error) {
+	var s string
+	err = json.Unmarshal(data, &s)
+	if err != nil {
+		return
+	}
+
+	switch strings.ToLower(s) {
 	case "default", "aligndefault":
 		*a = alignString(text.AlignDefault)
 	case "left", "alignleft":
@@ -41,8 +48,16 @@ func (a *alignString) UnmarshalYAML(node *yaml.Node) error {
 
 type valignString text.VAlign
 
-func (a *valignString) UnmarshalYAML(node *yaml.Node) error {
-	switch strings.ToLower(node.Value) {
+var _ json.Unmarshaler = (*valignString)(nil)
+
+func (a *valignString) UnmarshalJSON(data []byte) (err error) {
+	var s string
+	err = json.Unmarshal(data, &s)
+	if err != nil {
+		return
+	}
+
+	switch strings.ToLower(s) {
 	case "default", "aligndefault":
 		*a = valignString(text.VAlignDefault)
 	case "top", "aligntop":
@@ -60,8 +75,16 @@ func (a *valignString) UnmarshalYAML(node *yaml.Node) error {
 
 type colorString text.Color
 
-func (c *colorString) UnmarshalYAML(node *yaml.Node) error {
-	switch strings.ToLower(node.Value) {
+var _ json.Unmarshaler = (*colorString)(nil)
+
+func (c *colorString) UnmarshalJSON(data []byte) (err error) {
+	var s string
+	err = json.Unmarshal(data, &s)
+	if err != nil {
+		return
+	}
+
+	switch strings.ToLower(s) {
 	case "reset":
 		*c = colorString(text.Reset)
 	// Styling
@@ -153,7 +176,7 @@ func (c *colorString) UnmarshalYAML(node *yaml.Node) error {
 	case "bghiwhite":
 		*c = colorString(text.BgHiWhite)
 	default:
-		return fmt.Errorf("unknown column color value: %s", node.Value)
+		return fmt.Errorf("unknown column color value: %s", s)
 	}
 
 	return nil
@@ -222,8 +245,16 @@ const (
 
 type tableStyleString table.Style
 
-func (t *tableStyleString) UnmarshalYAML(node *yaml.Node) error {
-	switch strings.ToLower(node.Value) {
+var _ json.Unmarshaler = (*tableStyleString)(nil)
+
+func (t *tableStyleString) UnmarshalJSON(data []byte) (err error) {
+	var s string
+	err = json.Unmarshal(data, &s)
+	if err != nil {
+		return
+	}
+
+	switch strings.ToLower(s) {
 	case "bold", "stylebold":
 		*t = tableStyleString(table.StyleBold)
 	case "coloredblackonbluewhite", "stylecoloredblackonbluewhite":
