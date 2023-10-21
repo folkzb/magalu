@@ -14,9 +14,10 @@ type tenantCurrentResult struct {
 
 func newCurrent() core.Executor {
 	return core.NewStaticExecuteSimple(
-		"current",
-		"",
-		"Get the currently active Tenant",
+		core.DescriptorSpec{
+			Name:        "current",
+			Description: "Get the currently active Tenant",
+		},
 		func(ctx context.Context) (*tenantCurrentResult, error) {
 			auth := mgcAuthPkg.FromContext(ctx)
 			if auth == nil {

@@ -9,11 +9,9 @@ import (
 )
 
 type indexModuleSpec struct {
-	Name        string
-	Url         string
-	Path        string
-	Version     string
-	Description string
+	core.DescriptorSpec
+	Url  string
+	Path string
 }
 
 type indexFileSpec struct {
@@ -29,31 +27,16 @@ const indexVersion = "1.0.0"
 // -- ROOT: Source
 
 type source struct {
-	Loader dataloader.Loader
+	core.SimpleDescriptor
 	*core.GrouperLazyChildren[*module]
 }
 
-// BEGIN: Descriptor interface:
-
-func (o *source) Name() string {
-	return "OpenApis"
-}
-
-func (o *source) Version() string {
-	return ""
-}
-
-func (o *source) Description() string {
-	return fmt.Sprintf("OpenApis loaded using %v", o.Loader)
-}
-
-// END: Descriptor interface
-
-// BEGIN: Grouper interface:
-
 func NewSource(loader dataloader.Loader, extensionPrefix *string) *source {
 	return &source{
-		Loader: loader,
+		SimpleDescriptor: core.SimpleDescriptor{Spec: core.DescriptorSpec{
+			Name:        "OpenApis",
+			Description: fmt.Sprintf("OpenApis loaded using %v", loader),
+		}},
 		GrouperLazyChildren: core.NewGrouperLazyChildren[*module](
 			func() (modules []*module, err error) {
 				data, err := loader.Load(indexFileName)
@@ -81,7 +64,7 @@ func NewSource(loader dataloader.Loader, extensionPrefix *string) *source {
 						logger(),
 					)
 					modules[i] = module
-					moduleResolver.add(module)
+					moduleResolver.add(item.Url, module)
 				}
 
 				return modules, nil
@@ -89,7 +72,5 @@ func NewSource(loader dataloader.Loader, extensionPrefix *string) *source {
 	}
 }
 
-// implemented by embedded GrouperLazyChildren
+// implemented by embedded GrouperLazyChildren & SimpleDescriptor
 var _ core.Grouper = (*source)(nil)
-
-// END: Grouper interface

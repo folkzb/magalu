@@ -16,9 +16,10 @@ type GetAttachVolumeParams struct {
 
 func newGet() core.Executor {
 	return core.NewStaticExecute(
-		"get",
-		"",
-		"Check if a volume is attached to a virtual machine instance",
+		core.DescriptorSpec{
+			Name:        "get",
+			Description: "Check if a volume is attached to a virtual machine instance",
+		},
 		get,
 	)
 }

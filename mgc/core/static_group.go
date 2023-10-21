@@ -3,33 +3,13 @@ package core
 import "fmt"
 
 type StaticGroup struct {
-	name        string
-	version     string
-	description string
-	children    []Descriptor
+	SimpleDescriptor
+	children []Descriptor
 }
 
-func NewStaticGroup(name string, version string, description string, children []Descriptor) *StaticGroup {
-	return &StaticGroup{name, version, description, children}
+func NewStaticGroup(spec DescriptorSpec, children []Descriptor) *StaticGroup {
+	return &StaticGroup{SimpleDescriptor{spec}, children}
 }
-
-// BEGIN: Descriptor interface:
-
-func (o *StaticGroup) Name() string {
-	return o.name
-}
-
-func (o *StaticGroup) Version() string {
-	return o.version
-}
-
-func (o *StaticGroup) Description() string {
-	return o.description
-}
-
-// END: Descriptor interface
-
-// BEGIN: Grouper interface:
 
 func (o *StaticGroup) VisitChildren(visitor DescriptorVisitor) (finished bool, err error) {
 	for _, c := range o.children {
@@ -60,12 +40,11 @@ func (o *StaticGroup) GetChildByName(name string) (child Descriptor, err error) 
 	}
 
 	if finished {
-		return nil, fmt.Errorf("Child not found: %s", name)
+		return nil, fmt.Errorf("child not found: %s", name)
 	}
 
 	return found, err
 }
 
+// implemented by embedded SimpleDescriptor
 var _ Grouper = (*StaticGroup)(nil)
-
-// END: Grouper interface

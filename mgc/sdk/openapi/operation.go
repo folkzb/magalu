@@ -43,7 +43,7 @@ type parameterWithName struct {
 }
 
 type operation struct {
-	name                string
+	core.SimpleDescriptor
 	key                 string
 	method              string
 	path                *openapi3.PathItem
@@ -77,7 +77,10 @@ func newOperation(
 ) *operation {
 	logger = logger.Named(name)
 	return &operation{
-		name:            name,
+		SimpleDescriptor: core.SimpleDescriptor{Spec: core.DescriptorSpec{
+			Name:        name,
+			Description: getDescriptionExtension(extensionPrefix, desc.op.Extensions, desc.op.Description),
+		}},
 		key:             desc.key,
 		method:          method,
 		path:            desc.path,
@@ -89,24 +92,6 @@ func newOperation(
 		module:          module,
 	}
 }
-
-// BEGIN: Descriptor interface:
-
-func (o *operation) Name() string {
-	return o.name
-}
-
-func (o *operation) Version() string {
-	return ""
-}
-
-func (o *operation) Description() string {
-	return getDescriptionExtension(o.extensionPrefix, o.operation.Extensions, o.operation.Description)
-}
-
-// END: Descriptor interface
-
-// BEGIN: Executor interface:
 
 func (o *operation) collectParameters(byNameAndLocation map[string]map[string]*parameterWithName, parameters openapi3.Parameters) {
 	for _, ref := range parameters {
@@ -1312,6 +1297,5 @@ func (o *operation) Execute(
 	return
 }
 
+// implemented by embedded SimpleDescriptor
 var _ core.Executor = (*operation)(nil)
-
-// END: Executor interface

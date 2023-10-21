@@ -8,9 +8,10 @@ import (
 
 func NewGroup() core.Grouper {
 	return core.NewStaticGroup(
-		"object-storage",
-		"",
-		"Operations for Object Storage API",
+		core.DescriptorSpec{
+			Name:    "object-storage",
+			Version: "Operations for Object Storage API",
+		},
 		[]core.Descriptor{
 			buckets.NewGroup(), // object-storage buckets
 			objects.NewGroup(), // object-storage objects

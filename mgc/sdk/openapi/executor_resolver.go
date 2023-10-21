@@ -10,8 +10,8 @@ import (
 
 type moduleResolver map[string]*module
 
-func (r moduleResolver) add(m *module) {
-	r[m.indexModule.Url] = m
+func (r moduleResolver) add(url string, m *module) {
+	r[url] = m
 	m.execResolver.moduleResolver = r
 }
 

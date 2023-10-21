@@ -34,9 +34,10 @@ func configListFormatter(exec core.Executor, result core.Result) string {
 
 func newList() core.Executor {
 	executor := core.NewStaticExecuteSimple(
-		"list",
-		"",
-		"list all possible configs",
+		core.DescriptorSpec{
+			Name:        "list",
+			Description: "list all possible configs",
+		},
 		getAllConfigs,
 	)
 	return core.NewExecuteFormat(executor, configListFormatter)

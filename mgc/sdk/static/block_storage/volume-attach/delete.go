@@ -16,9 +16,10 @@ type DeleteAttachVolumeParams struct {
 
 func newDelete() core.Executor {
 	exec := core.NewStaticExecute(
-		"delete",
-		"",
-		"Detach a volume from a virtual machine instance",
+		core.DescriptorSpec{
+			Name:        "delete",
+			Description: "Detach a volume from a virtual machine instance",
+		},
 		delete,
 	)
 

@@ -30,9 +30,10 @@ func newListRequest(ctx context.Context, cfg s3.Config) (*http.Request, error) {
 
 func newList() core.Executor {
 	return core.NewStaticExecute(
-		"list",
-		"",
-		"List all buckets",
+		core.DescriptorSpec{
+			Name:        "list",
+			Description: "List all buckets",
+		},
 		list,
 	)
 }

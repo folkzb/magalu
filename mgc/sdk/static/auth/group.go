@@ -7,9 +7,10 @@ import (
 
 func NewGroup() *core.StaticGroup {
 	return core.NewStaticGroup(
-		"auth",
-		"",
-		"Actions with ID Magalu to login, refresh tokens, change tenants and others",
+		core.DescriptorSpec{
+			Name:        "auth",
+			Description: "Actions with ID Magalu to login, refresh tokens, change tenants and others",
+		},
 		[]core.Descriptor{
 			newSet(),
 			newLogin(),

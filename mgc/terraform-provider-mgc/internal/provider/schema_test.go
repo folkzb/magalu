@@ -37,9 +37,10 @@ type testCase struct {
 }
 
 var create = core.NewRawStaticExecute(
-	"mock create",
-	"v1",
-	"",
+	core.DescriptorSpec{
+		Name:    "mock create",
+		Version: "v1",
+	},
 	mgcSchemaPkg.NewObjectSchema(
 		map[string]*mgcSchemaPkg.Schema{
 			"image": mgcSchemaPkg.NewStringSchema(),
@@ -64,9 +65,10 @@ var create = core.NewRawStaticExecute(
 )
 
 var read = core.NewRawStaticExecute(
-	"mock read",
-	"v1",
-	"",
+	core.DescriptorSpec{
+		Name:    "mock read",
+		Version: "v1",
+	},
 	mgcSchemaPkg.NewObjectSchema(
 		map[string]*mgcSchemaPkg.Schema{
 			"id": mgcSchemaPkg.NewStringSchema(),
@@ -100,9 +102,10 @@ var read = core.NewRawStaticExecute(
 )
 
 var update = core.NewRawStaticExecute(
-	"mock update",
-	"v1",
-	"",
+	core.DescriptorSpec{
+		Name:    "mock update",
+		Version: "v1",
+	},
 	mgcSchemaPkg.NewObjectSchema(
 		map[string]*mgcSchemaPkg.Schema{
 			"id":    mgcSchemaPkg.NewStringSchema(),
@@ -134,9 +137,10 @@ var update = core.NewRawStaticExecute(
 )
 
 var delete = core.NewRawStaticExecute(
-	"mock delete",
-	"v1",
-	"",
+	core.DescriptorSpec{
+		Name:    "mock delete",
+		Version: "v1",
+	},
 	mgcSchemaPkg.NewObjectSchema(
 		map[string]*mgcSchemaPkg.Schema{
 			"id": mgcSchemaPkg.NewStringSchema(),

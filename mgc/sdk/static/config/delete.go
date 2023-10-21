@@ -14,9 +14,10 @@ type configDeleteParams struct {
 
 func newDelete() *core.StaticExecute {
 	return core.NewStaticExecute(
-		"delete",
-		"",
-		"Deletes a key from config file",
+		core.DescriptorSpec{
+			Name:        "delete",
+			Description: "Deletes a key from config file",
+		},
 		func(ctx context.Context, parameter configDeleteParams, _ struct{}) (result core.Value, err error) {
 			config := mgcConfigPkg.FromContext(ctx)
 			if config == nil {

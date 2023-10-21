@@ -16,9 +16,10 @@ type CreateAttachVolumeParams struct {
 
 func newCreate() core.Executor {
 	return core.NewStaticExecute(
-		"create",
-		"",
-		"Attach a volume to a virtual machine instance",
+		core.DescriptorSpec{
+			Name:        "create",
+			Description: "Attach a volume to a virtual machine instance",
+		},
 		create,
 	)
 }

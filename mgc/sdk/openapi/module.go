@@ -15,29 +15,11 @@ import (
 // Module
 
 type module struct {
-	indexModule  indexModuleSpec
+	core.SimpleDescriptor
 	execResolver executorResolver
 	loaded       bool
 	*core.GrouperLazyChildren[*resource]
 }
-
-// BEGIN: Descriptor interface:
-
-func (m *module) Name() string {
-	return m.indexModule.Name
-}
-
-func (m *module) Version() string {
-	return m.indexModule.Version
-}
-
-func (m *module) Description() string {
-	return m.indexModule.Description
-}
-
-// END: Descriptor interface
-
-// BEGIN: Grouper interface:
 
 func newModule(
 	indexModule indexModuleSpec,
@@ -47,7 +29,7 @@ func newModule(
 ) (m *module) {
 	logger = logger.Named(indexModule.Name)
 	m = &module{
-		indexModule: indexModule,
+		SimpleDescriptor: core.SimpleDescriptor{Spec: indexModule.DescriptorSpec},
 		GrouperLazyChildren: core.NewGrouperLazyChildren[*resource](func() (resources []*resource, err error) {
 			ctx := context.Background()
 			mData, err := loader.Load(indexModule.Path)
@@ -101,7 +83,5 @@ func (m *module) loadRecursive() {
 	m.loaded = true
 }
 
-// implemented by embedded GrouperLazyChildren
+// implemented by embedded GrouperLazyChildren & SimpleDescriptor
 var _ core.Grouper = (*module)(nil)
-
-// END: Grouper interface

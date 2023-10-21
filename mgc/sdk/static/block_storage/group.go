@@ -7,9 +7,10 @@ import (
 
 func NewGroup() core.Grouper {
 	return core.NewStaticGroup(
-		"block-storage",
-		"",
-		"Operations for Block Storage API",
+		core.DescriptorSpec{
+			Name:        "block-storage",
+			Description: "Operations for Block Storage API",
+		},
 		[]core.Descriptor{
 			attachment.NewGroup(),
 		},

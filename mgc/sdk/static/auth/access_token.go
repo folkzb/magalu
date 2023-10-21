@@ -18,9 +18,10 @@ type accessTokenResult struct {
 
 func newAccessToken() *core.StaticExecute {
 	return core.NewStaticExecute(
-		"access_token",
-		"",
-		"Retrieve the access token to use the APIs",
+		core.DescriptorSpec{
+			Name:        "access_token",
+			Description: "Retrieve the access token to use the APIs",
+		},
 		func(ctx context.Context, parameters accessTokenParameters, _ struct{}) (output *accessTokenResult, err error) {
 			auth := mgcAuthPkg.FromContext(ctx)
 			if auth == nil {

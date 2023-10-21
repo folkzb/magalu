@@ -3,15 +3,13 @@ package core
 import "errors"
 
 type MergeGroup struct {
-	name        string
-	version     string
-	description string
-	toMerge     []Grouper
+	SimpleDescriptor
+	toMerge []Grouper
 	*GrouperLazyChildren[Descriptor]
 }
 
-func NewMergeGroup(name string, version string, description string, toMerge []Grouper) (o *MergeGroup) {
-	o = &MergeGroup{name, version, description, toMerge, NewGrouperLazyChildren[Descriptor](func() (merged []Descriptor, err error) {
+func NewMergeGroup(desc DescriptorSpec, toMerge []Grouper) (o *MergeGroup) {
+	o = &MergeGroup{SimpleDescriptor{desc}, toMerge, NewGrouperLazyChildren[Descriptor](func() (merged []Descriptor, err error) {
 		merged, err = createChildren(o.toMerge)
 		o.toMerge = nil
 		return merged, err
@@ -26,24 +24,6 @@ func (o *MergeGroup) Add(child Grouper) error {
 	o.toMerge = append(o.toMerge, child)
 	return nil
 }
-
-// BEGIN: Descriptor interface:
-
-func (o *MergeGroup) Name() string {
-	return o.name
-}
-
-func (o *MergeGroup) Version() string {
-	return o.version
-}
-
-func (o *MergeGroup) Description() string {
-	return o.description
-}
-
-// END: Descriptor interface
-
-// BEGIN: Grouper interface:
 
 func mergeAfter(toMerge []Grouper, target Grouper, start int) (result []Grouper) {
 	result = make([]Grouper, 1, len(toMerge)-start+1)
@@ -77,12 +57,7 @@ func createChildren(toMerge []Grouper) (children []Descriptor, err error) {
 			if group, ok := child.(Grouper); ok {
 				merged := mergeAfter(toMerge, group, i+1)
 				if len(merged) > 1 {
-					child = NewMergeGroup(
-						name,
-						group.Version(),
-						group.Description(),
-						merged,
-					)
+					child = NewMergeGroup(group.DescriptorSpec(), merged)
 				}
 			}
 
@@ -102,7 +77,5 @@ func createChildren(toMerge []Grouper) (children []Descriptor, err error) {
 	return children, nil
 }
 
-// implemented by embedded GrouperLazyChildren
+// implemented by embedded GrouperLazyChildren & SimpleDescriptor
 var _ Grouper = (*MergeGroup)(nil)
-
-// END: Grouper interface

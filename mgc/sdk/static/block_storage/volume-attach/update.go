@@ -13,9 +13,10 @@ type UpdateAttachVolumeParams struct {
 
 func newUpdate() core.Executor {
 	return core.NewStaticExecute(
-		"update",
-		"",
-		"Update a block storage volume attachment",
+		core.DescriptorSpec{
+			Name:        "update",
+			Description: "Update a block storage volume attachment",
+		},
 		update,
 	)
 }

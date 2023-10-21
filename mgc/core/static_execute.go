@@ -12,20 +12,18 @@ import (
 )
 
 type StaticExecute struct {
-	name        string
-	version     string
-	description string
-	parameters  *Schema
-	config      *Schema
-	result      *Schema
-	links       map[string]Linker
-	related     map[string]Executor
-	execute     func(ctx context.Context, parameters Parameters, configs Configs) (value Value, err error)
+	SimpleDescriptor
+	parameters *Schema
+	config     *Schema
+	result     *Schema
+	links      map[string]Linker
+	related    map[string]Executor
+	execute    func(ctx context.Context, parameters Parameters, configs Configs) (value Value, err error)
 }
 
 // Raw Parameter and Config JSON Schemas
-func NewRawStaticExecute(name string, version string, description string, parameters *Schema, config *Schema, result *Schema, links map[string]Linker, related map[string]Executor, execute func(context context.Context, parameters Parameters, configs Configs) (value Value, err error)) *StaticExecute {
-	return &StaticExecute{name, version, description, parameters, config, result, links, related, execute}
+func NewRawStaticExecute(spec DescriptorSpec, parameters *Schema, config *Schema, result *Schema, links map[string]Linker, related map[string]Executor, execute func(context context.Context, parameters Parameters, configs Configs) (value Value, err error)) *StaticExecute {
+	return &StaticExecute{SimpleDescriptor{spec}, parameters, config, result, links, related, execute}
 }
 
 func newAnySchema() *Schema {
@@ -77,9 +75,7 @@ func schemaFromType[T any]() (*Schema, error) {
 // - https://pkg.go.dev/github.com/invopop/jsonschema
 // - https://pkg.go.dev/github.com/mitchellh/mapstructure
 func NewStaticExecuteWithLinksAndRelated[ParamsT any, ConfigsT any, ResultT any](
-	name string,
-	version string,
-	description string,
+	spec DescriptorSpec,
 	links map[string]Linker,
 	related map[string]Executor,
 	execute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
@@ -98,9 +94,7 @@ func NewStaticExecuteWithLinksAndRelated[ParamsT any, ConfigsT any, ResultT any]
 	}
 
 	return NewRawStaticExecute(
-		name,
-		version,
-		description,
+		spec,
 		ps,
 		cs,
 		rs,
@@ -135,27 +129,21 @@ func NewStaticExecuteWithLinksAndRelated[ParamsT any, ConfigsT any, ResultT any]
 // - https://pkg.go.dev/github.com/invopop/jsonschema
 // - https://pkg.go.dev/github.com/mitchellh/mapstructure
 func NewStaticExecute[ParamsT any, ConfigsT any, ResultT any](
-	name string,
-	version string,
-	description string,
+	spec DescriptorSpec,
 	execute func(context context.Context, params ParamsT, configs ConfigsT) (result ResultT, err error),
 ) *StaticExecute {
-	return NewStaticExecuteWithLinksAndRelated(name, version, description, nil, nil, execute)
+	return NewStaticExecuteWithLinksAndRelated(spec, nil, nil, execute)
 }
 
 // No parameters or configs
 func NewStaticExecuteSimpleWithLinksAndRelated[ResultT any](
-	name string,
-	version string,
-	description string,
+	spec DescriptorSpec,
 	links map[string]Linker,
 	related map[string]Executor,
 	execute func(ctx context.Context) (result ResultT, err error),
 ) *StaticExecute {
 	return NewStaticExecuteWithLinksAndRelated(
-		name,
-		version,
-		description,
+		spec,
 		links,
 		nil,
 		func(ctx context.Context, _, _ struct{}) (ResultT, error) {
@@ -166,31 +154,11 @@ func NewStaticExecuteSimpleWithLinksAndRelated[ResultT any](
 
 // No parameters or configs
 func NewStaticExecuteSimple[ResultT any](
-	name string,
-	version string,
-	description string,
+	spec DescriptorSpec,
 	execute func(context context.Context) (result ResultT, err error),
 ) *StaticExecute {
-	return NewStaticExecuteSimpleWithLinksAndRelated(name, version, description, nil, nil, execute)
+	return NewStaticExecuteSimpleWithLinksAndRelated(spec, nil, nil, execute)
 }
-
-// BEGIN: Descriptor interface:
-
-func (o *StaticExecute) Name() string {
-	return o.name
-}
-
-func (o *StaticExecute) Version() string {
-	return o.version
-}
-
-func (o *StaticExecute) Description() string {
-	return o.description
-}
-
-// END: Descriptor interface
-
-// BEGIN: Executor interface:
 
 func (o *StaticExecute) ParametersSchema() *Schema {
 	return o.parameters
@@ -226,9 +194,8 @@ func (o *StaticExecute) Related() map[string]Executor {
 	return o.related
 }
 
+// implemented by embedded SimpleDescriptor
 var _ Executor = (*StaticExecute)(nil)
-
-// END: Executor interface
 
 var schemaReflector *jsonschema.Reflector
 

@@ -62,9 +62,10 @@ type downloadObjectParams struct {
 
 func newDownload() core.Executor {
 	executor := core.NewStaticExecute(
-		"download",
-		"",
-		"download an object from a bucket",
+		core.DescriptorSpec{
+			Name:        "download",
+			Description: "download an object from a bucket",
+		},
 		download,
 	)
 

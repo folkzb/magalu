@@ -52,9 +52,10 @@ func (o deleteObjectsErrors) HasError() bool {
 
 func newDelete() core.Executor {
 	executor := core.NewStaticExecute(
-		"delete",
-		"",
-		"Delete a bucket",
+		core.DescriptorSpec{
+			Name:        "delete",
+			Description: "Delete a bucket",
+		},
 		delete,
 	)
 

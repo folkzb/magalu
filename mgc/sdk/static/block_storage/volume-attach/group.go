@@ -6,9 +6,10 @@ import (
 
 func NewGroup() core.Grouper {
 	return core.NewStaticGroup(
-		"volume-attach",
-		"",
-		"Block Storage Volume Attachment",
+		core.DescriptorSpec{
+			Name:        "volume-attach",
+			Description: "Block Storage Volume Attachment",
+		},
 		[]core.Descriptor{
 			newCreate(),
 			newGet(),

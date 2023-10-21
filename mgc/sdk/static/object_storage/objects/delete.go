@@ -16,9 +16,10 @@ type DeleteObjectParams struct {
 
 func newDelete() core.Executor {
 	exec := core.NewStaticExecute(
-		"delete",
-		"",
-		"Delete an object from a bucket",
+		core.DescriptorSpec{
+			Name:        "delete",
+			Description: "Delete an object from a bucket",
+		},
 		Delete,
 	)
 

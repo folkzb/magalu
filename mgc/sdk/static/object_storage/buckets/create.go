@@ -17,9 +17,10 @@ type createParams struct {
 
 func newCreate() core.Executor {
 	executor := core.NewStaticExecute(
-		"create",
-		"",
-		"Create a bucket",
+		core.DescriptorSpec{
+			Name:        "create",
+			Description: "Create a bucket",
+		},
 		create,
 	)
 

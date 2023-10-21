@@ -10,14 +10,15 @@ import (
 
 func newList() core.Executor {
 	return core.NewStaticExecuteSimple(
-		"list",
-		"",
-		"List all available tenants for current login",
-		ListTenants,
+		core.DescriptorSpec{
+			Name:        "list",
+			Description: "List all available tenants for current login",
+		},
+		listTenants,
 	)
 }
 
-func ListTenants(ctx context.Context) ([]*mgcAuthPkg.Tenant, error) {
+func listTenants(ctx context.Context) ([]*mgcAuthPkg.Tenant, error) {
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
 		return nil, fmt.Errorf("unable to get auth from context")

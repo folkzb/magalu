@@ -6,9 +6,10 @@ import (
 
 func NewGroup() *core.StaticGroup {
 	return core.NewStaticGroup(
-		"config",
-		"",
-		"Config related commands",
+		core.DescriptorSpec{
+			Name:        "config",
+			Description: "Config related commands",
+		},
 		[]core.Descriptor{
 			newList(),
 			newGet(),

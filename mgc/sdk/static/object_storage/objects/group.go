@@ -6,9 +6,10 @@ import (
 
 func NewGroup() core.Grouper {
 	return core.NewStaticGroup(
-		"objects",
-		"",
-		"Object operations for Object Storage API",
+		core.DescriptorSpec{
+			Name:        "objects",
+			Description: "Object operations for Object Storage API",
+		},
 		[]core.Descriptor{
 			newDelete(),   // object-storage objects delete
 			newDownload(), // object-storage objects download

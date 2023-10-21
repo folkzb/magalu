@@ -10,9 +10,7 @@ import (
 
 func NewGroup() *core.StaticGroup {
 	return core.NewStaticGroup(
-		"Static Groups Root",
-		"",
-		"",
+		core.DescriptorSpec{Name: "Static Groups Root"},
 		[]core.Descriptor{
 			auth.NewGroup(),           // cmd: "auth"
 			config.NewGroup(),         // cmd: "config"

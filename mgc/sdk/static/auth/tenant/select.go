@@ -14,9 +14,10 @@ type tenantSetParams struct {
 
 func newSelect() core.Executor {
 	executor := core.NewStaticExecute(
-		"select",
-		"",
-		"Set the active Tenant to be used for all subsequential requests",
+		core.DescriptorSpec{
+			Name:        "select",
+			Description: "Set the active Tenant to be used for all subsequential requests",
+		},
 		selectTenant,
 	)
 

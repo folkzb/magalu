@@ -16,9 +16,10 @@ type configSetParams struct {
 
 func newSet() *core.StaticExecute {
 	return core.NewStaticExecute(
-		"set",
-		"",
-		"Sets a specific config value",
+		core.DescriptorSpec{
+			Name:        "set",
+			Description: "Sets a specific config value",
+		},
 		func(ctx context.Context, parameter configSetParams, _ struct{}) (core.Value, error) {
 			config := mgcConfigPkg.FromContext(ctx)
 			if config == nil {

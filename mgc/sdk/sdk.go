@@ -131,9 +131,11 @@ func (o *Sdk) newOpenApiSource() core.Grouper {
 func (o *Sdk) Group() core.Grouper {
 	if o.group == nil {
 		o.group = core.NewMergeGroup(
-			"MagaLu Cloud",
-			"1.0",
-			"All MagaLu Groups & Executors",
+			core.DescriptorSpec{
+				Name:        "MagaLu Cloud",
+				Version:     "1.0",
+				Description: "All MagaLu Groups & Executors",
+			},
 			[]core.Grouper{
 				static.NewGroup(),
 				o.newOpenApiSource(),

@@ -14,9 +14,10 @@ type configGetParams struct {
 
 func newGet() *core.StaticExecute {
 	return core.NewStaticExecute(
-		"get",
-		"",
-		"Gets a specific config value",
+		core.DescriptorSpec{
+			Name:        "get",
+			Description: "Gets a specific config value",
+		},
 		func(ctx context.Context, parameter configGetParams, _ struct{}) (result core.Value, err error) {
 			config := mgcConfigPkg.FromContext(ctx)
 			if config == nil {

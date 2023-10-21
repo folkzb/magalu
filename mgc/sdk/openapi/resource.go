@@ -22,28 +22,9 @@ type confirmation struct {
 // Resource
 
 type resource struct {
-	name        string
-	description string
+	core.SimpleDescriptor
 	*core.GrouperLazyChildren[core.Executor]
 }
-
-// BEGIN: Descriptor interface:
-
-func (o *resource) Name() string {
-	return o.name
-}
-
-func (o *resource) Version() string {
-	return ""
-}
-
-func (o *resource) Description() string {
-	return o.description
-}
-
-// END: Descriptor interface
-
-// BEGIN: Grouper interface:
 
 func getServers(p *openapi3.PathItem, op *openapi3.Operation) openapi3.Servers {
 	var servers openapi3.Servers
@@ -240,8 +221,10 @@ func newResource(
 ) (r *resource) {
 	logger = logger.Named(tag.Name)
 	r = &resource{
-		name:        getNameExtension(extensionPrefix, tag.Extensions, tag.Name),
-		description: getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description),
+		SimpleDescriptor: core.SimpleDescriptor{Spec: core.DescriptorSpec{
+			Name:        getNameExtension(extensionPrefix, tag.Extensions, tag.Name),
+			Description: getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description),
+		}},
 		GrouperLazyChildren: core.NewGrouperLazyChildren[core.Executor](func() (operations []core.Executor, err error) {
 			operations = []core.Executor{}
 			operationsByName := map[string]core.Executor{}
@@ -325,7 +308,5 @@ func wrapInConfirmableExecutor(cExt map[string]any, isDelete bool, exec core.Exe
 	return core.NewConfirmableExecutor(exec, core.ConfirmPromptWithTemplate(c.Message)), nil
 }
 
-// implemented by embedded GrouperLazyChildren
+// implemented by embedded GrouperLazyChildren & SimpleDescriptor
 var _ core.Grouper = (*resource)(nil)
-
-// END: Grouper interface

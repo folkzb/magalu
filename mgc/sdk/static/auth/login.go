@@ -52,9 +52,10 @@ func loginLogger() *zap.SugaredLogger {
 
 func newLogin() *core.StaticExecute {
 	return core.NewStaticExecute(
-		"login",
-		"",
-		"authenticate with magalu cloud",
+		core.DescriptorSpec{
+			Name:        "login",
+			Description: "authenticate with magalu cloud",
+		},
 		func(ctx context.Context, parameters loginParameters, _ struct{}) (output *loginResult, err error) {
 			auth := mgcAuthPkg.FromContext(ctx)
 			if auth == nil {

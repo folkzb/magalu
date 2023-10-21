@@ -29,9 +29,10 @@ func set(ctx context.Context, parameter authSetParams, _ struct{}) (*authSetPara
 
 func newSet() core.Executor {
 	executor := core.NewStaticExecute(
-		"set",
-		"",
-		"Sets auth values",
+		core.DescriptorSpec{
+			Name:        "set",
+			Description: "Sets auth values",
+		},
 		set,
 	)
 

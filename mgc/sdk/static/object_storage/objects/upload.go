@@ -21,9 +21,10 @@ type uploadTemplateResult struct {
 
 func newUpload() core.Executor {
 	executor := core.NewStaticExecute(
-		"upload",
-		"",
-		"Upload a file to a bucket",
+		core.DescriptorSpec{
+			Name:        "upload",
+			Description: "Upload a file to a bucket",
+		},
 		upload,
 	)
 

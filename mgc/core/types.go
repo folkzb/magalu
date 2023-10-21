@@ -14,15 +14,6 @@ type Schema = schema.Schema
 // 'date-time'. We want the raw object schema for later validation
 type Time time.Time
 
-// General interface that describes both Executor and Grouper
-type Descriptor interface {
-	Name() string
-	Version() string
-	Description() string
-}
-
-type DescriptorVisitor func(child Descriptor) (run bool, err error)
-
 type Grouper interface {
 	Descriptor
 	VisitChildren(visitor DescriptorVisitor) (finished bool, err error)
