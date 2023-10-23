@@ -9,7 +9,7 @@ import (
 	"magalu.cloud/core/utils"
 )
 
-func doTransformsToSchema(logger *zap.SugaredLogger, transformers []transformer, value *mgcSchemaPkg.COWSchema) (result *mgcSchemaPkg.COWSchema, err error) {
+func doTransformsToSchema(logger *zap.SugaredLogger, transformers []transformer, value *mgcSchemaPkg.COWSchema, transformationKey string) (result *mgcSchemaPkg.COWSchema, err error) {
 	result = value
 	for _, t := range transformers {
 		result, err = t.TransformSchema(result)
@@ -18,6 +18,7 @@ func doTransformsToSchema(logger *zap.SugaredLogger, transformers []transformer,
 			return
 		}
 	}
+	value.ExtensionsCOW().Delete(transformationKey)
 	if result != value {
 		logger.Debugw("transformed schema", "input", value.Peek(), "output", result.Peek())
 	}
@@ -28,7 +29,7 @@ func transformSchema(logger *zap.SugaredLogger, schema *core.Schema, transformat
 	t := &commonSchemaTransformer[*mgcSchemaPkg.COWSchema]{
 		tKey: transformationKey,
 		transform: func(transformers []transformer, value *mgcSchemaPkg.COWSchema) (*mgcSchemaPkg.COWSchema, error) {
-			return doTransformsToSchema(logger, transformers, value)
+			return doTransformsToSchema(logger, transformers, value, transformationKey)
 		},
 		transformArray:       transformArraySchema,
 		transformObject:      transformObjectSchema,
