@@ -26,13 +26,13 @@ const indexVersion = "1.0.0"
 
 // -- ROOT: Source
 
-func NewSource(loader dataloader.Loader, extensionPrefix *string) *core.SimpleGrouper[*module] {
+func NewSource(loader dataloader.Loader, extensionPrefix *string) *core.SimpleGrouper[core.Grouper] {
 	return core.NewSimpleGrouper(
 		core.DescriptorSpec{
 			Name:        "OpenApis",
 			Description: fmt.Sprintf("OpenApis loaded using %v", loader),
 		},
-		func() (modules []*module, err error) {
+		func() (modules []core.Grouper, err error) {
 			data, err := loader.Load(indexFileName)
 			if err != nil {
 				return nil, err
@@ -47,18 +47,21 @@ func NewSource(loader dataloader.Loader, extensionPrefix *string) *core.SimpleGr
 				return nil, fmt.Errorf("unsupported %q version %q, expected %q", indexFileName, index.Version, indexVersion)
 			}
 
-			modules = make([]*module, len(index.Modules))
-			moduleResolver := moduleResolver{}
-
-			for i, item := range index.Modules {
-				module := newModule(
-					item,
+			modules = make([]core.Grouper, len(index.Modules))
+			refResolver := core.NewMultiRefPathResolver()
+			for i := range index.Modules {
+				var module core.Grouper
+				module, err = newModule(
+					&index.Modules[i],
 					extensionPrefix,
 					loader,
 					logger(),
+					refResolver,
 				)
+				if err != nil {
+					return
+				}
 				modules[i] = module
-				moduleResolver.add(item.Url, module)
 			}
 
 			return modules, nil

@@ -62,7 +62,7 @@ type operation struct {
 	servers             openapi3.Servers
 	parameters          *[]*parameterWithName
 	logger              *zap.SugaredLogger
-	module              *module
+	refResolver         *core.BoundRefPathResolver
 }
 
 func newOperation(
@@ -73,7 +73,7 @@ func newOperation(
 	servers openapi3.Servers,
 	logger *zap.SugaredLogger,
 	outputFlag string,
-	module *module,
+	refResolver *core.BoundRefPathResolver,
 ) *operation {
 	logger = logger.Named(name)
 	return &operation{
@@ -89,7 +89,7 @@ func newOperation(
 		servers:         servers,
 		logger:          logger,
 		outputFlag:      outputFlag,
-		module:          module,
+		refResolver:     refResolver,
 	}
 }
 
@@ -711,13 +711,17 @@ func (o *operation) ResultSchema() *core.Schema {
 
 func (o *operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
 	if link.OperationID != "" {
-		exec := o.module.execResolver.get(link.OperationID)
-		if exec == nil {
-			return nil, fmt.Errorf("linked operationId=%q was not found", link.OperationID)
+		exec, err := core.ResolveExecutor(o.refResolver, "/"+operationIdsDocKey+"/"+link.OperationID)
+		if err != nil {
+			return nil, fmt.Errorf("linked operationId=%q: %w", link.OperationID, err)
 		}
 		return exec, nil
 	} else if link.OperationRef != "" {
-		return o.module.execResolver.resolve(link.OperationRef)
+		exec, err := core.ResolveExecutor(o.refResolver, link.OperationRef)
+		if err != nil {
+			return nil, fmt.Errorf("linked operationRef=%q: %w", link.OperationRef, err)
+		}
+		return exec, nil
 	} else {
 		return nil, errors.New("link has no Operation ID or Ref")
 	}
@@ -726,7 +730,6 @@ func (o *operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
 // This map should not be altered externally
 func (o *operation) initLinksAndRelated() map[string]core.Linker {
 	if o.links == nil {
-		o.module.loadRecursive()
 		o.links = map[string]core.Linker{}
 		o.related = map[string]core.Executor{}
 		// TODO: Handle 'default' status code

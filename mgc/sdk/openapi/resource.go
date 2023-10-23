@@ -212,7 +212,7 @@ func newResource(
 	doc *openapi3.T,
 	extensionPrefix *string,
 	logger *zap.SugaredLogger,
-	module *module,
+	refResolver *core.BoundRefPathResolver,
 ) *core.SimpleGrouper[core.Executor] {
 	logger = logger.Named(tag.Name)
 	return core.NewSimpleGrouper[core.Executor](
@@ -250,7 +250,7 @@ func newResource(
 					servers,
 					logger,
 					outputFlag,
-					module,
+					refResolver,
 				)
 
 				isDelete := method == "DELETE"
@@ -272,14 +272,6 @@ func newResource(
 					}
 				}
 
-				err = module.execResolver.add(
-					desc.op.OperationID,
-					[]string{"paths", desc.key, desc.method},
-					operation,
-				)
-				if err != nil {
-					return false, err
-				}
 				operations = append(operations, operation)
 				operationsByName[opName] = operation
 				return true, nil
