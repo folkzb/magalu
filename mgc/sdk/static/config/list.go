@@ -3,14 +3,13 @@ package config
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	mgcConfigPkg "magalu.cloud/core/config"
-	"magalu.cloud/core/utils"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcUtilsPkg "magalu.cloud/core/utils"
 )
 
@@ -40,7 +39,7 @@ func configListFormatter(exec core.Executor, result core.Result) string {
 	return writer.Render()
 }
 
-var getList = utils.NewLazyLoader[core.Executor](newList)
+var getList = mgcUtilsPkg.NewLazyLoader[core.Executor](newList)
 
 func newList() core.Executor {
 	executor := core.NewStaticExecuteSimple(
@@ -74,8 +73,8 @@ func getAllConfigs(ctx context.Context) (map[string]*core.Schema, error) {
 			current := (*core.Schema)(ref.Value)
 
 			if existing, ok := configMap[name]; ok {
-				if !reflect.DeepEqual(existing, current) {
-					listLogger().Warnw("unhandled diverging config", "config", name, "path", path, "current", current, "existing", existing)
+				if err := mgcSchemaPkg.CompareJsonSchemas(existing, current); err != nil {
+					listLogger().Warnw("unhandled diverging config", "config", name, "path", path, "current", current, "existing", existing, "error", err)
 				}
 
 				continue
