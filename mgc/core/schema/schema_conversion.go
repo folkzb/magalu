@@ -2,10 +2,13 @@ package schema
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/iancoleman/orderedmap"
 	"github.com/invopop/jsonschema"
+	"golang.org/x/exp/constraints"
 )
 
 func ToCoreSchema(s *jsonschema.Schema) (schema *Schema, err error) {
@@ -22,14 +25,8 @@ func ToCoreSchema(s *jsonschema.Schema) (schema *Schema, err error) {
 		rootSchema = rootDef
 	}
 
-	oapiSchema, err := unmarshallIntoOpenapiSchema(rootSchema)
-
-	if err != nil {
-		return nil, err
-	}
-
+	oapiSchema := convertJsonSchemaToOpenAPISchema(rootSchema)
 	refCache := map[string]*openapi3.Schema{}
-
 	err = resolveRefs(oapiSchema, s.Definitions, refCache)
 	if err != nil {
 		return nil, err
@@ -40,19 +37,141 @@ func ToCoreSchema(s *jsonschema.Schema) (schema *Schema, err error) {
 	return SimplifySchema(schema)
 }
 
-func unmarshallIntoOpenapiSchema(s *jsonschema.Schema) (*openapi3.Schema, error) {
-	json, err := s.MarshalJSON()
-	if err != nil {
-		return nil, err
+func isJsonSchemaSchemaNullable(input *jsonschema.Schema) bool {
+	for _, sub := range input.OneOf {
+		if sub != nil && sub.Type == "null" {
+			return true
+		}
+	}
+	return false
+}
+
+func convertJsonSchemaNumberToOpenAPIPointer[T constraints.Integer | constraints.Float](v int) (r *T) {
+	if v == 0 {
+		return nil
+	}
+	r = new(T)
+	*r = T(v)
+	return
+}
+
+func convertJsonSchemaToOpenAPISchema(input *jsonschema.Schema) (output *openapi3.Schema) {
+	if input == nil {
+		return nil
 	}
 
-	newS := &openapi3.Schema{}
-	err = newS.UnmarshalJSON(json)
-	if err != nil {
-		return nil, err
+	// We used to MarshalJSON() from jsonschema.Schema and UnmarshalJSON() into openapi3.Schema, but
+	// jsonschema's MarshalJSON() will return "true" for empty schema and this is not handled by openapi3.Schema's UnmarshalJSON()
+	// Then do it manually.
+
+	if input == jsonschema.TrueSchema {
+		return (*openapi3.Schema)(NewAnySchema())
 	}
 
-	return newS, nil
+	additionalProperties := openapi3.AdditionalProperties{}
+	if input.AdditionalProperties != nil && input.AdditionalProperties != jsonschema.FalseSchema {
+		has := true
+		additionalProperties.Has = &has
+		additionalProperties.Schema = convertJsonSchemaToOpenAPISchemaRef(input.AdditionalProperties)
+	}
+	if len(input.PatternProperties) > 0 && additionalProperties.Has == nil {
+		has := true
+		additionalProperties.Has = &has
+		additionalProperties.Schema = &openapi3.SchemaRef{
+			Value: openapi3.NewAnyOfSchema(convertJsonSchemaToOpenAPISchemaMapToSlice(input.PatternProperties)...),
+		}
+	}
+
+	output = &openapi3.Schema{
+		OneOf:        convertJsonSchemaToOpenAPISchemaSlice(input.OneOf),
+		AnyOf:        convertJsonSchemaToOpenAPISchemaSlice(input.AnyOf),
+		AllOf:        convertJsonSchemaToOpenAPISchemaSlice(input.AllOf),
+		Not:          convertJsonSchemaToOpenAPISchemaRef(input.Not),
+		Type:         input.Type,
+		Title:        input.Title,
+		Format:       input.Format,
+		Description:  input.Description,
+		Enum:         input.Enum,
+		Default:      input.Default,
+		UniqueItems:  input.UniqueItems,
+		ExclusiveMin: input.ExclusiveMinimum,
+		ExclusiveMax: input.ExclusiveMaximum,
+		Nullable:     isJsonSchemaSchemaNullable(input),
+		ReadOnly:     input.ReadOnly,
+		WriteOnly:    input.WriteOnly,
+		// Does not exist: AllowEmptyValue:      input.AllowEmptyValue,
+		Deprecated:           input.Deprecated,
+		Min:                  convertJsonSchemaNumberToOpenAPIPointer[float64](input.Minimum),
+		Max:                  convertJsonSchemaNumberToOpenAPIPointer[float64](input.Maximum),
+		MultipleOf:           convertJsonSchemaNumberToOpenAPIPointer[float64](input.MultipleOf),
+		MinLength:            uint64(input.MinLength),
+		MaxLength:            convertJsonSchemaNumberToOpenAPIPointer[uint64](input.MaxLength),
+		Pattern:              input.Pattern,
+		MinItems:             uint64(input.MinItems),
+		MaxItems:             convertJsonSchemaNumberToOpenAPIPointer[uint64](input.MaxItems),
+		Items:                convertJsonSchemaToOpenAPISchemaRef(input.Items),
+		Required:             input.Required,
+		Properties:           convertJsonSchemaToOpenAPISchemaMap(input.Properties),
+		MinProps:             uint64(input.MinProperties),
+		MaxProps:             convertJsonSchemaNumberToOpenAPIPointer[uint64](input.MaxProperties),
+		AdditionalProperties: additionalProperties,
+		// Does not exist: Discriminator:        input.Discriminator,
+	}
+
+	if reflect.DeepEqual(&Schema{}, output) {
+		return (*openapi3.Schema)(NewAnySchema())
+	}
+
+	return
+}
+
+func convertJsonSchemaToOpenAPISchemaRef(input *jsonschema.Schema) (outpyt *openapi3.SchemaRef) {
+	if input == nil {
+		return nil
+	}
+	s := convertJsonSchemaToOpenAPISchema(input)
+	if s == nil {
+		return nil
+	}
+	return &openapi3.SchemaRef{Value: s}
+}
+
+func convertJsonSchemaToOpenAPISchemaSlice(input []*jsonschema.Schema) (output []*openapi3.SchemaRef) {
+	if len(input) == 0 {
+		return nil
+	}
+	output = make([]*openapi3.SchemaRef, len(input))
+	for i, value := range input {
+		output[i] = convertJsonSchemaToOpenAPISchemaRef(value)
+	}
+	return
+}
+
+func convertJsonSchemaToOpenAPISchemaMap(input *orderedmap.OrderedMap) (output map[string]*openapi3.SchemaRef) {
+	if input == nil {
+		return nil
+	}
+	values := input.Values()
+	if len(values) == 0 {
+		return nil
+	}
+	output = make(map[string]*openapi3.SchemaRef, len(values))
+	for key, value := range values {
+		output[key] = convertJsonSchemaToOpenAPISchemaRef(value.(*jsonschema.Schema))
+	}
+	return
+}
+
+func convertJsonSchemaToOpenAPISchemaMapToSlice(input map[string]*jsonschema.Schema) (output []*openapi3.Schema) {
+	if len(input) == 0 {
+		return nil
+	}
+	output = make([]*openapi3.Schema, 0, len(input))
+	for _, value := range input {
+		output = append(output, convertJsonSchemaToOpenAPISchema(value))
+	}
+	return
+
 }
 
 func getRefPath(ref string) []string {
@@ -202,12 +321,8 @@ func findRef(refPath []string, defs jsonschema.Definitions, cache map[string]*op
 		return nil, false
 	}
 
-	oapiDef, err := unmarshallIntoOpenapiSchema(def)
-	if err != nil {
-		return nil, false
-	}
-
-	err = resolveRefs(oapiDef, defs, cache)
+	oapiDef := convertJsonSchemaToOpenAPISchema(def)
+	err := resolveRefs(oapiDef, defs, cache)
 	if err != nil {
 		return nil, false
 	}

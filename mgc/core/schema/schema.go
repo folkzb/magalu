@@ -38,6 +38,23 @@ func NewSchemaRef(ref string, schema *Schema) *openapi3.SchemaRef {
 	return openapi3.NewSchemaRef(ref, (*openapi3.Schema)(schema))
 }
 
+func NewAnySchema() *Schema {
+	s := &openapi3.Schema{
+		Nullable: true,
+		AnyOf: openapi3.SchemaRefs{
+			&openapi3.SchemaRef{Value: &openapi3.Schema{Type: "null", Nullable: true}},
+			&openapi3.SchemaRef{Value: openapi3.NewBoolSchema()},
+			&openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
+			&openapi3.SchemaRef{Value: openapi3.NewFloat64Schema()},
+			&openapi3.SchemaRef{Value: openapi3.NewIntegerSchema()},
+			&openapi3.SchemaRef{Value: openapi3.NewArraySchema()},
+			&openapi3.SchemaRef{Value: openapi3.NewObjectSchema().WithAnyAdditionalProperties()},
+		},
+	}
+
+	return (*Schema)(s)
+}
+
 func NewObjectSchema(properties map[string]*Schema, required []string) *Schema {
 	hasAdditionalProperties := false
 
