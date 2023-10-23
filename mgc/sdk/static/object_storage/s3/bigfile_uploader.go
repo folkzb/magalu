@@ -163,6 +163,11 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 			return part, pipeline.ProcessAbort
 		}
 
+		// This is used while retrying requests
+		req.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(io.NewSectionReader(chunk.Reader, 0, CHUNK_SIZE)), nil
+		}
+
 		bigfileUploaderLogger().Debugw("Sending part", "part", partNumber, "total", totalParts)
 		_, res, err := SendRequest[any](ctx, req)
 		if err != nil {
