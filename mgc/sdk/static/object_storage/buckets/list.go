@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/s3"
 )
 
@@ -23,6 +24,8 @@ type ListResponse struct {
 	Buckets []*BucketResponse `xml:"Buckets>Bucket"`
 	Owner   *Owner            `xml:"Owner"`
 }
+
+var getList = utils.NewLazyLoader[core.Executor](newList)
 
 func newListRequest(ctx context.Context, cfg s3.Config) (*http.Request, error) {
 	return http.NewRequestWithContext(ctx, http.MethodGet, s3.BuildHost(cfg), nil)

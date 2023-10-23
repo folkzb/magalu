@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/s3"
 )
 
@@ -15,14 +16,22 @@ type createParams struct {
 	Location string `json:"location,omitempty" jsonschema:"description=Location constraint for the bucket,default=br-ne-1"`
 }
 
+var getCreate = utils.NewLazyLoader[core.Executor](newCreate)
+
 func newCreate() core.Executor {
-	executor := core.NewStaticExecute(
-		core.DescriptorSpec{
-			Name:        "create",
-			Description: "Create a bucket",
+	executor := core.NewReflectedSimpleExecutor[createParams, s3.Config, core.Value](
+		core.ExecutorSpec{
+			DescriptorSpec: core.DescriptorSpec{
+				Name:        "create",
+				Description: "Create a bucket",
+			},
+			Links: utils.NewLazyLoader[core.Links](func() core.Links { return core.Links{} }),
 		},
 		create,
 	)
+
+	executor.Links().AddLink("delete", core.NewSimpleLink(executor, getDelete()))
+	executor.Links().AddLink("list", core.NewSimpleLink(executor, getList()))
 
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Created bucket {{.name}}\n"

@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/pipeline"
+	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/objects"
 	"magalu.cloud/sdk/static/object_storage/s3"
 )
@@ -49,6 +50,8 @@ func (o deleteObjectsErrors) Error() string {
 func (o deleteObjectsErrors) HasError() bool {
 	return len(o) != 0
 }
+
+var getDelete = utils.NewLazyLoader[core.Executor](newDelete)
 
 func newDelete() core.Executor {
 	executor := core.NewStaticExecute(

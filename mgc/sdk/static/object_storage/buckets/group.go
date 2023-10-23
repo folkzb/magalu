@@ -11,9 +11,9 @@ func NewGroup() core.Grouper {
 			Description: "Bucket operations for Object Storage API",
 		},
 		[]core.Descriptor{
-			newCreate(), // object-storage buckets create
-			newDelete(), // object-storage buckets delete
-			newList(),   // object-storage buckets list
+			getCreate(), // object-storage buckets create
+			getDelete(), // object-storage buckets delete
+			getList(),   // object-storage buckets list
 		},
 	)
 }
