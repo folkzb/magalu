@@ -121,6 +121,25 @@ func TestGet(t *testing.T) {
 		}
 	})
 
+	t.Run("decode partial to non-zero struct", func(t *testing.T) {
+		data := `{"person":{"name":"Josh"}}`
+		c, err := setupWithFile([]byte(data))
+		if err != nil {
+			t.Errorf("setting up file expected err == nil, found: %v", err)
+		}
+
+		p := person{Age: 20}
+		err = c.Get("person", &p)
+		if err != nil {
+			t.Errorf("expected err == nil, found: %v", err)
+		}
+
+		expected := person{Age: 20, Name: "Josh"}
+		if !reflect.DeepEqual(p, expected) {
+			t.Errorf("expected %#v when decoding %s, found %#v instead", expected, data, p)
+		}
+	})
+
 	t.Run("decode from config file to pointer", func(t *testing.T) {
 		data := `{
 			"foo": {
@@ -290,7 +309,7 @@ func TestGet(t *testing.T) {
 
 		expected := map[string]any{
 			"name":          "jon",
-			"age":           5,
+			"age":           float64(5),
 			"caseSensitive": "some",
 		}
 
@@ -340,7 +359,7 @@ func TestGet(t *testing.T) {
 
 		expected := map[string]any{
 			"name":          "jon",
-			"age":           5,
+			"age":           float64(5),
 			"caseSensitive": "some",
 		}
 
