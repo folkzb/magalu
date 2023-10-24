@@ -51,11 +51,11 @@ func TestGetWithoutFile(t *testing.T) {
 
 		var out any
 		if err := c.Get(tc.key, &out); err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		if out != tc.expected {
-			t.Errorf("expected %v, found %v", tc.expected, out)
+			t.Errorf("expected %#v, found %#v", tc.expected, out)
 		}
 	}
 }
@@ -70,16 +70,16 @@ func TestGetWithFile(t *testing.T) {
 	for _, tc := range tests {
 		c, err := setupWithFile(tc.fileData)
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		var out any
 		if err := c.Get(tc.key, &out); err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		if out != tc.expected {
-			t.Errorf("expected %v, found %v", tc.expected, out)
+			t.Errorf("expected %#v, found %#v", tc.expected, out)
 		}
 	}
 }
@@ -95,14 +95,14 @@ func TestGet(t *testing.T) {
 		c, err := setupWithFile([]byte(`{ "foo": "bar" }`))
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		var p person
 		err = c.Get("foo", p)
 
 		if err == nil {
-			t.Errorf("expected err != nil, found: %v", err)
+			t.Errorf("expected err != nil, found: %#v", err)
 		}
 	})
 
@@ -110,14 +110,14 @@ func TestGet(t *testing.T) {
 		c, err := setupWithFile([]byte(`{ "foo": "bar" }`))
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		var p person
 		err = c.Get("foo", p)
 
 		if err == nil {
-			t.Errorf("expected err != nil, found: %v", err)
+			t.Errorf("expected err != nil, found: %#v", err)
 		}
 	})
 
@@ -125,13 +125,13 @@ func TestGet(t *testing.T) {
 		data := `{"person":{"name":"Josh"}}`
 		c, err := setupWithFile([]byte(data))
 		if err != nil {
-			t.Errorf("setting up file expected err == nil, found: %v", err)
+			t.Errorf("setting up file expected err == nil, found: %#v", err)
 		}
 
 		p := person{Age: 20}
 		err = c.Get("person", &p)
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		expected := person{Age: 20, Name: "Josh"}
@@ -153,17 +153,17 @@ func TestGet(t *testing.T) {
 		c, err := setupWithFile([]byte(data))
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		p := new(person)
 		err = c.Get("foo", p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if !reflect.DeepEqual(*p, expected) {
-			t.Errorf("expected p == %+v, found: %+v", expected, p)
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
 		}
 	})
 
@@ -185,10 +185,10 @@ func TestGet(t *testing.T) {
 		err := c.Get("foo", p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if !reflect.DeepEqual(*p, expected) {
-			t.Errorf("expected p == %v, found: %v", expected, *p)
+			t.Errorf("expected p == %#v, found: %#v", expected, *p)
 		}
 	})
 
@@ -198,17 +198,17 @@ func TestGet(t *testing.T) {
 
 		c, err := setupWithFile([]byte(data))
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		var p string
 		err = c.Get("foo", &p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if p != expected {
-			t.Errorf("expected p == bar, found: %+v", p)
+			t.Errorf("expected p == bar, found: %#v", p)
 		}
 	})
 
@@ -222,10 +222,10 @@ func TestGet(t *testing.T) {
 		err := c.Get("foo", &p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if p != expected {
-			t.Errorf("expected p == %v, found: %v", expected, p)
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
 		}
 	})
 
@@ -242,17 +242,17 @@ func TestGet(t *testing.T) {
 		c, err := setupWithFile([]byte(data))
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		var p person
 		err = c.Get("foo", &p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if !reflect.DeepEqual(p, expected) {
-			t.Errorf("expected p == %+v, found: %+v", expected, p)
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
 		}
 	})
 
@@ -274,10 +274,10 @@ func TestGet(t *testing.T) {
 		err := c.Get("foo", &p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if !reflect.DeepEqual(p, expected) {
-			t.Errorf("expected p == %+v, found: %+v", expected, p)
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
 		}
 	})
 
@@ -287,17 +287,17 @@ func TestGet(t *testing.T) {
 
 		c, err := setupWithFile([]byte(data))
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		var p any
 		err = c.Get("foo", &p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if p != expected {
-			t.Errorf("expected p == bar, found: %+v", p)
+			t.Errorf("expected p == bar, found: %#v", p)
 		}
 	})
 
@@ -316,17 +316,17 @@ func TestGet(t *testing.T) {
 		c, err := setupWithFile([]byte(data))
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		var p any
 		err = c.Get("foo", &p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if !reflect.DeepEqual(p, expected) {
-			t.Errorf("expected p == %+v, found: %+v", expected, p)
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
 		}
 	})
 
@@ -341,10 +341,10 @@ func TestGet(t *testing.T) {
 		err := c.Get("foo", &p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if p != expected {
-			t.Errorf("expected p == %+v, found: %+v", expected, p)
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
 		}
 	})
 
@@ -369,10 +369,10 @@ func TestGet(t *testing.T) {
 		err := c.Get("foo", &p)
 
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if !reflect.DeepEqual(p, expected) {
-			t.Errorf("expected p == %+v, found: %+v", expected, p)
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
 		}
 	})
 }
@@ -386,15 +386,15 @@ func TestSetWithoutFile(t *testing.T) {
 		c := setupWithoutFile()
 
 		if err := c.Set(tc.key, tc.expected); err != nil {
-			t.Errorf("expected err == nil , found %v", err)
+			t.Errorf("expected err == nil , found %#v", err)
 		}
 
 		var v any
 		if err := c.Get(tc.key, &v); err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if v != tc.expected {
-			t.Errorf("expected %v, found %v", tc.expected, v)
+			t.Errorf("expected %#v, found %#v", tc.expected, v)
 		}
 	}
 }
@@ -409,19 +409,19 @@ func TestSetWithFile(t *testing.T) {
 	for _, tc := range tests {
 		c, err := setupWithFile(tc.fileData)
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		if err := c.Set(tc.key, tc.expected); err != nil {
-			t.Errorf("expected err == nil , found %v", err)
+			t.Errorf("expected err == nil , found %#v", err)
 		}
 
 		var v any
 		if err := c.Get(tc.key, &v); err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if v != tc.expected {
-			t.Errorf("expected %v, found %v", tc.expected, v)
+			t.Errorf("expected %#v, found %#v", tc.expected, v)
 		}
 	}
 }
@@ -437,15 +437,15 @@ func TestDeleteWithoutFile(t *testing.T) {
 		c := setupWithoutFile()
 
 		if err := c.Delete(tc.key); err != nil {
-			t.Errorf("expected err == nil, found %v", err)
+			t.Errorf("expected err == nil, found %#v", err)
 		}
 
 		var v any
 		if err := c.Get(tc.key, &v); err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if v != tc.expected {
-			t.Errorf("expected %v, found %v", tc.expected, v)
+			t.Errorf("expected %#v, found %#v", tc.expected, v)
 		}
 	}
 }
@@ -460,19 +460,19 @@ func TestDeleteWithFile(t *testing.T) {
 	for _, tc := range tests {
 		c, err := setupWithFile(tc.fileData)
 		if err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 
 		if err := c.Delete(tc.key); err != nil {
-			t.Errorf("expected err == nil, found %v", err)
+			t.Errorf("expected err == nil, found %#v", err)
 		}
 
 		var v any
 		if err := c.Get(tc.key, &v); err != nil {
-			t.Errorf("expected err == nil, found: %v", err)
+			t.Errorf("expected err == nil, found: %#v", err)
 		}
 		if v != tc.expected {
-			t.Errorf("expected %v, found %v", tc.expected, v)
+			t.Errorf("expected %#v, found %#v", tc.expected, v)
 		}
 	}
 }
