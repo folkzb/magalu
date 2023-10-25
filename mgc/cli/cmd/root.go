@@ -29,63 +29,6 @@ const loggerConfigKey = "logging"
 
 var argParser = &osArgParser{}
 
-// -- BEGIN: create Dynamic Argument Loaders --
-
-// TODO: likely this DynamicArgLoader is not needed anymore,
-// I just converted it to use the sdk stuff without checking in detail
-
-type DynamicArgLoader func(cmd *cobra.Command, target *string) (*cobra.Command, DynamicArgLoader, error)
-
-// What we really need so far:
-// - no target (default) or a help target: load all
-// - else: run specific target (sub command)
-func createCommonDynamicArgLoader(
-	loadAll func(cmd *cobra.Command) error,
-	loadTarget func(target string, cmd *cobra.Command) (*cobra.Command, DynamicArgLoader, error),
-) DynamicArgLoader {
-	return func(cmd *cobra.Command, target *string) (*cobra.Command, DynamicArgLoader, error) {
-		if target == nil {
-			return nil, nil, loadAll(cmd)
-		}
-
-		return loadTarget(*target, cmd)
-	}
-}
-
-// -- END: create Dynamic Argument Loaders --
-
-func handleLoaderChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, child mgcSdk.Descriptor) (*cobra.Command, DynamicArgLoader, error) {
-	if childGroup, ok := child.(mgcSdk.Grouper); ok {
-		return AddGroup(sdk, cmd, childGroup)
-	} else if childExec, ok := child.(mgcSdk.Executor); ok {
-		return AddAction(sdk, cmd, childExec)
-	} else {
-		return nil, nil, fmt.Errorf("child %v not group/executor", child)
-	}
-}
-
-func createGroupLoader(sdk *mgcSdk.Sdk, group mgcSdk.Grouper) DynamicArgLoader {
-	return createCommonDynamicArgLoader(
-		func(cmd *cobra.Command) error {
-			_, err := group.VisitChildren(func(child mgcSdk.Descriptor) (bool, error) {
-				_, _, err := handleLoaderChild(sdk, cmd, child)
-				return true, err
-			})
-
-			return err
-		},
-		func(target string, cmd *cobra.Command) (*cobra.Command, DynamicArgLoader, error) {
-			child, err := group.GetChildByName(target)
-
-			if err != nil {
-				return nil, nil, err
-			}
-
-			return handleLoaderChild(sdk, cmd, child)
-		},
-	)
-}
-
 func getPropType(prop *mgcSdk.Schema) string {
 	result := prop.Type
 
@@ -472,7 +415,7 @@ func AddAction(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
 	exec mgcSdk.Executor,
-) (*cobra.Command, DynamicArgLoader, error) {
+) (*cobra.Command, error) {
 	desc := exec.(mgcSdk.Descriptor)
 
 	actionCmd := &cobra.Command{
@@ -511,7 +454,7 @@ func AddAction(
 
 	parentCmd.AddCommand(actionCmd)
 	logger().Debugw("Executor added to command tree", "name", exec.Name())
-	return actionCmd, nil, nil
+	return actionCmd, nil
 }
 
 func runHelpE(cmd *cobra.Command, args []string) error {
@@ -522,7 +465,7 @@ func AddGroup(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
 	group mgcSdk.Grouper,
-) (*cobra.Command, DynamicArgLoader, error) {
+) (*cobra.Command, error) {
 	desc := group.(mgcSdk.Descriptor)
 	moduleCmd := &cobra.Command{
 		Use:     desc.Name(),
@@ -531,11 +474,9 @@ func AddGroup(
 		RunE:    runHelpE,
 	}
 
-	loader := createGroupLoader(sdk, group)
-
 	parentCmd.AddCommand(moduleCmd)
 	logger().Debugw("Groupper added to command tree", "name", group.Name())
-	return moduleCmd, loader, nil
+	return moduleCmd, nil
 }
 
 // BEGIN: copied from cobra: command.go
@@ -605,31 +546,57 @@ func getNextUnknownCommand(c *cobra.Command, args []string) (*string, []string) 
 	return nil, args
 }
 
-func DynamicLoadCommand(cmd *cobra.Command, args []string, loader DynamicArgLoader) error {
-	childCmd, childArgs, err := cmd.Traverse(args)
+func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (*cobra.Command, core.Descriptor, error) {
+	if childGroup, ok := child.(mgcSdk.Grouper); ok {
+		cmd, err := AddGroup(sdk, parentCmd, childGroup)
+		return cmd, childGroup, err
+	} else if childExec, ok := child.(mgcSdk.Executor); ok {
+		cmd, err := AddAction(sdk, parentCmd, childExec)
+		return cmd, childExec, err
+	} else {
+		return nil, nil, fmt.Errorf("child %v not group/executor", child)
+	}
+}
+
+func loadChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, childName string) (*cobra.Command, core.Descriptor, error) {
+	grouper, ok := cmdDesc.(core.Grouper)
+	if !ok {
+		return nil, nil, nil
+	}
+
+	child, err := grouper.GetChildByName(childName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return addChildDesc(sdk, cmd, child)
+}
+
+func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor) (bool, error) {
+	grouper, ok := cmdDesc.(core.Grouper)
+	if !ok {
+		return false, nil
+	}
+
+	return grouper.VisitChildren(func(child core.Descriptor) (run bool, err error) {
+		_, _, err = addChildDesc(sdk, cmd, child)
+		return true, err
+	})
+}
+
+func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, args []string) error {
+	childName, childArgs := getNextUnknownCommand(cmd, args)
+	if childName == nil || *childName == "help" {
+		_, err := loadAllChildren(sdk, cmd, cmdDesc)
+		return err
+	}
+
+	childCmd, childCmdDesc, err := loadChild(sdk, cmd, cmdDesc, *childName)
 	if err != nil {
 		return err
 	}
 
-	if cmd != childCmd {
-		return nil
-	}
-
-	var childCmdName *string
-	for {
-		// NOTE: this replicates cmd.Traverse(), but returns the command and the args without flags
-		childCmdName, childArgs = getNextUnknownCommand(cmd, childArgs)
-		if childCmdName == nil || *childCmdName != "help" {
-			break
-		}
-	}
-
-	childCmd, childLoader, err := loader(cmd, childCmdName)
-	if err != nil || childLoader == nil || childCmd == nil {
-		return err
-	}
-
-	return DynamicLoadCommand(childCmd, childArgs, childLoader)
+	return loadCommandTree(sdk, childCmd, childCmdDesc, childArgs)
 }
 
 func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
@@ -705,8 +672,9 @@ can generate a command line on-demand for Rest manipulation`,
 	rootCmd.AddCommand(newDumpTreeCmd(sdk))
 
 	mainArgs := argParser.MainArgs()
+	rootDesc := sdk.Group()
 
-	err = DynamicLoadCommand(rootCmd, mainArgs, createGroupLoader(sdk, sdk.Group()))
+	err = loadCommandTree(sdk, rootCmd, rootDesc, mainArgs)
 	if err != nil {
 		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
 	}

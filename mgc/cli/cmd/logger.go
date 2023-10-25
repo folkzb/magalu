@@ -10,7 +10,7 @@ import (
 	"moul.io/zapfilter"
 )
 
-var logger = mgcLoggerPkg.NewLazy[DynamicArgLoader]()
+var logger = mgcLoggerPkg.NewLazy[osArgParser]()
 
 func newLogConfig() zap.Config {
 	zapConfig := zap.NewProductionConfig()
