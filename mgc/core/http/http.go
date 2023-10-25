@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/xml"
@@ -184,4 +185,16 @@ func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
 	}
 
 	return
+}
+
+var defaultTransport *http.Transport
+
+func DefaultTransport() http.RoundTripper {
+	if defaultTransport == nil {
+		defaultTransport = (http.DefaultTransport).(*http.Transport)
+		defaultTransport.MaxIdleConns = 10
+		defaultTransport.IdleConnTimeout = 30 * time.Second
+		defaultTransport.DisableCompression = true
+	}
+	return defaultTransport
 }

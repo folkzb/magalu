@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/spf13/afero"
 	"magalu.cloud/core"
@@ -145,15 +144,16 @@ func (o *Sdk) Group() core.Grouper {
 }
 
 func newHttpTransport() http.RoundTripper {
-	var transport http.RoundTripper = &http.Transport{
-		MaxIdleConns:       10,
-		IdleConnTimeout:    30 * time.Second,
-		DisableCompression: true,
-	}
-	transport = mgcHttpPkg.NewDefaultClientLogger(transport)
+	// To avoid creating a transport with zero values, we leverage
+	// DefaultTransport (exemple: `Proxy: ProxyFromEnvironment`)
+	transport := mgcHttpPkg.DefaultTransport()
+
+	newRoundTripper := (http.RoundTripper)(transport)
+
+	newRoundTripper = mgcHttpPkg.NewDefaultClientLogger(newRoundTripper)
 	userAgent := "MgcCLI/" + Version
-	transport = newDefaultSdkTransport(transport, userAgent)
-	return transport
+	newRoundTripper = newDefaultSdkTransport(newRoundTripper, userAgent)
+	return newRoundTripper
 }
 
 func (o *Sdk) addHttpRefreshHandler(t http.RoundTripper) http.RoundTripper {
