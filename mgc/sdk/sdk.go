@@ -151,7 +151,7 @@ func newHttpTransport() http.RoundTripper {
 	newRoundTripper := (http.RoundTripper)(transport)
 
 	newRoundTripper = mgcHttpPkg.NewDefaultClientLogger(newRoundTripper)
-	userAgent := "MgcCLI/" + Version
+	userAgent := "MgcSDK/" + Version
 	newRoundTripper = newDefaultSdkTransport(newRoundTripper, userAgent)
 	return newRoundTripper
 }
