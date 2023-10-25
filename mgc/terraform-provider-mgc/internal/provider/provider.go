@@ -113,25 +113,8 @@ func (p *MgcProvider) Configure(ctx context.Context, req provider.ConfigureReque
 func (p *MgcProvider) Resources(ctx context.Context) []func() resource.Resource {
 	tflog.Info(ctx, "configuring MGC provider resources")
 
-	resources := make([]func() resource.Resource, 0)
 	root := p.sdk.Group()
-	_, err := root.VisitChildren(func(child core.Descriptor) (run bool, err error) {
-		// TODO: We Should we check if the version is correct in the Configuration call or Resource
-		childName := fmt.Sprintf("%q@%q", child.Name(), child.Version())
-		if group, ok := child.(mgcSdk.Grouper); !ok {
-			// Warning since we don't want to stop the discovery process
-			tflog.Warn(ctx, fmt.Sprintf("Invalid API %q: invalid format", childName))
-			return true, nil
-		} else if groupResources, err := collectGroupResources(ctx, p.sdk, group, []string{providerTypeName, group.Name()}); err != nil {
-			// Warning since we don't want to stop the discovery process
-			tflog.Warn(ctx, fmt.Sprintf("Could not add API %q: %v", childName, err))
-			return true, nil
-		} else {
-			tflog.Info(ctx, fmt.Sprintf("Resources %v", groupResources))
-			resources = append(resources, groupResources...)
-			return true, nil
-		}
-	})
+	resources, err := collectGroupResources(ctx, p.sdk, root, []string{providerTypeName})
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("An error occurred while generating the provider resource list: %v", err))
 	}
@@ -145,6 +128,9 @@ func collectGroupResources(
 	group mgcSdk.Grouper,
 	path []string,
 ) (resources []func() resource.Resource, err error) {
+	// TODO: We should check if the version is correct in the Configuration call or Resource
+	debugMap := map[string]any{"path": path}
+	tflog.Debug(ctx, "Collecting resources", debugMap)
 	resources = make([]func() resource.Resource, 0)
 	var create, read, update, delete mgcSdk.Executor
 	_, err = group.VisitChildren(func(child mgcSdk.Descriptor) (run bool, err error) {
@@ -170,11 +156,11 @@ func collectGroupResources(
 			case "delete":
 				delete = exec
 			default:
-				tflog.Warn(ctx, fmt.Sprintf("TODO: uncovered action %s", exec.Name()))
+				tflog.Warn(ctx, fmt.Sprintf("TODO: uncovered action %s", exec.Name()), debugMap)
 			}
 			return true, nil
 		} else {
-			return false, fmt.Errorf("unsupported grouper child type %T", child)
+			return false, fmt.Errorf("Unsupported descriptor child type %T", child)
 		}
 	})
 	if err != nil {
@@ -183,12 +169,13 @@ func collectGroupResources(
 
 	if create != nil {
 		name := strings.Join(path, "_")
+		tflog.Debug(ctx, fmt.Sprintf("Found resource %q", name), debugMap)
 		if read == nil {
-			tflog.Warn(ctx, fmt.Sprintf("Resource %s misses read", name))
+			tflog.Warn(ctx, fmt.Sprintf("Resource %q misses read", name))
 			return resources, nil
 		}
 		if delete == nil {
-			tflog.Warn(ctx, fmt.Sprintf("Resource %s misses delete", name))
+			tflog.Warn(ctx, fmt.Sprintf("Resource %q misses delete", name))
 			return resources, nil
 		}
 		if update == nil {
@@ -204,8 +191,7 @@ func collectGroupResources(
 			delete: delete,
 		}
 
-		tflog.Debug(ctx, fmt.Sprintf("Export resource %q", name))
-
+		tflog.Debug(ctx, fmt.Sprintf("Export resource %q", name), debugMap)
 		resources = append(resources, func() resource.Resource { return res })
 	}
 
@@ -218,6 +204,8 @@ func collectGroupResources(
 }
 
 func collectActionResources(ctx context.Context, sdk *mgcSdk.Sdk, owner mgcSdk.Executor, path []string) []func() resource.Resource {
+	debugMap := map[string]any{"path": path}
+	tflog.Debug(ctx, "Collecting action resource", debugMap)
 	type actionLinks struct {
 		create mgcSdk.Linker
 		read   mgcSdk.Linker
@@ -260,7 +248,7 @@ func collectActionResources(ctx context.Context, sdk *mgcSdk.Sdk, owner mgcSdk.E
 				update:    links.update,
 				delete:    links.delete,
 			}
-			tflog.Debug(ctx, fmt.Sprintf("Export action resource %q", actionName))
+			tflog.Debug(ctx, fmt.Sprintf("Export action resource %q", actionName), debugMap)
 			result = append(result, func() resource.Resource { return actionResource })
 		}
 	}
