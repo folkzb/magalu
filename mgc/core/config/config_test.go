@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"path"
 	"reflect"
 	"testing"
@@ -84,11 +85,29 @@ func TestGetWithFile(t *testing.T) {
 	}
 }
 
+type unmarshalerField int
+
+func (f *unmarshalerField) UnmarshalText(data []byte) error {
+	str := string(data)
+	if str == "valid" {
+		*f = 100
+		return nil
+	}
+
+	return fmt.Errorf("'unmarshalerField' only accepts 'valid' keyword. Got %q instead", str)
+}
+
 func TestGet(t *testing.T) {
 	type person struct {
 		Name          string `json:"name"`
 		Age           int    `json:"age"`
 		CaseSensitive string `json:"caseSensitive"`
+	}
+
+	type unmarshalerPerson struct {
+		Name        string           `json:"name"`
+		Age         int              `json:"age"`
+		Unmarshaler unmarshalerField `json:"unmarshaler"`
 	}
 
 	t.Run("decode to no pointer", func(t *testing.T) {
@@ -298,6 +317,35 @@ func TestGet(t *testing.T) {
 		}
 		if p != expected {
 			t.Errorf("expected p == bar, found: %#v", p)
+		}
+	})
+
+	t.Run("decode object in config file with unmarshaler types", func(t *testing.T) {
+		// We save objects in Config File as strings...
+		data := `{
+			"foo": "{\"name\":\"jon\",\"age\":5,\"unmarshaler\":\"valid\"}"
+		}`
+
+		expected := unmarshalerPerson{
+			Name:        "jon",
+			Age:         5,
+			Unmarshaler: 100,
+		}
+
+		c, err := setupWithFile([]byte(data))
+
+		if err != nil {
+			t.Errorf("expected err == nil, found: %#v", err)
+		}
+
+		p := new(unmarshalerPerson)
+		err = c.Get("foo", p)
+
+		if err != nil {
+			t.Errorf("expected err == nil, found: %#v", err)
+		}
+		if !reflect.DeepEqual(*p, expected) {
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
 		}
 	})
 

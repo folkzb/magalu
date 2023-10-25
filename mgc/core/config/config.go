@@ -11,6 +11,7 @@ import (
 	"magalu.cloud/core/utils"
 
 	"github.com/invopop/yaml"
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 )
@@ -97,7 +98,16 @@ func (c *Config) Get(key string, out any) error {
 		return fmt.Errorf("result should not be nil pointer")
 	}
 
-	return c.viper.UnmarshalKey(key, out, viper.DecodeHook(stringUnmarshalHook))
+	return c.viper.UnmarshalKey(
+		key,
+		out,
+		viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.StringToSliceHookFunc(","),
+			mapstructure.TextUnmarshallerHookFunc(),
+			stringUnmarshalHook,
+		)),
+	)
 }
 
 func stringUnmarshalHook(f reflect.Value, t reflect.Value) (interface{}, error) {
