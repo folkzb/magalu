@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -13,7 +14,14 @@ import (
 
 	"go.uber.org/zap"
 	"magalu.cloud/core/pipeline"
+	"magalu.cloud/core/progress_report"
+	progressreport "magalu.cloud/core/progress_report"
 )
+
+type progressReport struct {
+	bytes uint64
+	err   error
+}
 
 var deleteBucketsLogger *zap.SugaredLogger
 
@@ -53,13 +61,14 @@ type completionRequest struct {
 }
 
 type bigFileUploader struct {
-	cfg      Config
-	dst      string
-	mimeType string
-	reader   io.ReaderAt
-	fileInfo fs.FileInfo
-	workerN  int
-	uploadId string
+	cfg        Config
+	dst        string
+	mimeType   string
+	reader     io.ReaderAt
+	fileInfo   fs.FileInfo
+	workerN    int
+	uploadId   string
+	reportChan chan progressReport
 }
 
 var _ uploader = (*bigFileUploader)(nil)
@@ -99,7 +108,8 @@ func (u *bigFileUploader) createMultipartRequest(ctx context.Context, partNumber
 	if err != nil {
 		return nil, err
 	}
-	req, err := newUploadRequest(ctx, u.cfg, u.dst, body)
+	wrappedReader := progressreport.NewProgressReader(body, u.reportProgress)
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, wrappedReader)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +175,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 
 		// This is used while retrying requests
 		req.GetBody = func() (io.ReadCloser, error) {
-			return io.NopCloser(io.NewSectionReader(chunk.Reader, 0, CHUNK_SIZE)), nil
+			return progressreport.NewProgressReader(io.NewSectionReader(chunk.Reader, 0, CHUNK_SIZE), u.reportProgress), nil
 		}
 
 		bigfileUploaderLogger().Debugw("Sending part", "part", partNumber, "total", totalParts)
@@ -180,6 +190,11 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 
 func (u *bigFileUploader) Upload(ctx context.Context) error {
 	bigfileUploaderLogger().Debug("start")
+
+	reportProgress := progressreport.FromContext(ctx)
+	u.reportChan = make(chan progressReport)
+	defer close(u.reportChan)
+	go progressReportSubroutine(reportProgress, u.reportChan, u.fileInfo)
 
 	ctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
@@ -200,4 +215,33 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 	}
 
 	return u.sendCompletionRequest(ctx, parts, uploadId)
+}
+
+func (u *bigFileUploader) reportProgress(n int, err error) {
+	u.reportChan <- progressReport{
+		bytes: uint64(n),
+		err:   err,
+	}
+}
+
+func progressReportSubroutine(
+	reportProgress progressreport.ReportProgress,
+	reportChan <-chan progressReport,
+	fileInfo fs.FileInfo,
+) {
+	// TODO as some parts may retry, progress maybe overreported
+	name := fileInfo.Name()
+	total := uint64(fileInfo.Size())
+	bytesDone := uint64(0)
+
+	// Report we're starting progress
+	reportProgress(name, bytesDone, total, progress_report.UnitsBytes, nil)
+
+	for report := range reportChan {
+		bytesDone += report.bytes
+		if errors.Is(report.err, io.EOF) {
+			report.err = nil
+		}
+		reportProgress(name, bytesDone, total, progress_report.UnitsBytes, report.err)
+	}
 }
