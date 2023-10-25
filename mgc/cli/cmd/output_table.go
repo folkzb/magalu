@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"text/scanner"
@@ -486,17 +487,20 @@ func configureWriter(w table.Writer, options *tableOptions) {
 
 	if options.Style != nil {
 		w.SetStyle(table.Style(*options.Style))
+	} else {
+		w.Style().Options.SeparateRows = true
+		w.Style().Box = table.StyleBoxLight
 	}
 }
 
-func formatTableWithOptions(val any, options *tableOptions) error {
+func buildTableHorizontally(writer table.Writer, val any, options *tableOptions) error {
+	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
 	columnCount := len(options.Columns)
 	headers := make([]any, columnCount)
 	for i, col := range options.Columns {
 		headers[i] = col.Name
 	}
 
-	writer := table.NewWriter()
 	writer.AppendHeader(headers)
 	configureWriter(writer, options)
 
@@ -511,20 +515,27 @@ func formatTableWithOptions(val any, options *tableOptions) error {
 			rows = append(rows, newRow)
 		}
 
-		var sanitized any
-		switch value.(type) {
+		switch val := value.(type) {
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
-			sanitized = value
-		default:
-			// Marshall the value for easier reading when printing to console, even if inside of a table
-			marshalled, err := json.Marshal(value)
+			rows[rowIdx][colIdx] = val
+		case map[string]any:
+			subTable := table.NewWriter()
+			fromAny, _ := columnsFromAny(val, "$")
+			tableOptions := &tableOptions{Columns: fromAny}
+			err := buildTableHorizontally(subTable, val, tableOptions)
 			if err != nil {
 				return err
 			}
-			sanitized = string(marshalled)
+			rows[rowIdx][colIdx] = subTable.Render()
+		default:
+			// Marshall the value for easier reading when printing to console, even if inside of a table
+			marshalled, err := json.Marshal(val)
+			if err != nil {
+				return err
+			}
+			rows[rowIdx][colIdx] = string(marshalled)
 		}
 
-		rows[rowIdx][colIdx] = sanitized
 		return nil
 	}
 
@@ -558,7 +569,111 @@ func formatTableWithOptions(val any, options *tableOptions) error {
 		writer.SetColumnConfigs(configs)
 	}
 
-	writer.AppendRows(rows)
+	writer.AppendRows(rows, rowConfigAutoMerge)
+
+	return nil
+}
+
+func buildSubTableFromMap(tw table.Writer, val map[string]any, op *tableOptions, key string, rConf table.RowConfig) error {
+	subTable := table.NewWriter()
+	err := buildTableVertically(subTable, val, op)
+	if err != nil {
+		return err
+	}
+	tw.AppendRow(table.Row{key, renderWriterWithFormat(subTable, op.Format)}, rConf)
+	return nil
+}
+
+func buildTableVertically(tw table.Writer, data map[string]any, options *tableOptions) error {
+	configureWriter(tw, options)
+	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
+	keys := make([]string, 0, len(data))
+
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	shouldAutoMergeColumn := len(keys) == 1
+
+	configs := []table.ColumnConfig{}
+
+	tw.AppendHeader(table.Row{"Key", "Value"}, rowConfigAutoMerge)
+
+	for _, key := range keys {
+
+		value := data[key]
+
+		switch val := value.(type) {
+		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
+			tw.AppendRow(table.Row{key, value}, rowConfigAutoMerge)
+		case map[string]any:
+			err := buildSubTableFromMap(tw, val, options, key, rowConfigAutoMerge)
+			if err != nil {
+				return err
+			}
+		case []any:
+			if len(val) > 0 && val[0] != nil {
+				if item, ok := val[0].(map[string]any); ok {
+					err := buildSubTableFromMap(tw, item, options, key, rowConfigAutoMerge)
+					if err != nil {
+						return err
+					}
+
+				} else {
+					var stringSlice []string
+
+					for _, item := range val {
+						str := fmt.Sprint(item)
+						stringSlice = append(stringSlice, str)
+					}
+
+					result := strings.Join(stringSlice, "\n")
+
+					tw.AppendRow(table.Row{key, fmt.Sprint(result)}, rowConfigAutoMerge)
+				}
+			} else {
+				tw.AppendRow(table.Row{key, "null"}, rowConfigAutoMerge)
+			}
+
+		default:
+			// Marshall the value for easier reading when printing to console, even if inside of a table
+			marshalled, err := json.Marshal(value)
+			if err != nil {
+				return err
+			}
+			tw.AppendRow(table.Row{key, string(marshalled)}, rowConfigAutoMerge)
+		}
+	}
+
+	if shouldAutoMergeColumn {
+		// merge the key column
+		configs = append(configs, table.ColumnConfig{Number: 1, AutoMerge: true})
+	}
+
+	tw.SetColumnConfigs(configs)
+
+	return nil
+}
+
+func formatTable(val any, options *tableOptions) (table.Writer, error) {
+	tw := table.NewWriter()
+	var err error
+
+	if mapVal, ok := val.(map[string]any); ok && len(mapVal) > 1 && len(options.Columns) > 1 {
+		err = buildTableVertically(tw, mapVal, options)
+	} else {
+		err = buildTableHorizontally(tw, val, options)
+	}
+
+	return tw, err
+}
+
+func formatTableWithOptions(val any, options *tableOptions) error {
+	writer, err := formatTable(val, options)
+	if err != nil {
+		return err
+	}
 	fmt.Println(renderWriterWithFormat(writer, options.Format))
 	return nil
 }
