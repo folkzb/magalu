@@ -593,6 +593,12 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 
 	childCmd, childCmdDesc, err := loadChild(sdk, cmd, cmdDesc, *childName)
 	if err != nil {
+		// If loading specified child fails, force load all children to print in help command
+		// as all available child commands
+		if _, loadAllErr := loadAllChildren(sdk, cmd, cmdDesc); loadAllErr != nil {
+			return loadAllErr
+		}
+
 		return err
 	}
 
