@@ -194,7 +194,6 @@ func DefaultTransport() http.RoundTripper {
 		defaultTransport = (http.DefaultTransport).(*http.Transport)
 		defaultTransport.MaxIdleConns = 10
 		defaultTransport.IdleConnTimeout = 30 * time.Second
-		defaultTransport.DisableCompression = true
 	}
 	return defaultTransport
 }
