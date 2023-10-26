@@ -671,7 +671,7 @@ func Execute() (err error) {
 	sdk := &mgcSdk.Sdk{}
 
 	rootCmd := &cobra.Command{
-		Use:     "mgc",
+		Use:     os.Args[0],
 		Version: mgcSdk.Version,
 		Short:   "CLI tool for OpenAPI integration",
 		Long: `This CLI is a dynamic processor of OpenAPI files that
