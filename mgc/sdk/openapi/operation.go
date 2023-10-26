@@ -643,9 +643,16 @@ func (o *operation) ParametersSchema() *core.Schema {
 		o.addSecurityParameters(rootSchema)
 
 		var err error
-		o.transformParameters, o.paramsSchema, err = createTransform[map[string]any](o.logger, rootSchema, o.extensionPrefix)
+		var transformSchema *core.Schema
+		o.transformParameters, transformSchema, err = createTransform[map[string]any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
-			o.logger.Warnw("error while loading parameters schema", "error", err)
+			o.logger.Warnw("error while loading parameters schema", "error", err, "rootSchema", rootSchema)
+		}
+
+		if simplifiedParams, err := mgcSchemaPkg.SimplifySchema(transformSchema); err == nil {
+			o.paramsSchema = simplifiedParams
+		} else {
+			o.logger.Warnw("error while simplifying params schema", "error", err, "transformSchema", transformSchema)
 		}
 	}
 	return o.paramsSchema
@@ -660,9 +667,16 @@ func (o *operation) ConfigsSchema() *core.Schema {
 		o.addNetworkConfig(rootSchema)
 
 		var err error
-		o.transformConfigs, o.configsSchema, err = createTransform[map[string]any](o.logger, rootSchema, o.extensionPrefix)
+		var transformSchema *core.Schema
+		o.transformConfigs, transformSchema, err = createTransform[map[string]any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
-			o.logger.Warnw("error while loading configs schema", "error", err)
+			o.logger.Warnw("error while loading configs schema", "error", err, "rootSchema", rootSchema)
+		}
+
+		if simplifiedConfigs, err := mgcSchemaPkg.SimplifySchema(transformSchema); err == nil {
+			o.configsSchema = simplifiedConfigs
+		} else {
+			o.logger.Warnw("error while simplifying configs schema", "error", err, "transformSchema", transformSchema)
 		}
 	}
 	return o.configsSchema
@@ -700,9 +714,15 @@ func (o *operation) initResultSchema() {
 		}
 
 		var err error
-		o.transformResult, o.resultSchema, err = createTransform[any](o.logger, rootSchema, o.extensionPrefix)
+		var transformSchema *core.Schema
+		o.transformResult, transformSchema, err = createTransform[any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
-			o.logger.Warnw("error while initializing result schema", "error", err)
+			o.logger.Warnw("error while initializing result schema", "error", err, "rootSchema", rootSchema)
+		}
+		if simplifiedResult, err := mgcSchemaPkg.SimplifySchema(transformSchema); err == nil {
+			o.resultSchema = simplifiedResult
+		} else {
+			o.logger.Warnw("error while simplifying result schema", "error", err, "transformSchema", transformSchema)
 		}
 	}
 }
