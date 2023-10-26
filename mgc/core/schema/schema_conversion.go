@@ -8,7 +8,7 @@ import (
 	"github.com/invopop/jsonschema"
 )
 
-func ToCoreSchema(s *jsonschema.Schema) (*Schema, error) {
+func ToCoreSchema(s *jsonschema.Schema) (schema *Schema, err error) {
 	if s == nil {
 		return nil, fmt.Errorf("invalid jsonschema.Schema passed to 'toCoreSchema' function")
 	}
@@ -36,7 +36,8 @@ func ToCoreSchema(s *jsonschema.Schema) (*Schema, error) {
 	}
 
 	initializeExtensions(oapiSchema)
-	return (*Schema)(oapiSchema), nil
+	schema = (*Schema)(oapiSchema)
+	return SimplifySchema(schema)
 }
 
 func unmarshallIntoOpenapiSchema(s *jsonschema.Schema) (*openapi3.Schema, error) {
