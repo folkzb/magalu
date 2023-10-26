@@ -92,6 +92,26 @@ func (c *COWSchemaRef) copyIfNeeded() {
 	}
 }
 
+func (c *COWSchemaRef) Ref() string {
+	if c == nil || c.s == nil {
+		return ""
+	}
+	return c.s.Ref
+}
+
+func (c *COWSchemaRef) SetRef(v string) bool {
+	if c.Ref() == v {
+		return false
+	}
+	c.copyIfNeeded()
+	c.s.Ref = v
+	return true
+}
+
+func (c *COWSchemaRef) UnsetRef() bool {
+	return c.SetRef("")
+}
+
 func (c *COWSchemaRef) SetValue(v *Schema) bool {
 	c.initCOWValueIfNeeded()
 	return c.cowValue.Replace(v)
