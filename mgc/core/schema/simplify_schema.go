@@ -589,7 +589,7 @@ func SimplifySchemaCOW(input *COWSchema) (err error) {
 
 	if input.Type() == "" {
 		if len(input.Enum()) > 0 {
-			if t, _ := GetJsonEnumType(input.Peek()); t != "" { // ignore errors, just don't set the type
+			if t, _ := getJsonEnumType(input.Peek()); t != "" { // ignore errors, just don't set the type
 				input.SetType(t)
 			}
 		}

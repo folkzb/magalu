@@ -135,7 +135,7 @@ func IsSchemaNullable(schema *Schema) bool {
 	return false
 }
 
-func GetJsonEnumType(v *Schema) (string, error) {
+func getJsonEnumType(v *Schema) (string, error) {
 	types := []string{}
 	for _, v := range v.Enum {
 		var t string
@@ -165,7 +165,7 @@ func GetJsonEnumType(v *Schema) (string, error) {
 func GetJsonType(v *Schema) (string, error) {
 	if v.Type == "" {
 		if len(v.Enum) != 0 {
-			return GetJsonEnumType(v)
+			return getJsonEnumType(v)
 		}
 
 		return "", fmt.Errorf("unable to find schema %+v type", v)
