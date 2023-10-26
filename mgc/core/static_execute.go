@@ -17,17 +17,17 @@ func ReflectExecutorSpecSchemas[ParamsT any, ConfigsT any, ResultT any](baseSpec
 
 	spec.ParametersSchema, err = schemaFromType[ParamsT]()
 	if err != nil {
-		err = &ChainedError{"ParamsT", err}
+		err = &ChainedError{Name: "ParamsT", Err: err}
 		return
 	}
 	spec.ConfigsSchema, err = schemaFromType[ConfigsT]()
 	if err != nil {
-		err = &ChainedError{"ConfigsT", err}
+		err = &ChainedError{Name: "ConfigsT", Err: err}
 		return
 	}
 	spec.ResultSchema, err = schemaFromType[ResultT]()
 	if err != nil {
-		err = &ChainedError{"ResultT", err}
+		err = &ChainedError{Name: "ResultT", Err: err}
 		return
 	}
 
@@ -40,12 +40,12 @@ func ReflectExecutorSpecFn[ParamsT any, ConfigsT any, ResultT any](
 	return func(executor Executor, ctx context.Context, parameters Parameters, configs Configs) (Result, error) {
 		typedParams, err := utils.DecodeNewValue[ParamsT](parameters)
 		if err != nil {
-			return nil, &ChainedError{"parameters", fmt.Errorf("decoding error. Did you forget to set 'json' struct flags for struct %T?: %w", typedParams, err)}
+			return nil, &ChainedError{Name: "parameters", Err: fmt.Errorf("decoding error. Did you forget to set 'json' struct flags for struct %T?: %w", typedParams, err)}
 		}
 
 		typedConfigs, err := utils.DecodeNewValue[ConfigsT](configs)
 		if err != nil {
-			return nil, &ChainedError{"configs", fmt.Errorf("decoding error. Did you forget to set 'json' struct flags for struct %T?: %w", typedConfigs, err)}
+			return nil, &ChainedError{Name: "configs", Err: fmt.Errorf("decoding error. Did you forget to set 'json' struct flags for struct %T?: %w", typedConfigs, err)}
 		}
 
 		typedResult, err := typedExecute(ctx, *typedParams, *typedConfigs)
@@ -55,7 +55,7 @@ func ReflectExecutorSpecFn[ParamsT any, ConfigsT any, ResultT any](
 
 		value, err := utils.SimplifyAny(typedResult)
 		if err != nil {
-			return nil, &ChainedError{"result", fmt.Errorf("error simplifying %T: %w", typedResult, err)}
+			return nil, &ChainedError{Name: "result", Err: fmt.Errorf("error simplifying %T: %w", typedResult, err)}
 		}
 
 		source := ResultSource{

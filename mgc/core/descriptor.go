@@ -14,10 +14,10 @@ type DescriptorSpec struct {
 
 func (d *DescriptorSpec) Validate() error {
 	if d.Name == "" {
-		return &ChainedError{fmt.Sprintf("<missing name %p>", d), errors.New("missing name")}
+		return &ChainedError{Name: fmt.Sprintf("<missing name %p>", d), Err: errors.New("missing name")}
 	}
 	if d.Description == "" {
-		return &ChainedError{d.Name, errors.New("missing description")}
+		return &ChainedError{Name: d.Name, Err: errors.New("missing description")}
 	}
 	// Version and Summary are optional
 	return nil
