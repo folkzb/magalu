@@ -10,9 +10,11 @@ import (
 	"strings"
 
 	"magalu.cloud/cli/ui"
+	"magalu.cloud/cli/ui/progress_bar"
 	"magalu.cloud/core"
 	mgcHttpPkg "magalu.cloud/core/http"
 	mgcLoggerPkg "magalu.cloud/core/logger"
+	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 
@@ -28,6 +30,8 @@ import (
 const loggerConfigKey = "logging"
 
 var argParser = &osArgParser{}
+
+var pb *progress_bar.ProgressBar
 
 func getPropType(prop *mgcSdk.Schema) string {
 	result := prop.Type
@@ -275,6 +279,9 @@ func handleExecutor(
 	parameters core.Parameters,
 	configs core.Configs,
 ) (core.Result, error) {
+	if pb != nil {
+		ctx = progress_report.NewContext(ctx, pb.ReportProgress)
+	}
 
 	if cExec, ok := core.ExecutorAs[core.ConfirmableExecutor](exec); ok && !getBypassConfirmationFlag(cmd) {
 		msg := cExec.ConfirmPrompt(parameters, configs)
@@ -691,6 +698,8 @@ can generate a command line on-demand for Rest manipulation`,
 	}()
 
 	rootCmd.SetArgs(mainArgs)
+	pb = progress_bar.New()
+	defer pb.Stop()
 	err = rootCmd.Execute()
 	showHelpForError(rootCmd, mainArgs, err) // since we SilenceUsage and SilenceErrors
 	return err

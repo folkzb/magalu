@@ -12,7 +12,7 @@ require (
 require (
 	github.com/erikgeiser/promptkit v0.9.0
 	github.com/invopop/yaml v0.2.0
-	github.com/jedib0t/go-pretty/v6 v6.4.6
+	github.com/jedib0t/go-pretty/v6 v6.4.8
 	github.com/stoewer/go-strcase v1.3.0
 	go.uber.org/zap v1.25.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
