@@ -419,8 +419,9 @@ func AddAction(
 	desc := exec.(mgcSdk.Descriptor)
 
 	actionCmd := &cobra.Command{
-		Use:   desc.Name(),
-		Short: desc.Description(),
+		Use:     desc.Name(),
+		Short:   desc.Description(),
+		Version: desc.Version(),
 		// TODO: Long:    desc.Description,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
