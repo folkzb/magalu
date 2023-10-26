@@ -3,6 +3,8 @@ package s3
 import (
 	"context"
 	"io"
+	"io/fs"
+
 )
 
 type smallFileUploader struct {
@@ -10,6 +12,7 @@ type smallFileUploader struct {
 	dst      string
 	mimeType string
 	reader   io.Reader
+	fileInfo fs.FileInfo
 }
 
 var _ uploader = (*smallFileUploader)(nil)

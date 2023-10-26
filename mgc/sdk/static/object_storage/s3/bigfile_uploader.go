@@ -15,7 +15,6 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core/pipeline"
 	"magalu.cloud/core/progress_report"
-	progressreport "magalu.cloud/core/progress_report"
 )
 
 type progressReport struct {
@@ -108,7 +107,7 @@ func (u *bigFileUploader) createMultipartRequest(ctx context.Context, partNumber
 	if err != nil {
 		return nil, err
 	}
-	wrappedReader := progressreport.NewProgressReader(body, u.reportProgress)
+	wrappedReader := progress_report.NewProgressReader(body, u.reportProgress)
 	req, err := newUploadRequest(ctx, u.cfg, u.dst, wrappedReader)
 	if err != nil {
 		return nil, err
@@ -175,7 +174,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 
 		// This is used while retrying requests
 		req.GetBody = func() (io.ReadCloser, error) {
-			return progressreport.NewProgressReader(io.NewSectionReader(chunk.Reader, 0, CHUNK_SIZE), u.reportProgress), nil
+			return progress_report.NewProgressReader(io.NewSectionReader(chunk.Reader, 0, CHUNK_SIZE), u.reportProgress), nil
 		}
 
 		bigfileUploaderLogger().Debugw("Sending part", "part", partNumber, "total", totalParts)
@@ -191,7 +190,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 func (u *bigFileUploader) Upload(ctx context.Context) error {
 	bigfileUploaderLogger().Debug("start")
 
-	reportProgress := progressreport.FromContext(ctx)
+	reportProgress := progress_report.FromContext(ctx)
 	u.reportChan = make(chan progressReport)
 	defer close(u.reportChan)
 	go progressReportSubroutine(reportProgress, u.reportChan, u.fileInfo)
@@ -225,7 +224,7 @@ func (u *bigFileUploader) reportProgress(n int, err error) {
 }
 
 func progressReportSubroutine(
-	reportProgress progressreport.ReportProgress,
+	reportProgress progress_report.ReportProgress,
 	reportChan <-chan progressReport,
 	fileInfo fs.FileInfo,
 ) {
@@ -237,11 +236,19 @@ func progressReportSubroutine(
 	// Report we're starting progress
 	reportProgress(name, bytesDone, total, progress_report.UnitsBytes, nil)
 
+	var err error
+
 	for report := range reportChan {
 		bytesDone += report.bytes
-		if errors.Is(report.err, io.EOF) {
-			report.err = nil
+		if report.err != nil && !errors.Is(report.err, io.EOF) {
+			err = report.err
 		}
-		reportProgress(name, bytesDone, total, progress_report.UnitsBytes, report.err)
+		reportProgress(name, bytesDone, total, progress_report.UnitsBytes, nil)
 	}
+	// Set DONE flag
+	if err == nil {
+		err = progress_report.ErrorProgressDone
+	}
+
+	reportProgress(name, bytesDone, total, progress_report.UnitsBytes, err)
 }
