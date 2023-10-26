@@ -674,6 +674,7 @@ can generate a command line on-demand for Rest manipulation`,
 	addWaitTerminationFlag(rootCmd)
 	addRetryUntilFlag(rootCmd)
 	addBypassConfirmationFlag(rootCmd)
+	addHideProgressFlag(rootCmd)
 
 	if hasOutputFormatHelp(rootCmd) {
 		return nil
@@ -698,8 +699,12 @@ can generate a command line on-demand for Rest manipulation`,
 	}()
 
 	rootCmd.SetArgs(mainArgs)
-	pb = progress_bar.New()
-	defer pb.Stop()
+
+	if !getHideProgressFlag(rootCmd) {
+		pb = progress_bar.New()
+		defer pb.Stop()
+	}
+
 	err = rootCmd.Execute()
 	showHelpForError(rootCmd, mainArgs, err) // since we SilenceUsage and SilenceErrors
 	return err
