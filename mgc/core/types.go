@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"magalu.cloud/core/schema"
+	"magalu.cloud/core/utils"
 )
 
 type Schema = schema.Schema
+type ChainedError = utils.ChainedError
 
 // NOTE: This is so 'jsonschema' doesn't generate a schema with type string and format
 // 'date-time'. We want the raw object schema for later validation
