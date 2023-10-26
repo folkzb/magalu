@@ -64,8 +64,9 @@ type Executor interface {
 	//
 	// For other executors that may be associated or operate together with this one, see Related().
 	//
-	// NOTE: This map should not be altered externally.
-	Links() map[string]Linker
+	// NOTE: it's possible to add new links using Links().AddLink(), but it's not possible to delete
+	// nor override any existing links
+	Links() Links
 	// Executors that may be associated or operate together with this one.
 	//
 	// For executors that can operate on the returned value, see Links().

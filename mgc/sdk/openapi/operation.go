@@ -52,7 +52,7 @@ type operation struct {
 	configsSchema       *core.Schema
 	resultSchema        *core.Schema
 	responseSchemas     map[string]*core.Schema
-	links               map[string]core.Linker
+	links               core.Links
 	related             map[string]core.Executor
 	transformParameters func(value map[string]any) (map[string]any, error)
 	transformConfigs    func(value map[string]any) (map[string]any, error)
@@ -760,8 +760,9 @@ func (o *operation) initLinksAndRelated() map[string]core.Linker {
 	return o.links
 }
 
-// This map should not be altered externally
-func (o *operation) Links() map[string]core.Linker {
+// NOTE: it's possible to add new links using Links().AddLink(), but it's not possible to delete
+// nor override any existing links
+func (o *operation) Links() core.Links {
 	o.initLinksAndRelated()
 	return o.links
 }
