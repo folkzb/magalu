@@ -6,7 +6,10 @@ import (
 
 	"magalu.cloud/core"
 	mgcAuthPkg "magalu.cloud/core/auth"
+	"magalu.cloud/core/utils"
 )
+
+var getList = utils.NewLazyLoader[core.Executor](newList)
 
 func newList() core.Executor {
 	return core.NewStaticExecuteSimple(

@@ -14,6 +14,8 @@ type CreateAttachVolumeParams struct {
 	VirtualMachineID string `json:"virtual_machine_id" jsonschema:"description=ID of the virtual machine instance to attach the volume"`
 }
 
+var getCreate = utils.NewLazyLoader[core.Executor](newCreate)
+
 func newCreate() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{

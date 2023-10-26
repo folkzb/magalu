@@ -1,17 +1,22 @@
 package tenant
 
-import "magalu.cloud/core"
+import (
+	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
+)
 
-func NewGroup() core.Grouper {
+var GetGroup = utils.NewLazyLoader[core.Grouper](newGroup)
+
+func newGroup() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:        "tenant",
 			Description: "Tenant-related operations",
 		},
 		[]core.Descriptor{
-			newList(),
-			newSelect(),
-			newCurrent(),
+			getList(),
+			getSelect(),
+			getCurrent(),
 		},
 	)
 }

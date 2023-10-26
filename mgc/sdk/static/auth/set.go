@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	mgcAuthPkg "magalu.cloud/core/auth"
+	"magalu.cloud/core/utils"
 
 	"magalu.cloud/core"
 )
@@ -13,6 +14,8 @@ type authSetParams struct {
 	AccessKeyId     string `jsonschema_description:"Access key id value"`
 	SecretAccessKey string `jsonschema_description:"Secret access key value"`
 }
+
+var getSet = utils.NewLazyLoader[core.Executor](newSet)
 
 func set(ctx context.Context, parameter authSetParams, _ struct{}) (*authSetParams, error) {
 	auth := mgcAuthPkg.FromContext(ctx)

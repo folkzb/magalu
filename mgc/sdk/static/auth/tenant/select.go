@@ -6,11 +6,14 @@ import (
 
 	"magalu.cloud/core"
 	mgcAuthPkg "magalu.cloud/core/auth"
+	"magalu.cloud/core/utils"
 )
 
 type tenantSetParams struct {
 	ID string `jsonschema_description:"The UUID of the desired Tenant. To list all possible IDs, run auth tenant list"`
 }
+
+var getSelect = utils.NewLazyLoader[core.Executor](newSelect)
 
 func newSelect() core.Executor {
 	executor := core.NewStaticExecute(

@@ -4,12 +4,15 @@ import (
 	"context"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 )
 
 type UpdateAttachVolumeParams struct {
 	VolumeID         string `json:"id" jsonschema:"description=Block storage volume ID to be attached"`
 	VirtualMachineID string `json:"virtual_machine_id" jsonschema:"description=ID of the virtual machine instance to attach the volume"`
 }
+
+var getUpdate = utils.NewLazyLoader[core.Executor](newUpdate)
 
 func newUpdate() core.Executor {
 	return core.NewStaticExecute(

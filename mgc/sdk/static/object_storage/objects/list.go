@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/s3"
 )
 
@@ -37,6 +38,8 @@ func newListRequest(ctx context.Context, cfg s3.Config, bucket string) (*http.Re
 	}
 	return http.NewRequestWithContext(ctx, http.MethodGet, parsedUrl.String(), nil)
 }
+
+var getList = utils.NewLazyLoader[core.Executor](newList)
 
 func newList() core.Executor {
 	return core.NewStaticExecute(

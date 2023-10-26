@@ -12,10 +12,10 @@ func NewGroup() *core.StaticGroup {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{Name: "Static Groups Root"},
 		[]core.Descriptor{
-			auth.NewGroup(),           // cmd: "auth"
-			config.NewGroup(),         // cmd: "config"
-			object_storage.NewGroup(), // cmd: "object-storage"
-			block_storage.NewGroup(),  // cmd: "block-storage"
+			auth.GetGroup(),           // cmd: "auth"
+			config.GetGroup(),         // cmd: "config"
+			object_storage.GetGroup(), // cmd: "object-storage"
+			block_storage.GetGroup(),  // cmd: "block-storage"
 		},
 	)
 }

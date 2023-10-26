@@ -6,6 +6,7 @@ import (
 
 	"magalu.cloud/core"
 	mgcAuthPkg "magalu.cloud/core/auth"
+	"magalu.cloud/core/utils"
 )
 
 type accessTokenParameters struct {
@@ -15,6 +16,8 @@ type accessTokenParameters struct {
 type accessTokenResult struct {
 	AccessToken string `json:"access_token,omitempty"`
 }
+
+var getAccessToken = utils.NewLazyLoader[core.Executor](newAccessToken)
 
 func newAccessToken() core.Executor {
 	return core.NewStaticExecute(

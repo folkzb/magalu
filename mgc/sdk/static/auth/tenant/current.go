@@ -6,11 +6,14 @@ import (
 
 	"magalu.cloud/core"
 	mgcAuthPkg "magalu.cloud/core/auth"
+	"magalu.cloud/core/utils"
 )
 
 type tenantCurrentResult struct {
 	ID string
 }
+
+var getCurrent = utils.NewLazyLoader[core.Executor](newCurrent)
 
 func newCurrent() core.Executor {
 	return core.NewStaticExecuteSimple(

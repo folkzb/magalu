@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	mgcConfigPkg "magalu.cloud/core/config"
+	"magalu.cloud/core/utils"
 	mgcUtilsPkg "magalu.cloud/core/utils"
 )
 
@@ -31,6 +32,8 @@ func configListFormatter(exec core.Executor, result core.Result) string {
 
 	return writer.Render()
 }
+
+var getList = utils.NewLazyLoader[core.Executor](newList)
 
 func newList() core.Executor {
 	executor := core.NewStaticExecuteSimple(

@@ -14,6 +14,8 @@ type GetAttachVolumeParams struct {
 	VirtualMachineID string `json:"virtual_machine_id" jsonschema:"description=Instance ID of the virtual machine to which the volume is attached"`
 }
 
+var getGet = utils.NewLazyLoader[core.Executor](newGet)
+
 func newGet() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{

@@ -7,12 +7,15 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"magalu.cloud/core"
 	mgcConfigPkg "magalu.cloud/core/config"
+	"magalu.cloud/core/utils"
 )
 
 type configSetParams struct {
 	Key   string `jsonschema_description:"Name of the desired config"`
 	Value any    `jsonschema_description:"New flag value"`
 }
+
+var getSet = utils.NewLazyLoader[core.Executor](newSet)
 
 func newSet() core.Executor {
 	return core.NewStaticExecute(

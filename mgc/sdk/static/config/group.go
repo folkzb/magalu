@@ -2,19 +2,22 @@ package config
 
 import (
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 )
 
-func NewGroup() *core.StaticGroup {
+var GetGroup = utils.NewLazyLoader[*core.StaticGroup](newGroup)
+
+func newGroup() *core.StaticGroup {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:        "config",
 			Description: "Config related commands",
 		},
 		[]core.Descriptor{
-			newList(),
-			newGet(),
-			newSet(),
-			newDelete(),
+			getList(),
+			getGet(),
+			getSet(),
+			getDelete(),
 		},
 	)
 }

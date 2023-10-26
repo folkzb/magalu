@@ -60,6 +60,8 @@ type downloadObjectParams struct {
 	Destination string `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved" example:"file1.txt"`
 }
 
+var getDownload = utils.NewLazyLoader[core.Executor](newDownload)
+
 func newDownload() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{

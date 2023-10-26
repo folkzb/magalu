@@ -6,11 +6,14 @@ import (
 
 	"magalu.cloud/core"
 	mgcConfigPkg "magalu.cloud/core/config"
+	"magalu.cloud/core/utils"
 )
 
 type configGetParams struct {
 	Key string `json:"key" validate:"required" jsonschema_description:"Name of the desired config"`
 }
+
+var getGet = utils.NewLazyLoader[core.Executor](newGet)
 
 func newGet() core.Executor {
 	return core.NewStaticExecute(

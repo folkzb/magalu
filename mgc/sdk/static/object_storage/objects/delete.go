@@ -7,12 +7,15 @@ import (
 	"strings"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/s3"
 )
 
 type DeleteObjectParams struct {
 	Destination string `json:"dst" jsonschema:"description=Path of the object to be deleted" example:"s3://bucket1/file1"`
 }
+
+var getDelete = utils.NewLazyLoader[core.Executor](newDelete)
 
 func newDelete() core.Executor {
 	exec := core.NewStaticExecute(

@@ -19,6 +19,7 @@ import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
 	mgcAuthPkg "magalu.cloud/core/auth"
+	"magalu.cloud/core/utils"
 )
 
 type authResult struct {
@@ -42,6 +43,8 @@ var (
 	successPage         string
 	loginLoggerInstance *zap.SugaredLogger
 )
+
+var getLogin = utils.NewLazyLoader[core.Executor](newLogin)
 
 func loginLogger() *zap.SugaredLogger {
 	if loginLoggerInstance == nil {

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/s3"
 )
 
@@ -18,6 +19,8 @@ type uploadTemplateResult struct {
 	File string `json:"file"`
 	URI  string `json:"uri"`
 }
+
+var getUpload = utils.NewLazyLoader[core.Executor](newUpload)
 
 func newUpload() core.Executor {
 	executor := core.NewStaticExecute(

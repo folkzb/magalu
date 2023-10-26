@@ -14,6 +14,8 @@ type DeleteAttachVolumeParams struct {
 	VirtualMachineID string `json:"virtual_machine_id" jsonschema:"description=ID of the virtual machine instance to detach the volume from"`
 }
 
+var getDelete = utils.NewLazyLoader[core.Executor](newDelete)
+
 func newDelete() core.Executor {
 	exec := core.NewStaticExecute(
 		core.DescriptorSpec{

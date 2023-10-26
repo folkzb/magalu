@@ -6,11 +6,14 @@ import (
 
 	"magalu.cloud/core"
 	mgcConfigPkg "magalu.cloud/core/config"
+	"magalu.cloud/core/utils"
 )
 
 type configDeleteParams struct {
 	Key string `jsonschema_description:"Name of the config to be deleted"`
 }
+
+var getDelete = utils.NewLazyLoader[core.Executor](newDelete)
 
 func newDelete() core.Executor {
 	return core.NewStaticExecute(
