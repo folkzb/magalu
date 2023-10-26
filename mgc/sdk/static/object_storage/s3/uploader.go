@@ -42,6 +42,7 @@ func NewS3Uploader(cfg Config, src, dst string) (uploader, error) {
 			dst:      dst,
 			mimeType: mimeType,
 			reader:   reader,
+			fileInfo: fileInfo,
 		}, nil
 	}
 }

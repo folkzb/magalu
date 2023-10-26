@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/fs"
 
+	"magalu.cloud/core/progress_report"
 )
 
 type smallFileUploader struct {
@@ -17,8 +18,20 @@ type smallFileUploader struct {
 
 var _ uploader = (*smallFileUploader)(nil)
 
+func (u *smallFileUploader) createProgressReporter(ctx context.Context) progress_report.ReportReaderProgress {
+	reportProgress := progress_report.FromContext(ctx)
+	fileName := u.fileInfo.Name()
+	total := uint64(u.fileInfo.Size())
+	sentBytes := uint64(0)
+	return func(n int, err error) {
+		sentBytes += uint64(n)
+		reportProgress(fileName, sentBytes, total, progress_report.UnitsBytes, err)
+	}
+}
+
 func (u *smallFileUploader) Upload(ctx context.Context) error {
-	req, err := newUploadRequest(ctx, u.cfg, u.dst, u.reader)
+	wrappedReader := progress_report.NewProgressReader(u.reader, u.createProgressReporter(ctx))
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, wrappedReader)
 	if err != nil {
 		return err
 	}
