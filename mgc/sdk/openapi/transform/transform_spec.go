@@ -6,7 +6,7 @@ import (
 )
 
 type transformSpec struct {
-	Type string `json:"type" yaml:"type"`
+	Type string `json:"type"`
 	// See more about the 'remain' directive here: https://pkg.go.dev/github.com/mitchellh/mapstructure#hdr-Remainder_Values
 	Parameters map[string]any `json:",remain"` // nolint
 	Schema     *openapi3.Schema

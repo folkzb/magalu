@@ -8,13 +8,13 @@ import (
 )
 
 type transformTranslateSpecItem struct {
-	From any `json:"from" yaml:"from"`
-	To   any `json:"to" yaml:"to"`
+	From any `json:"from"`
+	To   any `json:"to"`
 }
 
 type transformTranslateSpec struct {
-	Translations []transformTranslateSpecItem `json:"translations" yaml:"translations"`
-	AllowMissing bool                         `json:"allowMissing,omitempty" yaml:"allowMissing,omitempty"`
+	Translations []transformTranslateSpecItem `json:"translations"`
+	AllowMissing bool                         `json:"allowMissing,omitempty"`
 }
 
 func transformTranslate(params map[string]any, value any) (result any, err error) {

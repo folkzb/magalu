@@ -9,9 +9,9 @@ import (
 
 type transformRegExpSpec struct {
 	// Regular Expression as per https://pkg.go.dev/regexp#Compile
-	Pattern string `json:"pattern" yaml:"pattern"`
+	Pattern string `json:"pattern"`
 	// Replacement Template as per https://pkg.go.dev/regexp#Regexp.Expand
-	Replacement string `json:"replacement" yaml:"replacement"`
+	Replacement string `json:"replacement"`
 }
 
 func transformRegExp(params map[string]any, s string) (result string, err error) {
