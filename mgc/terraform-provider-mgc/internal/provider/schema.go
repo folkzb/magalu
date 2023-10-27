@@ -76,9 +76,9 @@ func addMgcSchemaAttributes(
 		mgcName := mgcName(k)
 		mgcPropSchema := (*mgcSdk.Schema)(ref.Value)
 		if ca, ok := attributes[mgcName]; ok {
-			if !mgcSchemaPkg.CheckSimilarJsonSchemas(ca.mgcSchema, mgcPropSchema) {
+			if err := mgcSchemaPkg.CompareJsonSchemas(ca.mgcSchema, mgcPropSchema); err != nil {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
-				tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring DIFFERENT attribute %q:\nOLD=%+v\nNEW=%+v", k, ca.mgcSchema, mgcPropSchema))
+				tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring DIFFERENT attribute %q:\nOLD=%+v\nNEW=%+v\nERROR=%s\n", k, ca.mgcSchema, mgcPropSchema, err.Error()))
 				continue
 			} else {
 				tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring already computed attribute %q ", k))
@@ -164,10 +164,10 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map
 	for name, iattr := range handler.InputAttributes() {
 		// Split attributes that differ between input/output
 		if oattr := handler.OutputAttributes()[name]; oattr != nil {
-			if !mgcSchemaPkg.CheckSimilarJsonSchemas(oattr.mgcSchema, iattr.mgcSchema) {
+			if err := mgcSchemaPkg.CompareJsonSchemas(oattr.mgcSchema, iattr.mgcSchema); err != nil {
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()
-				tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q differs between input and output. input: %s - output %s", name, is, os))
+				tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q differs between input and output. input: %s - output %s\nerror=%s", name, is, os, err.Error()))
 				iattr.tfName = iattr.tfName.asDesired()
 				oattr.tfName = oattr.tfName.asCurrent()
 
