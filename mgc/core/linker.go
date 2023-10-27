@@ -48,13 +48,13 @@ func NewSimpleLink(owner Executor, target Executor) *simpleLink {
 
 	l.getAdditionalParametersSchema = utils.NewLazyLoader[*Schema](
 		func() *Schema {
-			return l.additionalProps(l.target.ParametersSchema(), l.owner.ResultSchema(), l.owner.ParametersSchema())
+			return additionalProps(l.target.ParametersSchema(), l.owner.ResultSchema(), l.owner.ParametersSchema())
 		},
 	)
 
 	l.getAdditionalConfigsSchema = utils.NewLazyLoader[*Schema](
 		func() *Schema {
-			return l.additionalProps(l.target.ConfigsSchema(), l.owner.ResultSchema(), l.owner.ConfigsSchema())
+			return additionalProps(l.target.ConfigsSchema(), l.owner.ResultSchema(), l.owner.ConfigsSchema())
 		},
 	)
 
@@ -69,7 +69,7 @@ func (l *simpleLink) Description() string {
 	return l.description
 }
 
-func (l *simpleLink) additionalProps(target *Schema, sources ...*Schema) *Schema {
+func additionalProps(target *Schema, sources ...*Schema) *Schema {
 	additional := map[string]*Schema{}
 	required := []string{}
 
