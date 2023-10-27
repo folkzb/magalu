@@ -112,3 +112,79 @@ func Test_ReflectValueUnorderedSliceCompareDeepEqual_InvalidType(t *testing.T) {
 		t.Errorf("%s: expected ChainedError.Name == %q, got %#v", prefix, CompareTypeErrorKey, chainedError)
 	}
 }
+
+func Test_ReflectValueStructFieldsCompare_Equal(t *testing.T) {
+	type testSt struct {
+		S       string
+		I       []int
+		ignored float32
+	}
+
+	a := testSt{
+		S:       "hello",
+		I:       []int{1, 2, 3},
+		ignored: 123,
+	}
+	b := testSt{
+		S:       "hello",
+		I:       []int{3, 2, 1},
+		ignored: 456,
+	}
+
+	err := StructFieldsCompare(a, b, NewMapStructFieldsComparator[testSt](map[string]ReflectValueCompareFn{
+		"S": ReflectValueDeepEqualCompare,
+		"I": ReflectValueUnorderedSliceCompareDeepEqual,
+	}))
+	if err != nil {
+		t.Errorf("StructFieldsCompare: unexpected error, got %#v", err)
+	}
+}
+
+func Test_ReflectValueStructFieldsCompare_Different(t *testing.T) {
+	type testSt struct {
+		S       string
+		I       []int
+		ignored float32
+	}
+
+	a := testSt{
+		S:       "hello",
+		I:       []int{1, 2, 3},
+		ignored: 123,
+	}
+	b := testSt{
+		S:       "world",
+		I:       []int{1, 2, 3},
+		ignored: 456,
+	}
+	c := testSt{
+		S:       "hello",
+		I:       []int{4, 5, 6},
+		ignored: 789,
+	}
+
+	var err error
+	var chainedError *ChainedError
+
+	prefix := "StructFieldsCompare"
+
+	err = StructFieldsCompare(a, b, NewMapStructFieldsComparator[testSt](map[string]ReflectValueCompareFn{
+		"S": ReflectValueDeepEqualCompare,
+		"I": ReflectValueUnorderedSliceCompareDeepEqual,
+	}))
+	if !errors.As(err, &chainedError) {
+		t.Errorf("%s: expected ChainedError, got %#v", prefix, err)
+	} else if chainedError.Name != "S" {
+		t.Errorf("%s: expected ChainedError.Name == 'S', got %#v", prefix, chainedError)
+	}
+
+	err = StructFieldsCompare(a, c, NewMapStructFieldsComparator[testSt](map[string]ReflectValueCompareFn{
+		"S": ReflectValueDeepEqualCompare,
+		"I": ReflectValueUnorderedSliceCompareDeepEqual,
+	}))
+	if !errors.As(err, &chainedError) {
+		t.Errorf("%s: expected ChainedError, got %#v", prefix, err)
+	} else if chainedError.Name != "I" {
+		t.Errorf("%s: expected ChainedError.Name == 'I', got %#v", prefix, chainedError)
+	}
+}

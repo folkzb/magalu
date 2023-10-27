@@ -163,3 +163,94 @@ func ReflectValueUnorderedSliceCompare(vA, vB reflect.Value, compare ReflectValu
 
 	return &CompareError{A: vA.Interface(), B: vB.Interface(), Message: msg}
 }
+
+type StructFieldsComparator interface {
+	Type() reflect.Type
+	// field index at reflect.Type
+	Compare(field int, vA, vB reflect.Value) (err error)
+}
+
+type mapStructFieldsComparator struct {
+	t       reflect.Type
+	compare []ReflectValueCompareFn
+}
+
+func (c *mapStructFieldsComparator) Type() reflect.Type {
+	return c.t
+}
+
+func (c *mapStructFieldsComparator) Compare(field int, vA, vB reflect.Value) (err error) {
+	cmp := c.compare[field]
+	if cmp != nil {
+		return cmp(vA, vB)
+	}
+	return nil
+}
+
+var _ StructFieldsComparator = (*mapStructFieldsComparator)(nil)
+
+func NewMapStructFieldsComparator[T any](fields map[string]ReflectValueCompareFn) StructFieldsComparator {
+	if len(fields) == 0 {
+		panic("NewMapStructFieldsComparator: programming error: needs non-nil fields")
+	}
+
+	t := reflect.TypeOf(*new(T))
+	if t.Kind() != reflect.Struct {
+		panic(fmt.Sprintf("NewMapStructFieldsComparator: programming error: expected struct, got %s", t))
+	}
+
+	fieldCompare := make([]ReflectValueCompareFn, t.NumField())
+	for name := range fields {
+		if f, ok := t.FieldByName(name); !ok {
+			panic("NewMapStructFieldsComparator: programming error: unknown field name: " + name)
+		} else if !f.IsExported() {
+			panic("NewMapStructFieldsComparator: programming error: private field name: " + name)
+		} else {
+			fieldCompare[f.Index[0]] = fields[f.Name]
+		}
+	}
+
+	return &mapStructFieldsComparator{t, fieldCompare}
+}
+
+func StructFieldsEqual[T any](a, b T, cmp StructFieldsComparator) bool {
+	return StructFieldsCompare[T](a, b, cmp) == nil
+}
+
+func StructFieldsCompare[T any](a, b T, cmp StructFieldsComparator) (err error) {
+	return ReflectValueStructFieldsCompare(
+		reflect.ValueOf(a),
+		reflect.ValueOf(b),
+		cmp,
+	)
+}
+
+func ReflectValueStructFieldsCompare(vA, vB reflect.Value, cmp StructFieldsComparator) (err error) {
+	t := cmp.Type()
+	vA = valueDereference(vA)
+	vB = valueDereference(vB)
+
+	if vA.Type() != t {
+		return &ChainedError{Name: CompareTypeErrorKey, Err: &ChainedError{Name: CompareAErrorKey, Err: &CompareError{A: vA.Type(), B: t}}}
+	}
+
+	if vB.Type() != t {
+		return &ChainedError{Name: CompareTypeErrorKey, Err: &ChainedError{Name: CompareBErrorKey, Err: &CompareError{A: vB.Type(), B: t}}}
+	}
+
+	nFields := t.NumField()
+	for i := 0; i < nFields; i++ {
+		f := t.Field(i)
+		if !f.IsExported() {
+			continue
+		}
+		aValue := vA.Field(i)
+		bValue := vB.Field(i)
+		err = cmp.Compare(i, aValue, bValue)
+		if err != nil {
+			return &ChainedError{Name: f.Name, Err: err}
+		}
+	}
+
+	return nil
+}
