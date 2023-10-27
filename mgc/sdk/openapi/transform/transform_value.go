@@ -2,62 +2,25 @@ package transform
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/stoewer/go-strcase"
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
 
-func doTransformValue(spec *transformSpec, value any) (any, error) {
-	switch spec.Type {
-	case "uppercase", "upper-case", "upper":
-		if s, ok := value.(string); ok {
-			return strings.ToUpper(s), nil
-		}
-	case "lowercase", "lower-case", "lower":
-		if s, ok := value.(string); ok {
-			return strings.ToLower(s), nil
-		}
-	case "kebabcase", "kebab-case", "kebab":
-		if s, ok := value.(string); ok {
-			return strcase.KebabCase(s), nil
-		}
-	case "snakecase", "snake-case", "snake":
-		if s, ok := value.(string); ok {
-			return strcase.SnakeCase(s), nil
-		}
-	case "pascal", "pascalcase", "pascal-case", "upper-camel":
-		if s, ok := value.(string); ok {
-			return strcase.UpperCamelCase(s), nil
-		}
-	case "camel", "camelcase", "camel-case", "lower-camel":
-		if s, ok := value.(string); ok {
-			return strcase.LowerCamelCase(s), nil
-		}
-	case "regexp", "regexp-replace":
-		if s, ok := value.(string); ok {
-			return transformRegExp(spec.Parameters, s)
-		}
-	case "translate":
-		return transformTranslate(spec.Parameters, value)
-	}
-
-	return value, nil
-}
-
-func doTransformsToValue(logger *zap.SugaredLogger, specs []*transformSpec, value any) (result any, err error) {
+func doTransformsToValue(logger *zap.SugaredLogger, transformers []transformer, value any) (result any, err error) {
 	result = value
-	for _, spec := range specs {
-		result, err = doTransformValue(spec, result)
+	for _, t := range transformers {
+		result, err = t.TransformValue(result)
 		if err != nil {
-			logger.Debugw("transformation attempt failed", "value", value, "type", spec.Type)
+			logger.Debugw("transformation attempt failed", "value", value)
 			return
 		}
 	}
-	logger.Debugw("transformed value", "input", value, "output", result)
+	if result != value {
+		logger.Debugw("transformed value", "input", value, "output", result)
+	}
 	return
 }
 
@@ -65,8 +28,10 @@ func doTransformsToValue(logger *zap.SugaredLogger, specs []*transformSpec, valu
 // If the schema doesn't contain any transformation, then the value is unchanged
 func transformValue(logger *zap.SugaredLogger, schema *core.Schema, transformationKey string, value any) (any, error) {
 	t := &commonSchemaTransformer[any]{
-		tKey:                 transformationKey,
-		transformSpecs:       func(specs []*transformSpec, value any) (any, error) { return doTransformsToValue(logger, specs, value) },
+		tKey: transformationKey,
+		transform: func(transformers []transformer, value any) (any, error) {
+			return doTransformsToValue(logger, transformers, value)
+		},
 		transformArray:       transformArrayValue,
 		transformObject:      transformObjectValue,
 		transformConstraints: transformConstraintsValue,

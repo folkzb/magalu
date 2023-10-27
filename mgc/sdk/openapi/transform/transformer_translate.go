@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
 
@@ -17,21 +18,82 @@ type transformTranslateSpec struct {
 	AllowMissing bool                         `json:"allowMissing,omitempty"`
 }
 
-func transformTranslate(params map[string]any, value any) (result any, err error) {
-	spec, err := utils.DecodeNewValue[transformTranslateSpec](params)
+func newTransformerTranslate(tSpec *transformSpec) (transformer, error) {
+	t := &transformerTranslate{}
+	var err error
+	t.spec, err = utils.DecodeNewValue[transformTranslateSpec](tSpec.Parameters)
 	if err != nil {
-		return value, fmt.Errorf("invalid translation parameters: %w", err)
+		return nil, fmt.Errorf("invalid translation parameters: %w", err)
 	}
-	if len(spec.Translations) == 0 {
-		return value, fmt.Errorf("invalid translation parameters: missing translations")
+	if len(t.spec.Translations) == 0 {
+		return nil, fmt.Errorf("invalid translation parameters: missing translations")
 	}
-	for _, item := range spec.Translations {
+
+	return t, nil
+}
+
+type transformerTranslate struct {
+	spec *transformTranslateSpec
+}
+
+var _ transformer = (*transformerTranslate)(nil)
+
+func (t *transformerTranslate) TransformValue(value any) (any, error) {
+	for _, item := range t.spec.Translations {
 		if reflect.DeepEqual(item.From, value) {
 			return item.To, nil
+		}
+		fmt.Printf(">>>   NOT EQUAL: %#v != %#v\n", value, item.From)
+	}
+	if t.spec.AllowMissing {
+		return value, nil
+	}
+	fmt.Printf(">>> TRANSLATIONS: %#v -> %#v\n", value, t.spec.Translations)
+	return value, fmt.Errorf("translation not found: %+v", value)
+}
+
+func (t *transformerTranslate) TransformSchema(schema *mgcSchemaPkg.COWSchema) (result *mgcSchemaPkg.COWSchema, err error) {
+	if schema.Default() == nil && len(schema.Enum()) == 0 {
+		return schema, nil
+	}
+
+	result = schema
+
+	if schema.Default() != nil {
+		var schemaDefault any
+		schemaDefault, err = reverseTranslate(t.spec, schema.Default())
+		if err != nil {
+			return
+		}
+		schema.SetDefault(schemaDefault)
+	}
+
+	enumCow := schema.EnumCOW()
+	enumCow.ForEach(func(i int, value any) (run bool) {
+		var translatedEnum any
+		translatedEnum, err = reverseTranslate(t.spec, value)
+		if err != nil {
+			return false
+		}
+		enumCow.Set(i, translatedEnum)
+		return true
+	})
+
+	return
+}
+
+func reverseTranslate(spec *transformTranslateSpec, value any) (any, error) {
+	for _, item := range spec.Translations {
+		if reflect.DeepEqual(item.To, value) {
+			return item.From, nil
 		}
 	}
 	if spec.AllowMissing {
 		return value, nil
 	}
-	return value, fmt.Errorf("translation not found: %+v", value)
+	return value, fmt.Errorf("translation not found: %#v", value)
+}
+
+func init() {
+	addTransformer[transformTranslateSpec](newTransformerTranslate, "translate")
 }

@@ -1,9 +1,28 @@
 package transform
 
 import (
+	"fmt"
+	"reflect"
+
 	"github.com/getkin/kin-openapi/openapi3"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
+
+type transformer interface {
+	TransformValue(value any) (any, error)
+	TransformSchema(value *mgcSchemaPkg.COWSchema) (*mgcSchemaPkg.COWSchema, error)
+}
+
+type transformerCreator func(spec *transformSpec) (transformer, error)
+
+type transformerRegistryEntry struct {
+	name    string
+	schema  *mgcSchemaPkg.Schema
+	creator transformerCreator
+}
+
+var registry = map[string]*transformerRegistryEntry{}
 
 type transformSpec struct {
 	Type string `json:"type"`
@@ -62,5 +81,60 @@ func getTransformationSpecs(extensions map[string]any, transformationKey string)
 		return []*transformSpec{ts}
 	} else {
 		return nil
+	}
+}
+
+func getTransformers(extensions map[string]any, transformationKey string) (transformers []transformer, err error) {
+	specs := getTransformationSpecs(extensions, transformationKey)
+	for i, spec := range specs {
+		entry := registry[spec.Type]
+		if entry == nil {
+			return nil, &utils.ChainedError{Name: fmt.Sprint(i), Err: fmt.Errorf("unknown transformer type: %q", spec.Type)}
+		}
+		t, err := entry.creator(spec)
+		if err != nil {
+			return nil, &utils.ChainedError{
+				Name: fmt.Sprint(i), Err: &utils.ChainedError{
+					Name: spec.Type,
+					Err:  fmt.Errorf("failed to create: %#v", err),
+				},
+			}
+		}
+		transformers = append(transformers, t)
+	}
+	return
+}
+
+var baseSchema = utils.NewLazyLoader(func() *mgcSchemaPkg.Schema {
+	schema, err := mgcSchemaPkg.SchemaFromType[transformSpec]()
+	if err != nil {
+		panic(err.Error())
+	}
+	return schema
+})
+
+func addTransformer[T any](creator transformerCreator, names ...string) {
+	if len(names) == 0 {
+		panic("programming error: missing names")
+	}
+	rt := reflect.TypeOf(*new(T))
+
+	var schema *mgcSchemaPkg.Schema = baseSchema()
+	if rt.Kind() == reflect.Struct && rt.NumField() > 0 {
+		transformerSchema, err := mgcSchemaPkg.SchemaFromType[T]()
+		if err != nil {
+			panic(err.Error())
+		}
+		schema, err = mgcSchemaPkg.SimplifySchema(mgcSchemaPkg.NewAllOfSchema(schema, transformerSchema))
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+
+	for _, n := range names {
+		if existing := registry[n]; existing != nil {
+			panic(fmt.Sprintf("existing transformer: %q => creator=%#v, schema=%#v\n", n, existing.creator, existing.schema))
+		}
+		registry[n] = &transformerRegistryEntry{n, schema, creator}
 	}
 }

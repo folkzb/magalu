@@ -9,7 +9,7 @@ import (
 func needsTransformation(schema *core.Schema, transformationKey string) (bool, error) {
 	t := &commonSchemaTransformer[bool]{
 		tKey:                 transformationKey,
-		transformSpecs:       func(specs []*transformSpec, value bool) (bool, error) { return true, nil },
+		transform:            func(transformers []transformer, value bool) (bool, error) { return true, nil },
 		transformArray:       transformArrayNeedsTransformation,
 		transformObject:      transformObjectNeedsTransformation,
 		transformConstraints: transformConstraintsNeedsTransformation,

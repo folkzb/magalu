@@ -11,17 +11,19 @@ import (
 // Scalars are passed thru while Constraints() are recursively processed.
 type commonSchemaTransformer[T any] struct {
 	tKey                 string
-	transformSpecs       func(specs []*transformSpec, value T) (T, error)
+	transform            func(transformers []transformer, value T) (T, error)
 	transformArray       func(t mgcSchemaPkg.Transformer[T], schema *core.Schema, itemSchema *core.Schema, value T) (T, error)
 	transformObject      func(t mgcSchemaPkg.Transformer[T], schema *core.Schema, value T) (T, error)
 	transformConstraints func(t mgcSchemaPkg.Transformer[T], kind mgcSchemaPkg.ConstraintKind, schemaRefs mgcSchemaPkg.SchemaRefs, value T) (T, error)
 }
 
 func (t *commonSchemaTransformer[T]) Transform(schema *core.Schema, value T) (T, error) {
-	specs := getTransformationSpecs(schema.Extensions, t.tKey)
-	var err error
-	if len(specs) > 0 {
-		value, err = t.transformSpecs(specs, value)
+	transformers, err := getTransformers(schema.Extensions, t.tKey)
+	if err != nil {
+		return value, err
+	}
+	if len(transformers) > 0 {
+		value, err = t.transform(transformers, value)
 		if err == nil {
 			err = mgcSchemaPkg.TransformStop
 		}
