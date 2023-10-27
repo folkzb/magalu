@@ -19,6 +19,13 @@ type ChainedError struct {
 	Err  error
 }
 
+func (e *ChainedError) Is(target error) bool {
+	if other, ok := target.(*ChainedError); ok {
+		return e.Name == other.Name && errors.Is(e.Err, other.Err)
+	}
+	return errors.Is(e.Err, target)
+}
+
 func (e *ChainedError) Error() string {
 	path := ""
 	n := e
