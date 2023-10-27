@@ -1,4 +1,4 @@
-package s3
+package common
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type uploader interface {
 	Upload(context.Context) error
 }
 
-func NewS3Uploader(cfg Config, src, dst string) (uploader, error) {
+func NewUploader(cfg Config, src, dst string) (uploader, error) {
 	reader, fileInfo, err := readContent(src)
 	if err != nil {
 		return nil, fmt.Errorf("error reading object: %w", err)

@@ -11,8 +11,8 @@ import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/pipeline"
 	"magalu.cloud/core/utils"
+	"magalu.cloud/sdk/static/object_storage/common"
 	"magalu.cloud/sdk/static/object_storage/objects"
-	"magalu.cloud/sdk/static/object_storage/s3"
 )
 
 var deleteBucketsLogger *zap.SugaredLogger
@@ -74,8 +74,8 @@ func newDelete() core.Executor {
 	})
 }
 
-func newDeleteRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*http.Request, error) {
-	host := s3.BuildHost(cfg)
+func newDeleteRequest(ctx context.Context, cfg common.Config, pathURIs ...string) (*http.Request, error) {
+	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func newDeleteRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*
 
 // Deleting an object does not yield result except there is an error. So this processor will *Skip*
 // success results and *Output* errors
-func createObjectDeletionProcessor(cfg s3.Config, bucketName string) pipeline.Processor[*objects.BucketContent, deleteObjectsError] {
+func createObjectDeletionProcessor(cfg common.Config, bucketName string) pipeline.Processor[*objects.BucketContent, deleteObjectsError] {
 	return func(ctx context.Context, obj *objects.BucketContent) (deleteObjectsError, pipeline.ProcessStatus) {
 		objURI := path.Join(bucketName, obj.Key)
 		_, err := objects.Delete(
@@ -97,13 +97,13 @@ func createObjectDeletionProcessor(cfg s3.Config, bucketName string) pipeline.Pr
 		if err != nil {
 			return deleteObjectsError{uri: objURI, err: err}, pipeline.ProcessOutput
 		} else {
-			deleteLogger().Infow("Deleted objects", "uri", s3.URIPrefix+objURI)
+			deleteLogger().Infow("Deleted objects", "uri", common.URIPrefix+objURI)
 			return deleteObjectsError{}, pipeline.ProcessSkip
 		}
 	}
 }
 
-func delete(ctx context.Context, params deleteParams, cfg s3.Config) (core.Value, error) {
+func delete(ctx context.Context, params deleteParams, cfg common.Config) (core.Value, error) {
 	objs, err := objects.List(ctx, objects.ListObjectsParams{Destination: params.Name}, cfg)
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func delete(ctx context.Context, params deleteParams, cfg s3.Config) (core.Value
 		return nil, err
 	}
 
-	_, _, err = s3.SendRequest[core.Value](ctx, req)
+	_, _, err = common.SendRequest[core.Value](ctx, req)
 	if err != nil {
 		return nil, err
 	}

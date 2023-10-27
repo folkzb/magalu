@@ -8,7 +8,7 @@ import (
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
-	"magalu.cloud/sdk/static/object_storage/s3"
+	"magalu.cloud/sdk/static/object_storage/common"
 )
 
 type ListObjectsParams struct {
@@ -31,7 +31,7 @@ type ListObjectsResponse struct {
 	CommonPrefixes []*prefix        `xml:"CommonPrefixes" json:"SubDirectories"`
 }
 
-func newListRequest(ctx context.Context, cfg s3.Config, bucket string) (*http.Request, error) {
+func newListRequest(ctx context.Context, cfg common.Config, bucket string) (*http.Request, error) {
 	parsedUrl, err := parseURL(cfg, bucket)
 	if err != nil {
 		return nil, err
@@ -51,12 +51,12 @@ func newList() core.Executor {
 	)
 }
 
-func parseURL(cfg s3.Config, bucketURI string) (*url.URL, error) {
+func parseURL(cfg common.Config, bucketURI string) (*url.URL, error) {
 	// Bucket URI cannot end in '/' as this makes it search for a
 	// non existing directory
 	bucketURI = strings.TrimSuffix(bucketURI, "/")
 	dirs := strings.Split(bucketURI, "/")
-	path, err := url.JoinPath(s3.BuildHost(cfg), dirs[0])
+	path, err := url.JoinPath(common.BuildHost(cfg), dirs[0])
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +81,13 @@ func parseURL(cfg s3.Config, bucketURI string) (*url.URL, error) {
 	return u, nil
 }
 
-func List(ctx context.Context, params ListObjectsParams, cfg s3.Config) (result ListObjectsResponse, err error) {
-	bucket, _ := strings.CutPrefix(params.Destination, s3.URIPrefix)
+func List(ctx context.Context, params ListObjectsParams, cfg common.Config) (result ListObjectsResponse, err error) {
+	bucket, _ := strings.CutPrefix(params.Destination, common.URIPrefix)
 	req, err := newListRequest(ctx, cfg, bucket)
 	if err != nil {
 		return
 	}
 
-	result, _, err = s3.SendRequest[ListObjectsResponse](ctx, req)
+	result, _, err = common.SendRequest[ListObjectsResponse](ctx, req)
 	return
 }

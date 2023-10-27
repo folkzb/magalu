@@ -7,7 +7,7 @@ import (
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
-	"magalu.cloud/sdk/static/object_storage/s3"
+	"magalu.cloud/sdk/static/object_storage/common"
 )
 
 type uploadParams struct {
@@ -37,21 +37,21 @@ func newUpload() core.Executor {
 }
 
 func formatURI(uri string) string {
-	if !strings.Contains(uri, s3.URIPrefix) {
-		return s3.URIPrefix + uri
+	if !strings.Contains(uri, common.URIPrefix) {
+		return common.URIPrefix + uri
 	}
 	return uri
 }
 
-func upload(ctx context.Context, params uploadParams, cfg s3.Config) (*uploadTemplateResult, error) {
-	dst, _ := strings.CutPrefix(params.Destination, s3.URIPrefix)
+func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploadTemplateResult, error) {
+	dst, _ := strings.CutPrefix(params.Destination, common.URIPrefix)
 	_, fileName := path.Split(params.Source)
 	if isDirPath(dst) {
 		// If it isn't a file path, don't rename, just append source with bucket URI
 		dst = path.Join(dst, fileName)
 	}
 
-	uploader, err := s3.NewS3Uploader(cfg, params.Source, dst)
+	uploader, err := common.NewUploader(cfg, params.Source, dst)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
-	"magalu.cloud/sdk/static/object_storage/s3"
+	"magalu.cloud/sdk/static/object_storage/common"
 )
 
 var downloadObjectsLogger *zap.SugaredLogger
@@ -76,8 +76,8 @@ func newDownload() core.Executor {
 	})
 }
 
-func newDownloadRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*http.Request, error) {
-	host := s3.BuildHost(cfg)
+func newDownloadRequest(ctx context.Context, cfg common.Config, pathURIs ...string) (*http.Request, error) {
+	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
 		return nil, err
@@ -101,13 +101,13 @@ func writeToFile(reader io.ReadCloser, outFile string) (err error) {
 	return nil
 }
 
-func downloadSingleFile(ctx context.Context, cfg s3.Config, src, dst string) error {
+func downloadSingleFile(ctx context.Context, cfg common.Config, src, dst string) error {
 	req, err := newDownloadRequest(ctx, cfg, src)
 	if err != nil {
 		return err
 	}
 
-	closer, _, err := s3.SendRequest[io.ReadCloser](ctx, req)
+	closer, _, err := common.SendRequest[io.ReadCloser](ctx, req)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func downloadSingleFile(ctx context.Context, cfg s3.Config, src, dst string) err
 	return nil
 }
 
-func downloadMultipleFiles(ctx context.Context, cfg s3.Config, src, dst string) error {
+func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst string) error {
 	bucketRoot := strings.Split(src, "/")[0]
 	objs, err := List(ctx, ListObjectsParams{Destination: src}, cfg)
 	if err != nil {
@@ -143,7 +143,7 @@ func downloadMultipleFiles(ctx context.Context, cfg s3.Config, src, dst string) 
 			continue
 		}
 
-		closer, _, err := s3.SendRequest[io.ReadCloser](ctx, req)
+		closer, _, err := common.SendRequest[io.ReadCloser](ctx, req)
 		if err != nil || closer == nil {
 			objError.Add(objURI, err)
 			continue
@@ -168,8 +168,8 @@ func downloadMultipleFiles(ctx context.Context, cfg s3.Config, src, dst string) 
 	return nil
 }
 
-func newHeadObjectRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*http.Request, error) {
-	host := s3.BuildHost(cfg)
+func newHeadObjectRequest(ctx context.Context, cfg common.Config, pathURIs ...string) (*http.Request, error) {
+	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
 		return nil, err
@@ -177,13 +177,13 @@ func newHeadObjectRequest(ctx context.Context, cfg s3.Config, pathURIs ...string
 	return http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
 }
 
-func isObjectPath(ctx context.Context, cfg s3.Config, pathURIs ...string) bool {
+func isObjectPath(ctx context.Context, cfg common.Config, pathURIs ...string) bool {
 	req, err := newHeadObjectRequest(ctx, cfg, pathURIs...)
 	if err != nil {
 		return false
 	}
 
-	result, _, err := s3.SendRequest[core.Value](ctx, req)
+	result, _, err := common.SendRequest[core.Value](ctx, req)
 	if err != nil {
 		return false
 	}
@@ -195,7 +195,7 @@ func isDirPath(fpath string) bool {
 	return path.Ext(fpath) == ""
 }
 
-func download(ctx context.Context, p downloadObjectParams, cfg s3.Config) (result core.Value, err error) {
+func download(ctx context.Context, p downloadObjectParams, cfg common.Config) (result core.Value, err error) {
 	dst := p.Destination
 	if dst == "" {
 		dst, err = os.Getwd()
@@ -205,7 +205,7 @@ func download(ctx context.Context, p downloadObjectParams, cfg s3.Config) (resul
 		_, fname := path.Split(p.Source)
 		dst = path.Join(dst, fname)
 	}
-	src, _ := strings.CutPrefix(p.Source, s3.URIPrefix)
+	src, _ := strings.CutPrefix(p.Source, common.URIPrefix)
 	if isObjectPath(ctx, cfg, src) {
 		// User specified a directory, append the file name to it
 		if isDirPath(dst) {

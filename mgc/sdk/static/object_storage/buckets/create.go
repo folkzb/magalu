@@ -7,7 +7,7 @@ import (
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
-	"magalu.cloud/sdk/static/object_storage/s3"
+	"magalu.cloud/sdk/static/object_storage/common"
 )
 
 type createParams struct {
@@ -19,7 +19,7 @@ type createParams struct {
 var getCreate = utils.NewLazyLoader[core.Executor](newCreate)
 
 func newCreate() core.Executor {
-	executor := core.NewReflectedSimpleExecutor[createParams, s3.Config, core.Value](
+	executor := core.NewReflectedSimpleExecutor[createParams, common.Config, core.Value](
 		core.ExecutorSpec{
 			DescriptorSpec: core.DescriptorSpec{
 				Name:        "create",
@@ -38,8 +38,8 @@ func newCreate() core.Executor {
 	})
 }
 
-func newCreateRequest(ctx context.Context, cfg s3.Config, bucket string) (*http.Request, error) {
-	host := s3.BuildHost(cfg)
+func newCreateRequest(ctx context.Context, cfg common.Config, bucket string) (*http.Request, error) {
+	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, bucket)
 	if err != nil {
 		return nil, err
@@ -47,13 +47,13 @@ func newCreateRequest(ctx context.Context, cfg s3.Config, bucket string) (*http.
 	return http.NewRequestWithContext(ctx, http.MethodPut, url, nil)
 }
 
-func create(ctx context.Context, params createParams, cfg s3.Config) (core.Value, error) {
+func create(ctx context.Context, params createParams, cfg common.Config) (core.Value, error) {
 	req, err := newCreateRequest(ctx, cfg, params.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	_, _, err = s3.SendRequest[core.Value](ctx, req)
+	_, _, err = common.SendRequest[core.Value](ctx, req)
 	if err != nil {
 		return nil, err
 	}

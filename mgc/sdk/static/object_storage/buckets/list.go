@@ -6,7 +6,7 @@ import (
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
-	"magalu.cloud/sdk/static/object_storage/s3"
+	"magalu.cloud/sdk/static/object_storage/common"
 )
 
 type BucketResponse struct {
@@ -27,8 +27,8 @@ type ListResponse struct {
 
 var getList = utils.NewLazyLoader[core.Executor](newList)
 
-func newListRequest(ctx context.Context, cfg s3.Config) (*http.Request, error) {
-	return http.NewRequestWithContext(ctx, http.MethodGet, s3.BuildHost(cfg), nil)
+func newListRequest(ctx context.Context, cfg common.Config) (*http.Request, error) {
+	return http.NewRequestWithContext(ctx, http.MethodGet, common.BuildHost(cfg), nil)
 }
 
 func newList() core.Executor {
@@ -41,12 +41,12 @@ func newList() core.Executor {
 	)
 }
 
-func list(ctx context.Context, _ struct{}, cfg s3.Config) (result ListResponse, err error) {
+func list(ctx context.Context, _ struct{}, cfg common.Config) (result ListResponse, err error) {
 	req, err := newListRequest(ctx, cfg)
 	if err != nil {
 		return
 	}
 
-	result, _, err = s3.SendRequest[ListResponse](ctx, req)
+	result, _, err = common.SendRequest[ListResponse](ctx, req)
 	return
 }

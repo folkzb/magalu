@@ -1,4 +1,4 @@
-package s3
+package common
 
 import mgcLoggerPkg "magalu.cloud/core/logger"
 

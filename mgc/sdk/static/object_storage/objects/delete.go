@@ -8,7 +8,7 @@ import (
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
-	"magalu.cloud/sdk/static/object_storage/s3"
+	"magalu.cloud/sdk/static/object_storage/common"
 )
 
 type DeleteObjectParams struct {
@@ -34,8 +34,8 @@ func newDelete() core.Executor {
 	)
 }
 
-func newDeleteRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*http.Request, error) {
-	host := s3.BuildHost(cfg)
+func newDeleteRequest(ctx context.Context, cfg common.Config, pathURIs ...string) (*http.Request, error) {
+	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
 		return nil, err
@@ -43,13 +43,13 @@ func newDeleteRequest(ctx context.Context, cfg s3.Config, pathURIs ...string) (*
 	return http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 }
 
-func Delete(ctx context.Context, params DeleteObjectParams, cfg s3.Config) (result core.Value, err error) {
-	bucketURI, _ := strings.CutPrefix(params.Destination, s3.URIPrefix)
+func Delete(ctx context.Context, params DeleteObjectParams, cfg common.Config) (result core.Value, err error) {
+	bucketURI, _ := strings.CutPrefix(params.Destination, common.URIPrefix)
 	req, err := newDeleteRequest(ctx, cfg, bucketURI)
 	if err != nil {
 		return nil, err
 	}
 
-	result, _, err = s3.SendRequest[core.Value](ctx, req)
+	result, _, err = common.SendRequest[core.Value](ctx, req)
 	return
 }
