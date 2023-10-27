@@ -109,7 +109,7 @@ func (o *Sdk) newOpenApiSource() core.Grouper {
 	embedLoader := openapi.GetEmbedLoader()
 
 	// TODO: are these going to be fixed? configurable?
-	extensionPrefix := "x-cli"
+	extensionPrefix := "x-mgc"
 	openApiDir := os.Getenv("MGC_SDK_OPENAPI_DIR")
 	if openApiDir == "" {
 		cwd, err := os.Getwd()

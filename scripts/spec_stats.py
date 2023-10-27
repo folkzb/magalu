@@ -465,7 +465,7 @@ def is_tag_crud(tag: Optional[OAPITagInfo]) -> bool:
     if not tag:
         return False
 
-    if tag.extensions.get("x-cli-hidden"):
+    if tag.extensions.get("x-mgc-hidden"):
         return False
 
     return True

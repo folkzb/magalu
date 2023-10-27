@@ -2,7 +2,7 @@
 # using yaml_merge.py
 # NOTE: Lists are merged by their indexes, be careful with parameters, tags and such!
 # to keep it sane, keep some list item identifier (ex: "name") and add extra properties,
-# such as "x-cli-name" or "x-cli-description"
+# such as "x-mgc-name" or "x-mgc-description"
 
 servers:
 -   url: https://api-block-storage{env}.{region}.jaxyendy.com
@@ -20,7 +20,7 @@ servers:
             enum:
             - ''
             - .pre-prod
-            x-cli-transforms:
+            x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod
@@ -31,9 +31,9 @@ servers:
 paths:
     /v0/volumes:
         get:
-            x-cli-description: List all Block Storage volumes
+            x-mgc-description: List all Block Storage volumes
         post:
-            x-cli-description: Create a Block Storage volume
+            x-mgc-description: Create a Block Storage volume
             responses:
                 '200':
                     links:
@@ -54,7 +54,7 @@ paths:
                                 id: $response.body#/id
     /v0/volumes/{id}:
         get:
-            x-cli-description: Get a Block Storage volume details
+            x-mgc-description: Get a Block Storage volume details
             responses:
                 '200':
                     links:
@@ -83,20 +83,20 @@ paths:
                             operationId: volume_details_v0_volumes__id__get
                             parameters:
                                 id: $request.path.id
-                            x-cli-extra-parameters:
+                            x-mgc-extra-parameters:
                                 - name: virtual_machine_id
                                   required: true
                                   schema:
                                       type: string
                                       format: uuid
-                            x-cli-wait-termination:
+                            x-mgc-wait-termination:
                                 maxRetries: 2
                                 interval: 5s
                                 jsonPathQuery: $.result.attachments[?(@.virtual_machine_id == $.parameters.virtual_machine_id)]
         delete:
-            x-cli-description: Delete a Block Storage volume
+            x-mgc-description: Delete a Block Storage volume
         patch:
-            x-cli-description: Update a Block Storage volume
+            x-mgc-description: Update a Block Storage volume
             responses:
                 '200':
                     links:
@@ -112,7 +112,7 @@ paths:
                                 id: $request.path.id
     /v0/volumes/{id}/attach/{virtual_machine_id}:
         post:
-            x-cli-name: attach
+            x-mgc-name: attach
             responses:
                 '200':
                     links:
@@ -127,13 +127,13 @@ paths:
                             operationId: volume_details_v0_volumes__id__get
                             parameters:
                                 id: $request.path.id
-                            x-cli-wait-termination:
+                            x-mgc-wait-termination:
                                 maxRetries: 1
                                 interval: 5s
                                 jsonPathQuery: $.result.attachments[?(@.virtual_machine_id == $.owner.parameters.virtual_machine_id)]
     /v0/volumes/{id}/detach/{virtual_machine_id}:
         post:
-            x-cli-name: detach
+            x-mgc-name: detach
     /v0/snapshots:
         post:
             responses:
@@ -146,15 +146,15 @@ paths:
                                 snapshot_id: $response.body#/id
     /v0/snapshots/{snapshot_id}:
         post:
-            x-cli-name: restore
+            x-mgc-name: restore
     /v0/volume_types_all:
-        x-cli-hidden: true
+        x-mgc-hidden: true
 
 
 tags:
 -   name: healthchecks
     description: healthchecks
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: usage
     description: usage
 -   name: snapshots
@@ -162,5 +162,5 @@ tags:
 -   name: volume-types
     description: volume types
 -   name: block-storage
-    x-cli-description: Block Storage Volume Resources
-    x-cli-name: volume
+    x-mgc-description: Block Storage Volume Resources
+    x-mgc-name: volume

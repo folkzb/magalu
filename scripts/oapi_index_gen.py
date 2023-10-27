@@ -73,7 +73,7 @@ def load_mods(
                 name=name,
                 url=url,
                 path=relpath,
-                description=info.get("x-cli-description", info.get("description", "")),
+                description=info.get("x-mgc-description", info.get("description", "")),
                 version=info.get("version", ""),
             )
         )
@@ -137,8 +137,8 @@ var embedLoaderInstance = embedLoader{
         add_str(k)
         out.write(": ([]byte)(")
         # TODO: cleanup embedded documents, remove unused stuff (examples?)
-        # and consolidate x-cli-XXX into final fields, if we're using a single
-        # x-cli- for both CLI and TerraForm
+        # and consolidate x-mgc-XXX into final fields, if we're using a single
+        # x-mgc- for both CLI and TerraForm
         add_str(json.dumps(v, **embed_json_opts))
         out.write("),\n")
 

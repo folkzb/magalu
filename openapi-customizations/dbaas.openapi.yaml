@@ -2,7 +2,7 @@
 # using yaml_merge.py
 # NOTE: Lists are merged by their indexes, be careful with parameters, tags and such!
 # to keep it sane, keep some list item identifier (ex: "name") and add extra properties,
-# such as "x-cli-name" or "x-cli-description"
+# such as "x-mgc-name" or "x-mgc-description"
 
 paths:
     /v1/instances/{id}/backups:
@@ -108,7 +108,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.read
-            x-cli-wait-termination:
+            x-mgc-wait-termination:
                 maxRetries: 30
                 interval: 10s
                 jsonPathQuery: $.result.status == "ACTIVE" || $.result.status == "ERROR"
@@ -244,7 +244,7 @@ servers:
             enum:
             - ''
             - .pre-prod
-            x-cli-transforms:
+            x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod

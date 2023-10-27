@@ -1,7 +1,7 @@
 # Overlays to Existing OpenAPI
 
 These files should be applied on top of incoming OpenAPI in order
-to add some extra keys such as `x-cli-name` to change the
+to add some extra keys such as `x-mgc-name` to change the
 command line interface name to use for a command or flag.
 
 Apply using [yaml_merge.py](../scripts/yaml_merge.py), example:

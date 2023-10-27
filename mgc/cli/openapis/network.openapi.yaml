@@ -151,7 +151,7 @@ paths:
                 required: true
                 schema:
                     title: Vpc Id
-                x-cli-name: vpc
+                x-mgc-name: vpc
             -   name: detailed
                 in: query
                 required: false
@@ -200,8 +200,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             viveiro: true
-            x-cli-description: List VPC ports
-            x-cli-name: list-vpc-ports
+            x-mgc-description: List VPC ports
+            x-mgc-name: list-vpc-ports
             security:
             -   OAuth2:
                 - network.read
@@ -4676,7 +4676,7 @@ servers:
             enum:
             - ''
             - .pre-prod
-            x-cli-transforms:
+            x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod
@@ -4685,30 +4685,30 @@ servers:
                     to: .pre-prod
 tags:
 -   name: vpc
-    x-cli-description: Virtual Private Cloud (VPC)
+    x-mgc-description: Virtual Private Cloud (VPC)
 -   name: port
-    x-cli-description: VPC Port
+    x-mgc-description: VPC Port
 -   name: security_group
-    x-cli-description: VPC Security Groups
+    x-mgc-description: VPC Security Groups
 -   name: rule
-    x-cli-description: VPC Rules
+    x-mgc-description: VPC Rules
 -   name: public_ip
-    x-cli-description: VPC Public IPs
+    x-mgc-description: VPC Public IPs
 -   name: subnets
-    x-cli-description: VPC Subnets
+    x-mgc-description: VPC Subnets
 -   name: healthcheck
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_vpc
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_subnetpools
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_rule
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_security_group
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_port
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_subnets
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: quotas
-    x-cli-description: VPC Quotas
+    x-mgc-description: VPC Quotas

@@ -2,7 +2,7 @@
 # using yaml_merge.py
 # NOTE: Lists are merged by their indexes, be careful with parameters, tags and such!
 # to keep it sane, keep some list item identifier (ex: "name") and add extra properties,
-# such as "x-cli-name" or "x-cli-description"
+# such as "x-mgc-name" or "x-mgc-description"
 
 servers:
 -   url: https://api-vpc{env}.{region}.jaxyendy.com
@@ -20,7 +20,7 @@ servers:
             enum:
             - ''
             - .pre-prod
-            x-cli-transforms:
+            x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod
@@ -31,11 +31,11 @@ servers:
 paths:
   /v0/vpcs/{vpc_id}/ports:
     get:
-      x-cli-description: List VPC ports
-      x-cli-name: list-vpc-ports
+      x-mgc-description: List VPC ports
+      x-mgc-name: list-vpc-ports
       parameters:
         - name: vpc_id
-          x-cli-name: vpc
+          x-mgc-name: vpc
       security:
         - OAuth2:
             - network.read
@@ -322,30 +322,30 @@ paths:
 
 tags:
 -   name: vpc
-    x-cli-description: Virtual Private Cloud (VPC)
+    x-mgc-description: Virtual Private Cloud (VPC)
 -   name: port
-    x-cli-description: VPC Port
+    x-mgc-description: VPC Port
 -   name: security_group
-    x-cli-description: VPC Security Groups
+    x-mgc-description: VPC Security Groups
 -   name: rule
-    x-cli-description: VPC Rules
+    x-mgc-description: VPC Rules
 -   name: public_ip
-    x-cli-description: VPC Public IPs
+    x-mgc-description: VPC Public IPs
 -   name: subnets
-    x-cli-description: VPC Subnets
+    x-mgc-description: VPC Subnets
 -   name: healthcheck
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_vpc
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_subnetpools
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_rule
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_security_group
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_port
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: xaas_subnets
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: quotas
-    x-cli-description: VPC Quotas
+    x-mgc-description: VPC Quotas

@@ -25,7 +25,7 @@ servers:
             enum:
             - ''
             - .pre-prod
-            x-cli-transforms:
+            x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod

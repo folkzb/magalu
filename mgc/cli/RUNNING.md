@@ -192,7 +192,7 @@ The CLI can output the requests in the following formats using the `-o` flag:
 - template
 
 Some commands have a default output format defined in the OpenAPI spec using an
-`x-cli` extension. The format will be overridden if the user specify a new
+`x-mgc` extension. The format will be overridden if the user specify a new
 output format.
 
 ### JSON

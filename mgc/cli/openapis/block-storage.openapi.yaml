@@ -87,7 +87,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.read
-        x-cli-hidden: true
+        x-mgc-hidden: true
     /v0/usage:
         get:
             tags:
@@ -215,7 +215,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.write
-            x-cli-name: restore
+            x-mgc-name: restore
         delete:
             tags:
             - snapshots
@@ -266,7 +266,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.read
-            x-cli-description: List all Block Storage volumes
+            x-mgc-description: List all Block Storage volumes
         post:
             tags:
             - block-storage
@@ -312,7 +312,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.write
-            x-cli-description: Create a Block Storage volume
+            x-mgc-description: Create a Block Storage volume
     /v0/volumes/{id}:
         get:
             tags:
@@ -363,13 +363,13 @@ paths:
                             operationId: volume_details_v0_volumes__id__get
                             parameters:
                                 id: $request.path.id
-                            x-cli-extra-parameters:
+                            x-mgc-extra-parameters:
                             -   name: virtual_machine_id
                                 required: true
                                 schema:
                                     type: string
                                     format: uuid
-                            x-cli-wait-termination:
+                            x-mgc-wait-termination:
                                 maxRetries: 2
                                 interval: 5s
                                 jsonPathQuery: $.result.attachments[?(@.virtual_machine_id
@@ -383,7 +383,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.read
-            x-cli-description: Get a Block Storage volume details
+            x-mgc-description: Get a Block Storage volume details
         delete:
             tags:
             - block-storage
@@ -419,7 +419,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.write
-            x-cli-description: Delete a Block Storage volume
+            x-mgc-description: Delete a Block Storage volume
         patch:
             tags:
             - block-storage
@@ -468,7 +468,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.write
-            x-cli-description: Update a Block Storage volume
+            x-mgc-description: Update a Block Storage volume
     /v0/volumes/{id}/attach/{virtual_machine_id}:
         post:
             tags:
@@ -513,7 +513,7 @@ paths:
                             operationId: volume_details_v0_volumes__id__get
                             parameters:
                                 id: $request.path.id
-                            x-cli-wait-termination:
+                            x-mgc-wait-termination:
                                 maxRetries: 1
                                 interval: 5s
                                 jsonPathQuery: $.result.attachments[?(@.virtual_machine_id
@@ -527,7 +527,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.write
-            x-cli-name: attach
+            x-mgc-name: attach
     /v0/volumes/{id}/detach/{virtual_machine_id}:
         post:
             tags:
@@ -586,7 +586,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.write
-            x-cli-name: detach
+            x-mgc-name: detach
 components:
     schemas:
         AttachmentResponse:
@@ -1102,7 +1102,7 @@ components:
 tags:
 -   name: healthchecks
     description: healthchecks
-    x-cli-hidden: true
+    x-mgc-hidden: true
 -   name: usage
     description: usage
 -   name: snapshots
@@ -1111,8 +1111,8 @@ tags:
     description: volume types
 -   name: block-storage
     description: block storage
-    x-cli-description: Block Storage Volume Resources
-    x-cli-name: volume
+    x-mgc-description: Block Storage Volume Resources
+    x-mgc-name: volume
 servers:
 -   url: https://api-block-storage{env}.{region}.jaxyendy.com
     variables:
@@ -1129,7 +1129,7 @@ servers:
             enum:
             - ''
             - .pre-prod
-            x-cli-transforms:
+            x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod

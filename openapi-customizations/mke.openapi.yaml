@@ -2,7 +2,7 @@
 # using yaml_merge.py
 # NOTE: Lists are merged by their indexes, be careful with parameters, tags and such!
 # to keep it sane, keep some list item identifier (ex: "name") and add extra properties,
-# such as "x-cli-name" or "x-cli-description"
+# such as "x-mgc-name" or "x-mgc-description"
 
 servers:
 -   url: https://api-mke{env}.{region}.jaxyendy.com
@@ -20,7 +20,7 @@ servers:
             enum:
             - ''
             - .pre-prod
-            x-cli-transforms:
+            x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod

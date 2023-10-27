@@ -49,10 +49,10 @@ modules:
 Some extensions may be added in the OpenAPI in order to control the
 runtime generation:
 
-* `x-cli-name` may be present to change the tag, operation, parameter
+* `x-mgc-name` may be present to change the tag, operation, parameter
   or JSON Schema properties (ie: request body) to control its name.
-* `x-cli-name` like `x-cli-name`, but affects the description.
-* `x-cli-hidden: true` like `x-cli-name`, but if `true` will skip
+* `x-mgc-name` like `x-mgc-name`, but affects the description.
+* `x-mgc-hidden: true` like `x-mgc-name`, but if `true` will skip
   using such entry.
 
 > **NOTE:**
@@ -65,7 +65,7 @@ runtime generation:
 The following snippet show how to customize `visible-tag`, giving it
 another name `my-resource-name` and description `my resource description`.
 
-We're hiding `POST /v0/some/path` using `x-cli-hidden`, so
+We're hiding `POST /v0/some/path` using `x-mgc-hidden`, so
 `my-resource-name` will have a single action `GET /v0/some/path` that
 will be named `retrieve` and description `this will be used`.
 
@@ -78,12 +78,12 @@ paths:
             tags:
             - visible-tag
             description: this won't be used
-            x-cli-name: retrieve
-            x-cli-description: this will be used
+            x-mgc-name: retrieve
+            x-mgc-description: this will be used
         post:
             tags:
             - visible-tag
-            x-cli-hidden: true
+            x-mgc-hidden: true
 
    /v0/other/path:
         get:
@@ -92,10 +92,10 @@ paths:
 tags:
 -   name: visible-tag
     description: this won't be used
-    x-cli-name: my-resource-name
-    x-cli-description: my resource description
+    x-mgc-name: my-resource-name
+    x-mgc-description: my resource description
 -   name: hidden-tag
-    x-cli-hidden: true # no resources using this tag will be visible
+    x-mgc-hidden: true # no resources using this tag will be visible
 ```
 
 ## Parameters x Config
