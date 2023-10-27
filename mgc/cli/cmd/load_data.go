@@ -5,7 +5,6 @@ import (
 
 	flag "github.com/spf13/pflag"
 	"magalu.cloud/core"
-	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -23,7 +22,7 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 		if err != nil {
 			return err
 		}
-		if val == nil && !mgcSchemaPkg.IsSchemaNullable((*core.Schema)(propSchema)) {
+		if val == nil && !propSchema.Nullable {
 			continue
 		}
 		dst[name] = val

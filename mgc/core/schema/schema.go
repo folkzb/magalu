@@ -116,27 +116,6 @@ func SetDescription(schema *Schema, description string) *Schema {
 	return schema
 }
 
-// *Recursively* checks if schema can be nullable. Function supports `nullable`
-// fields and `type: 'null'` fields, including if included in anyOf, allOf and oneOf
-// properties. It also checks for type refs to check if they are nullable, alas why recursive.
-func IsSchemaNullable(schema *Schema) bool {
-	// Object is nullable
-	if schema.Nullable || schema.Type == "null" {
-		return true
-	}
-	// Object has nullable type in type list
-	possibleRefs := []openapi3.SchemaRefs{schema.AnyOf, schema.OneOf, schema.AllOf}
-	for _, refs := range possibleRefs {
-		for _, typeRef := range refs {
-			// ! Recursive call
-			if IsSchemaNullable((*Schema)(typeRef.Value)) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func getJsonEnumType(v *Schema) (string, error) {
 	types := []string{}
 	for _, v := range v.Enum {

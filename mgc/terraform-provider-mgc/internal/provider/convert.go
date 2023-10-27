@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -58,7 +57,7 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 			// Optional values that aren't computed will never be unknown
 			// this means they will be null in the state
 			return nil, true
-		} else if !mgcSchemaPkg.IsSchemaNullable(mgcSchema) {
+		} else if !mgcSchema.Nullable {
 			c.diag.AddError(
 				"Unable to convert non nullable value",
 				fmt.Sprintf("[convert] unable to convert %q since value is null and not nullable by the schema: value %+v - schema: %+v", atinfo.mgcName, tfValue, mgcSchema),
