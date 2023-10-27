@@ -5,4 +5,5 @@ use (
 	./mgc/core
 	./mgc/sdk
 	./mgc/terraform-provider-mgc
+	./mgc/tools
 )
