@@ -215,10 +215,12 @@ func newResource(
 	refResolver *core.BoundRefPathResolver,
 ) *core.SimpleGrouper[core.Executor] {
 	logger = logger.Named(tag.Name)
+	version := doc.Info.Version
 	return core.NewSimpleGrouper[core.Executor](
 		core.DescriptorSpec{
 			Name:        getNameExtension(extensionPrefix, tag.Extensions, tag.Name),
 			Description: getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description),
+			Version:     version,
 		},
 		func() (operations []core.Executor, err error) {
 			operations = []core.Executor{}
@@ -245,6 +247,7 @@ func newResource(
 				var operation core.Executor = newOperation(
 					opName,
 					desc,
+					version,
 					method,
 					extensionPrefix,
 					servers,

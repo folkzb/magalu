@@ -68,6 +68,7 @@ type operation struct {
 func newOperation(
 	name string,
 	desc *operationDesc,
+	version string,
 	method string,
 	extensionPrefix *string,
 	servers openapi3.Servers,
@@ -80,6 +81,7 @@ func newOperation(
 		SimpleDescriptor: core.SimpleDescriptor{Spec: core.DescriptorSpec{
 			Name:        name,
 			Description: getDescriptionExtension(extensionPrefix, desc.op.Extensions, desc.op.Description),
+			Version:     version,
 		}},
 		key:             desc.key,
 		method:          method,
