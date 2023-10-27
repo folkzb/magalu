@@ -68,13 +68,7 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 		return nil, true
 	}
 
-	t, err := mgcSchemaPkg.GetJsonType(mgcSchema)
-	if err != nil {
-		c.diag.AddError(fmt.Sprintf("Unable to get schema type for attribute %q", atinfo.mgcName), err.Error())
-		return nil, false
-	}
-
-	switch t {
+	switch mgcSchema.Type {
 	case "string":
 		var state string
 		err := tfValue.As(&state)
@@ -306,14 +300,9 @@ func (c *tfStateConverter) applyMgcList(mgcList []any, attributes mgcAttributes,
 
 func (c *tfStateConverter) applyValueToState(mgcValue any, attr *attribute, ctx context.Context, tfState *tfsdk.State, path path.Path) {
 	rv := reflect.ValueOf(mgcValue)
-	t, err := mgcSchemaPkg.GetJsonType(attr.mgcSchema)
-	if err != nil {
-		c.diag.AddError("Unable to retrieve type", fmt.Sprintf("found an untyped nil attribute `%#v` without valid mgc schema type. Error: %#v", path, err))
-	}
-
 	if mgcValue == nil {
 		// We must check the nil value type, since SetAttribute method requires a typed nil
-		switch t {
+		switch attr.mgcSchema.Type {
 		case "string":
 			rv = reflect.ValueOf((*string)(nil))
 		case "integer":
@@ -325,7 +314,7 @@ func (c *tfStateConverter) applyValueToState(mgcValue any, attr *attribute, ctx 
 		}
 	}
 
-	switch t {
+	switch attr.mgcSchema.Type {
 	case "array":
 		tflog.Debug(ctx, fmt.Sprintf("populating list in state at path %#v", path))
 		c.applyMgcList(mgcValue.([]any), attr.attributes, ctx, tfState, path)

@@ -164,17 +164,6 @@ func getJsonEnumType(v *Schema) (string, error) {
 	return types[0], nil
 }
 
-func GetJsonType(v *Schema) (string, error) {
-	if v.Type == "" {
-		if len(v.Enum) != 0 {
-			return getJsonEnumType(v)
-		}
-
-		return "", fmt.Errorf("unable to find schema %+v type", v)
-	}
-	return v.Type, nil
-}
-
 // Similar schemas are those with the same type and, depending on the type,
 // similar properties or restrictions.
 func CheckSimilarJsonSchemas(a, b *Schema) bool {

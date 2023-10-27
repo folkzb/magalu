@@ -195,13 +195,9 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map
 }
 
 func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, ctx context.Context) (schema.Attribute, mgcAttributes, error) {
-	t, err := mgcSchemaPkg.GetJsonType(mgcSchema)
-	if err != nil {
-		return nil, nil, err
-	}
 	description := mgcSchema.Description
 
-	switch t {
+	switch mgcSchema.Type {
 	case "string":
 		// I wanted to use an interface to define the modifiers regardless of the attr type
 		// but couldn't find the interface, it seems everything is redefined for each type
@@ -397,7 +393,7 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, ctx context.C
 			Default:       d,
 		}, mgcAttributes, nil
 	default:
-		return nil, nil, fmt.Errorf("type %q not supported", t)
+		return nil, nil, fmt.Errorf("type %q not supported", mgcSchema.Type)
 	}
 }
 
@@ -455,12 +451,7 @@ func attrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType attr
 		return nil, false, nil
 	}
 
-	t, err := mgcSchemaPkg.GetJsonType(s)
-	if err != nil {
-		return nil, false, err
-	}
-
-	switch t {
+	switch s.Type {
 	case "string":
 		if dStr, ok := v.(string); ok {
 			return types.StringValue(dStr), true, nil
@@ -504,7 +495,7 @@ func attrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType attr
 		}
 		return attrValue, true, nil
 	default:
-		return nil, false, fmt.Errorf("type %q not supported", t)
+		return nil, false, fmt.Errorf("type %q not supported", s.Type)
 	}
 }
 
