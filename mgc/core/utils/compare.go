@@ -9,6 +9,8 @@ import "reflect"
 func IsSameValueOrPointer(a, b any) bool {
 	if a == nil {
 		return b == nil
+	} else if b == nil {
+		return false
 	}
 
 	vA := reflect.ValueOf(a)
@@ -23,7 +25,12 @@ func IsSameValueOrPointer(a, b any) bool {
 	if vA.Comparable() {
 		return vA.Interface() == vB.Interface()
 	} else {
-		return vA.UnsafePointer() == vB.UnsafePointer()
+		switch vA.Kind() {
+		case reflect.Array, reflect.Slice, reflect.Map, reflect.Chan, reflect.UnsafePointer, reflect.Func:
+			return vA.UnsafePointer() == vB.UnsafePointer()
+		default:
+			return reflect.DeepEqual(a, b)
+		}
 	}
 }
 
