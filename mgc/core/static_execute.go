@@ -3,10 +3,8 @@ package core
 import (
 	"context"
 	"fmt"
-	"reflect"
 
-	"github.com/invopop/jsonschema"
-	"magalu.cloud/core/schema"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
 
@@ -14,17 +12,17 @@ import (
 func ReflectExecutorSpecSchemas[ParamsT any, ConfigsT any, ResultT any](baseSpec ExecutorSpec) (spec ExecutorSpec, err error) {
 	spec = baseSpec
 
-	spec.ParametersSchema, err = schemaFromType[ParamsT]()
+	spec.ParametersSchema, err = mgcSchemaPkg.SchemaFromType[ParamsT]()
 	if err != nil {
 		err = &ChainedError{Name: "ParamsT", Err: err}
 		return
 	}
-	spec.ConfigsSchema, err = schemaFromType[ConfigsT]()
+	spec.ConfigsSchema, err = mgcSchemaPkg.SchemaFromType[ConfigsT]()
 	if err != nil {
 		err = &ChainedError{Name: "ConfigsT", Err: err}
 		return
 	}
-	spec.ResultSchema, err = schemaFromType[ResultT]()
+	spec.ResultSchema, err = mgcSchemaPkg.SchemaFromType[ResultT]()
 	if err != nil {
 		err = &ChainedError{Name: "ResultT", Err: err}
 		return
@@ -78,30 +76,6 @@ func ReflectExecutorSpec[ParamsT any, ConfigsT any, ResultT any](
 
 	spec.Execute = ReflectExecutorSpecFn[ParamsT, ConfigsT, ResultT](typedExecute)
 	return
-}
-
-func schemaFromType[T any]() (*Schema, error) {
-	t := new(T)
-	tp := reflect.TypeOf(t).Elem()
-	kind := tp.Kind()
-	if tp.Name() == "" && kind == reflect.Interface {
-		return schema.NewAnySchema(), nil
-	}
-
-	s, err := schema.ToCoreSchema(schemaReflector.Reflect(t))
-	if err != nil {
-		return nil, fmt.Errorf("unable to create JSON Schema for type '%T': %w", t, err)
-	}
-
-	isArray := kind == reflect.Array || kind == reflect.Slice
-
-	// schemaReflector seems to lose the fact that it's an array, so we bring that back
-	if isArray && s.Type == "object" {
-		arrSchema := schema.NewArraySchema(s)
-		s = arrSchema
-	}
-
-	return s, nil
 }
 
 // Go Parameter and Config structs
@@ -158,12 +132,4 @@ func NewStaticExecuteSimple[ResultT any](
 			return execute(context)
 		},
 	)
-}
-
-var schemaReflector *jsonschema.Reflector
-
-func init() {
-	schemaReflector = &jsonschema.Reflector{
-		DoNotReference: false,
-	}
 }

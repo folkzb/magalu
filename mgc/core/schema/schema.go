@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/invopop/jsonschema"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core/utils"
@@ -300,4 +301,36 @@ func CompareJsonSchemas(a, b *Schema) (err error) {
 	}
 
 	return utils.StructFieldsCompare(a, b, schemaFieldComparator)
+}
+
+func SchemaFromType[T any]() (*Schema, error) {
+	t := new(T)
+	tp := reflect.TypeOf(t).Elem()
+	kind := tp.Kind()
+	if tp.Name() == "" && kind == reflect.Interface {
+		return NewAnySchema(), nil
+	}
+
+	s, err := ToCoreSchema(schemaReflector.Reflect(t))
+	if err != nil {
+		return nil, fmt.Errorf("unable to create JSON Schema for type '%T': %w", t, err)
+	}
+
+	isArray := kind == reflect.Array || kind == reflect.Slice
+
+	// schemaReflector seems to lose the fact that it's an array, so we bring that back
+	if isArray && s.Type == "object" {
+		arrSchema := NewArraySchema(s)
+		s = arrSchema
+	}
+
+	return s, nil
+}
+
+var schemaReflector *jsonschema.Reflector
+
+func init() {
+	schemaReflector = &jsonschema.Reflector{
+		DoNotReference: false,
+	}
 }
