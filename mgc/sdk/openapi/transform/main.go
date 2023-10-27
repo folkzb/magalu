@@ -1,4 +1,4 @@
-package openapi
+package transform
 
 import (
 	"fmt"
@@ -215,7 +215,7 @@ func getTransformationSpecs(extensions map[string]any, transformationKey string)
 
 // The returned function does NOT and should NOT alter the value that was passed by it
 // (maps, for example, when passed as input, won't be altered, a new copy will be made)
-func createTransform[T any](logger *zap.SugaredLogger, schema *core.Schema, extensionPrefix *string) (func(value T) (T, error), *core.Schema, error) {
+func New[T any](logger *zap.SugaredLogger, schema *core.Schema, extensionPrefix *string) (func(value T) (T, error), *core.Schema, error) {
 	transformationKey := getTransformKey(extensionPrefix)
 	if transformationKey == "" {
 		return nil, schema, nil

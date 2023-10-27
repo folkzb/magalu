@@ -23,6 +23,7 @@ import (
 	mgcHttpPkg "magalu.cloud/core/http"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
+	"magalu.cloud/sdk/openapi/transform"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"golang.org/x/exp/maps"
@@ -644,7 +645,7 @@ func (o *operation) ParametersSchema() *core.Schema {
 
 		var err error
 		var transformSchema *core.Schema
-		o.transformParameters, transformSchema, err = createTransform[map[string]any](o.logger, rootSchema, o.extensionPrefix)
+		o.transformParameters, transformSchema, err = transform.New[map[string]any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
 			o.logger.Warnw("error while loading parameters schema", "error", err, "rootSchema", rootSchema)
 		}
@@ -668,7 +669,7 @@ func (o *operation) ConfigsSchema() *core.Schema {
 
 		var err error
 		var transformSchema *core.Schema
-		o.transformConfigs, transformSchema, err = createTransform[map[string]any](o.logger, rootSchema, o.extensionPrefix)
+		o.transformConfigs, transformSchema, err = transform.New[map[string]any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
 			o.logger.Warnw("error while loading configs schema", "error", err, "rootSchema", rootSchema)
 		}
@@ -715,7 +716,7 @@ func (o *operation) initResultSchema() {
 
 		var err error
 		var transformSchema *core.Schema
-		o.transformResult, transformSchema, err = createTransform[any](o.logger, rootSchema, o.extensionPrefix)
+		o.transformResult, transformSchema, err = transform.New[any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
 			o.logger.Warnw("error while initializing result schema", "error", err, "rootSchema", rootSchema)
 		}
