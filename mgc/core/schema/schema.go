@@ -5,7 +5,9 @@ import (
 	"reflect"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
+	"magalu.cloud/core/utils"
 )
 
 // NOTE: TODO: should we duplicate this, or find a more generic package?
@@ -176,47 +178,141 @@ func GetJsonType(v *Schema) (string, error) {
 // Similar schemas are those with the same type and, depending on the type,
 // similar properties or restrictions.
 func CheckSimilarJsonSchemas(a, b *Schema) bool {
+	return CompareJsonSchemas(a, b) == nil
+}
+
+func CheckSimilarJsonSchemasRefs(a, b *SchemaRef) bool {
+	return CompareJsonSchemaRefs(a, b) == nil
+}
+
+func CompareJsonSchemaRefs(a, b *SchemaRef) (err error) {
 	if a == b {
-		return true
+		return nil
+	} else if a == nil || b == nil {
+		return &utils.CompareError{A: a, B: b}
+	}
+	return CompareJsonSchemas((*Schema)(a.Value), (*Schema)(b.Value))
+}
+
+func compareIfNonZero(vA, vB reflect.Value) (err error) {
+	if vA.IsZero() || vB.IsZero() {
+		return nil
+	}
+	return utils.ReflectValueDeepEqualCompare(vA, vB)
+}
+
+func compareEnum(vA, vB reflect.Value) (err error) {
+	if vA.IsZero() || vB.IsZero() {
+		return nil
+	}
+	return utils.ReflectValueUnorderedSliceCompareDeepEqual(vA, vB)
+}
+
+func compareSchemaRef(vA, vB reflect.Value) (err error) {
+	a, ok := vA.Interface().(*SchemaRef)
+	if !ok {
+		return &utils.ChainedError{Name: utils.CompareTypeErrorKey, Err: fmt.Errorf("expected *SchemaRef, got %s", vA)}
 	}
 
-	tA, err := GetJsonType(a)
+	b, ok := vB.Interface().(*SchemaRef)
+	if !ok {
+		return &utils.ChainedError{Name: utils.CompareTypeErrorKey, Err: fmt.Errorf("expected *SchemaRef, got %s", vA)}
+	}
+
+	return CompareJsonSchemaRefs(a, b)
+}
+
+func compareSchemaRefSlice(vA, vB reflect.Value) (err error) {
+	return utils.ReflectValueUnorderedSliceCompare(vA, vB, compareSchemaRef)
+}
+
+func compareSchemaRefMap(vA, vB reflect.Value) (err error) {
+	a, ok := vA.Interface().(openapi3.Schemas)
+	if !ok {
+		return &utils.ChainedError{Name: utils.CompareTypeErrorKey, Err: fmt.Errorf("expected *SchemaRef, got %s", vA)}
+	}
+
+	b, ok := vB.Interface().(openapi3.Schemas)
+	if !ok {
+		return &utils.ChainedError{Name: utils.CompareTypeErrorKey, Err: fmt.Errorf("expected *SchemaRef, got %s", vA)}
+	}
+
+	if !maps.EqualFunc(a, b, CheckSimilarJsonSchemasRefs) {
+		return &utils.CompareError{A: a, B: b}
+	}
+
+	return nil
+}
+
+func compareAdditionalProperties(vA, vB reflect.Value) (err error) {
+	if vA.IsZero() || vB.IsZero() {
+		return nil
+	}
+	if vA.Type() != vB.Type() {
+		return &utils.ChainedError{Name: utils.CompareTypeErrorKey, Err: &utils.CompareError{A: vA.Interface(), B: vB.Interface()}}
+	}
+
+	a, ok := vA.Interface().(openapi3.AdditionalProperties)
+	if !ok {
+		return &utils.ChainedError{Name: utils.CompareTypeErrorKey, Err: fmt.Errorf("expected openapi3.AdditionalProperties, got %s", vA)}
+	}
+
+	b, ok := vB.Interface().(openapi3.AdditionalProperties)
+	if !ok {
+		return &utils.ChainedError{Name: utils.CompareTypeErrorKey, Err: fmt.Errorf("expected openapi3.AdditionalProperties, got %s", vA)}
+	}
+
+	if a.Has != nil && b.Has != nil && *a.Has != *b.Has {
+		return &utils.ChainedError{Name: "Has", Err: &utils.CompareError{A: a.Has, B: b.Has}}
+	}
+
+	err = CompareJsonSchemaRefs(a.Schema, b.Schema)
 	if err != nil {
-		return false
+		return &utils.ChainedError{Name: "Schema", Err: &utils.CompareError{A: a.Schema, B: b.Schema}}
+	}
+	return
+}
+
+var schemaFieldComparator utils.StructFieldsComparator
+
+func init() {
+	// break initialization cycle
+	schemaFieldComparator = utils.NewMapStructFieldsComparator[Schema](map[string]utils.ReflectValueCompareFn{
+		"Type":                 utils.ReflectValueDeepEqualCompare,
+		"OneOf":                compareSchemaRefSlice,
+		"AnyOf":                compareSchemaRefSlice,
+		"AllOf":                compareSchemaRefSlice,
+		"Not":                  compareSchemaRef,
+		"Format":               compareIfNonZero,
+		"Enum":                 compareEnum,
+		"Default":              compareIfNonZero,
+		"Nullable":             utils.ReflectValueDeepEqualCompare,
+		"ReadOnly":             utils.ReflectValueDeepEqualCompare,
+		"WriteOnly":            utils.ReflectValueDeepEqualCompare,
+		"AllowEmptyValue":      utils.ReflectValueDeepEqualCompare,
+		"Min":                  compareIfNonZero,
+		"Max":                  compareIfNonZero,
+		"MultipleOf":           compareIfNonZero,
+		"MinLength":            compareIfNonZero,
+		"MaxLength":            compareIfNonZero,
+		"Pattern":              compareIfNonZero,
+		"MinItems":             compareIfNonZero,
+		"MaxItems":             compareIfNonZero,
+		"Items":                compareSchemaRef,
+		"Required":             utils.ReflectValueUnorderedSliceCompareDeepEqual,
+		"Properties":           compareSchemaRefMap,
+		"MinProps":             compareIfNonZero,
+		"MaxProps":             compareIfNonZero,
+		"AdditionalProperties": compareAdditionalProperties,
+	})
+}
+
+func CompareJsonSchemas(a, b *Schema) (err error) {
+	if a == b {
+		return nil
+	} else if a == nil || b == nil {
+		return &utils.CompareError{A: a, B: b}
 	}
 
-	tB, err := GetJsonType(b)
-	if err != nil {
-		return false
-	}
-
-	if tA != tB {
-		return false
-	}
-
-	switch tA {
-	default:
-		return true
-	case "string":
-		// Relax if one of them doesn't specify a format
-		return a.Format == b.Format || a.Format == "" || b.Format == ""
-	case "array":
-		return CheckSimilarJsonSchemas((*Schema)(a.Items.Value), (*Schema)(b.Items.Value))
-	case "object":
-		// TODO: should we compare Required? I don't think so, but it may be a problem
-		if len(a.Properties) != len(b.Properties) {
-			return false
-		}
-		for k, refA := range a.Properties {
-			refB := b.Properties[k]
-			if refB == nil {
-				return false
-			}
-			if !CheckSimilarJsonSchemas((*Schema)(refA.Value), (*Schema)(refB.Value)) {
-				return false
-			}
-		}
-		// TODO: handle additionalProperties and property patterns
-		return true
-	}
+	return utils.StructFieldsCompare(a, b, schemaFieldComparator)
 }
