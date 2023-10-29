@@ -12,14 +12,11 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	mgcAuthPkg "magalu.cloud/core/auth"
-	"magalu.cloud/core/config"
 	mgcHttpPkg "magalu.cloud/core/http"
 	mgcSchemaPkg "magalu.cloud/core/schema"
-	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/openapi/transform"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"golang.org/x/exp/maps"
 )
 
 const defaultResponseStatusCode = "default"
@@ -45,7 +42,7 @@ type operation struct {
 	transformResult     func(value any) (any, error)
 	extensionPrefix     *string
 	outputFlag          string
-	servers             openapi3.Servers
+	server              *server
 	parameters          *parameters
 	requestBody         requestBody
 	logger              *zap.SugaredLogger
@@ -76,12 +73,12 @@ func newOperation(
 		path:            desc.path,
 		operation:       desc.op,
 		extensionPrefix: extensionPrefix,
-		servers:         servers,
 		logger:          logger,
 		outputFlag:      outputFlag,
 		refResolver:     refResolver,
 		parameters:      newParameters(desc.path.Parameters, desc.op.Parameters, extensionPrefix),
 		requestBody:     newRequestBody(method, desc.op, logger, extensionPrefix),
+		server:          newServer(servers, extensionPrefix),
 	}
 }
 
@@ -154,8 +151,10 @@ func (o *operation) ConfigsSchema() *core.Schema {
 			o.logger.Warnw("error while adding parameters to configs schema", "error", err, "rootSchema", rootSchema)
 		}
 
-		o.addServerVariables(rootSchema)
-		o.addNetworkConfig(rootSchema)
+		err = o.server.addToSchema(rootSchema)
+		if err != nil {
+			o.logger.Warnw("error while adding server variables", "error", err)
+		}
 
 		var transformSchema *core.Schema
 		o.transformConfigs, transformSchema, err = transform.New[map[string]any](o.logger, rootSchema, o.extensionPrefix)
@@ -298,93 +297,6 @@ func (o *operation) getResponseSchemas() map[string]*core.Schema {
 	return o.responseSchemas
 }
 
-type cbForEachVariable func(externalName string, internalName string, spec *openapi3.ServerVariable, server *openapi3.Server) (run bool, err error)
-
-func (o *operation) forEachServerVariable(cb cbForEachVariable) (finished bool, err error) {
-	var s *openapi3.Server
-	if len(o.servers) > 0 {
-		s = o.servers[0]
-	}
-
-	if s == nil {
-		return false, fmt.Errorf("no available servers in spec")
-	}
-
-	for internalName, spec := range s.Variables {
-		externalName := getNameExtension(o.extensionPrefix, spec.Extensions, internalName)
-		run, err := cb(externalName, internalName, spec, s)
-		if err != nil {
-			return false, err
-		}
-		if !run {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
-
-func (o *operation) addServerVariables(schema *core.Schema) {
-	_, err := o.forEachServerVariable(func(externalName, internalName string, spec *openapi3.ServerVariable, server *openapi3.Server) (run bool, err error) {
-		varSchema := openapi3.NewStringSchema()
-		varSchema.Default = spec.Default
-
-		varSchema.Description = getDescriptionExtension(o.extensionPrefix, spec.Extensions, spec.Description)
-		for _, e := range spec.Enum {
-			varSchema.Enum = append(varSchema.Enum, e)
-		}
-		varSchema.Extensions = spec.Extensions
-
-		schema.Properties[externalName] = &openapi3.SchemaRef{Value: varSchema}
-		return true, nil
-	})
-
-	if err != nil {
-		o.logger.Warnw("error while adding server variables", "error", err)
-	}
-}
-
-func (o *operation) addNetworkConfig(schema *core.Schema) {
-	s := config.NetworkConfigSchema()
-	maps.Copy(schema.Properties, s.Properties)
-}
-
-func (o *operation) getServerURL(configs core.Configs) (string, error) {
-	nc, _ := utils.DecodeNewValue[config.NetworkConfig](configs)
-
-	if nc.ServerUrl != "" {
-		return nc.ServerUrl, nil
-	}
-	if len(o.servers) == 0 {
-		return "", fmt.Errorf("no available servers in spec")
-	}
-	if len(o.servers[0].Variables) == 0 {
-		return o.servers[0].URL, nil
-	}
-
-	url := ""
-	_, err := o.forEachServerVariable(func(externalName, internalName string, spec *openapi3.ServerVariable, server *openapi3.Server) (run bool, err error) {
-		val, ok := configs[externalName]
-		if !ok {
-			val = spec.Default
-		}
-		tmpl := "{" + internalName + "}"
-
-		if url == "" {
-			url = server.URL
-		}
-		url = strings.ReplaceAll(url, tmpl, fmt.Sprintf("%v", val))
-
-		return true, nil
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	return url, nil
-}
-
 func replaceInPath(path string, param *openapi3.Parameter, val core.Value) (string, error) {
 	// TODO: handle complex conversion using openapi style values
 	// https://spec.openapis.org/oas/latest.html#style-values
@@ -431,7 +343,7 @@ func (o *operation) getRequestUrl(
 	paramValues core.Parameters,
 	configs core.Configs,
 ) (string, error) {
-	serverURL, err := o.getServerURL(configs)
+	serverURL, err := o.server.url(configs)
 	if err != nil {
 		return "", err
 	}
