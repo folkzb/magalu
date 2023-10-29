@@ -6,6 +6,7 @@ import (
 	"github.com/invopop/yaml"
 	"magalu.cloud/core"
 	"magalu.cloud/core/dataloader"
+	"magalu.cloud/core/utils"
 )
 
 type indexModuleSpec struct {
@@ -59,6 +60,7 @@ func NewSource(loader dataloader.Loader, extensionPrefix *string) *core.SimpleGr
 					refResolver,
 				)
 				if err != nil {
+					err = &utils.ChainedError{Name: index.Modules[i].Path, Err: err}
 					return
 				}
 				modules[i] = module
