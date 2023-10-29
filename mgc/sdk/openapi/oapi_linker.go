@@ -61,11 +61,11 @@ func insertParameter(
 	dstParams core.Parameters,
 	dstConfigs core.Configs,
 ) {
-	finished, _ := op.forEachParameter(parametersLocations, insertParameterCb(oapiName, dstParams, value))
+	finished, _ := op.parameters.forEach(parametersLocations, insertParameterCb(oapiName, dstParams, value))
 	if !finished {
 		return
 	}
-	_, _ = op.forEachParameter(configLocations, insertParameterCb(oapiName, dstConfigs, value))
+	_, _ = op.parameters.forEach(configLocations, insertParameterCb(oapiName, dstConfigs, value))
 }
 
 func fillMissingConfigs(preparedConfigs core.Configs, schema *core.Schema, sourceConfigs core.Configs) {
@@ -158,7 +158,7 @@ func (l *openapiLinker) addReqBodyParameters(
 func opParameterValueResolver(op *operation, paramData core.Parameters) func(location, name string) (core.Value, bool) {
 	return func(location, name string) (core.Value, bool) {
 		var result core.Value
-		notFound, err := op.forEachParameterWithValue(
+		notFound, err := op.parameters.forEachWithValue(
 			paramData,
 			[]string{location},
 			func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {

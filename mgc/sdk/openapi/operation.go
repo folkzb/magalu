@@ -38,11 +38,6 @@ const defaultResponseStatusCode = "default"
 
 // Operation
 
-type parameterWithName struct {
-	name      string
-	parameter *openapi3.Parameter
-}
-
 type operation struct {
 	core.SimpleDescriptor
 	key                 string
@@ -61,7 +56,7 @@ type operation struct {
 	extensionPrefix     *string
 	outputFlag          string
 	servers             openapi3.Servers
-	parameters          *[]*parameterWithName
+	parameters          *parameters
 	logger              *zap.SugaredLogger
 	refResolver         *core.BoundRefPathResolver
 }
@@ -94,128 +89,7 @@ func newOperation(
 		logger:          logger,
 		outputFlag:      outputFlag,
 		refResolver:     refResolver,
-	}
-}
-
-func (o *operation) collectParameters(byNameAndLocation map[string]map[string]*parameterWithName, parameters openapi3.Parameters) {
-	for _, ref := range parameters {
-		// "A unique parameter is defined by a combination of a name and location."
-		parameter := ref.Value
-
-		byLocation, exists := byNameAndLocation[parameter.Name]
-		if !exists {
-			byLocation = map[string]*parameterWithName{}
-			byNameAndLocation[parameter.Name] = byLocation
-		}
-
-		name := getNameExtension(o.extensionPrefix, parameter.Extensions, "")
-		byLocation[parameter.In] = &parameterWithName{name, parameter}
-	}
-}
-
-func (o *operation) finalizeParameters(byNameAndLocation map[string]map[string]*parameterWithName) *[]*parameterWithName {
-	parameters := []*parameterWithName{}
-
-	for name, byLocation := range byNameAndLocation {
-		for location, pn := range byLocation {
-			if pn.name == "" {
-				if len(byLocation) == 1 {
-					pn.name = name
-				} else {
-					pn.name = fmt.Sprintf("%s-%s", location, name)
-				}
-			}
-			parameters = append(parameters, pn)
-		}
-	}
-
-	return &parameters
-}
-
-func (o *operation) getParameters() []*parameterWithName {
-	if o.parameters == nil {
-		// operation parameters take precedence over path:
-		// https://spec.openapis.org/oas/latest.html#fixed-fields-7
-		// "the new definition will override it but can never remove it"
-		// "A unique parameter is defined by a combination of a name and location."
-		m := map[string]map[string]*parameterWithName{}
-		o.collectParameters(m, o.path.Parameters)
-		o.collectParameters(m, o.operation.Parameters)
-		o.parameters = o.finalizeParameters(m)
-	}
-	return *o.parameters
-}
-
-type cbForEachParameter func(externalName string, parameter *openapi3.Parameter) (run bool, err error)
-
-func (o *operation) forEachParameter(locations []string, cb cbForEachParameter) (finished bool, err error) {
-	for _, pn := range o.getParameters() {
-		name := pn.name
-		parameter := pn.parameter
-
-		if parameter.Schema == nil || parameter.Schema.Value == nil {
-			continue
-		}
-
-		if !slices.Contains(locations, parameter.In) {
-			continue
-		}
-		if parameter.In == openapi3.ParameterInHeader && strings.HasPrefix(strings.ToLower(parameter.Name), "content-") {
-			continue
-		}
-
-		run, err := cb(name, parameter)
-		if err != nil {
-			return false, err
-		}
-		if !run {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
-
-type cbForEachParameterWithValue func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error)
-
-func (o *operation) forEachParameterWithValue(values map[string]any, locations []string, cb cbForEachParameterWithValue) (finished bool, err error) {
-	return o.forEachParameter(locations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
-		value, ok := values[externalName]
-		if !ok {
-			value = parameter.Schema.Value.Default
-			if value == nil {
-				return true, nil
-			}
-		}
-		return cb(externalName, parameter, value)
-	})
-}
-
-func (o *operation) addParameters(schema *core.Schema, locations []string) {
-	_, err := o.forEachParameter(locations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
-		paramSchemaRef := mgcSchemaPkg.NewCOWSchemaRef(parameter.Schema)
-		paramSchema := paramSchemaRef.ValueCOW()
-
-		desc := getDescriptionExtension(o.extensionPrefix, parameter.Extensions, parameter.Description)
-		if desc == "" {
-			desc = getDescriptionExtension(o.extensionPrefix, paramSchema.Extensions(), paramSchema.Description())
-		}
-
-		if desc != "" {
-			paramSchema.SetDescription(desc)
-		}
-
-		schema.Properties[externalName] = paramSchemaRef.Peek()
-
-		if parameter.Required && !slices.Contains(schema.Required, externalName) {
-			schema.Required = append(schema.Required, externalName)
-		}
-
-		return true, nil
-	})
-
-	if err != nil {
-		o.logger.Warnw("failed to add parameters", "error", err)
+		parameters:      newParameters(desc.path.Parameters, desc.op.Parameters, extensionPrefix),
 	}
 }
 
@@ -599,7 +473,7 @@ type cbForEachParameterName func(externalName, internalName, location string) (r
 
 // Must match ParametersSchema!
 func (o *operation) forEachParameterName(cb cbForEachParameterName) (finished bool, err error) {
-	finished, err = o.forEachParameter(parametersLocations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
+	finished, err = o.parameters.forEach(parametersLocations, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
 		return cb(externalName, parameter.Name, parameter.In)
 	})
 	if !finished || err != nil {
@@ -637,13 +511,17 @@ func (o *operation) forEachParameterName(cb cbForEachParameterName) (finished bo
 func (o *operation) ParametersSchema() *core.Schema {
 	if o.paramsSchema == nil {
 		rootSchema := mgcSchemaPkg.NewObjectSchema(map[string]*core.Schema{}, []string{})
+		var err error
 
 		// Must match forEachParameterName!
-		o.addParameters(rootSchema, parametersLocations)
+		err = o.parameters.addToSchema(rootSchema, parametersLocations)
+		if err != nil {
+			o.logger.Warnw("error while adding parameters to schema", "error", err, "rootSchema", rootSchema)
+		}
+
 		o.addRequestBodyParameters(rootSchema)
 		o.addSecurityParameters(rootSchema)
 
-		var err error
 		var transformSchema *core.Schema
 		o.transformParameters, transformSchema, err = transform.New[map[string]any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
@@ -662,12 +540,16 @@ func (o *operation) ParametersSchema() *core.Schema {
 func (o *operation) ConfigsSchema() *core.Schema {
 	if o.configsSchema == nil {
 		rootSchema := mgcSchemaPkg.NewObjectSchema(map[string]*core.Schema{}, []string{})
+		var err error
 
-		o.addParameters(rootSchema, configLocations)
+		err = o.parameters.addToSchema(rootSchema, configLocations)
+		if err != nil {
+			o.logger.Warnw("error while adding parameters to configs schema", "error", err, "rootSchema", rootSchema)
+		}
+
 		o.addServerVariables(rootSchema)
 		o.addNetworkConfig(rootSchema)
 
-		var err error
 		var transformSchema *core.Schema
 		o.transformConfigs, transformSchema, err = transform.New[map[string]any](o.logger, rootSchema, o.extensionPrefix)
 		if err != nil {
@@ -1022,7 +904,7 @@ func (o *operation) getRequestUrl(
 
 	queryValues := url.Values{}
 	path := o.key
-	_, err = o.forEachParameterWithValue(paramValues, parametersLocations, func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
+	_, err = o.parameters.forEachWithValue(paramValues, parametersLocations, func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
 		switch parameter.In {
 		case openapi3.ParameterInPath:
 			path, err = replaceInPath(path, parameter, value)
@@ -1050,7 +932,7 @@ func (o *operation) configureRequest(
 	req *http.Request,
 	configs core.Configs,
 ) (err error) {
-	_, err = o.forEachParameterWithValue(configs, configLocations, func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
+	_, err = o.parameters.forEachWithValue(configs, configLocations, func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
 		switch parameter.In {
 		case openapi3.ParameterInHeader:
 			addHeaderParam(req, parameter, value)
