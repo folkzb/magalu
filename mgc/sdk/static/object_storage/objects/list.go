@@ -169,14 +169,22 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg common.Con
 		req, err := newListRequest(ctx, cfg, bucket)
 		if err != nil {
 			listObjectsLogger().Errorw("newListRequest() failed", "err", err)
-			ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent]("", nil, err)
+			select {
+			case <-ctx.Done():
+				listObjectsLogger().Debugw("context.Done() for newListRequest() error", "err", err)
+			case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent]("", nil, err):
+			}
 			return
 		}
 
 		result, _, err := common.SendRequest[ListObjectsResponse](ctx, req)
 		if err != nil {
 			listObjectsLogger().Errorw("common.SendRequest() failed", "err", err)
-			ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent]("", nil, err)
+			select {
+			case <-ctx.Done():
+				listObjectsLogger().Debugw("context.Done() for common.SendRequest() error", "err", err)
+			case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent]("", nil, err):
+			}
 			return
 		}
 
