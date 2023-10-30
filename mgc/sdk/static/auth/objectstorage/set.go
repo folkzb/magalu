@@ -1,4 +1,4 @@
-package auth
+package objectstorage
 
 import (
 	"context"
@@ -34,7 +34,7 @@ func newSet() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "set",
-			Description: "Sets auth values",
+			Description: "Set the credentials values used for Object Storage",
 		},
 		set,
 	)

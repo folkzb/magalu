@@ -3,6 +3,7 @@ package auth
 import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
+	"magalu.cloud/sdk/static/auth/objectstorage"
 	"magalu.cloud/sdk/static/auth/tenant"
 )
 
@@ -15,9 +16,9 @@ func newGroup() core.Grouper {
 			Description: "Actions with ID Magalu to login, refresh tokens, change tenants and others",
 		},
 		[]core.Descriptor{
-			getSet(),
 			getLogin(),
 			getAccessToken(),
+			objectstorage.GetGroup(),
 			tenant.GetGroup(),
 		},
 	)
