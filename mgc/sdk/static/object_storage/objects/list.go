@@ -2,23 +2,24 @@ package objects
 
 import (
 	"context"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
+	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
 )
 
+var listObjectsLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
+	return logger().Named("list")
+})
+
 type ListObjectsParams struct {
 	Destination string `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/"`
-}
-
-type BucketContent struct {
-	Key          string `xml:"Key"`
-	LastModified string `xml:"LastModified"`
-	Size         int    `xml:"Size"`
 }
 
 type prefix struct {
@@ -30,6 +31,52 @@ type ListObjectsResponse struct {
 	Contents       []*BucketContent `xml:"Contents"`
 	CommonPrefixes []*prefix        `xml:"CommonPrefixes" json:"SubDirectories"`
 }
+
+type BucketContent struct {
+	Key          string `xml:"Key"`
+	LastModified string `xml:"LastModified"`
+	ContentSize  int64  `xml:"Size"`
+}
+
+func (b *BucketContent) ModTime() time.Time {
+	modTime, err := time.Parse(time.RFC3339, b.LastModified)
+	if err != nil {
+		listObjectsLogger().Errorw("failed to parse time", "err", err)
+		modTime = time.Time{}
+	}
+	return modTime
+}
+
+func (b *BucketContent) Mode() fs.FileMode {
+	return utils.FILE_PERMISSION
+}
+
+func (b *BucketContent) Size() int64 {
+	return b.ContentSize
+}
+
+func (b *BucketContent) Sys() any {
+	return nil
+}
+
+func (b *BucketContent) Info() (fs.FileInfo, error) {
+	return b, nil
+}
+
+func (b *BucketContent) IsDir() bool {
+	return false
+}
+
+func (b *BucketContent) Name() string {
+	return b.Key
+}
+
+func (b *BucketContent) Type() fs.FileMode {
+	return utils.FILE_PERMISSION
+}
+
+var _ fs.DirEntry = (*BucketContent)(nil)
+var _ fs.FileInfo = (*BucketContent)(nil)
 
 func newListRequest(ctx context.Context, cfg common.Config, bucket string) (*http.Request, error) {
 	parsedUrl, err := parseURL(cfg, bucket)
