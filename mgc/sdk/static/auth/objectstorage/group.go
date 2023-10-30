@@ -15,6 +15,7 @@ func newGroup() core.Grouper {
 		},
 		[]core.Descriptor{
 			getSet(),
+			getGet(),
 		},
 	)
 }
