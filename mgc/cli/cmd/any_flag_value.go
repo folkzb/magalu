@@ -16,11 +16,16 @@ func (f *anyFlagValue) String() string {
 		return ""
 	}
 
-	str, err := json.Marshal(f.value)
-	if err != nil {
-		return ""
+	switch v := f.value.(type) {
+	case string:
+		return v
+	default:
+		str, err := json.Marshal(v)
+		if err != nil {
+			return ""
+		}
+		return string(str)
 	}
-	return string(str)
 }
 
 func (f *anyFlagValue) Set(val string) error {
