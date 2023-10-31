@@ -30,6 +30,24 @@ func NewLazyOnceWithError(loader OnceWithError) OnceWithError {
 	}
 }
 
+// Type U *MUST* be comparable
+func NewLazyLoaderWithArg[T any, U comparable](loader func(U) T) func(U) T {
+	var values map[U]T
+	return func(arg U) T {
+		if existing, ok := values[arg]; ok {
+			return existing
+		}
+
+		if values == nil {
+			values = map[U]T{}
+		}
+
+		value := loader(arg)
+		values[arg] = value
+		return value
+	}
+}
+
 func NewLazyLoader[T any](loader func() T) func() T {
 	var value T
 	return func() T {
