@@ -285,7 +285,7 @@ func resolveField(field string, doc any) (result any, err error) {
 	case Linker:
 		return resolveLinker(field, v)
 
-	case map[string]Linker:
+	case Links:
 		return resolveLinkerMap(field, v)
 
 	case map[string]Executor:
@@ -361,7 +361,7 @@ func resolveLinker(field string, linker Linker) (result any, err error) {
 	}
 }
 
-func resolveLinkerMap(field string, m map[string]Linker) (result Linker, err error) {
+func resolveLinkerMap(field string, m Links) (result Linker, err error) {
 	if result, ok := m[field]; ok {
 		return result, nil
 	}

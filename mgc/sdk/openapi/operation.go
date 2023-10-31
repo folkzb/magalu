@@ -730,9 +730,9 @@ func (o *operation) resolveLink(link *openapi3.Link) (core.Executor, error) {
 }
 
 // This map should not be altered externally
-func (o *operation) initLinksAndRelated() map[string]core.Linker {
+func (o *operation) initLinksAndRelated() core.Links {
 	if o.links == nil {
-		o.links = map[string]core.Linker{}
+		o.links = core.Links{}
 		o.related = map[string]core.Executor{}
 		// TODO: Handle 'default' status code
 		for _, respRef := range o.operation.Responses {

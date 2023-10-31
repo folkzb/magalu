@@ -246,7 +246,7 @@ func handleLinkArgs(
 	ctx context.Context,
 	parentCmd *cobra.Command,
 	linkChainedArgs [][]string,
-	links map[string]core.Linker,
+	links core.Links,
 	config *mgcSdk.Config,
 	originalResult core.Result,
 ) error {

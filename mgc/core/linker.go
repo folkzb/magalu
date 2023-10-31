@@ -25,6 +25,8 @@ type Linker interface {
 	CreateExecutor(originalResult Result) (exec Executor, err error)
 }
 
+type Links map[string]Linker
+
 type simpleLink struct {
 	name                          string
 	description                   string

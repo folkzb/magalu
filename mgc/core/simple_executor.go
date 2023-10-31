@@ -6,7 +6,6 @@ import (
 	"fmt"
 )
 
-type Links map[string]Linker
 
 func (l Links) AddLink(name string, target Linker) bool {
 	_, ok := l[name]
