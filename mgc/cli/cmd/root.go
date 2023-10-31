@@ -69,7 +69,7 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 				}
 			}
 
-			f := &AnyFlagValue{value: value, typeName: propType}
+			f := &anyFlagValue{value: value, typeName: propType}
 			flags.AddFlag(&flag.Flag{
 				Name:     name,
 				DefValue: f.String(),
@@ -97,7 +97,7 @@ func getFlagValue(flags *flag.FlagSet, name string) (mgcSdk.Value, *pflag.Flag, 
 		return nil, nil, os.ErrNotExist
 	}
 
-	if f, ok := flag.Value.(*AnyFlagValue); ok {
+	if f, ok := flag.Value.(*anyFlagValue); ok {
 		return f.Value(), flag, nil
 	} else if val, err := flags.GetBool(name); err == nil {
 		return val, flag, nil

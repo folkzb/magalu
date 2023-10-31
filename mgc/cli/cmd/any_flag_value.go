@@ -6,12 +6,12 @@ import (
 	"strings"
 )
 
-type AnyFlagValue struct {
+type anyFlagValue struct {
 	value    any
 	typeName string
 }
 
-func (f *AnyFlagValue) String() string {
+func (f *anyFlagValue) String() string {
 	str, err := json.Marshal(f.value)
 	if err != nil {
 		return ""
@@ -19,7 +19,7 @@ func (f *AnyFlagValue) String() string {
 	return string(str)
 }
 
-func (f *AnyFlagValue) Set(val string) error {
+func (f *anyFlagValue) Set(val string) error {
 	var err error
 	switch {
 	case strings.HasPrefix(val, "@"):
@@ -43,11 +43,11 @@ func (f *AnyFlagValue) Set(val string) error {
 	return nil
 }
 
-func (f *AnyFlagValue) Type() string {
+func (f *anyFlagValue) Type() string {
 	return f.typeName
 }
 
-func (f *AnyFlagValue) Value() any {
+func (f *anyFlagValue) Value() any {
 	return f.value
 }
 
