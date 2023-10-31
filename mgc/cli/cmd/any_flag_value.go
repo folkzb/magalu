@@ -12,6 +12,10 @@ type anyFlagValue struct {
 }
 
 func (f *anyFlagValue) String() string {
+	if f.value == nil {
+		return ""
+	}
+
 	str, err := json.Marshal(f.value)
 	if err != nil {
 		return ""

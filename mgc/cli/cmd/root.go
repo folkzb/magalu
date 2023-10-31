@@ -48,6 +48,7 @@ func getPropType(prop *mgcSdk.Schema) string {
 func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 	for name, propRef := range schema.Properties {
 		prop := propRef.Value
+		isRequired := slices.Contains(schema.Required, name)
 
 		propType := getPropType((*mgcSdk.Schema)(prop))
 		if propType == "boolean" {
@@ -78,7 +79,7 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 			})
 		}
 
-		if slices.Contains(schema.Required, name) {
+		if isRequired {
 			if err := cobra.MarkFlagRequired(flags, name); err != nil {
 				// Will probably never happen
 				logger().Warnw(
