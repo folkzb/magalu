@@ -6,17 +6,7 @@ import (
 	"fmt"
 )
 
-
-func (l Links) AddLink(name string, target Linker) bool {
-	_, ok := l[name]
-	if !ok {
-		l[name] = target
-	}
-
-	return !ok
-}
-
-type LinksSpecFn func() Links
+type LinksSpecFn func(e Executor) Links
 type RelatedSpecFn func() map[string]Executor
 type ExecutorSpecFn func(executor Executor, context context.Context, parameters Parameters, configs Configs) (result Result, err error)
 
@@ -104,7 +94,7 @@ func (e *SimpleExecutor) Links() Links {
 	if e.links == nil {
 		return nil
 	}
-	return e.links()
+	return e.links(e)
 }
 
 func (e *SimpleExecutor) Related() map[string]Executor {

@@ -25,13 +25,15 @@ func newCreate() core.Executor {
 				Name:        "create",
 				Description: "Create a bucket",
 			},
-			Links: utils.NewLazyLoader[core.Links](func() core.Links { return core.Links{} }),
+			Links: utils.NewLazyLoaderWithArg(func(e core.Executor) core.Links {
+				return core.Links{
+					"delete": core.NewSimpleLink(e, getDelete()),
+					"list":   core.NewSimpleLink(e, getList()),
+				}
+			}),
 		},
 		create,
 	)
-
-	executor.Links().AddLink("delete", core.NewSimpleLink(executor, getDelete()))
-	executor.Links().AddLink("list", core.NewSimpleLink(executor, getList()))
 
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Created bucket {{.name}}\n"
