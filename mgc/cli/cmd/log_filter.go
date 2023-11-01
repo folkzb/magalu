@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	mgcSdk "magalu.cloud/sdk"
 )
 
 const logFilterFlag = "cli.log"
@@ -23,4 +24,14 @@ func addLogFilterFlag(cmd *cobra.Command, def string) {
 func getLogFilterFlag(cmd *cobra.Command) string {
 	_ = cmd.ParseFlags(os.Args[1:])
 	return cmd.Root().PersistentFlags().Lookup(logFilterFlag).Value.String()
+}
+
+// TODO: Bind config to PFlag. Investigate how to make it work correctly
+func getLogFilterConfig(sdk *mgcSdk.Sdk) string {
+	var logfilter string
+	err := sdk.Config().Get("logfilter", &logfilter)
+	if err != nil {
+		return ""
+	}
+	return logfilter
 }

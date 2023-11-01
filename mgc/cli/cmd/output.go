@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"magalu.cloud/core"
 )
 
 const outputFlag = "cli.output"
@@ -72,4 +73,15 @@ func getOutputFormatter(name, options string) (formatter OutputFormatter, err er
 		return formatter, nil
 	}
 	return nil, fmt.Errorf("unknown formatter %q", name)
+}
+
+func getOutputFor(cmd *cobra.Command, result core.Result) string {
+	output := getOutputFlag(cmd)
+	if output == "" {
+		if outputOptions, ok := core.ResultAs[core.ResultWithDefaultOutputOptions](result); ok {
+			return outputOptions.DefaultOutputOptions()
+		}
+	}
+
+	return output
 }
