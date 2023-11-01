@@ -58,3 +58,34 @@ func TestSliceItemConsumerError(t *testing.T) {
 		t.Errorf("Expected error to be `%#v`, found `%#v`", errors.New(errorStr), err)
 	}
 }
+
+func TestCancelAndCloseWithSend(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	ch := make(chan int, 10)
+	for i := 0; i < 10; i++ {
+		ch <- i
+	}
+	close(ch)
+	cancel()
+	ret, err := pipeline.SliceItemConsumer[[]int](ctx, ch)
+	if len(ret) != 0 {
+		t.Errorf("Expected empty slice, found %#v", ret)
+	}
+	if err == nil {
+		t.Error("Expected error, found nil")
+	}
+}
+
+func TestCancelAndCloseWithoutSend(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	ch := make(chan int)
+	close(ch)
+	cancel()
+	ret, err := pipeline.SliceItemConsumer[[]int](ctx, ch)
+	if len(ret) != 0 {
+		t.Errorf("Expected empty slice, found %#v", ret)
+	}
+	if err == nil {
+		t.Error("Expected error, found nil")
+	}
+}
