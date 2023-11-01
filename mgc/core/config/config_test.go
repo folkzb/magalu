@@ -110,6 +110,10 @@ func TestGet(t *testing.T) {
 		Unmarshaler unmarshalerField `json:"unmarshaler"`
 	}
 
+	type unmarshalerSubObject struct {
+		Person unmarshalerPerson `json:"person"`
+	}
+
 	t.Run("decode to no pointer", func(t *testing.T) {
 		c, err := setupWithFile([]byte(`{ "foo": "bar" }`))
 
@@ -349,6 +353,36 @@ func TestGet(t *testing.T) {
 		}
 	})
 
+	t.Run("decode object in config file with subfield unmarshaler types", func(t *testing.T) {
+		// We save objects in Config File as strings...
+		data := `{
+			"foo": "{\"person\":{\"name\":\"jon\",\"age\":5,\"unmarshaler\":\"valid\"}}"
+		}`
+
+		expected := unmarshalerSubObject{
+			Person: unmarshalerPerson{
+				Name:        "jon",
+				Age:         5,
+				Unmarshaler: 100,
+			},
+		}
+
+		c, err := setupWithFile([]byte(data))
+
+		if err != nil {
+			t.Errorf("expected err == nil, found: %#v", err)
+		}
+
+		p := new(unmarshalerSubObject)
+		err = c.Get("foo", p)
+
+		if err != nil {
+			t.Errorf("expected err == nil, found: %#v", err)
+		}
+		if !reflect.DeepEqual(*p, expected) {
+			t.Errorf("expected p == %#v, found: %#v", expected, p)
+		}
+	})
 	t.Run("decode object in config file to any", func(t *testing.T) {
 		// We save objects in Config File as strings...
 		data := `{

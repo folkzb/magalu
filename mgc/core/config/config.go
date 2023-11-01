@@ -124,19 +124,20 @@ func stringUnmarshalHook(f reflect.Value, t reflect.Value) (interface{}, error) 
 		derefKind = dereferenced.Kind()
 	}
 
-	target := t.Interface()
-
 	switch derefKind {
 	case reflect.Struct, reflect.Array, reflect.Slice:
-		err := yaml.Unmarshal([]byte(str), &target)
+		target := dereferenced.Addr().Interface()
+		err := yaml.Unmarshal([]byte(str), target)
 
 		return target, err
 	case reflect.Map:
+		target := t.Interface()
 		err := yaml.Unmarshal([]byte(str), target)
 
 		return target, err
 	case reflect.Invalid:
 		// Try to decode string to any, it may work. If not, just return the value as-is
+		target := t.Interface()
 		err := yaml.Unmarshal([]byte(str), &target)
 		if err != nil {
 			return str, nil
