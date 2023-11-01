@@ -11,6 +11,7 @@ from typing import (
     NotRequired,
     Sequence,
     Set,
+    Tuple,
     TypeAlias,
     TypedDict,
     Union,
@@ -397,6 +398,7 @@ NON_JSON_REQUESTS = "non-json-requests"
 NON_JSON_RESPONSES = "non-json-responses"
 NON_SNAKECASE_VALUES = "non-snakecase-values"
 TAGLESS_OPERATIONS = "tagless-operations"
+UNEVEN_RESOURCES = "uneven-resources"
 UNUSED_COMPONENTS = "unused-components"
 TYPELESS_SCHEMAS = "typeless-schemas"
 
@@ -873,15 +875,90 @@ def fill_missing_crud_stats(r: OAPIResource, crud_entries: List[str], dst: OAPIS
         dst.setdefault(MISSING_CRUD, []).append(missing_crud)
 
 
+# If all values in the array start with one of the values in the array,
+# returns that value. Otherwise, returns an empty string.
+def find_prefix_entry(strings: List[str]) -> str:
+    prefix = ""
+
+    for s in strings:
+        if prefix == "" or prefix.startswith(s):
+            prefix = s
+        elif not s.startswith(prefix):
+            return ""
+
+    return prefix
+
+
+# Finds the most common prefix entry in the array and returns that entry and
+# all values in the array that abide to said prefix. If there is no prefix
+# at all, returns and empty string and an empty array
+def find_best_prefix_entry(strings: List[str]) -> Tuple[str, List[str]]:
+    if len(strings) == 1:
+        return strings[0], strings
+
+    prefixes: Dict[str, List[str]] = {}
+    to_check: List[str] = []
+
+    for s in strings:
+        for prefix, values in prefixes.items():
+            full_seq = values + [s]
+            if (p := find_prefix_entry(full_seq)) != "":
+                prefixes[p] = full_seq
+                break
+        else:
+            for check in to_check:
+                if (p := find_prefix_entry([s, check])) != "":
+                    prefixes[p] = [s, check]
+                    to_check.remove(check)
+                    break
+            else:
+                to_check.append(s)
+
+    most_common: Tuple[str, List[str]] = "", []
+    for prefix, values in prefixes.items():
+        (_, current_values) = most_common
+        if len(values) > len(current_values):
+            most_common = prefix, values
+
+    return most_common
+
+
+def fill_uneven_resource_stats(
+    r: OAPIResource, paths_by_method: Dict[str, List[str]], dst: OAPIStats
+):
+    if not filterer.should_include(UNEVEN_RESOURCES):
+        return
+
+    for method, paths in paths_by_method.items():
+        prefix, values = find_best_prefix_entry(paths)
+        remaining = []
+        for p in paths:
+            if p not in values:
+                remaining.append(p)
+
+        if remaining:
+            if prefix:
+                dst.setdefault(UNEVEN_RESOURCES, {}).setdefault(r.name, {}).setdefault(
+                    method.upper(), {"expected_prefix": prefix, "uneven": remaining}
+                )
+            else:
+                dst.setdefault(UNEVEN_RESOURCES, {}).setdefault(r.name, {}).setdefault(
+                    method.upper(), remaining
+                )
+
+
 def fill_resource_stats(r: OAPIResource, dst: OAPIStats, resolve: Callable[[str], Any]):
     crud_entries = []
+    paths_by_method: Dict[str, List[str]] = {}
 
     for op in r.operations:
         fill_operation_stats(op, dst, resolve)
+        paths_by_method.setdefault(op.method, []).append(op.path)
 
         if op.method in CRUD_OP_KEYS:
             crud_entries.append(op.method)
 
+    fill_uneven_resource_stats(r, paths_by_method, dst)
     fill_missing_crud_stats(r, crud_entries, dst)
 
 

@@ -295,6 +295,11 @@ mke.openapi:
       responses:
         application/json:
           - .securityGroups
+  uneven-resources:
+    info:
+      GET:
+        - /v0/info/flavors
+        - /v0/info/versions
 network.openapi:
   computed-variables:
     - POST /v0/ports:
@@ -556,6 +561,85 @@ network.openapi:
     - paths./v0/xaas/vpcs/{vpc_id}/delete_interface/{interface_id}.delete.parameters.vpc_id.schema
     - paths./v0/xaas/vpcs/{vpc_id}/delete_interface/{interface_id}.delete.parameters.interface_id.schema
     - paths./v0/xaas/vpcs/{vpc_id}/interfaces.get.parameters.vpc_id.schema
+  uneven-resources:
+    port:
+      DELETE:
+        - /v0/ports/{port_id}
+        - /v0/ports/all
+      GET:
+        expected_prefix: /v0/ports
+        uneven:
+          - /v0/vpcs/{vpc_id}/ports
+      POST:
+        expected_prefix: /v0/ports
+        uneven:
+          - /v0/vpcs/{vpc_id}/ports
+    public_ip:
+      GET:
+        expected_prefix: /v0/public_ips
+        uneven:
+          - /v0/vpcs/{vpc_id}/public_ips
+      POST:
+        - /v0/vpcs/{vpc_id}/public_ips
+        - /v0/public_ips/{public_ip_id}/attach/{port_id}
+        - /v0/public_ips/{public_ip_id}/detach/{port_id}
+    rule:
+      GET:
+        - /v0/security_groups/{security_group_id}/rules
+        - /v0/rules/{rule_id}
+    security_group:
+      DELETE:
+        - /v0/security_groups/{security_group_id}
+        - /v0/security_groups_all
+      GET:
+        expected_prefix: /v0/security_groups
+        uneven:
+          - /v0/vpcs/{vpc_id}/security_groups
+      POST:
+        expected_prefix: /v0/security_groups
+        uneven:
+          - /v0/vpcs/{vpc_id}/security_groups
+    subnets:
+      GET:
+        - /v0/vpcs/{vpc_id}/subnets
+        - /v0/subnets/{subnet_id}
+    vpc:
+      DELETE:
+        - /v0/vpcs/{vpc_id}
+        - /v0/vpcs/all
+    xaas_port:
+      DELETE:
+        - /v0/xaas/ports/all
+        - /v0/xaas/ports/{port_id}
+      POST:
+        - /v0/xaas/vpcs/{vpc_id}/ports
+        - /v0/xaas/ports/{port_id}/attach/{security_group_id}
+        - /v0/xaas/ports/{port_id}/detach/{security_group_id}
+    xaas_rule:
+      GET:
+        - /v0/xaas/security_groups/{security_group_id}/rules
+        - /v0/xaas/rules/{rule_id}
+    xaas_security_group:
+      DELETE:
+        - /v0/xaas/security_groups/{security_group_id}
+        - /v0/xaas/security_groups_all
+      GET:
+        expected_prefix: /v0/xaas/security_groups
+        uneven:
+          - /v0/xaas/vpcs/{vpc_id}/security_groups
+      POST:
+        expected_prefix: /v0/xaas/security_groups
+        uneven:
+          - /v0/xaas/vpcs/{vpc_id}/security_groups
+    xaas_subnetpools:
+      GET:
+        expected_prefix: /v0/xaas/subnetpools
+        uneven:
+          - /v0/xaas/vpcs/{vpc_id}/subnetpools
+    xaas_vpc:
+      DELETE:
+        - /v0/xaas/vpcs/all
+        - /v0/xaas/vpcs/{vpc_id}/delete_interface/{interface_id}
   unused-components:
     - '#/components/schemas/ValidationError'
 virtual-machine.openapi:
