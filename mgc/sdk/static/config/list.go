@@ -39,7 +39,7 @@ func newList() core.Executor {
 	executor := core.NewStaticExecuteSimple(
 		core.DescriptorSpec{
 			Name:        "list",
-			Description: "list all possible configs",
+			Description: "List all available Configs",
 		},
 		getAllConfigs,
 	)

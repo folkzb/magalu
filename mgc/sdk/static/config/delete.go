@@ -18,8 +18,10 @@ var getDelete = utils.NewLazyLoader[core.Executor](newDelete)
 func newDelete() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
-			Name:        "delete",
-			Description: "Deletes a key from config file",
+			Name:    "delete",
+			Summary: "Delete/unset a Config value that had been previously set",
+			Description: `Delete/unset a Config value that had been previously set. This does not
+affect the environment variables`,
 		},
 		func(ctx context.Context, parameter configDeleteParams, _ struct{}) (result core.Value, err error) {
 			config := mgcConfigPkg.FromContext(ctx)

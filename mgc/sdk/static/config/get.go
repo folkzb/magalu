@@ -18,8 +18,11 @@ var getGet = utils.NewLazyLoader[core.Executor](newGet)
 func newGet() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
-			Name:        "get",
-			Description: "Gets a specific config value",
+			Name:    "get",
+			Summary: "Get a specific Config value that has been previously set",
+			Description: `Get a specific Config value that has been previously set. If there's an env variable
+matching the key (in uppercase and with the 'MGC_' prefix), it'll be retreived.
+Otherwise, the value will be searched for in the YAML file`,
 		},
 		func(ctx context.Context, parameter configGetParams, _ struct{}) (result core.Value, err error) {
 			config := mgcConfigPkg.FromContext(ctx)

@@ -21,7 +21,7 @@ func newSet() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "set",
-			Description: "Sets a specific config value",
+			Description: "Set a specific Config value in the configuration file",
 		},
 		func(ctx context.Context, parameter configSetParams, _ struct{}) (core.Value, error) {
 			config := mgcConfigPkg.FromContext(ctx)
