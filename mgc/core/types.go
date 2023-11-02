@@ -120,14 +120,18 @@ func ExecutorAs[T Executor](exec Executor) (T, bool) {
 	return zeroT, false
 }
 
-func VisitAllExecutors(child Descriptor, path []string, visitExecutor func(executor Executor, path []string) (bool, error)) (bool, error) {
+func VisitAllExecutors(child Descriptor, path []string, includeInternal bool, visitExecutor func(executor Executor, path []string) (bool, error)) (bool, error) {
+	if child.IsInternal() && !includeInternal {
+		return true, nil
+	}
+
 	if executor, ok := child.(Executor); ok {
 		return visitExecutor(executor, path)
 	} else if group, ok := child.(Grouper); ok {
 		return group.VisitChildren(func(child Descriptor) (run bool, err error) {
 			size := len(path)
 			path = append(path, child.Name())
-			run, err = VisitAllExecutors(child, path, visitExecutor)
+			run, err = VisitAllExecutors(child, path, includeInternal, visitExecutor)
 			path = path[:size]
 
 			return run, err

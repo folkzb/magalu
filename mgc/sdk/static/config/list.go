@@ -62,7 +62,7 @@ func getAllConfigs(ctx context.Context) (map[string]*core.Schema, error) {
 		return nil, fmt.Errorf("unable to get built in configs: %w", err)
 	}
 
-	_, err = core.VisitAllExecutors(root, []string{}, func(executor core.Executor, path []string) (bool, error) {
+	_, err = core.VisitAllExecutors(root, []string{}, false, func(executor core.Executor, path []string) (bool, error) {
 		for name, ref := range executor.ConfigsSchema().Properties {
 			current := (*core.Schema)(ref.Value)
 
