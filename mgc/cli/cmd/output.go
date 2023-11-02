@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -46,7 +45,6 @@ func getOutputFlag(cmd *cobra.Command) string {
 }
 
 func hasOutputFormatHelp(cmd *cobra.Command) bool {
-	_ = cmd.ParseFlags(os.Args[1:])
 	value := getOutputFlag(cmd)
 	if value == helpFormatter {
 		showFormatHelp()

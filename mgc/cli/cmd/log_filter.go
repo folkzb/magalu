@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -23,7 +21,6 @@ See more details about the filter syntax at https://github.com/moul/zapfilter`,
 }
 
 func getLogFilterFlag(cmd *cobra.Command) string {
-	_ = cmd.ParseFlags(os.Args[1:])
 	return cmd.Root().PersistentFlags().Lookup(logFilterFlag).Value.String()
 }
 
