@@ -8,6 +8,10 @@ type osArgParser struct {
 	chainedArgs [][]string
 }
 
+func (o *osArgParser) FullProgramPath() string {
+	return os.Args[0]
+}
+
 // Includes all but the first argument, which is the program name
 func (o *osArgParser) AllArgs() []string {
 	if o.allArgs == nil {

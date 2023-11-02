@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"magalu.cloud/cli/ui/progress_bar"
 	mgcLoggerPkg "magalu.cloud/core/logger"
 	mgcSdk "magalu.cloud/sdk"
@@ -27,7 +25,7 @@ func Execute() (err error) {
 	sdk := &mgcSdk.Sdk{}
 
 	rootCmd := &cobra.Command{
-		Use:     os.Args[0],
+		Use:     argParser.FullProgramPath(),
 		Version: mgcSdk.Version,
 		Short:   "CLI tool for OpenAPI integration",
 		Long: `This CLI is a dynamic processor of OpenAPI files that
