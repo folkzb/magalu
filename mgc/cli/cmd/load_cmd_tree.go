@@ -54,8 +54,16 @@ func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 }
 
 func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, args []string) error {
-	childName, childArgs := getNextUnknownCommand(cmd, args)
-	if childName == nil || *childName == "help" {
+	var childName *string
+	var childArgs = args
+	for {
+		childName, childArgs = getNextUnknownCommand(cmd, childArgs)
+		if childName == nil || *childName != "help" {
+			break
+		}
+	}
+
+	if childName == nil {
 		_, err := loadAllChildren(sdk, cmd, cmdDesc)
 		return err
 	}
