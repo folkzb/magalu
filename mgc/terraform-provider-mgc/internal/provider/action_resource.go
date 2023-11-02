@@ -255,7 +255,9 @@ func (r *MgcActionResource) performLinkOperation(ctx context.Context, link core.
 	if diag.HasError() {
 		return
 	}
-	applyStateAfter(r, result, ctx, outState, diag)
+	if outState != nil {
+		applyStateAfter(r, result, ctx, outState, diag)
+	}
 }
 
 func (r *MgcActionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -301,7 +303,7 @@ func (r *MgcActionResource) Update(ctx context.Context, req resource.UpdateReque
 func (r *MgcActionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "delete")
 	ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
-	r.performLinkOperation(ctx, r.delete, req.State, &resp.State, &resp.Diagnostics)
+	r.performLinkOperation(ctx, r.delete, req.State, nil, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

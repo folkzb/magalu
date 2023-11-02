@@ -253,7 +253,9 @@ func (r *MgcResource) performOperation(ctx context.Context, exec core.Executor, 
 		return
 	}
 
-	applyStateAfter(r, result, ctx, outState, diag)
+	if outState != nil {
+		applyStateAfter(r, result, ctx, outState, diag)
+	}
 }
 
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -289,7 +291,7 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "delete")
 	ctx = tflog.SetField(ctx, resourceNameField, r.name)
-	r.performOperation(ctx, r.delete, req.State, &resp.State, &resp.Diagnostics)
+	r.performOperation(ctx, r.delete, req.State, nil, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
