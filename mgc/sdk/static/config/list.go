@@ -7,6 +7,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"go.uber.org/zap"
+	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	mgcConfigPkg "magalu.cloud/core/config"
 	"magalu.cloud/core/utils"
@@ -25,9 +26,15 @@ func configListFormatter(exec core.Executor, result core.Result) string {
 	writer := table.NewWriter()
 	writer.AppendHeader(table.Row{"Config", "Type", "Description"})
 
-	for name, schema := range configMap {
-		schema := schema.(map[string]any)
-		writer.AppendRow(table.Row{name, schema["type"], schema["description"]})
+	sortedKeys := make([]string, 0, len(configMap))
+	for k := range configMap {
+		sortedKeys = append(sortedKeys, k)
+	}
+	slices.Sort(sortedKeys)
+
+	for _, k := range sortedKeys {
+		schema := configMap[k].(map[string]any)
+		writer.AppendRow(table.Row{k, schema["type"], schema["description"]})
 	}
 
 	return writer.Render()
