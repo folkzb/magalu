@@ -34,7 +34,7 @@ func newSet() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "set",
-			Description: "Set the credentials values used for Object Storage",
+			Description: "Set the credentials values used for Object Storage requests",
 		},
 		set,
 	)
