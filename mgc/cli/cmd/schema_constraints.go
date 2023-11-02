@@ -75,9 +75,10 @@ func addArrayConstraints(s *mgcSdk.Schema, dst *[]string) {
 		if filler, ok := getSchemaConstraintFiller(items.Type); ok {
 			itemsConstraints := []string{}
 			filler(items, &itemsConstraints)
-
-			itemsStr := fmt.Sprintf("%s:(%s)", items.Type, strings.Join(itemsConstraints, " and "))
-			*dst = append(*dst, itemsStr)
+			if len(itemsConstraints) > 0 {
+				itemsStr := fmt.Sprintf("%s:(%s)", items.Type, strings.Join(itemsConstraints, " and "))
+				*dst = append(*dst, itemsStr)
+			}
 		}
 	}
 }
