@@ -68,13 +68,15 @@ def load_mods(
         url = data["$id"]
         name = match.group("name")
         full_mods[filename] = data
+        description = info.get("x-mgc-description", info.get("description", ""))
         mods.append(
             IndexModule(
                 name=name,
                 url=url,
                 path=relpath,
-                description=info.get("x-mgc-description", info.get("description", "")),
+                description=description,
                 version=info.get("version", ""),
+                summary=info.get("summary", description),
             )
         )
     return full_mods, mods

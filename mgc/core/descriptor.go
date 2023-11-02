@@ -9,6 +9,7 @@ type DescriptorSpec struct {
 	Name        string `json:"name"`
 	Version     string `json:"version"`
 	Description string `json:"description"`
+	Summary     string `json:"summary"`
 }
 
 func (d *DescriptorSpec) Validate() error {
@@ -18,7 +19,7 @@ func (d *DescriptorSpec) Validate() error {
 	if d.Description == "" {
 		return &ChainedError{d.Name, errors.New("missing description")}
 	}
-	// Version is optional
+	// Version and Summary are optional
 	return nil
 }
 
@@ -27,6 +28,7 @@ type Descriptor interface {
 	Name() string
 	Version() string
 	Description() string
+	Summary() string
 	DescriptorSpec() DescriptorSpec
 }
 
@@ -48,6 +50,13 @@ func (d *SimpleDescriptor) Description() string {
 
 func (d *SimpleDescriptor) DescriptorSpec() DescriptorSpec {
 	return d.Spec
+}
+
+func (d *SimpleDescriptor) Summary() string {
+	if d.Spec.Summary == "" {
+		return d.Spec.Description
+	}
+	return d.Spec.Summary
 }
 
 var _ Descriptor = (*SimpleDescriptor)(nil)

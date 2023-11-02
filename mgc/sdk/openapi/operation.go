@@ -82,6 +82,7 @@ func newOperation(
 			Name:        name,
 			Description: getDescriptionExtension(extensionPrefix, desc.op.Extensions, desc.op.Description),
 			Version:     version,
+			Summary:     desc.op.Summary,
 		}},
 		key:             desc.key,
 		method:          method,

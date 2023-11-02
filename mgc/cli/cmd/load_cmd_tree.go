@@ -127,9 +127,9 @@ func addAction(
 
 	actionCmd := &cobra.Command{
 		Use:     desc.Name(),
-		Short:   desc.Description(),
+		Short:   desc.Summary(),
+		Long:    desc.Description(),
 		Version: desc.Version(),
-		// TODO: Long:    desc.Description,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			parameters := core.Parameters{}
@@ -173,7 +173,8 @@ func addGroup(
 	desc := group.(mgcSdk.Descriptor)
 	moduleCmd := &cobra.Command{
 		Use:     desc.Name(),
-		Short:   desc.Description(),
+		Short:   desc.Summary(),
+		Long:    desc.Description(),
 		Version: desc.Version(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
