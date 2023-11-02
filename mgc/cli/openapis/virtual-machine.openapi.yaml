@@ -77,7 +77,6 @@ paths:
             security:
             -   OAuth2:
                 - virtual-machine.write
-            x-mgc-hidden: true
     /v0/images/{image_id}:
         delete:
             tags:
@@ -106,7 +105,6 @@ paths:
             security:
             -   OAuth2:
                 - virtual-machine.write
-            x-mgc-hidden: true
     /v0/instance_types:
         get:
             tags:

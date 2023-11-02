@@ -72,7 +72,6 @@ paths:
                                 id: $request.path.id
     /v0/images:
         post:
-            x-mgc-hidden: true
             responses:
                 '201':
                     links:
@@ -81,9 +80,6 @@ paths:
                             description: Delete image in DB
                             parameters:
                                 image_id: $response.body#/id
-    /v0/images/{image_id}:
-        delete:
-            x-mgc-hidden: true
     /v0/instance_types:
         post:
             x-mgc-hidden: true
