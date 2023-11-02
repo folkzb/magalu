@@ -92,6 +92,10 @@ func newModule(
 			resources = make([]core.Grouper, 0, len(doc.Tags))
 
 			for _, tag := range doc.Tags {
+				if getHiddenExtension(extensionPrefix, tag.Extensions) {
+					continue
+				}
+
 				resource := newResource(
 					tag,
 					doc,
