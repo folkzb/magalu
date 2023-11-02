@@ -15,13 +15,16 @@ type UpdateAttachVolumeParams struct {
 var getUpdate = utils.NewLazyLoader[core.Executor](newUpdate)
 
 func newUpdate() core.Executor {
-	return core.NewStaticExecute(
+	exec := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "update",
 			Description: "Update a block storage volume attachment",
 		},
 		update,
 	)
+	return core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "No-op"
+	})
 }
 
 func update(ctx context.Context, params UpdateAttachVolumeParams, cfg core.Configs) (core.Result, error) {

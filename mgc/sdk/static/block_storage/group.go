@@ -12,7 +12,8 @@ func newGroup() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:        "block-storage",
-			Description: "Operations for Block Storage API",
+			Summary:     "Operations for Block Storage API",
+			Description: `Create and manage Volumes via the Block Storage API`,
 		},
 		[]core.Descriptor{
 			attachment.GetGroup(),
