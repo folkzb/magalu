@@ -20,7 +20,12 @@ func addRetryUntilFlag(cmd *cobra.Command) {
 		retryUntilFlag,
 		"U",
 		"",
-		"Retry the action with the same parameters until the given condition is met. The flag parameters use the format: "+retryUntilFlagFormat+", where \"retries\" is a positive integer, \"interval\" is a duration (ex: 2s) and \"condition\" is a "+retryUntilFlagConditionFormat+" pair such as \"jsonpath=expression\"",
+		fmt.Sprintf(`Retry the action with the same parameters until the given condition is met. The flag parameters
+use the format: %q, where 'retries' is a positive integer, 'interval' is
+a duration (ex: 2s) and 'condition' is a %q pair such as "jsonpath=expression"`,
+			retryUntilFlagFormat,
+			retryUntilFlagConditionFormat,
+		),
 	)
 }
 

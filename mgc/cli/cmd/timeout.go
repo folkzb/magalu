@@ -13,7 +13,8 @@ func addTimeoutFlag(cmd *cobra.Command) {
 		timeoutFlag,
 		"t",
 		0.0,
-		"If > 0, it's the timeout for the action execution. It's specified as numbers and unit suffix. Valid unit suffixes: ns, us, ms, s, m and h. Examples: 300ms, 1m30s",
+		`If > 0, it's the timeout for the action execution. It's specified as numbers and unit suffix.
+Valid unit suffixes: ns, us, ms, s, m and h. Examples: 300ms, 1m30s`,
 	)
 }
 

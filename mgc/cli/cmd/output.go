@@ -35,8 +35,9 @@ func addOutputFlag(cmd *cobra.Command) {
 		"o",
 		"",
 		fmt.Sprintf(
-			"If the result is plain data types, then choose the output format, one of %s, use 'help' to know more details. "+
-				"Otherwise it's the file name to save to, use '-' to write to stdout (default).",
+			`If the result is plain data types, it's the output format.
+One of %s, use 'help' to know more details.
+Otherwise it's the file name to save to, use '-' to write to stdout (default)`,
 			strings.Join(getOutputFormats(), "|")))
 }
 

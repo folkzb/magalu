@@ -13,7 +13,9 @@ func addWaitTerminationFlag(cmd *cobra.Command) {
 		waitTerminationFlag,
 		"w",
 		false,
-		"Wait any asynchronous actions to transition to their final state. Note that not all actions implement ExecuteUntilTermination(), if that is not available, then regular Execute() is used and no wait will be done",
+		`Wait for any asynchronous actions to transition to their final state. Note that not all actions
+implement ExecuteUntilTermination(), if that is not available, then regular Execute()
+is used and no wait will be done`,
 	)
 
 	f := cmd.Root().PersistentFlags().Lookup(waitTerminationFlag)
