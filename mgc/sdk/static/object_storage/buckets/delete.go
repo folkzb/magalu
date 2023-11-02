@@ -57,7 +57,7 @@ func newDelete() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "delete",
-			Description: "Delete a bucket",
+			Description: "Delete an existing Bucket",
 		},
 		delete,
 	)

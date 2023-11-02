@@ -23,7 +23,8 @@ func newCreate() core.Executor {
 		core.ExecutorSpec{
 			DescriptorSpec: core.DescriptorSpec{
 				Name:        "create",
-				Description: "Create a bucket",
+				Summary:     "Create a new Bucket",
+				Description: `Buckets are "containers" that are able to store various Objects inside`,
 			},
 			Links: utils.NewLazyLoaderWithArg(func(e core.Executor) core.Links {
 				return core.Links{

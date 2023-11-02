@@ -35,7 +35,7 @@ func newList() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "list",
-			Description: "List all buckets",
+			Description: "List all existing Buckets",
 		},
 		list,
 	)
