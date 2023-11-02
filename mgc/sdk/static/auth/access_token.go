@@ -23,7 +23,7 @@ func newAccessToken() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "access_token",
-			Description: "Retrieve the access token to use the APIs",
+			Description: "Retrieve the access token used in the APIs",
 		},
 		func(ctx context.Context, parameters accessTokenParameters, _ struct{}) (output *accessTokenResult, err error) {
 			auth := mgcAuthPkg.FromContext(ctx)
