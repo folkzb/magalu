@@ -11,8 +11,8 @@ import (
 
 const (
 	retryUntilFlag                string = "cli.retry-until"
-	retryUntilFlagFormat          string = "\"retries,interval,condition\""
-	retryUntilFlagConditionFormat string = "\"engine=value\""
+	retryUntilFlagFormat          string = "retries,interval,condition"
+	retryUntilFlagConditionFormat string = "engine=value"
 )
 
 func addRetryUntilFlag(cmd *cobra.Command) {
@@ -21,8 +21,8 @@ func addRetryUntilFlag(cmd *cobra.Command) {
 		"U",
 		"",
 		fmt.Sprintf(`Retry the action with the same parameters until the given condition is met. The flag parameters
-use the format: %q, where 'retries' is a positive integer, 'interval' is
-a duration (ex: 2s) and 'condition' is a %q pair such as "jsonpath=expression"`,
+use the format: '%s', where 'retries' is a positive integer, 'interval' is
+a duration (ex: 2s) and 'condition' is a '%s' pair such as "jsonpath=expression"`,
 			retryUntilFlagFormat,
 			retryUntilFlagConditionFormat,
 		),
