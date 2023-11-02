@@ -19,7 +19,8 @@ func newCurrent() core.Executor {
 	return core.NewStaticExecuteSimple(
 		core.DescriptorSpec{
 			Name:        "current",
-			Description: "Get the currently active Tenant",
+			Summary:     "Get the currently active Tenant",
+			Description: `The current Tenant is used for all Magalu HTTP requests`,
 		},
 		func(ctx context.Context) (*tenantCurrentResult, error) {
 			auth := mgcAuthPkg.FromContext(ctx)
