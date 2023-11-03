@@ -79,6 +79,13 @@ func (path RefPath) Validate() (err error) {
 	return nil
 }
 
+func (path RefPath) Add(parts ...string) RefPath {
+	for _, part := range parts {
+		path += RefPath("/" + jsonpointer.Escape(part))
+	}
+	return path
+}
+
 func (path RefPath) SplitUrl() (url string, p RefPath) {
 	before, after, found := strings.Cut(string(path), "#")
 	if !found {
