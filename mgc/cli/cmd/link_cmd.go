@@ -4,10 +4,21 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
 )
+
+func printLinkExecutionTable(name, description string) {
+	t := table.NewWriter()
+	t.AppendHeader(table.Row{"Executing link"})
+	t.AppendRows([]table.Row{{"Name", name}, {"Description", description}})
+	t.SetStyle(table.StyleRounded)
+	fmt.Println()
+	fmt.Println(t.Render())
+	fmt.Println()
+}
 
 func addLinkHelp(
 	parentCmd *cobra.Command,
@@ -16,7 +27,7 @@ func addLinkHelp(
 		Use:   "help",
 		Short: "Get help on the usage of link chains",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("\nExecuting link\nName: %s\nDescription: %s\n\n", cmd.Use, cmd.Short)
+			printLinkExecutionTable(cmd.Use, cmd.Short)
 
 			msg := `All Executors might have possible links to other Executors.
 These Links use the output of said Executor to aid in deciding which

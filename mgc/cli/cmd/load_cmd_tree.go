@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"golang.org/x/exp/slices"
@@ -225,13 +224,7 @@ func addLink(
 		Use:   link.Name(),
 		Short: link.Description(),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			t := table.NewWriter()
-			t.AppendHeader(table.Row{"Executing link"})
-			t.AppendRows([]table.Row{{"Name", link.Name()}, {"Description", link.Description()}})
-			t.SetStyle(table.StyleRounded)
-			fmt.Println()
-			fmt.Println(t.Render())
-			fmt.Println()
+			printLinkExecutionTable(link.Name(), link.Description())
 
 			additionalParameters := core.Parameters{}
 			additionalConfigs := core.Configs{}
