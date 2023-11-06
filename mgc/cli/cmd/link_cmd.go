@@ -67,6 +67,14 @@ func handleLinkArgs(
 		linkHelpCmd.Run(linkHelpCmd, nil)
 		return nil
 	} else {
-		return fmt.Errorf("Invalid link execution. Command '%s' has no link '%s'", parentCmd.Use, linkName)
+		allLinkNames := make([]string, 0, len(links))
+		for linkName := range links {
+			allLinkNames = append(allLinkNames, linkName)
+		}
+		if len(allLinkNames) == 0 {
+			return fmt.Errorf("Invalid link execution. Command %q doesn't support any links.", parentCmd.Use)
+		} else {
+			return fmt.Errorf("Invalid link execution. Command %q has no link %q. Available links are %v", parentCmd.Use, linkName, allLinkNames)
+		}
 	}
 }
