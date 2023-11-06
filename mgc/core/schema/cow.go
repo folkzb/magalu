@@ -73,7 +73,6 @@ func NewCOWSchemaRef(s *SchemaRef) *COWSchemaRef {
 		s:       s,
 		changed: false,
 	}
-	c.initCOW()
 	return c
 }
 
@@ -121,7 +120,13 @@ func (c *COWSchemaRef) Value() *Schema {
 	if c == nil {
 		return nil
 	}
-	return c.cowValue.Peek()
+	if c.cowValue != nil {
+		return c.cowValue.Peek()
+	}
+	if c.s != nil {
+		return (*Schema)(c.s.Value)
+	}
+	return nil
 }
 
 func (c *COWSchemaRef) ValueCOW() *COWSchema {
@@ -388,7 +393,6 @@ func NewCOWSchema(s *Schema) *COWSchema {
 		s:       s,
 		changed: false,
 	}
-	c.initCOW()
 	return c
 }
 
@@ -425,8 +429,13 @@ func (c *COWSchema) Extensions() map[string]any {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowExtensions.Peek()
+	if c.cowExtensions != nil {
+		return c.cowExtensions.Peek()
+	}
+	if c.s != nil {
+		return c.s.Extensions
+	}
+	return nil
 }
 
 // Replace the Extensions map, if it's different from the existing value
@@ -527,8 +536,13 @@ func (c *COWSchema) Enum() []any {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowEnum.Peek()
+	if c.cowEnum != nil {
+		return c.cowEnum.Peek()
+	}
+	if c.s != nil {
+		return c.s.Enum
+	}
+	return nil
 }
 
 // Replace the Enum slice, if it's different from the existing value
@@ -549,8 +563,13 @@ func (c *COWSchema) OneOf() SchemaRefs {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowOneOf.Peek()
+	if c.cowOneOf != nil {
+		return c.cowOneOf.Peek()
+	}
+	if c.s != nil {
+		return c.s.OneOf
+	}
+	return nil
 }
 
 // Replace the OneOf slice, if it's different from the existing value
@@ -571,8 +590,13 @@ func (c *COWSchema) AnyOf() SchemaRefs {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowAnyOf.Peek()
+	if c.cowAnyOf != nil {
+		return c.cowAnyOf.Peek()
+	}
+	if c.s != nil {
+		return c.s.AnyOf
+	}
+	return nil
 }
 
 // Replace the AnyOf slice, if it's different from the existing value
@@ -593,8 +617,13 @@ func (c *COWSchema) AllOf() SchemaRefs {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowAllOf.Peek()
+	if c.cowAllOf != nil {
+		return c.cowAllOf.Peek()
+	}
+	if c.s != nil {
+		return c.s.AllOf
+	}
+	return nil
 }
 
 // Replace the AllOf slice, if it's different from the existing value
@@ -615,8 +644,13 @@ func (c *COWSchema) Not() *SchemaRef {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowNot.Peek()
+	if c.cowNot != nil {
+		return c.cowNot.Peek()
+	}
+	if c.s != nil {
+		return c.s.Not
+	}
+	return nil
 }
 
 func (c *COWSchema) SetNot(v *SchemaRef) bool {
@@ -901,8 +935,13 @@ func (c *COWSchema) Items() *SchemaRef {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowItems.Peek()
+	if c.cowItems != nil {
+		return c.cowItems.Peek()
+	}
+	if c.s != nil {
+		return c.s.Items
+	}
+	return nil
 }
 
 func (c *COWSchema) SetItems(v *SchemaRef) bool {
@@ -921,8 +960,13 @@ func (c *COWSchema) Properties() map[string]*SchemaRef {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowProperties.Peek()
+	if c.cowProperties != nil {
+		return c.cowProperties.Peek()
+	}
+	if c.s != nil {
+		return c.s.Properties
+	}
+	return nil
 }
 
 // In order to do more fine grained operations such as Set/Delete, use PropertiesCOW()
@@ -941,8 +985,13 @@ func (c *COWSchema) Required() []string {
 	if c == nil {
 		return nil
 	}
-	// nil receiver is ok
-	return c.cowRequired.Peek()
+	if c.cowRequired != nil {
+		return c.cowRequired.Peek()
+	}
+	if c.s != nil {
+		return c.s.Required
+	}
+	return nil
 }
 
 // Replace the Required slice, if it's different from the existing value
