@@ -168,10 +168,11 @@ func addAction(
 		},
 	}
 
-	addFlags(actionCmd.Flags(), exec.ParametersSchema())
-	addFlags(actionCmd.PersistentFlags(), exec.ConfigsSchema())
-
 	parentCmd.AddCommand(actionCmd)
+
+	addFlags(actionCmd.Flags(), exec.ParametersSchema())
+	addFlags(actionCmd.Root().PersistentFlags(), exec.ConfigsSchema())
+
 	logger().Debugw("Executor added to command tree", "name", exec.Name())
 	// TODO: Parse this command's flags right after its creation
 	return actionCmd, nil
@@ -244,10 +245,10 @@ func addLink(
 		},
 	}
 
-	addFlags(linkCmd.Flags(), link.AdditionalParametersSchema())
-	addFlags(linkCmd.PersistentFlags(), link.AdditionalConfigsSchema())
-
 	parentCmd.AddCommand(linkCmd)
+	addFlags(linkCmd.Flags(), link.AdditionalParametersSchema())
+	addFlags(linkCmd.Root().PersistentFlags(), link.AdditionalConfigsSchema())
+
 	logger().Debugw("Link added to command tree", "name", link.Name())
 
 	// Reset values of persistent flags to avoid inheriting the values set from previous actions/links
