@@ -8,10 +8,15 @@ import (
 	flag "github.com/spf13/pflag"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 	mgcSdk "magalu.cloud/sdk"
 )
 
-var allExecutorChildren = []string{}
+const (
+	listLinksCmd = "cli.list-links"
+)
+
+var allExecutorChildren = []string{listLinksCmd}
 
 func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (*cobra.Command, error) {
 	if childGroup, ok := child.(mgcSdk.Grouper); ok {
@@ -72,6 +77,7 @@ func loadAllGrouperChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core
 }
 
 func loadAllExecChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdExec core.Executor) error {
+	addListLinks(cmd, cmdExec)
 	return nil
 }
 
@@ -172,6 +178,7 @@ func addAction(
 	exec mgcSdk.Executor,
 ) (*cobra.Command, error) {
 	desc := exec.(mgcSdk.Descriptor)
+	links := exec.Links()
 
 	actionCmd := &cobra.Command{
 		Use:     desc.Name(),
@@ -204,13 +211,14 @@ func addAction(
 
 			// First chained args structure is MainArgs
 			linkChainedArgs := argParser.ChainedArgs()[1:]
-			return handleLinkArgs(ctx, cmd, linkChainedArgs, exec.Links(), config, result)
+			return handleLinkArgs(ctx, cmd, linkChainedArgs, links, config, result)
 		},
 	}
 
 	parentCmd.AddCommand(actionCmd)
 
 	logger().Debugw("Executor added to command tree", "name", exec.Name())
+
 	// TODO: Parse this command's flags right after its creation
 	return actionCmd, nil
 }
@@ -291,4 +299,38 @@ func addLink(
 	})
 
 	return linkCmd
+}
+
+func addListLinks(
+	parentCmd *cobra.Command,
+	sourceExec core.Executor,
+) *cobra.Command {
+	type LinkerListEntry struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+	type LinkerList []LinkerListEntry
+
+	listLinksCmd := &cobra.Command{
+		Use:   listLinksCmd,
+		Short: "List all available links for this command",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			links := sourceExec.Links()
+			result := make(LinkerList, 0, len(links))
+
+			for linkName, link := range links {
+				result = append(result, LinkerListEntry{Name: linkName, Description: link.Description()})
+			}
+
+			simplified, err := utils.SimplifyAny(result)
+			if err != nil {
+				return err
+			}
+
+			return handleSimpleResultValue(simplified, getOutputFlag(cmd))
+		},
+	}
+
+	parentCmd.AddCommand(listLinksCmd)
+	return listLinksCmd
 }
