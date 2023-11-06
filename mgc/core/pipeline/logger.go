@@ -4,16 +4,10 @@ import (
 	"context"
 
 	"go.uber.org/zap"
+	mgcLoggerPkg "magalu.cloud/core/logger"
 )
 
-var pkgLogger *zap.SugaredLogger
-
-func logger() *zap.SugaredLogger {
-	if pkgLogger == nil {
-		pkgLogger = zap.Must(zap.NewProduction()).Sugar()
-	}
-	return pkgLogger
-}
+var logger = mgcLoggerPkg.NewLazy[ProcessStatus]()
 
 type contextLoggerKey string
 
