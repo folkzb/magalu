@@ -65,6 +65,23 @@ paths:
               description: Delete Port
               parameters:
                 port_id: $request.path.port_id
+            create/attach-security-group:
+                description: Attach a Security Group to this Port
+                operationId: attachSecurityGroup
+                parameters:
+                    port_id: $request.path.port_id
+            delete/attach-security-group:
+                description: Detach this BS Volume to a VM instance
+                operationId: detachSecurityGroup
+                parameters:
+                    port_id: $request.path.port_id
+            read/attach-security-group:
+                description: Check if a Security Group is attached to this Port
+                operationId: securityGroupDetails
+                x-mgc-wait-termination:
+                    maxRetries: 2
+                    interval: 5s
+                    jsonPathQuery: $.owner.result.security_groups[?(@ == $.parameters.security_group_id)]
       security:
         - OAuth2:
             - network.read
@@ -211,6 +228,22 @@ paths:
             - network.write
   /v0/ports/{port_id}/attach/{security_group_id}:
     post:
+      responses:
+        '200':
+          links:
+            read: # Action Resources v2
+              description: Check if a Security Group is attached to this Port
+              operationId: securityGroupDetails
+              x-mgc-wait-termination:
+                  maxRetries: 2
+                  interval: 5s
+                  jsonPathQuery: $.owner.result.security_groups[?(@ == $.parameters.security_group_id)]
+            delete:
+                description: Detach this BS Volume to a VM instance
+                operationId: detachSecurityGroup
+                parameters:
+                    port_id: $request.path.port_id
+                    security_group_i: $request.path.security_group_id
       security:
         - OAuth2:
             - network.write
