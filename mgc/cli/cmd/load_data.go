@@ -16,15 +16,17 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 	for name, propRef := range schema.Properties {
 		propSchema := propRef.Value
 		val, flag, err := getFlagValue(flags, name)
-		if flag == nil {
-			continue
-		}
 		if err != nil {
 			return err
 		}
-		if val == nil && !propSchema.Nullable {
+
+		if flag == nil {
+			if propSchema.Default != nil {
+				dst[name] = propSchema.Default
+			}
 			continue
 		}
+
 		dst[name] = val
 	}
 
@@ -32,9 +34,17 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 }
 
 func loadDataFromConfig(config *mgcSdk.Config, flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[string]mgcSdk.Value) error {
-	for name := range schema.Properties {
+	for name, propRef := range schema.Properties {
+		propSchema := propRef.Value
 		val, flag, err := getFlagValue(flags, name)
+		if err != nil {
+			return err
+		}
+
 		if flag == nil {
+			if propSchema.Default != nil {
+				dst[name] = propSchema.Default
+			}
 			continue
 		}
 
