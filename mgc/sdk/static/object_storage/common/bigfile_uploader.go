@@ -107,8 +107,7 @@ func (u *bigFileUploader) createMultipartRequest(ctx context.Context, partNumber
 	if err != nil {
 		return nil, err
 	}
-	wrappedReader := progress_report.NewProgressReader(body, u.reportProgress)
-	req, err := newUploadRequest(ctx, u.cfg, u.dst, wrappedReader)
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, body)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +121,9 @@ func (u *bigFileUploader) createMultipartRequest(ctx context.Context, partNumber
 	return req, nil
 }
 
-func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []completionPart, uploadId string) error {
+func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []completionPart, uploadId string) (err error) {
+	defer func() { u.reportProgress(0, err) }()
+
 	sort.Slice(parts, func(i, j int) bool {
 		return parts[i].PartNumber < parts[j].PartNumber
 	})
@@ -165,8 +166,12 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 
 func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFunc, totalParts int, uploadId string) pipeline.Processor[pipeline.Chunk, completionPart] {
 	return func(ctx context.Context, chunk pipeline.Chunk) (part completionPart, status pipeline.ProcessStatus) {
+		var err error
+		defer func() { u.reportProgress(0, err) }()
+
 		partNumber := int(chunk.StartOffset/CHUNK_SIZE) + 1
-		req, err := u.createMultipartRequest(ctx, partNumber, chunk.Reader)
+		reader := progress_report.NewProgressReader(chunk.Reader, u.reportProgress)
+		req, err := u.createMultipartRequest(ctx, partNumber, reader)
 		if err != nil {
 			cancel(err)
 			return part, pipeline.ProcessAbort
@@ -190,10 +195,11 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 func (u *bigFileUploader) Upload(ctx context.Context) error {
 	bigfileUploaderLogger().Debug("start")
 
-	reportProgress := progress_report.FromContext(ctx)
-	u.reportChan = make(chan progressReport)
-	defer close(u.reportChan)
-	go progressReportSubroutine(reportProgress, u.reportChan, u.fileInfo)
+	if reportProgress := progress_report.FromContext(ctx); reportProgress != nil {
+		u.reportChan = make(chan progressReport)
+		defer close(u.reportChan)
+		go progressReportSubroutine(reportProgress, u.reportChan, u.fileInfo)
+	}
 
 	ctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
@@ -217,10 +223,11 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 }
 
 func (u *bigFileUploader) reportProgress(n int, err error) {
-	u.reportChan <- progressReport{
-		bytes: uint64(n),
-		err:   err,
+	if u.reportChan == nil {
+		return
 	}
+
+	u.reportChan <- progressReport{bytes: uint64(n), err: err}
 }
 
 func progressReportSubroutine(
