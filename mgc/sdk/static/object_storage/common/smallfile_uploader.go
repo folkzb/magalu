@@ -18,7 +18,7 @@ type smallFileUploader struct {
 
 var _ uploader = (*smallFileUploader)(nil)
 
-func (u *smallFileUploader) createProgressReporter(ctx context.Context) progress_report.ReportReaderProgress {
+func (u *smallFileUploader) createProgressReporter(ctx context.Context) progress_report.ReportRead {
 	reportProgress := progress_report.FromContext(ctx)
 	fileName := u.fileInfo.Name()
 	total := uint64(u.fileInfo.Size())
@@ -30,7 +30,7 @@ func (u *smallFileUploader) createProgressReporter(ctx context.Context) progress
 }
 
 func (u *smallFileUploader) Upload(ctx context.Context) error {
-	wrappedReader := progress_report.NewProgressReader(u.reader, u.createProgressReporter(ctx))
+	wrappedReader := progress_report.NewReporterReader(u.reader, u.createProgressReporter(ctx))
 	req, err := newUploadRequest(ctx, u.cfg, u.dst, wrappedReader)
 	if err != nil {
 		return err

@@ -170,7 +170,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 		defer func() { u.reportProgress(0, err) }()
 
 		partNumber := int(chunk.StartOffset/CHUNK_SIZE) + 1
-		reader := progress_report.NewProgressReader(chunk.Reader, u.reportProgress)
+		reader := progress_report.NewReporterReader(chunk.Reader, u.reportProgress)
 		req, err := u.createMultipartRequest(ctx, partNumber, reader)
 		if err != nil {
 			cancel(err)
@@ -179,7 +179,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 
 		// This is used while retrying requests
 		req.GetBody = func() (io.ReadCloser, error) {
-			return progress_report.NewProgressReader(io.NewSectionReader(chunk.Reader, 0, CHUNK_SIZE), u.reportProgress), nil
+			return progress_report.NewReporterReader(io.NewSectionReader(chunk.Reader, 0, CHUNK_SIZE), u.reportProgress), nil
 		}
 
 		bigfileUploaderLogger().Debugw("Sending part", "part", partNumber, "total", totalParts)
