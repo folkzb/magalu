@@ -156,16 +156,14 @@ func (o *Sdk) Group() core.Grouper {
 }
 
 func newHttpTransport() http.RoundTripper {
+	userAgent := "MgcSDK/" + Version
+
 	// To avoid creating a transport with zero values, we leverage
 	// DefaultTransport (exemple: `Proxy: ProxyFromEnvironment`)
 	transport := mgcHttpPkg.DefaultTransport()
-
-	newRoundTripper := (http.RoundTripper)(transport)
-
-	newRoundTripper = mgcHttpPkg.NewDefaultClientLogger(newRoundTripper)
-	userAgent := "MgcSDK/" + Version
-	newRoundTripper = newDefaultSdkTransport(newRoundTripper, userAgent)
-	return newRoundTripper
+	transport = mgcHttpPkg.NewDefaultClientLogger(transport)
+	transport = newDefaultSdkTransport(transport, userAgent)
+	return transport
 }
 
 func (o *Sdk) addHttpRefreshHandler(t http.RoundTripper) http.RoundTripper {
