@@ -152,7 +152,10 @@ func addAction(
 				return err
 			}
 
-			if err := loadDataFromConfig(config, cmd.PersistentFlags(), exec.ConfigsSchema(), configs); err != nil {
+			// Load from 'Flags' instead of 'PersistentFlags' because Cobra merges them before executing the command
+			// (and in other scenarios too). The canonical way to load the flags is always via cmd.Flags(), PersistentFlags
+			// are only to be used for inserting new flags
+			if err := loadDataFromConfig(config, cmd.Flags(), exec.ConfigsSchema(), configs); err != nil {
 				return err
 			}
 
