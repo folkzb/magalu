@@ -11,52 +11,78 @@ import (
 	mgcSdk "magalu.cloud/sdk"
 )
 
-func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (*cobra.Command, core.Descriptor, error) {
+var allExecutorChildren = []string{}
+
+func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (*cobra.Command, error) {
 	if childGroup, ok := child.(mgcSdk.Grouper); ok {
 		cmd, err := addGroup(sdk, parentCmd, childGroup)
-		return cmd, childGroup, err
+		return cmd, err
 	} else if childExec, ok := child.(mgcSdk.Executor); ok {
 		cmd, err := addAction(sdk, parentCmd, childExec)
-		return cmd, childExec, err
+		return cmd, err
 	} else {
-		return nil, nil, fmt.Errorf("child %v not group/executor", child)
+		return nil, fmt.Errorf("child %v not group/executor", child)
 	}
 }
 
-func loadChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, childName string) (*cobra.Command, core.Descriptor, error) {
-	grouper, ok := cmdDesc.(core.Grouper)
-	if !ok {
-		return nil, nil, nil
-	}
-
-	child, err := grouper.GetChildByName(childName)
+func loadGrouperChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Grouper, childName string) (*cobra.Command, core.Descriptor, error) {
+	child, err := cmdGrouper.GetChildByName(childName)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	newCmd, newCmdDesc, err := addChildDesc(sdk, cmd, child)
+	childCmd, err := addChildDesc(sdk, cmd, child)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	if childExec, ok := child.(mgcSdk.Executor); ok {
-		addFlags(newCmd.Flags(), childExec.ParametersSchema())
-		addFlags(newCmd.Root().PersistentFlags(), childExec.ConfigsSchema())
+		addFlags(childCmd.Flags(), childExec.ParametersSchema())
+		addFlags(childCmd.Root().PersistentFlags(), childExec.ConfigsSchema())
 	}
 
-	return newCmd, newCmdDesc, err
+	return childCmd, child, nil
 }
 
-func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor) (bool, error) {
-	grouper, ok := cmdDesc.(core.Grouper)
-	if !ok {
-		return false, nil
+func loadChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, childName string) (*cobra.Command, core.Descriptor, error) {
+	if cmdGrouper, ok := cmdDesc.(core.Grouper); ok {
+		return loadGrouperChild(sdk, cmd, cmdGrouper, childName)
+	} else if cmdExec, ok := cmdDesc.(core.Executor); ok {
+		// Manually fail if specified child is invalid
+		if !slices.Contains(allExecutorChildren, childName) {
+			return nil, nil, fmt.Errorf("command %q has no child named %q", cmd.Name(), childName)
+		}
+
+		// Always load all executor children
+		return nil, nil, loadAllExecChildren(sdk, cmd, cmdExec)
 	}
 
-	return grouper.VisitChildren(func(child core.Descriptor) (run bool, err error) {
+	return nil, nil, fmt.Errorf("command %q has no child named %q", cmd.Name(), childName)
+}
+
+func loadAllGrouperChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Grouper) error {
+	_, err := cmdGrouper.VisitChildren(func(child core.Descriptor) (run bool, err error) {
 		if child.IsInternal() && !getShowInternalFlag(cmd.Root()) {
 			return true, nil
 		}
-		_, _, err = addChildDesc(sdk, cmd, child)
+		_, err = addChildDesc(sdk, cmd, child)
 		return true, err
 	})
+	return err
+}
+
+func loadAllExecChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdExec core.Executor) error {
+	return nil
+}
+
+func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor) error {
+	if cmdGrouper, ok := cmdDesc.(core.Grouper); ok {
+		return loadAllGrouperChildren(sdk, cmd, cmdGrouper)
+	} else if cmdExec, ok := cmdDesc.(core.Executor); ok {
+		return loadAllExecChildren(sdk, cmd, cmdExec)
+	}
+
+	return nil
 }
 
 func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, args []string) error {
@@ -70,15 +96,14 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 	}
 
 	if childName == nil {
-		_, err := loadAllChildren(sdk, cmd, cmdDesc)
-		return err
+		return loadAllChildren(sdk, cmd, cmdDesc)
 	}
 
 	childCmd, childCmdDesc, err := loadChild(sdk, cmd, cmdDesc, *childName)
 	if err != nil {
 		// If loading specified child fails, force load all children to print in help command
 		// as all available child commands
-		if _, loadAllErr := loadAllChildren(sdk, cmd, cmdDesc); loadAllErr != nil {
+		if loadAllErr := loadAllChildren(sdk, cmd, cmdDesc); loadAllErr != nil {
 			return loadAllErr
 		}
 
