@@ -27,7 +27,8 @@ type ListObjectsParams struct {
 }
 
 type PaginationParams struct {
-	MaxItems int `json:"max-items,omitempty" jsonschema:"description=Limit of items to be listed,default=1000,minimum=1" example:"1000"`
+	MaxItems          int    `json:"max-items,omitempty" jsonschema:"description=Limit of items to be listed,default=1000,minimum=1" example:"1000"`
+	ContinuationToken string `json:"continuation-token,omitempty" jsonschema:"description=Token of result page to continue from"`
 }
 
 type prefix struct {
@@ -101,6 +102,10 @@ func newListRequest(ctx context.Context, cfg common.Config, bucket string, page 
 	}
 
 	listReqQuery := parsedUrl.Query()
+	listReqQuery.Set("list-type", "2")
+	if page.ContinuationToken != "" {
+		listReqQuery.Set("continuation-token", page.ContinuationToken)
+	}
 	if page.MaxItems <= 0 {
 		return nil, fmt.Errorf("invalid item limit MaxItems, must be higher than zero: %d", page.MaxItems)
 	} else if page.MaxItems > common.ApiLimitMaxItems {
@@ -238,8 +243,9 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg common.Con
 				}
 			}
 
+			page.ContinuationToken = result.NextContinuationToken
 			page.MaxItems = page.MaxItems - requestedItems
-			if page.MaxItems <= 0 {
+			if !result.IsTruncated || page.MaxItems <= 0 {
 				logger.Info("finished reading contents")
 				break
 			}
