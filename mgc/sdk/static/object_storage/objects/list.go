@@ -2,6 +2,7 @@ package objects
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"net/http"
 	"net/url"
@@ -21,7 +22,12 @@ var listObjectsLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
 })
 
 type ListObjectsParams struct {
-	Destination string `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/"`
+	Destination      string           `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/"`
+	PaginationParams `json:",squash"` // nolint
+}
+
+type PaginationParams struct {
+	MaxItems int `json:"max-items,omitempty" jsonschema:"description=Limit of items to be listed,default=1000,minimum=1" example:"1000"`
 }
 
 type prefix struct {
@@ -29,9 +35,15 @@ type prefix struct {
 }
 
 type ListObjectsResponse struct {
-	Name           string           `xml:"Name"`
-	Contents       []*BucketContent `xml:"Contents"`
-	CommonPrefixes []*prefix        `xml:"CommonPrefixes" json:"SubDirectories"`
+	Name                   string           `xml:"Name"`
+	Contents               []*BucketContent `xml:"Contents"`
+	CommonPrefixes         []*prefix        `xml:"CommonPrefixes" json:"SubDirectories"`
+	PaginationResponseInfo `json:",squash"` // nolint
+}
+
+type PaginationResponseInfo struct {
+	NextContinuationToken string `xml:"NextContinuationToken"`
+	IsTruncated           bool   `xml:"IsTruncated"`
 }
 
 type BucketContent struct {
@@ -82,11 +94,21 @@ func (b *BucketContent) Type() fs.FileMode {
 var _ fs.DirEntry = (*BucketContent)(nil)
 var _ fs.FileInfo = (*BucketContent)(nil)
 
-func newListRequest(ctx context.Context, cfg common.Config, bucket string) (*http.Request, error) {
+func newListRequest(ctx context.Context, cfg common.Config, bucket string, page PaginationParams) (*http.Request, error) {
 	parsedUrl, err := parseURL(cfg, bucket)
 	if err != nil {
 		return nil, err
 	}
+
+	listReqQuery := parsedUrl.Query()
+	if page.MaxItems <= 0 {
+		return nil, fmt.Errorf("invalid item limit MaxItems, must be higher than zero: %d", page.MaxItems)
+	} else if page.MaxItems > common.ApiLimitMaxItems {
+		page.MaxItems = common.ApiLimitMaxItems
+	}
+	listReqQuery.Set("max-keys", fmt.Sprint(page.MaxItems))
+	parsedUrl.RawQuery = listReqQuery.Encode()
+
 	return http.NewRequestWithContext(ctx, http.MethodGet, parsedUrl.String(), nil)
 }
 
@@ -133,9 +155,12 @@ func parseURL(cfg common.Config, bucketURI string) (*url.URL, error) {
 }
 
 func List(ctx context.Context, params ListObjectsParams, cfg common.Config) (result ListObjectsResponse, err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	objChan := ListGenerator(ctx, params, cfg)
 
-	entries, err := pipeline.SliceItemConsumer[[]BucketContentDirEntry](ctx, objChan)
+	entries, err := pipeline.SliceItemLimitedConsumer[[]BucketContentDirEntry](ctx, params.MaxItems, objChan)
 	if err != nil {
 		return result, err
 	}
@@ -159,53 +184,69 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg common.Con
 	ch := make(chan BucketContentDirEntry)
 	outputChan = ch
 
+	logger := listObjectsLogger().Named("ListGenerator").With(
+		"params", params,
+		"cfg", cfg,
+	)
+
 	generator := func() {
 		defer func() {
-			listObjectsLogger().Info("closing output channel")
 			close(ch)
+			logger.Info("closed output channel")
 		}()
 
+		page := params.PaginationParams
+		var requestedItems int
 		bucket, _ := strings.CutPrefix(params.Destination, common.URIPrefix)
-		req, err := newListRequest(ctx, cfg, bucket)
-		if err != nil {
-			listObjectsLogger().Errorw("newListRequest() failed", "err", err)
-			select {
-			case <-ctx.Done():
-				listObjectsLogger().Debugw("context.Done() for newListRequest() error", "err", err)
-			case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent]("", nil, err):
+		for {
+			requestedItems = 0
+
+			req, err := newListRequest(ctx, cfg, bucket, page)
+			var result ListObjectsResponse
+			if err == nil {
+				result, _, err = common.SendRequest[ListObjectsResponse](ctx, req)
 			}
-			return
-		}
 
-		result, _, err := common.SendRequest[ListObjectsResponse](ctx, req)
-		if err != nil {
-			listObjectsLogger().Errorw("common.SendRequest() failed", "err", err)
-			select {
-			case <-ctx.Done():
-				listObjectsLogger().Debugw("context.Done() for common.SendRequest() error", "err", err)
-			case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent]("", nil, err):
-			}
-			return
-		}
-
-		for _, content := range result.Contents {
-			dirEntry := pipeline.NewSimpleWalkDirEntry(
-				path.Join(params.Destination, content.Key),
-				content,
-				nil,
-			)
-
-			select {
-			case <-ctx.Done():
-				listObjectsLogger().Debugw("context.Done()", "err", ctx.Err())
+			if err != nil {
+				logger.Errorw("list request failed", "err", err, "req", req)
+				select {
+				case <-ctx.Done():
+					logger.Debugw("context.Done()", "err", err)
+				case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent](params.Destination, nil, err):
+				}
 				return
-			case ch <- dirEntry:
+			}
+
+		listObjectsResponseLoop:
+			for _, content := range result.Contents {
+				dirEntry := pipeline.NewSimpleWalkDirEntry(
+					path.Join(params.Destination, content.Key),
+					content,
+					nil,
+				)
+
+				select {
+				case <-ctx.Done():
+					logger.Debugw("context.Done()", "err", ctx.Err())
+					return
+				case ch <- dirEntry:
+					requestedItems++
+					if requestedItems >= page.MaxItems {
+						logger.Infow("item limit reached", "limit", params.PaginationParams.MaxItems)
+						break listObjectsResponseLoop
+					}
+				}
+			}
+
+			page.MaxItems = page.MaxItems - requestedItems
+			if page.MaxItems <= 0 {
+				logger.Info("finished reading contents")
+				break
 			}
 		}
-		listObjectsLogger().Info("finished reading contents")
 	}
 
-	listObjectsLogger().Info("list generation start")
+	logger.Info("list generation start")
 	go generator()
 	return
 }
