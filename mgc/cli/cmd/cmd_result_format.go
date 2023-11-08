@@ -71,3 +71,14 @@ func handleResultWithValue(result core.ResultWithValue, output string) (err erro
 	}
 	return formatter.Format(value, options)
 }
+
+func handleSimpleResultValue(value core.Value, output string) error {
+	name, options := parseOutputFormatter(output)
+	formatter, err := getOutputFormatter(name, options)
+
+	if err != nil {
+		return err
+	}
+
+	return formatter.Format(value, options)
+}
