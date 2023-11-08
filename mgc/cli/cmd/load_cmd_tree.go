@@ -35,7 +35,14 @@ func loadChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, chi
 		return nil, nil, err
 	}
 
-	return addChildDesc(sdk, cmd, child)
+	newCmd, newCmdDesc, err := addChildDesc(sdk, cmd, child)
+
+	if childExec, ok := child.(mgcSdk.Executor); ok {
+		addFlags(newCmd.Flags(), childExec.ParametersSchema())
+		addFlags(newCmd.Root().PersistentFlags(), childExec.ConfigsSchema())
+	}
+
+	return newCmd, newCmdDesc, err
 }
 
 func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor) (bool, error) {
@@ -88,6 +95,12 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 		isRequired := slices.Contains(schema.Required, name)
 
 		propType := getPropType((*mgcSdk.Schema)(prop))
+
+		// Prevents flags be added twice by Link command
+		if flags.Lookup(name) != nil {
+			continue
+		}
+
 		if propType == "boolean" {
 			def, _ := prop.Default.(bool)
 			flags.Bool(name, def, prop.Description)
@@ -172,9 +185,6 @@ func addAction(
 	}
 
 	parentCmd.AddCommand(actionCmd)
-
-	addFlags(actionCmd.Flags(), exec.ParametersSchema())
-	addFlags(actionCmd.Root().PersistentFlags(), exec.ConfigsSchema())
 
 	logger().Debugw("Executor added to command tree", "name", exec.Name())
 	// TODO: Parse this command's flags right after its creation
