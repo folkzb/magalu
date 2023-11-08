@@ -58,7 +58,7 @@ type BucketContentDirEntry = *pipeline.SimpleWalkDirEntry[*BucketContent]
 func (b *BucketContent) ModTime() time.Time {
 	modTime, err := time.Parse(time.RFC3339, b.LastModified)
 	if err != nil {
-		listObjectsLogger().Errorw("failed to parse time", "err", err)
+		listObjectsLogger().Named("BucketContent.ModTime()").Errorw("failed to parse time", "err", err, "key", b.Key, "lastModified", b.LastModified)
 		modTime = time.Time{}
 	}
 	return modTime
