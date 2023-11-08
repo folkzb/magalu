@@ -13,17 +13,17 @@ func formatResult(cmd *cobra.Command, result core.Result) error {
 	output := getOutputFor(cmd, result)
 
 	if resultWithReader, ok := core.ResultAs[core.ResultWithReader](result); ok {
-		return handleReaderResult(resultWithReader.Reader(), output)
+		return handleResultWithReader(resultWithReader.Reader(), output)
 	}
 
 	if resultWithValue, ok := core.ResultAs[core.ResultWithValue](result); ok {
-		return handleJsonResult(resultWithValue, output)
+		return handleResultWithValue(resultWithValue, output)
 	}
 
 	return fmt.Errorf("unsupported result: %T %+v", result, result)
 }
 
-func handleReaderResult(reader io.Reader, outFile string) (err error) {
+func handleResultWithReader(reader io.Reader, outFile string) (err error) {
 	if closer, ok := reader.(io.Closer); ok {
 		defer closer.Close()
 	}
@@ -46,7 +46,7 @@ func handleReaderResult(reader io.Reader, outFile string) (err error) {
 	return nil
 }
 
-func handleJsonResult(result core.ResultWithValue, output string) (err error) {
+func handleResultWithValue(result core.ResultWithValue, output string) (err error) {
 	value := result.Value()
 	if value == nil {
 		return nil
