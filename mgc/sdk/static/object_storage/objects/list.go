@@ -22,12 +22,12 @@ var listObjectsLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
 })
 
 type ListObjectsParams struct {
-	Destination      string           `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/"`
+	Destination      string           `json:"dst" jsonschema:"description=Path of the bucket to list objects from,example=s3://bucket1/"`
 	PaginationParams `json:",squash"` // nolint
 }
 
 type PaginationParams struct {
-	MaxItems          int    `json:"max-items,omitempty" jsonschema:"description=Limit of items to be listed,default=1000,minimum=1" example:"1000"`
+	MaxItems          int    `json:"max-items,omitempty" jsonschema:"description=Limit of items to be listed,default=1000,minimum=1,=example=1000"`
 	ContinuationToken string `json:"continuation-token,omitempty" jsonschema:"description=Token of result page to continue from"`
 }
 

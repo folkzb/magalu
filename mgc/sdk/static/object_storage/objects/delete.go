@@ -12,7 +12,7 @@ import (
 )
 
 type DeleteObjectParams struct {
-	Destination string `json:"dst" jsonschema:"description=Path of the object to be deleted" example:"s3://bucket1/file1"`
+	Destination string `json:"dst" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file1"`
 }
 
 var getDelete = utils.NewLazyLoader[core.Executor](newDelete)
