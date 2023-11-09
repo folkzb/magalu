@@ -85,8 +85,8 @@ func newDeleteRequest(ctx context.Context, cfg common.Config, pathURIs ...string
 
 // Deleting an object does not yield result except there is an error. So this processor will *Skip*
 // success results and *Output* errors
-func createObjectDeletionProcessor(cfg common.Config, bucketName string) pipeline.Processor[*objects.BucketContent, deleteObjectsError] {
-	return func(ctx context.Context, obj *objects.BucketContent) (deleteObjectsError, pipeline.ProcessStatus) {
+func createObjectDeletionProcessor(cfg common.Config, bucketName string) pipeline.Processor[*common.BucketContent, deleteObjectsError] {
+	return func(ctx context.Context, obj *common.BucketContent) (deleteObjectsError, pipeline.ProcessStatus) {
 		objURI := path.Join(bucketName, obj.Key)
 		_, err := objects.Delete(
 			ctx,
@@ -104,7 +104,7 @@ func createObjectDeletionProcessor(cfg common.Config, bucketName string) pipelin
 }
 
 func delete(ctx context.Context, params deleteParams, cfg common.Config) (core.Value, error) {
-	objs, err := objects.List(ctx, objects.ListObjectsParams{Destination: params.Name}, cfg)
+	objs, err := objects.List(ctx, common.ListObjectsParams{Destination: params.Name}, cfg)
 	if err != nil {
 		return nil, err
 	}

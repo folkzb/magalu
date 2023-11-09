@@ -56,9 +56,9 @@ func NewDownloadObjectsError() downloadObjectsError {
 }
 
 type downloadObjectParams struct {
-	Source           string           `json:"src" jsonschema:"description=Path of the object to be downloaded,example=s3://bucket1/file1"`
-	Destination      string           `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved,example=file1.txt"`
-	PaginationParams `json:",squash"` // nolint
+	Source                  string           `json:"src" jsonschema:"description=Path of the object to be downloaded" example:"s3://bucket1/file1"`
+	Destination             string           `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved" example:"file1.txt"`
+	common.PaginationParams `json:",squash"` // nolint
 }
 
 var getDownload = utils.NewLazyLoader[core.Executor](newDownload)
@@ -127,9 +127,9 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src, dst string)
 	return nil
 }
 
-func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst string, paginationParams PaginationParams) error {
+func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst string, paginationParams common.PaginationParams) error {
 	bucketRoot := strings.Split(src, "/")[0]
-	objs, err := List(ctx, ListObjectsParams{Destination: src, PaginationParams: paginationParams}, cfg)
+	objs, err := List(ctx, common.ListObjectsParams{Destination: src, PaginationParams: paginationParams}, cfg)
 	if err != nil {
 		return err
 	}
