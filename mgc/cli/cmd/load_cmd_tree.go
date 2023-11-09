@@ -107,6 +107,15 @@ func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 	return nil
 }
 
+func isExistingCommand(cmd *cobra.Command, name string) bool {
+	for _, c := range cmd.Commands() {
+		if c.Name() == name || c.HasAlias(name) {
+			return true
+		}
+	}
+	return false
+}
+
 func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, args []string) error {
 	if cmd == nil {
 		return nil
@@ -123,6 +132,8 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 
 	if childName == nil {
 		return loadAllChildren(sdk, cmd, cmdDesc)
+	} else if isExistingCommand(cmd, *childName) {
+		return nil
 	}
 
 	childCmd, childCmdDesc, err := loadChild(sdk, cmd, cmdDesc, *childName)

@@ -151,3 +151,21 @@ Usage:
 ```shell
 python3 ./scripts/tf_generate_docs.sh
 ```
+
+### [gen_expected_cli_help_output.py](./gen_expected_cli_help_output.py)
+
+This script will loop through all the CLI commands and generate output corresponding to each of them. When run, it will iterate through the commands available in the CLI, producing the output associated with each command in sequence.
+
+```shell
+python3 ./scripts/gen_expected_cli_help_output.py ./cli
+```
+
+### [gen_expected_output_file.sh](./gen_expected_output_file.sh)
+
+This script has the purpose of creating a file based on the output of the `gen_expected_cli_help_output.py`. When executed, it uses the information produced by the script as input. This approach aims to automate and simplify the file creation process and help on test CLI output.
+
+Usage:
+
+```shell
+./scripts/gen_expected_output_file.sh
+```

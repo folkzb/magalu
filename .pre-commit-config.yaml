@@ -22,14 +22,24 @@ repos:
         types_or: [yaml, json]
         stages: [pre-commit, pre-push]
         additional_dependencies: [jsonschema, PyYAML, typing, argparse]
+    -   id: check-commands-outputs
+        name: check-commands-outputs
+        language: system
+        entry: bash -c './tests/test-cli-output.sh'
+        stages: [pre-commit]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
     -   id: trailing-whitespace
         stages: [pre-commit, pre-push]
+        exclude: tests/test-cli-output.expected
     -   id: end-of-file-fixer
         stages: [pre-commit, pre-push]
-        exclude: mgc/sdk/version.txt
+        exclude: >
+          (?x)(
+            ^mgc/sdk/version.txt|
+            ^tests/test-cli-output.expected
+          )
     -   id: check-yaml
         stages: [pre-commit, pre-push]
     -   id: check-added-large-files
