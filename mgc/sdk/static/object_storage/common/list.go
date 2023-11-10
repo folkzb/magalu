@@ -29,9 +29,45 @@ type PaginationParams struct {
 	ContinuationToken string `json:"continuation-token,omitempty" jsonschema:"description=Token of result page to continue from"`
 }
 
-type prefix struct {
+type Prefix struct {
 	Path string `xml:"Prefix"`
 }
+
+func (p *Prefix) ModTime() time.Time {
+	var modTime time.Time
+	return modTime
+}
+
+func (p *Prefix) Mode() fs.FileMode {
+	return utils.DIR_PERMISSION | fs.ModeDir
+}
+
+func (p *Prefix) Size() int64 {
+	return 0
+}
+
+func (p *Prefix) Sys() any {
+	return nil
+}
+
+func (p *Prefix) Info() (fs.FileInfo, error) {
+	return p, nil
+}
+
+func (p *Prefix) IsDir() bool {
+	return true
+}
+
+func (p *Prefix) Name() string {
+	return path.Base(path.Dir(p.Path))
+}
+
+func (p *Prefix) Type() fs.FileMode {
+	return utils.DIR_PERMISSION | fs.ModeDir
+}
+
+var _ fs.DirEntry = (*Prefix)(nil)
+var _ fs.FileInfo = (*Prefix)(nil)
 
 type listObjectsRequestResponse struct {
 	Name                   string           `xml:"Name"`
