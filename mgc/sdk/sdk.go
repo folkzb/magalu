@@ -198,7 +198,7 @@ func (o *Sdk) HttpClient() *mgcHttpPkg.Client {
 
 func (o *Sdk) Config() *config.Config {
 	if o.config == nil {
-		o.config = config.New()
+		o.config = config.New(o.ProfileManager())
 	}
 	return o.config
 }

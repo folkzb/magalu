@@ -3,12 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"path"
 	"reflect"
 	"testing"
 
-	"github.com/spf13/afero"
-	"magalu.cloud/core/utils"
+	"magalu.cloud/core/profile_manager"
 )
 
 type test struct {
@@ -18,26 +16,19 @@ type test struct {
 }
 
 func setupWithoutFile() *Config {
-	path, _ := utils.BuildMGCPath()
-	c := New()
-	c.init(path, afero.NewMemMapFs())
+	c := New(profile_manager.NewInMemoryProfileManager())
+	c.init()
 
 	return c
 }
 
 func setupWithFile(testFileData []byte) (*Config, error) {
-	file, err := utils.BuildMGCFilePath(CONFIG_FILE)
-	if err != nil {
+	m := profile_manager.NewInMemoryProfileManager()
+	if err := m.Current().Write(CONFIG_FILE, testFileData); err != nil {
 		return nil, err
 	}
 
-	fs := afero.NewMemMapFs()
-	if err := afero.WriteFile(fs, file, testFileData, 0644); err != nil {
-		return nil, err
-	}
-
-	c := New()
-	c.init(path.Dir(file), fs)
+	c := New(m)
 
 	return c, nil
 }

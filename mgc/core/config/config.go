@@ -1,18 +1,16 @@
 package config
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"os"
-	"path"
 	"reflect"
 
 	"magalu.cloud/core"
-	"magalu.cloud/core/utils"
+	"magalu.cloud/core/profile_manager"
 
 	"github.com/invopop/yaml"
 	"github.com/mitchellh/mapstructure"
-	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 )
 
@@ -21,17 +19,14 @@ import (
 type contextKey string
 
 type Config struct {
-	path  string
-	fs    afero.Fs
+	pm    *profile_manager.ProfileManager
 	viper *viper.Viper
 }
 
 const (
-	CONFIG_NAME   = "cli"
-	CONFIG_TYPE   = "yaml"
-	CONFIG_FOLDER = ".config/mgc"
-	CONFIG_FILE   = CONFIG_NAME + "." + CONFIG_TYPE
-	ENV_PREFIX    = "MGC"
+	CONFIG_FILE_TYPE = "yaml"
+	CONFIG_FILE      = "cli.yaml"
+	ENV_PREFIX       = "MGC"
 )
 
 var configKey contextKey = "magalu.cloud/core/Config"
@@ -45,35 +40,24 @@ func FromContext(ctx context.Context) *Config {
 	return c
 }
 
-func New() *Config {
-	dirname, err := utils.BuildMGCPath()
-	if err != nil {
-		logger().Warnln(err)
-	}
-
-	c := &Config{}
-	c.init(dirname, afero.NewOsFs())
+func New(pm *profile_manager.ProfileManager) *Config {
+	c := &Config{pm: pm}
+	c.init()
 	return c
 }
 
-func (c *Config) init(dirname string, fs afero.Fs) {
+func (c *Config) init() {
 	v := viper.New()
-	v.SetFs(fs)
-	v.SetConfigName(CONFIG_NAME)
-	v.SetConfigType(CONFIG_TYPE)
-	v.AddConfigPath(dirname)
 	v.AutomaticEnv()
 	v.SetEnvPrefix(ENV_PREFIX)
+	v.SetConfigType(CONFIG_FILE_TYPE)
 
-	_ = v.ReadInConfig()
-
-	c.path = path.Join(dirname, CONFIG_FILE)
 	c.viper = v
-	c.fs = fs
+	_ = c.readFromFile()
 }
 
 func (c *Config) FilePath() string {
-	return c.path
+	return c.pm.Current().Dir()
 }
 
 func (c *Config) BuiltInConfigs() (map[string]*core.Schema, error) {
@@ -176,10 +160,6 @@ func marshalValueIfNeeded(value any) (any, error) {
 }
 
 func (c *Config) Set(key string, value interface{}) error {
-	if err := os.MkdirAll(path.Dir(c.path), utils.DIR_PERMISSION); err != nil {
-		return fmt.Errorf("error creating dir at %s: %w", c.path, err)
-	}
-
 	marshaled, err := marshalValueIfNeeded(value)
 	if err != nil {
 		return fmt.Errorf("unable to marshal config %s: %w", key, err)
@@ -187,11 +167,8 @@ func (c *Config) Set(key string, value interface{}) error {
 
 	c.viper.Set(key, marshaled)
 
-	if err := c.viper.WriteConfigAs(c.path); err != nil {
-		return fmt.Errorf("error writing to config file: %w", err)
-	}
-
-	return nil
+	obj := c.viper.AllSettings()
+	return c.saveToConfigFile(obj)
 }
 
 func (c *Config) Delete(key string) error {
@@ -206,7 +183,16 @@ func (c *Config) Delete(key string) error {
 		return err
 	}
 
-	return nil
+	return c.readFromFile()
+}
+
+func (c *Config) readFromFile() (err error) {
+	data, err := c.pm.Current().Read(CONFIG_FILE)
+	if err != nil {
+		return err
+	}
+
+	return c.viper.ReadConfig(bytes.NewBuffer(data))
 }
 
 func (c *Config) saveToConfigFile(configMap map[string]interface{}) error {
@@ -215,16 +201,8 @@ func (c *Config) saveToConfigFile(configMap map[string]interface{}) error {
 		return err
 	}
 
-	if err = os.MkdirAll(path.Dir(c.path), utils.DIR_PERMISSION); err != nil {
-		return fmt.Errorf("error creating dir at %s: %w", c.path, err)
-	}
-
-	if err = afero.WriteFile(c.fs, c.path, encodedConfig, utils.FILE_PERMISSION); err != nil {
+	if err = c.pm.Current().Write(CONFIG_FILE, encodedConfig); err != nil {
 		return fmt.Errorf("error writing to config file: %w", err)
-	}
-
-	if err := c.viper.ReadInConfig(); err != nil {
-		return err
 	}
 
 	return nil

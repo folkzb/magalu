@@ -17,6 +17,10 @@ func (p *profile) Name() string {
 	return p.name
 }
 
+func (p *profile) Dir() string {
+	return path.Join(p.m.dir, p.name)
+}
+
 func (p *profile) buildPath(name string) string {
 	s := sanitizePath(name)
 	return path.Join(p.name, s)

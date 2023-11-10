@@ -9,11 +9,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"magalu.cloud/core"
-	mgcLoggerPkg "magalu.cloud/core/logger"
 	"magalu.cloud/core/schema"
 )
-
-var logger = mgcLoggerPkg.NewLazy[Config]()
 
 func logfilterSchema() *core.Schema {
 	s := schema.NewStringSchema()
