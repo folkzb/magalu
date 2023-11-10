@@ -42,6 +42,15 @@ func New() *ProfileManager {
 	return &ProfileManager{dir, afero.NewOsFs()}
 }
 
+func NewInMemoryProfileManager() *ProfileManager {
+	dir, err := buildMGCPath()
+	if err != nil {
+		dir = "."
+	}
+
+	return &ProfileManager{dir, afero.NewMemMapFs()}
+}
+
 func (m *ProfileManager) buildPath(name string) string {
 	s := sanitizePath(name)
 	return path.Join(m.dir, s)
