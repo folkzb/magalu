@@ -42,7 +42,6 @@ func checkProfileName(name string) error {
 	return nil
 }
 
-// TODO: once the Profile feature is finished, delete utils.BuildMGCPath. No other packages should use it.
 func buildMGCPath() (string, error) {
 	dir := ""
 	switch runtime.GOOS {
