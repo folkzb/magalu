@@ -11,10 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/afero"
 	"magalu.cloud/core"
 	mgcHttpPkg "magalu.cloud/core/http"
-	"magalu.cloud/core/utils"
+	"magalu.cloud/core/profile_manager"
 
 	"github.com/invopop/yaml"
 	"golang.org/x/sync/singleflight"
@@ -64,8 +63,8 @@ type Config struct {
 
 type Auth struct {
 	httpClient      *http.Client
+	profileManager  *profile_manager.ProfileManager
 	config          Config
-	configFile      string
 	accessToken     string
 	refreshToken    string
 	currentTenantId string
@@ -73,7 +72,6 @@ type Auth struct {
 	secretAccessKey string
 	codeVerifier    *codeVerifier
 	group           singleflight.Group
-	fs              afero.Fs
 }
 
 type Tenant struct {
@@ -120,19 +118,12 @@ func FromContext(ctx context.Context) *Auth {
 	return a
 }
 
-func New(config Config, client *http.Client, fs afero.Fs) *Auth {
-	filePath, err := utils.BuildMGCFilePath(authFilename)
-	if err != nil {
-		logger().Warnw("unable to locate auth configuration file", "error", err)
-		return nil
-	}
-
+func New(config Config, client *http.Client, profileManager *profile_manager.ProfileManager) *Auth {
 	newAuth := Auth{
-		httpClient:   client,
-		config:       config,
-		configFile:   filePath,
-		codeVerifier: nil,
-		fs:           fs,
+		httpClient:     client,
+		config:         config,
+		codeVerifier:   nil,
+		profileManager: profileManager,
 	}
 	newAuth.InitTokensFromFile()
 
@@ -394,9 +385,9 @@ func (o *Auth) newRefreshAccessTokenRequest(ctx context.Context) (*http.Request,
 
 func (o *Auth) readConfigFile() (*ConfigResult, error) {
 	var result ConfigResult
-	authFile, err := afero.ReadFile(o.fs, o.configFile)
+	authFile, err := o.profileManager.Current().Read(authFilename)
 	if err != nil {
-		logger().Warnw("unable to read from auth configuration file", "error", err)
+		logger().Debugw("unable to read from auth configuration file", "error", err)
 		return nil, err
 	}
 
@@ -416,12 +407,7 @@ func (o *Auth) writeConfigFile(result *ConfigResult) error {
 		return err
 	}
 
-	err = afero.WriteFile(o.fs, o.configFile, yamlData, 0600)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return o.profileManager.Current().Write(authFilename, yamlData)
 }
 
 func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {

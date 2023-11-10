@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/afero"
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
 	"magalu.cloud/core/config"
@@ -183,7 +182,7 @@ func (o *Sdk) ProfileManager() *profile_manager.ProfileManager {
 func (o *Sdk) Auth() *auth.Auth {
 	if o.auth == nil {
 		client := &http.Client{Transport: newHttpTransport()}
-		o.auth = auth.New(authConfig, client, afero.NewOsFs())
+		o.auth = auth.New(authConfig, client, o.ProfileManager())
 	}
 	return o.auth
 }

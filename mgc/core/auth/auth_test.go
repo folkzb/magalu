@@ -10,9 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/spf13/afero"
 	"magalu.cloud/core"
-	"magalu.cloud/core/utils"
+	"magalu.cloud/core/profile_manager"
 )
 
 var dummyConfig Config = Config{
@@ -54,11 +53,6 @@ func (o mockTransport) RoundTrip(*http.Request) (*http.Response, error) {
 }
 
 func TestNew(t *testing.T) {
-	filename, err := utils.BuildMGCFilePath(authFilename)
-	if err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
 	type test struct {
 		name           string
 		authFileData   []byte
@@ -93,15 +87,15 @@ func TestNew(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			fs := afero.NewMemMapFs()
-			err := afero.WriteFile(fs, filename, tc.authFileData, 0644)
+			m := profile_manager.NewInMemoryProfileManager()
+			err := m.Current().Write(authFilename, tc.authFileData)
 			if err != nil {
-				t.Errorf("expected err == nil, found: %v", err)
+				t.Errorf("error wrting on auth file: %s", err.Error())
 			}
 
 			t.Setenv("MGC_SDK_ACCESS_TOKEN", tc.envAccessToken)
 
-			auth := New(dummyConfig, &http.Client{Transport: mockTransport{}}, fs)
+			auth := New(dummyConfig, &http.Client{Transport: mockTransport{}}, m)
 
 			if auth.accessToken != tc.expected.AccessToken {
 				t.Errorf("expected auth.accessToken == %v, found: %v", tc.expected.AccessToken, auth.accessToken)
@@ -116,7 +110,7 @@ func TestNew(t *testing.T) {
 	}
 
 	t.Run("no config file", func(t *testing.T) {
-		auth := New(dummyConfig, &http.Client{Transport: mockTransport{}}, afero.NewMemMapFs())
+		auth := New(dummyConfig, &http.Client{Transport: mockTransport{}}, profile_manager.NewInMemoryProfileManager())
 		if auth.accessToken != "" {
 			t.Errorf("expected auth.accessToken == '', found: %v", auth.accessToken)
 		}
@@ -135,7 +129,7 @@ func TestSetTokens(t *testing.T) {
 		RefreshToken: "refresh-token",
 	}
 
-	auth := New(dummyConfig, &http.Client{Transport: mockTransport{}}, afero.NewMemMapFs())
+	auth := New(dummyConfig, &http.Client{Transport: mockTransport{}}, profile_manager.NewInMemoryProfileManager())
 
 	if err := auth.SetTokens(dummyLoginResult); err != nil {
 		t.Errorf("expected err == nil, found: %v", err)
@@ -152,8 +146,8 @@ func TestSetTokens(t *testing.T) {
 func TestSetAccessKey(t *testing.T) {
 	accessKeyId := "MyAccessKeyIdTest"
 	secretAccessKey := "MySecretAccessKeyTeste"
-	fs := afero.NewMemMapFs()
-	currentAuth := New(dummyConfig, &http.Client{Transport: mockTransport{}}, fs)
+	m := profile_manager.NewInMemoryProfileManager()
+	currentAuth := New(dummyConfig, &http.Client{Transport: mockTransport{}}, m)
 
 	if err := currentAuth.SetAccessKey(accessKeyId, secretAccessKey); err != nil {
 		t.Errorf("expected err == nil, found: %v", err)
@@ -163,7 +157,7 @@ func TestSetAccessKey(t *testing.T) {
 		// Current auth
 		currentAuth,
 		// New auth reading from file
-		New(dummyConfig, &http.Client{Transport: mockTransport{}}, fs),
+		New(dummyConfig, &http.Client{Transport: mockTransport{}}, m),
 	}
 
 	for i, auth := range auths {
@@ -177,22 +171,18 @@ func TestSetAccessKey(t *testing.T) {
 }
 
 func TestRequestAuthTokenWithAuthorizationCode(t *testing.T) {
-	filename, err := utils.BuildMGCFilePath(authFilename)
-	if err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
-	fs := afero.NewMemMapFs()
-	if err := afero.WriteFile(fs, filename, dummyConfigResultYaml, 0644); err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
 	type test struct {
 		name        string
 		transport   mockTransport
 		verifier    *codeVerifier
 		expected    LoginResult
 		expectedErr bool
+	}
+
+	m := profile_manager.NewInMemoryProfileManager()
+	err := m.Current().Write(authFilename, dummyConfigResultYaml)
+	if err != nil {
+		t.Errorf("error writing on auth file: %s", err.Error())
 	}
 
 	tests := []test{
@@ -247,10 +237,10 @@ func TestRequestAuthTokenWithAuthorizationCode(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, fs)
+			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, m)
 			auth.codeVerifier = tc.verifier
 
-			err := auth.RequestAuthTokenWithAuthorizationCode(context.Background(), "")
+			err = auth.RequestAuthTokenWithAuthorizationCode(context.Background(), "")
 			hasErr := err != nil
 
 			if hasErr != tc.expectedErr {
@@ -267,21 +257,17 @@ func TestRequestAuthTokenWithAuthorizationCode(t *testing.T) {
 }
 
 func TestValidateAccessToken(t *testing.T) {
-	filename, err := utils.BuildMGCFilePath(authFilename)
-	if err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
-	fs := afero.NewMemMapFs()
-	if err := afero.WriteFile(fs, filename, dummyConfigResultYaml, 0644); err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
 	type test struct {
 		name           string
 		transport      mockTransport
 		expectedResult LoginResult
 		expectedErr    bool
+	}
+
+	m := profile_manager.NewInMemoryProfileManager()
+	err := m.Current().Write(authFilename, dummyConfigResultYaml)
+	if err != nil {
+		t.Errorf("error writing on auth file: %s", err.Error())
 	}
 
 	testErr := []test{
@@ -324,9 +310,9 @@ func TestValidateAccessToken(t *testing.T) {
 
 	for _, tcErr := range testErr {
 		t.Run(tcErr.name, func(t *testing.T) {
-			auth := New(dummyConfig, &http.Client{Transport: tcErr.transport}, fs)
+			auth := New(dummyConfig, &http.Client{Transport: tcErr.transport}, m)
 
-			err := auth.ValidateAccessToken(context.Background())
+			err = auth.ValidateAccessToken(context.Background())
 			hasErr := err != nil
 
 			if hasErr != tcErr.expectedErr {
@@ -343,21 +329,17 @@ func TestValidateAccessToken(t *testing.T) {
 }
 
 func TestDoRefreshAccessToken(t *testing.T) {
-	filename, err := utils.BuildMGCFilePath(authFilename)
-	if err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
-	fs := afero.NewMemMapFs()
-	if err := afero.WriteFile(fs, filename, dummyConfigResultYaml, 0644); err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
 	type test struct {
 		name           string
 		transport      mockTransport
 		expectedResult string
 		expectedErr    bool
+	}
+
+	m := profile_manager.NewInMemoryProfileManager()
+	err := m.Current().Write(authFilename, dummyConfigResultYaml)
+	if err != nil {
+		t.Errorf("error writing on auth file: %s", err.Error())
 	}
 
 	tests := []test{
@@ -401,7 +383,7 @@ func TestDoRefreshAccessToken(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, fs)
+			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, m)
 
 			tk, err := auth.doRefreshAccessToken(context.Background())
 			hasErr := err != nil
@@ -417,21 +399,17 @@ func TestDoRefreshAccessToken(t *testing.T) {
 }
 
 func TestListTenants(t *testing.T) {
-	filename, err := utils.BuildMGCFilePath(authFilename)
-	if err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
-	fs := afero.NewMemMapFs()
-	if err := afero.WriteFile(fs, filename, dummyConfigResultYaml, 0644); err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
 	type test struct {
 		name           string
 		transport      mockTransport
 		expectedResult []*Tenant
 		expectedErr    bool
+	}
+
+	m := profile_manager.NewInMemoryProfileManager()
+	err := m.Current().Write(authFilename, dummyConfigResultYaml)
+	if err != nil {
+		t.Errorf("error writing on auth file: %s", err.Error())
 	}
 
 	tests := []test{
@@ -498,7 +476,7 @@ func TestListTenants(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, fs)
+			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, m)
 
 			tLst, err := auth.ListTenants(context.Background())
 			hasErr := err != nil
@@ -514,21 +492,17 @@ func TestListTenants(t *testing.T) {
 }
 
 func TestSelectTenant(t *testing.T) {
-	filename, err := utils.BuildMGCFilePath(authFilename)
-	if err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
-	fs := afero.NewMemMapFs()
-	if err := afero.WriteFile(fs, filename, dummyConfigResultYaml, 0644); err != nil {
-		t.Errorf("expected err == nil, found: %v", err)
-	}
-
 	type test struct {
 		name           string
 		transport      mockTransport
 		expectedResult *TenantAuth
 		expectedErr    bool
+	}
+
+	m := profile_manager.NewInMemoryProfileManager()
+	err := m.Current().Write(authFilename, dummyConfigResultYaml)
+	if err != nil {
+		t.Errorf("error writing on auth file: %s", err.Error())
 	}
 
 	tests := []test{
@@ -580,7 +554,7 @@ func TestSelectTenant(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, fs)
+			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, m)
 
 			tnt, err := auth.SelectTenant(context.Background(), "abc123")
 			hasErr := err != nil
