@@ -92,6 +92,10 @@ func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 }
 
 func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, args []string) error {
+	if cmd == nil {
+		return nil
+	}
+
 	var childName *string
 	var childArgs = args
 	for {
