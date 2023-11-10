@@ -10,7 +10,8 @@ import (
 )
 
 type listResponse struct {
-	Contents []*common.BucketContent `xml:"Contents"`
+	Contents       []*common.BucketContent `xml:"Contents"`
+	CommonPrefixes []*common.Prefix        `xml:"CommonPrefixes"`
 }
 
 var getList = utils.NewLazyLoader[core.Executor](newList)
@@ -31,22 +32,27 @@ func List(ctx context.Context, params common.ListObjectsParams, cfg common.Confi
 
 	objChan := common.ListGenerator(ctx, params, cfg)
 
-	entries, err := pipeline.SliceItemLimitedConsumer[[]common.BucketContentDirEntry](ctx, params.MaxItems, objChan)
+	entries, err := pipeline.SliceItemLimitedConsumer[[]pipeline.WalkDirEntry](ctx, params.MaxItems, objChan)
 	if err != nil {
 		return result, err
 	}
 
 	contents := make([]*common.BucketContent, 0, len(entries))
+	commonPrefixes := make([]*common.Prefix, 0)
 	for _, entry := range entries {
 		if entry.Err() != nil {
 			return result, entry.Err()
 		}
-
-		contents = append(contents, entry.Object)
+		if entry.DirEntry().IsDir() {
+			commonPrefixes = append(commonPrefixes, entry.DirEntry().(*common.Prefix))
+		} else {
+			contents = append(contents, entry.DirEntry().(*common.BucketContent))
+		}
 	}
 
 	result = listResponse{
-		Contents: contents,
+		Contents:       contents,
+		CommonPrefixes: commonPrefixes,
 	}
 	return result, nil
 }

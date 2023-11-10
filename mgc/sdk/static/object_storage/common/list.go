@@ -22,6 +22,7 @@ var listObjectsLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
 type ListObjectsParams struct {
 	Destination      string           `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/"`
 	PaginationParams `json:",squash"` // nolint
+	Recursive        bool             `json:"recursive,omitempty" jsonschema:"description=List folders and subfolders,default=false"`
 }
 
 type PaginationParams struct {
@@ -72,7 +73,7 @@ var _ fs.FileInfo = (*Prefix)(nil)
 type listObjectsRequestResponse struct {
 	Name                   string           `xml:"Name"`
 	Contents               []*BucketContent `xml:"Contents"`
-	CommonPrefixes         []*prefix        `xml:"CommonPrefixes" json:"SubDirectories"`
+	CommonPrefixes         []*Prefix        `xml:"CommonPrefixes" json:"SubDirectories"`
 	paginationResponseInfo `json:",squash"` // nolint
 }
 
@@ -119,7 +120,7 @@ func (b *BucketContent) IsDir() bool {
 }
 
 func (b *BucketContent) Name() string {
-	return b.Key
+	return path.Base(b.Key)
 }
 
 func (b *BucketContent) Type() fs.FileMode {
@@ -129,7 +130,7 @@ func (b *BucketContent) Type() fs.FileMode {
 var _ fs.DirEntry = (*BucketContent)(nil)
 var _ fs.FileInfo = (*BucketContent)(nil)
 
-func newListRequest(ctx context.Context, cfg Config, bucket string, page PaginationParams) (*http.Request, error) {
+func newListRequest(ctx context.Context, cfg Config, bucket string, page PaginationParams, recursive bool) (*http.Request, error) {
 	parsedUrl, err := parseURL(cfg, bucket)
 	if err != nil {
 		return nil, err
@@ -146,6 +147,9 @@ func newListRequest(ctx context.Context, cfg Config, bucket string, page Paginat
 		page.MaxItems = ApiLimitMaxItems
 	}
 	listReqQuery.Set("max-keys", fmt.Sprint(page.MaxItems))
+	if !recursive {
+		listReqQuery.Set("delimiter", delimiter)
+	}
 	parsedUrl.RawQuery = listReqQuery.Encode()
 
 	return http.NewRequestWithContext(ctx, http.MethodGet, parsedUrl.String(), nil)
@@ -154,9 +158,10 @@ func newListRequest(ctx context.Context, cfg Config, bucket string, page Paginat
 func parseURL(cfg Config, bucketURI string) (*url.URL, error) {
 	// Bucket URI cannot end in '/' as this makes it search for a
 	// non existing directory
-	bucketURI = strings.TrimSuffix(bucketURI, "/")
-	dirs := strings.Split(bucketURI, "/")
-	path, err := url.JoinPath(BuildHost(cfg), dirs[0])
+	bucketURI = strings.TrimSuffix(bucketURI, delimiter)
+	pathEntries := strings.Split(bucketURI, delimiter)
+	bucket := pathEntries[0]
+	path, err := url.JoinPath(BuildHost(cfg), bucket)
 	if err != nil {
 		return nil, err
 	}
@@ -164,25 +169,22 @@ func parseURL(cfg Config, bucketURI string) (*url.URL, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(dirs) <= 1 {
-		return u, nil
-	}
 	q := u.Query()
-	delimiter := "/"
-	prefixQ := strings.Join(dirs[1:], delimiter)
-	lastChar := string(prefixQ[len(prefixQ)-1])
-	if lastChar != delimiter {
-		prefixQ += delimiter
+	if len(pathEntries) > 1 {
+		prefixQ := strings.Join(pathEntries[1:], delimiter)
+		lastChar := string(prefixQ[len(prefixQ)-1])
+		if lastChar != delimiter {
+			prefixQ += delimiter
+		}
+		q.Set("prefix", prefixQ)
 	}
-	q.Set("prefix", prefixQ)
-	q.Set("delimiter", delimiter)
 	q.Set("encoding-type", "url")
 	u.RawQuery = q.Encode()
 	return u, nil
 }
 
-func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (outputChan <-chan BucketContentDirEntry) {
-	ch := make(chan BucketContentDirEntry)
+func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (outputChan <-chan pipeline.WalkDirEntry) {
+	ch := make(chan pipeline.WalkDirEntry)
 	outputChan = ch
 
 	logger := listObjectsLogger().Named("ListGenerator").With(
@@ -199,10 +201,11 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 		page := params.PaginationParams
 		var requestedItems int
 		bucket, _ := strings.CutPrefix(params.Destination, URIPrefix)
+	MainLoop:
 		for {
 			requestedItems = 0
 
-			req, err := newListRequest(ctx, cfg, bucket, page)
+			req, err := newListRequest(ctx, cfg, bucket, page, params.Recursive)
 			var result listObjectsRequestResponse
 			if err == nil {
 				result, _, err = SendRequest[listObjectsRequestResponse](ctx, req)
@@ -218,7 +221,26 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 				return
 			}
 
-		listObjectsResponseLoop:
+			for _, prefix := range result.CommonPrefixes {
+				dirEntry := pipeline.NewSimpleWalkDirEntry(
+					path.Join(params.Destination, prefix.Path),
+					prefix,
+					nil,
+				)
+
+				select {
+				case <-ctx.Done():
+					logger.Debugw("context.Done()", "err", ctx.Err())
+					return
+				case ch <- dirEntry:
+					requestedItems++
+					if requestedItems >= page.MaxItems {
+						logger.Infow("item limit reached", "limit", params.PaginationParams.MaxItems)
+						break MainLoop
+					}
+				}
+			}
+
 			for _, content := range result.Contents {
 				dirEntry := pipeline.NewSimpleWalkDirEntry(
 					path.Join(params.Destination, content.Key),
@@ -234,7 +256,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 					requestedItems++
 					if requestedItems >= page.MaxItems {
 						logger.Infow("item limit reached", "limit", params.PaginationParams.MaxItems)
-						break listObjectsResponseLoop
+						break MainLoop
 					}
 				}
 			}
