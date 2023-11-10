@@ -446,6 +446,11 @@ class SchemaHandler:
     def __init__(self, dst: Dict[str, Any]) -> None:
         self.dst = dst
 
+    def xof_single_item_handler(self, path: str, field: Any):
+        if not self.is_schema(path):
+            return
+        traverse_all_subschemas(path, field, self._check_xof_single_item)
+
     def typeless_handler(self, path: str, field: Any) -> None:
         if not self.is_schema(path):
             return
@@ -457,6 +462,11 @@ class SchemaHandler:
                 return
 
         self.dst.setdefault(TYPELESS_SCHEMAS, []).append(path)
+
+    def _check_xof_single_item(self, path, schema: JSONSchema) -> None:
+        single_items = single_item_xofs(schema)
+        if len(single_items) > 0:
+            self.dst.setdefault(XOF_SCHEMA_SINGLE_ITEM, []).append(path)
 
     def is_schema(self, path: str) -> bool:
         path_terms = path.split(".")
@@ -740,13 +750,6 @@ def fill_responses_stats(
                             op.key(), {}
                         ).setdefault("responses", {}).setdefault(t, []).append(path)
 
-                if filterer.should_include(XOF_SCHEMA_SINGLE_ITEM):
-                    if len(which := single_item_xofs(schema)) > 0:
-                        keys = (path + " | " + xof for xof in which)
-                        dst.setdefault(XOF_SCHEMA_SINGLE_ITEM, {}).setdefault(
-                            op.key(), {}
-                        ).setdefault("response", {}).setdefault(code, []).extend(keys)
-
             traverse_all_subschemas("", s, visit_schema, resolve)
 
             if filterer.should_include(MIXED_ENUMS):
@@ -784,12 +787,6 @@ def fill_req_body_stats(
                         ).setdefault("request-bodies", {}).setdefault(t, []).append(
                             path
                         )
-
-                if filterer.should_include(XOF_SCHEMA_SINGLE_ITEM):
-                    if len(which := single_item_xofs(schema)) > 0:
-                        dst.setdefault(XOF_SCHEMA_SINGLE_ITEM, {}).setdefault(
-                            op.key(), {}
-                        ).setdefault("request", []).extend(which)
 
             traverse_all_subschemas("", s, visit_schema, resolve)
 
@@ -1118,6 +1115,10 @@ def get_oapi_stats(o: OAPI) -> OAPIStats:
     if filterer.should_include(TYPELESS_SCHEMAS):
         schema_handler = SchemaHandler(result)
         oapi_walker.add_handler(schema_handler.typeless_handler)
+
+    if filterer.should_include(XOF_SCHEMA_SINGLE_ITEM):
+        schema_handler = SchemaHandler(result)
+        oapi_walker.add_handler(schema_handler.xof_single_item_handler)
 
     oapi_walker.dfs()
 
