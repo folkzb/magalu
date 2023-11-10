@@ -12,6 +12,7 @@ import (
 	"magalu.cloud/core/config"
 	"magalu.cloud/core/dataloader"
 	mgcHttpPkg "magalu.cloud/core/http"
+	"magalu.cloud/core/profile_manager"
 	"magalu.cloud/sdk/openapi"
 	"magalu.cloud/sdk/static"
 )
@@ -29,11 +30,12 @@ type Result = core.Result
 type Config = config.Config
 
 type Sdk struct {
-	group       *core.MergeGroup
-	auth        *auth.Auth
-	httpClient  *mgcHttpPkg.Client
-	config      *config.Config
-	refResolver core.RefPathResolver
+	group          *core.MergeGroup
+	profileManager *profile_manager.ProfileManager
+	auth           *auth.Auth
+	httpClient     *mgcHttpPkg.Client
+	config         *config.Config
+	refResolver    core.RefPathResolver
 }
 
 type contextKey string
@@ -96,6 +98,7 @@ func (o *Sdk) WrapContext(ctx context.Context) context.Context {
 
 	ctx = core.NewRefPathResolverContext(ctx, o.RefResolver())
 	ctx = core.NewGrouperContext(ctx, o.Group())
+	ctx = profile_manager.NewContext(ctx, o.ProfileManager())
 	ctx = auth.NewContext(ctx, o.Auth())
 	// Needs to be called after Auth, because we need the refresh token callback for the interceptor
 	ctx = mgcHttpPkg.NewClientContext(ctx, o.HttpClient())
@@ -168,6 +171,13 @@ func newHttpTransport() http.RoundTripper {
 
 func (o *Sdk) addHttpRefreshHandler(t http.RoundTripper) http.RoundTripper {
 	return mgcHttpPkg.NewDefaultRefreshLogger(t, o.Auth().RefreshAccessToken)
+}
+
+func (o *Sdk) ProfileManager() *profile_manager.ProfileManager {
+	if o.profileManager == nil {
+		o.profileManager = profile_manager.New()
+	}
+	return o.profileManager
 }
 
 func (o *Sdk) Auth() *auth.Auth {
