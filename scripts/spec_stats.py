@@ -401,6 +401,7 @@ TAGLESS_OPERATIONS = "tagless-operations"
 UNEVEN_RESOURCES = "uneven-resources"
 UNUSED_COMPONENTS = "unused-components"
 TYPELESS_SCHEMAS = "typeless-schemas"
+OPERATION_MISSING_SECURITY = "operation-missing-security"
 
 
 class OAPIWalk:
@@ -855,6 +856,9 @@ def fill_operation_stats(
 
     if "operationId" not in op.op and filterer.should_include(MISSING_OPERATION_ID):
         dst.setdefault(MISSING_OPERATION_ID, []).append(op.key())
+
+    if filterer.should_include(OPERATION_MISSING_SECURITY) and "security" not in op.op:
+        dst.setdefault(OPERATION_MISSING_SECURITY, []).append(op.key())
 
     return
 

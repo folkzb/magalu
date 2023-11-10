@@ -502,6 +502,43 @@ network.openapi:
     PATCH /v0/xaas/security_groups/{security_group_id}:
       parameters:
         - x-request-id
+  operation-missing-security:
+    - DELETE /v0/xaas/ports/all
+    - POST /v0/xaas/vpcs/{vpc_id}/ports
+    - POST /v0/xaas/ports/{port_id}/attach/{security_group_id}
+    - POST /v0/xaas/ports/{port_id}/detach/{security_group_id}
+    - GET /v0/xaas/ports/{port_id}
+    - DELETE /v0/xaas/ports/{port_id}
+    - POST /v0/xaas/routers/default
+    - GET /v0/xaas/routers
+    - POST /v0/xaas/security_groups/{security_group_id}/rules
+    - GET /v0/xaas/security_groups/{security_group_id}/rules
+    - GET /v0/xaas/rules/{rule_id}
+    - DELETE /v0/xaas/rules/{rule_id}
+    - PATCH /v0/xaas/rules/{rule_id}
+    - POST /v0/xaas/security_groups/default
+    - POST /v0/xaas/security_groups
+    - GET /v0/xaas/security_groups
+    - POST /v0/xaas/vpcs/{vpc_id}/security_groups
+    - GET /v0/xaas/vpcs/{vpc_id}/security_groups
+    - GET /v0/xaas/security_groups/{security_group_id}
+    - DELETE /v0/xaas/security_groups/{security_group_id}
+    - PATCH /v0/xaas/security_groups/{security_group_id}
+    - DELETE /v0/xaas/security_groups_all
+    - POST /v0/xaas/vpcs/{vpc_id}/subnetpools
+    - GET /v0/xaas/vpcs/{vpc_id}/subnetpools
+    - GET /v0/xaas/subnetpools
+    - GET /v0/xaas/subnetpools/{subnetpool_id}
+    - DELETE /v0/xaas/subnetpools/{subnetpool_id}
+    - GET /v0/xaas/vpcs/{vpc_id}/subnets
+    - POST /v0/xaas/vpcs
+    - GET /v0/xaas/vpcs
+    - DELETE /v0/xaas/vpcs/all
+    - POST /v0/xaas/vpcs/{vpc_id}/add_route
+    - POST /v0/xaas/vpcs/{vpc_id}/delete_route
+    - POST /v0/xaas/vpcs/{vpc_id}/add_interface
+    - DELETE /v0/xaas/vpcs/{vpc_id}/delete_interface/{interface_id}
+    - GET /v0/xaas/vpcs/{vpc_id}/interfaces
   typeless-schemas:
     - paths./v0/vpcs/{vpc_id}/ports.post.parameters.vpc_id.schema
     - paths./v0/vpcs/{vpc_id}/ports.get.parameters.vpc_id.schema
@@ -687,5 +724,7 @@ virtual-machine.openapi:
               - public_key
             non-computed:
               - keypair_name
+  operation-missing-security:
+    - GET /v0/usage
   unused-components:
     - '#/components/schemas/ValidationError'
