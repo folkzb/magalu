@@ -9,6 +9,10 @@ import (
 	"magalu.cloud/sdk/static/object_storage/common"
 )
 
+type listResponse struct {
+	Contents []*common.BucketContent `xml:"Contents"`
+}
+
 var getList = utils.NewLazyLoader[core.Executor](newList)
 
 func newList() core.Executor {
@@ -21,7 +25,7 @@ func newList() core.Executor {
 	)
 }
 
-func List(ctx context.Context, params common.ListObjectsParams, cfg common.Config) (result common.ListObjectsResponse, err error) {
+func List(ctx context.Context, params common.ListObjectsParams, cfg common.Config) (result listResponse, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -41,7 +45,7 @@ func List(ctx context.Context, params common.ListObjectsParams, cfg common.Confi
 		contents = append(contents, entry.Object)
 	}
 
-	result = common.ListObjectsResponse{
+	result = listResponse{
 		Contents: contents,
 	}
 	return result, nil

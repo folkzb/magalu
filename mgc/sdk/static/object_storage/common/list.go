@@ -33,14 +33,14 @@ type prefix struct {
 	Path string `xml:"Prefix"`
 }
 
-type ListObjectsResponse struct {
+type listObjectsRequestResponse struct {
 	Name                   string           `xml:"Name"`
 	Contents               []*BucketContent `xml:"Contents"`
 	CommonPrefixes         []*prefix        `xml:"CommonPrefixes" json:"SubDirectories"`
-	PaginationResponseInfo `json:",squash"` // nolint
+	paginationResponseInfo `json:",squash"` // nolint
 }
 
-type PaginationResponseInfo struct {
+type paginationResponseInfo struct {
 	NextContinuationToken string `xml:"NextContinuationToken"`
 	IsTruncated           bool   `xml:"IsTruncated"`
 }
@@ -167,9 +167,9 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 			requestedItems = 0
 
 			req, err := newListRequest(ctx, cfg, bucket, page)
-			var result ListObjectsResponse
+			var result listObjectsRequestResponse
 			if err == nil {
-				result, _, err = SendRequest[ListObjectsResponse](ctx, req)
+				result, _, err = SendRequest[listObjectsRequestResponse](ctx, req)
 			}
 
 			if err != nil {
