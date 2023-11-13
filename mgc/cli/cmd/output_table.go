@@ -500,7 +500,7 @@ func configureWriter(w table.Writer, options *tableOptions) {
 
 func buildTableHorizontally(writer table.Writer, val any, options *tableOptions) error {
 	columnCount := len(options.Columns)
-	headers := make([]any, columnCount)
+	headers := make(table.Row, columnCount)
 	for i, col := range options.Columns {
 		headers[i] = col.Name
 	}
@@ -519,21 +519,21 @@ func buildTableHorizontally(writer table.Writer, val any, options *tableOptions)
 			rows = append(rows, newRow)
 		}
 
-		switch val := value.(type) {
+		switch value := value.(type) {
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
-			rows[rowIdx][colIdx] = val
+			rows[rowIdx][colIdx] = value
 		case map[string]any:
 			subTable := table.NewWriter()
-			fromAny, _ := columnsFromAny(val, "$")
+			fromAny, _ := columnsFromAny(value, "$")
 			tableOptions := &tableOptions{Columns: fromAny}
-			err := buildTableHorizontally(subTable, val, tableOptions)
+			err := buildTableHorizontally(subTable, value, tableOptions)
 			if err != nil {
 				return err
 			}
 			rows[rowIdx][colIdx] = subTable.Render()
 		default:
 			// Marshall the value for easier reading when printing to console, even if inside of a table
-			marshalled, err := json.Marshal(val)
+			marshalled, err := json.Marshal(value)
 			if err != nil {
 				return err
 			}
@@ -597,27 +597,20 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 	}
 	sort.Strings(keys)
 
-	shouldAutoMergeColumn := len(keys) == 1
-
-	configs := []table.ColumnConfig{}
-
 	tw.AppendHeader(table.Row{"Key", "Value"})
 
 	for _, key := range keys {
-
-		value := data[key]
-
-		switch val := value.(type) {
+		switch value := data[key].(type) {
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
 			tw.AppendRow(table.Row{key, value})
 		case map[string]any:
-			err := buildSubTableFromMap(tw, val, options, key)
+			err := buildSubTableFromMap(tw, value, options, key)
 			if err != nil {
 				return err
 			}
 		case []any:
-			if len(val) > 0 && val[0] != nil {
-				if item, ok := val[0].(map[string]any); ok {
+			if len(value) > 0 && value[0] != nil {
+				if item, ok := value[0].(map[string]any); ok {
 					err := buildSubTableFromMap(tw, item, options, key)
 					if err != nil {
 						return err
@@ -626,7 +619,7 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 				} else {
 					var stringSlice []string
 
-					for _, item := range val {
+					for _, item := range value {
 						str := fmt.Sprint(item)
 						stringSlice = append(stringSlice, str)
 					}
@@ -638,7 +631,6 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 			} else {
 				tw.AppendRow(table.Row{key, "null"})
 			}
-
 		default:
 			// Marshall the value for easier reading when printing to console, even if inside of a table
 			marshalled, err := json.Marshal(value)
@@ -649,12 +641,11 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 		}
 	}
 
-	if shouldAutoMergeColumn {
-		// merge the key column
-		configs = append(configs, table.ColumnConfig{Number: 1, AutoMerge: true})
+	// Merge the key column
+	if len(keys) == 1 {
+		configs := []table.ColumnConfig{{Number: 1, AutoMerge: true}}
+		tw.SetColumnConfigs(configs)
 	}
-
-	tw.SetColumnConfigs(configs)
 
 	return nil
 }
@@ -696,20 +687,16 @@ func renderWriterWithFormat(writer table.Writer, format tableRenderFormat) strin
 	return writer.Render()
 }
 
-func (f *tableOutputFormatter) Format(val any, options string) error {
+func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 	var columns []*column
 	if options != "" {
-		fromString, err := columnsFromString(options)
-		if err != nil {
-			return err
-		}
-		columns = fromString
+		columns, err = columnsFromString(options)
 	} else {
-		fromAny, err := columnsFromAny(val, "$")
-		if err != nil {
-			return err
-		}
-		columns = fromAny
+		columns, err = columnsFromAny(val, "$")
+	}
+
+	if err != nil {
+		return err
 	}
 
 	tableOptions := &tableOptions{Columns: columns}
