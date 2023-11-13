@@ -19,6 +19,7 @@ current profile, so users can alter and switch between profiles without loosing 
 			getCreate(),
 			getSetCurrent(),
 			getList(),
+			getDelete(),
 		},
 	)
 })
