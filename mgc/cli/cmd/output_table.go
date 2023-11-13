@@ -522,15 +522,12 @@ func buildTableHorizontally(writer table.Writer, val any, options *tableOptions)
 		switch value := value.(type) {
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
 			rows[rowIdx][colIdx] = value
-		case map[string]any:
-			subTable := table.NewWriter()
-			fromAny, _ := columnsFromAny(value, "$")
-			tableOptions := &tableOptions{Columns: fromAny}
-			err := buildTableHorizontally(subTable, value, tableOptions)
+		case map[string]any, []any:
+			subTable, err := buildSubTable(value, options)
 			if err != nil {
 				return err
 			}
-			rows[rowIdx][colIdx] = subTable.Render()
+			rows[rowIdx][colIdx] = subTable
 		default:
 			// Marshall the value for easier reading when printing to console, even if inside of a table
 			marshalled, err := json.Marshal(value)
@@ -578,14 +575,27 @@ func buildTableHorizontally(writer table.Writer, val any, options *tableOptions)
 	return nil
 }
 
-func buildSubTableFromMap(tw table.Writer, val map[string]any, op *tableOptions, key string) error {
-	subTable := table.NewWriter()
-	err := buildTableVertically(subTable, val, op)
+func buildSubTable(val any, parentOpts *tableOptions) (result string, err error) {
+	subColumns, err := columnsFromAny(val, "$")
 	if err != nil {
-		return err
+		return "", err
 	}
-	tw.AppendRow(table.Row{key, renderWriterWithFormat(subTable, op.Format)})
-	return nil
+
+	subOptions := *parentOpts
+	subOptions.Columns = subColumns
+	subOptions.StyleCustomizations = func(s *table.Style) {
+		s.Options.DrawBorder = false
+	}
+	subTable := table.NewWriter()
+	if mapVal, ok := val.(map[string]any); ok && len(mapVal) > 1 && len(subOptions.Columns) > 1 {
+		err = buildTableVertically(subTable, mapVal, &subOptions)
+	} else {
+		err = buildTableHorizontally(subTable, val, &subOptions)
+	}
+	if err != nil {
+		return "", err
+	}
+	return renderWriterWithFormat(subTable, subOptions.Format), nil
 }
 
 func buildTableVertically(tw table.Writer, data map[string]any, options *tableOptions) error {
@@ -597,40 +607,16 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 	}
 	sort.Strings(keys)
 
-	tw.AppendHeader(table.Row{"Key", "Value"})
-
 	for _, key := range keys {
 		switch value := data[key].(type) {
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
 			tw.AppendRow(table.Row{key, value})
-		case map[string]any:
-			err := buildSubTableFromMap(tw, value, options, key)
+		case map[string]any, []any:
+			subTable, err := buildSubTable(value, options)
 			if err != nil {
 				return err
 			}
-		case []any:
-			if len(value) > 0 && value[0] != nil {
-				if item, ok := value[0].(map[string]any); ok {
-					err := buildSubTableFromMap(tw, item, options, key)
-					if err != nil {
-						return err
-					}
-
-				} else {
-					var stringSlice []string
-
-					for _, item := range value {
-						str := fmt.Sprint(item)
-						stringSlice = append(stringSlice, str)
-					}
-
-					result := strings.Join(stringSlice, "\n")
-
-					tw.AppendRow(table.Row{key, fmt.Sprint(result)})
-				}
-			} else {
-				tw.AppendRow(table.Row{key, "null"})
-			}
+			tw.AppendRow(table.Row{key, subTable})
 		default:
 			// Marshall the value for easier reading when printing to console, even if inside of a table
 			marshalled, err := json.Marshal(value)
