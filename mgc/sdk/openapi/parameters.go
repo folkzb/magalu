@@ -20,6 +20,10 @@ func collectParameters(byNameAndLocation map[string]map[string]*parameterWithNam
 		// "A unique parameter is defined by a combination of a name and location."
 		parameter := ref.Value
 
+		if getHiddenExtension(extensionPrefix, parameter.Extensions) {
+			continue
+		}
+
 		byLocation, exists := byNameAndLocation[parameter.Name]
 		if !exists {
 			byLocation = map[string]*parameterWithName{}
