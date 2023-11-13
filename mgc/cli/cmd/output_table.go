@@ -499,7 +499,6 @@ func configureWriter(w table.Writer, options *tableOptions) {
 }
 
 func buildTableHorizontally(writer table.Writer, val any, options *tableOptions) error {
-	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
 	columnCount := len(options.Columns)
 	headers := make([]any, columnCount)
 	for i, col := range options.Columns {
@@ -574,24 +573,23 @@ func buildTableHorizontally(writer table.Writer, val any, options *tableOptions)
 		writer.SetColumnConfigs(configs)
 	}
 
-	writer.AppendRows(rows, rowConfigAutoMerge)
+	writer.AppendRows(rows)
 
 	return nil
 }
 
-func buildSubTableFromMap(tw table.Writer, val map[string]any, op *tableOptions, key string, rConf table.RowConfig) error {
+func buildSubTableFromMap(tw table.Writer, val map[string]any, op *tableOptions, key string) error {
 	subTable := table.NewWriter()
 	err := buildTableVertically(subTable, val, op)
 	if err != nil {
 		return err
 	}
-	tw.AppendRow(table.Row{key, renderWriterWithFormat(subTable, op.Format)}, rConf)
+	tw.AppendRow(table.Row{key, renderWriterWithFormat(subTable, op.Format)})
 	return nil
 }
 
 func buildTableVertically(tw table.Writer, data map[string]any, options *tableOptions) error {
 	configureWriter(tw, options)
-	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
 	keys := make([]string, 0, len(data))
 
 	for k := range data {
@@ -603,7 +601,7 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 
 	configs := []table.ColumnConfig{}
 
-	tw.AppendHeader(table.Row{"Key", "Value"}, rowConfigAutoMerge)
+	tw.AppendHeader(table.Row{"Key", "Value"})
 
 	for _, key := range keys {
 
@@ -611,16 +609,16 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 
 		switch val := value.(type) {
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
-			tw.AppendRow(table.Row{key, value}, rowConfigAutoMerge)
+			tw.AppendRow(table.Row{key, value})
 		case map[string]any:
-			err := buildSubTableFromMap(tw, val, options, key, rowConfigAutoMerge)
+			err := buildSubTableFromMap(tw, val, options, key)
 			if err != nil {
 				return err
 			}
 		case []any:
 			if len(val) > 0 && val[0] != nil {
 				if item, ok := val[0].(map[string]any); ok {
-					err := buildSubTableFromMap(tw, item, options, key, rowConfigAutoMerge)
+					err := buildSubTableFromMap(tw, item, options, key)
 					if err != nil {
 						return err
 					}
@@ -635,10 +633,10 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 
 					result := strings.Join(stringSlice, "\n")
 
-					tw.AppendRow(table.Row{key, fmt.Sprint(result)}, rowConfigAutoMerge)
+					tw.AppendRow(table.Row{key, fmt.Sprint(result)})
 				}
 			} else {
-				tw.AppendRow(table.Row{key, "null"}, rowConfigAutoMerge)
+				tw.AppendRow(table.Row{key, "null"})
 			}
 
 		default:
@@ -647,7 +645,7 @@ func buildTableVertically(tw table.Writer, data map[string]any, options *tableOp
 			if err != nil {
 				return err
 			}
-			tw.AppendRow(table.Row{key, string(marshalled)}, rowConfigAutoMerge)
+			tw.AppendRow(table.Row{key, string(marshalled)})
 		}
 	}
 
