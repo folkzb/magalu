@@ -97,7 +97,7 @@ func (m *ProfileManager) walk(name string, cb func(path string) error) error {
 	})
 }
 
-func (m *ProfileManager) Get(name string) (p *profile, err error) {
+func (m *ProfileManager) Get(name string) (p *Profile, err error) {
 	if err = checkProfileName(name); err != nil {
 		return
 	}
@@ -105,7 +105,7 @@ func (m *ProfileManager) Get(name string) (p *profile, err error) {
 	return newProfile(name, m), nil
 }
 
-func (m *ProfileManager) Current() *profile {
+func (m *ProfileManager) Current() *Profile {
 	var name string
 
 	data, err := m.read(currentProfileNameFile)
@@ -127,11 +127,11 @@ func (m *ProfileManager) Current() *profile {
 	return p
 }
 
-func (m *ProfileManager) SetCurrent(p *profile) error {
-	return m.write(currentProfileNameFile, []byte(p.name))
+func (m *ProfileManager) SetCurrent(p *Profile) error {
+	return m.write(currentProfileNameFile, []byte(p.Name))
 }
 
-func (m *ProfileManager) Create(name string) (p *profile, err error) {
+func (m *ProfileManager) Create(name string) (p *Profile, err error) {
 	if p, err = m.Get(name); err != nil {
 		return
 	}
@@ -151,35 +151,35 @@ func (m *ProfileManager) Create(name string) (p *profile, err error) {
 	return
 }
 
-func (m *ProfileManager) Copy(src, dst *profile) error {
-	if src.Name() == dst.Name() {
+func (m *ProfileManager) Copy(src, dst *Profile) error {
+	if src.Name == dst.Name {
 		return errorCopyToSelf
 	}
-	return m.walk(src.name, func(name string) (err error) {
-		data, err := m.read(path.Join(src.name, name))
+	return m.walk(src.Name, func(name string) (err error) {
+		data, err := m.read(path.Join(src.Name, name))
 		if err != nil {
 			return
 		}
 
-		return m.write(path.Join(dst.name, name), data)
+		return m.write(path.Join(dst.Name, name), data)
 	})
 }
 
-func (m *ProfileManager) Delete(p *profile) error {
-	if m.Current().Name() == p.Name() {
+func (m *ProfileManager) Delete(p *Profile) error {
+	if m.Current().Name == p.Name {
 		return errorDeleteCurrentNotAllowed
 	}
-	return m.remove(p.name)
+	return m.remove(p.Name)
 }
 
-func (m *ProfileManager) List() (profiles []*profile) {
+func (m *ProfileManager) List() (profiles []*Profile) {
 	entries, err := afero.ReadDir(m.fs, m.dir)
 	current := m.Current()
 	if err == nil {
 		for _, e := range entries {
 			if e.IsDir() {
 				if p, err := m.Get(e.Name()); err == nil {
-					if current != nil && p.Name() == current.Name() {
+					if current != nil && p.Name == current.Name {
 						current = nil
 					}
 					profiles = append(profiles, p)
@@ -192,8 +192,8 @@ func (m *ProfileManager) List() (profiles []*profile) {
 		profiles = append(profiles, current)
 	}
 
-	slices.SortFunc(profiles, func(a, b *profile) int {
-		return strings.Compare(a.Name(), b.Name())
+	slices.SortFunc(profiles, func(a, b *Profile) int {
+		return strings.Compare(a.Name, b.Name)
 	})
 
 	return

@@ -144,8 +144,8 @@ func createProfileManagerGetTest(name string, expectedError error) testCaseProfi
 			if err != nil {
 				return err
 			}
-			if name != p.Name() {
-				return fmt.Errorf("expected name %q, got %q", name, p.Name())
+			if name != p.Name {
+				return fmt.Errorf("expected name %q, got %q", name, p.Name)
 			}
 			return nil
 		},
@@ -160,8 +160,8 @@ func createProfileManagerCurrentTest(testName string, profileName string, provid
 		expectedFs: provided,
 		run: func(m *ProfileManager) error {
 			p := m.Current()
-			if profileName != p.Name() {
-				return fmt.Errorf("expected name %q, got %q", profileName, p.Name())
+			if profileName != p.Name {
+				return fmt.Errorf("expected name %q, got %q", profileName, p.Name)
 			}
 			return nil
 		},
@@ -198,8 +198,8 @@ func createProfileManagerCreateTest(testName string, profileName string, expecte
 			if err != nil {
 				return err
 			}
-			if profileName != p.Name() {
-				return fmt.Errorf("expected name %q, got %q", profileName, p.Name())
+			if profileName != p.Name {
+				return fmt.Errorf("expected name %q, got %q", profileName, p.Name)
 			}
 			return nil
 		},
@@ -238,8 +238,8 @@ func createProfileManagerListTest(testName string, profileNames []string, provid
 			}
 
 			for i, p := range profiles {
-				if profileNames[i] != p.Name() {
-					return fmt.Errorf("expected profile %d to be named %q, got %q", i, profileNames[i], p.Name())
+				if profileNames[i] != p.Name {
+					return fmt.Errorf("expected profile %d to be named %q, got %q", i, profileNames[i], p.Name)
 				}
 			}
 

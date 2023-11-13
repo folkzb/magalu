@@ -19,7 +19,7 @@ type testCaseProfile struct {
 	expectedError error
 	expectedFs    []testFsEntry
 	providedFs    []testFsEntry
-	run           func(p *profile) ([]byte, error)
+	run           func(p *Profile) ([]byte, error)
 }
 
 func createProfileWriteTest(testName, name string, data []byte, expectedError error, provided, expected []testFsEntry) testCaseProfile {
@@ -30,7 +30,7 @@ func createProfileWriteTest(testName, name string, data []byte, expectedError er
 		expectedError: expectedError,
 		expectedFs:    expected,
 		providedFs:    provided,
-		run: func(p *profile) ([]byte, error) {
+		run: func(p *Profile) ([]byte, error) {
 			return nil, p.Write(name, data)
 		},
 	}
@@ -44,7 +44,7 @@ func createProfileReadTest(testName, name string, expectedData []byte, expectedE
 		expectedError: expectedError,
 		expectedFs:    provided,
 		providedFs:    provided,
-		run: func(p *profile) ([]byte, error) {
+		run: func(p *Profile) ([]byte, error) {
 			return p.Read(name)
 		},
 	}
@@ -58,7 +58,7 @@ func createDeleteProfileTest(testName, name string, expectedError error, provide
 		expectedError: expectedError,
 		expectedFs:    expected,
 		providedFs:    provided,
-		run: func(p *profile) ([]byte, error) {
+		run: func(p *Profile) ([]byte, error) {
 			return nil, p.Delete(name)
 		},
 	}
