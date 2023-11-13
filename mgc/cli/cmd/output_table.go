@@ -300,10 +300,11 @@ func (t *tableStyleString) UnmarshalJSON(data []byte) (err error) {
 }
 
 type tableOptions struct {
-	Columns   []*column
-	RowLength int
-	Format    tableRenderFormat
-	Style     *tableStyleString
+	Columns             []*column
+	RowLength           int
+	Format              tableRenderFormat
+	Style               *tableStyleString
+	StyleCustomizations func(*table.Style)
 }
 
 func concreteKind(v reflect.Value) reflect.Kind {
@@ -490,6 +491,10 @@ func configureWriter(w table.Writer, options *tableOptions) {
 	} else {
 		w.Style().Options.SeparateRows = true
 		w.Style().Box = table.StyleBoxLight
+	}
+
+	if options.StyleCustomizations != nil {
+		options.StyleCustomizations(w.Style())
 	}
 }
 
