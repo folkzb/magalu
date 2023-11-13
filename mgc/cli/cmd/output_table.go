@@ -317,7 +317,7 @@ func concreteKind(v reflect.Value) reflect.Kind {
 
 func columnsFromPointerOrInterface(v reflect.Value, prefix string) ([]*column, error) {
 	if v.IsNil() {
-		return []*column{{Name: "RESULT", JSONPath: prefix}}, nil
+		return []*column{{Name: "", JSONPath: prefix}}, nil
 	}
 
 	return columnsFromAny(v.Elem().Interface(), prefix)
@@ -343,7 +343,7 @@ func columnsFromStruct(v reflect.Value, prefix string) ([]*column, error) {
 
 func columnsFromArrayOrSlice(v reflect.Value, prefix string) ([]*column, error) {
 	if v.Len() == 0 {
-		return []*column{{Name: "RESULT", JSONPath: prefix}}, nil
+		return []*column{{Name: "", JSONPath: prefix}}, nil
 	}
 
 	subVal := v.Index(0)
@@ -419,7 +419,7 @@ func columnsFromAny(val any, prefix string) ([]*column, error) {
 	case reflect.Map:
 		return columnsFromMap(v, prefix)
 	default:
-		return []*column{{Name: "RESULT", JSONPath: prefix}}, nil
+		return []*column{{Name: "", JSONPath: prefix}}, nil
 	}
 }
 
@@ -501,11 +501,17 @@ func configureWriter(w table.Writer, options *tableOptions) {
 func buildTableHorizontally(writer table.Writer, val any, options *tableOptions) error {
 	columnCount := len(options.Columns)
 	headers := make(table.Row, columnCount)
+	isHeaderValid := false
 	for i, col := range options.Columns {
 		headers[i] = col.Name
+		if col.Name != "" {
+			isHeaderValid = true
+		}
 	}
 
-	writer.AppendHeader(headers)
+	if isHeaderValid {
+		writer.AppendHeader(headers)
+	}
 	configureWriter(writer, options)
 
 	rows := []table.Row{}
