@@ -6,6 +6,7 @@ import (
 	"magalu.cloud/sdk/static/block_storage"
 	"magalu.cloud/sdk/static/config"
 	"magalu.cloud/sdk/static/object_storage"
+	"magalu.cloud/sdk/static/profile"
 )
 
 func NewGroup() *core.StaticGroup {
@@ -16,6 +17,7 @@ func NewGroup() *core.StaticGroup {
 			config.GetGroup(),         // cmd: "config"
 			object_storage.GetGroup(), // cmd: "object-storage"
 			block_storage.GetGroup(),  // cmd: "block-storage"
+			profile.GetGroup(),        // cmd: "profile"
 		},
 	)
 }

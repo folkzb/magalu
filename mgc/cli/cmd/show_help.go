@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"magalu.cloud/core"
 	mgcHttpPkg "magalu.cloud/core/http"
+	"magalu.cloud/sdk/static/profile"
 )
 
 func showFormatHelp() {
@@ -53,6 +54,7 @@ func showHelpForError(cmd *cobra.Command, args []string, err error) {
 		errors.As(err, new(*url.Error)),
 		errors.As(err, new(core.FailedTerminationError)),
 		errors.As(err, new(core.UserDeniedConfirmationError)),
+		errors.As(err, new(profile.ProfileError)),
 		errors.Is(err, context.Canceled),
 		errors.Is(err, context.DeadlineExceeded):
 		break
