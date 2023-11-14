@@ -15,6 +15,18 @@ For example:
 `./mgc virtual-machine instances delete --cli.log "*:*" --id ...`. Notice how
 `--cli.log` is going before `--id`.
 
+## Passing objects to flags
+
+Some commands have objects as parameters. To pass these objects to the CLI one should pass it as a JSON enclosed by single
+quotes. Like so:
+
+```
+./mgc dbaas instances create --volume '{"size":10,"type":"CLOUD_NVME"}'
+```
+
+There's also the option to save the JSON in a file, and pass this file as the parameter. For more information see [Input
+handling with prefixes](#input-handling-with-prefixes)
+
 ## Input handling with prefixes
 
 When providing flags to a command, we can use one of the following prefixes to get the
@@ -170,7 +182,8 @@ while `magalu.cloud/sdk/openapi.*` will match all the OpenAPI and
 
 ### Configure via environment variable
 
-It's also possible to configure the logger using the ```MGC_LOGGING``` environment variable. The code below shows the same logger configuration as before being set thorugh the environment variable:
+It's also possible to configure the logger using the ```MGC_LOGGING``` environment variable. The code below shows the same
+logger configuration as before being set thorugh the environment variable:
 
 ```shell
 export MGC_LOGGING='{
@@ -184,7 +197,9 @@ export MGC_LOGGING='{
 '
 ```
 
-The environment variable configuration has precedence over other logger configurations. This means that even if one has set a previous logger configuration using ```./mgc config set --key=logging --value=[...]``` the CLI will look for the configuration in ```MGC_LOGGING``` first.
+The environment variable configuration has precedence over other logger configurations. This means that even if one has
+set a previous logger configuration using ```./mgc config set --key=logging --value=[...]``` the CLI will look for the
+configuration in ```MGC_LOGGING``` first.
 
 ### Examples:
 
