@@ -1,6 +1,7 @@
 # Running the CLI
 
-First download or build the `mgc` cli.
+First download or build the `mgc` cli. For more details on the build process
+see [DEVELOPMENT.md](./DEVELOPMENT.md)
 
 ## Flag usage guidelines
 

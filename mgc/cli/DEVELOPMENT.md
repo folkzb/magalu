@@ -10,17 +10,16 @@ go install
 
 ## Build
 
-Build the command line using:
+To build the project run:
 
 ```sh
-go build -o mgc # basic build without embedded openapi
-go build -tags "embed" -ldflags "-s -w" -o mgc # stripped build, with embedded openapi
+go build -o mgc
 ```
 
-Alternatively, during development one may run without building:
+The `mgc` executable produced by this command will not contain the OpenAPI files in it. Instead, it will read them from the directory stored at `MGC_SDK_OPENAPI_DIR` environment variable. To produce a build with the OpenAPI files embedded in it, run:
 
 ```sh
-go run main.go
+go build -tags "embed" -ldflags "-s -w" -o mgc
 ```
 
 > **NOTE:**
