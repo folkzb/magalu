@@ -50,6 +50,32 @@ can use `--flag=#1234` to make sure `1234` is read as a string instead of number
 Lastly, if you use no prefix, the value will be interpreted as JSON first then as a string
 if that fails. You can use this option if you are unsure about the input format.
 
+## Profiles
+
+The CLI and Terraform uses profiles to hold authentication information, and system runtime configurations. They allow
+the user to save different configurations for the CLI/Terraform, and switch between them in an easy and reliable manner.
+
+Profiles exist as directories at `$XDG_CONFIG_HOME/mgc`. In Unix systems, `$XDG_CONFIG_HOME` will default to
+`$HOME/.config`, and in Windows `%AppData%` (the examples will consider a Unix environment). A profile named `foo` would
+be at `$HOME/.config/mgc/foo`. The current profile is stored in the `$HOME/.config/mgc/current` file, with the name of the
+profile in it. Out of the box the current profile is the `default` profile. The user is allowed to have as many profiles
+as they want. All of them will use their own authentication and system configuration file: `auth.yaml` and `cli.yaml`,
+respectively. Thus the directory structure at `$HOME/.config/mgc` with two profiles `foo` and `bar`, will look like this:
+
+```
+$HOME/.config/mgc/
+├─ current    # Holds the name of the current profile
+├─ foo/
+│  ├─ auth.yaml
+│  ├─ cli.yaml
+├─ bar/
+│  ├─ cli.yaml
+│  ├─ auth.yaml
+```
+
+A set of commands under `./mgc profile` is offered to allow the user to get and set the current profile, and create,
+list or delete new ones.
+
 ## Authentication
 
 To get a token, one can run
@@ -59,7 +85,7 @@ To get a token, one can run
 ```
 
 A browser will open, redirecting the user to id.magalu.com. After completing authentication,
-the token will be saved to `$HOME/.config/mgc/auth.yaml` and reused by the CLI in further actions:
+the token will be saved to `$HOME/.config/mgc/<CURRENT_PROFILE>/auth.yaml` and reused by the CLI in further actions:
 
 To ensure it is working, perform a CLI command that requires authentication:
 
@@ -81,16 +107,10 @@ To ensure it is working, perform a CLI command that requires authentication:
 ./mgc config get --key=region
 ```
 
-Configurations can be stored in the configuration file or in environment variables. The `config set`
-command saves the key value pair in the file. The `config get` command will ALWAYS check if there's
-a environment variable set with the `MGC_` prefix first. This means that if there's a `foo` key in
-the file and a `MGC_FOO` environment variable set, `config get --key foo` will return the environment
-variable value.
-
-> **NOTE:**
-> The file `cli.yaml` is saved at a sub-folder `mgc` of
-> `$XDG_CONFIG_HOME` (on Unix, defaults to `$HOME/.config`)
-> or `%AppData%` (on Windows).
+Configurations can be stored in the configuration file at `$HOME/.config/mgc/<CURRENT_PROFILE>/cli.yaml` or in environment
+variables. The `config set` command saves the key value pair in the file. The `config get` command will ALWAYS check if
+there's a environment variable set with the `MGC_` prefix first. This means that if there's a `foo` key in the file and
+a `MGC_FOO` environment variable set, `config get --key foo` will return the environment variable value.
 
 > **NOTE:**
 > Case sensitivity is not supported for environment variables. This means
