@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"strconv"
 	"strings"
 	"text/scanner"
@@ -300,6 +299,8 @@ func (t *tableStyleString) UnmarshalJSON(data []byte) (err error) {
 }
 
 type tableOptions struct {
+	// If true, the Columns will become Rows and the Rows will become Columns
+	BuildVertically     bool
 	Columns             []*column
 	RowLength           int
 	Format              tableRenderFormat
@@ -587,56 +588,49 @@ func buildSubTable(val any, parentOpts *tableOptions) (result string, err error)
 		return "", err
 	}
 
+	mapVal, isMap := val.(map[string]any)
+
 	subOptions := *parentOpts
 	subOptions.Columns = subColumns
+	subOptions.BuildVertically = isMap && len(mapVal) > 1 && len(subOptions.Columns) > 1
 	subOptions.StyleCustomizations = func(s *table.Style) {
 		s.Options.DrawBorder = false
 	}
-	subTable := table.NewWriter()
-	if mapVal, ok := val.(map[string]any); ok && len(mapVal) > 1 && len(subOptions.Columns) > 1 {
-		err = buildTableVertically(subTable, mapVal, &subOptions)
-	} else {
-		err = buildTableHorizontally(subTable, val, &subOptions)
-	}
+
+	subTable, err := formatTable(val, &subOptions)
 	if err != nil {
 		return "", err
 	}
+
 	return renderWriterWithFormat(subTable, subOptions.Format), nil
 }
 
-func buildTableVertically(tw table.Writer, data map[string]any, options *tableOptions) error {
+func buildTableVertically(tw table.Writer, val any, options *tableOptions) error {
 	configureWriter(tw, options)
-	keys := make([]string, 0, len(data))
 
-	for k := range data {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	for _, col := range options.Columns {
+		value, err := utils.GetJsonPath(col.JSONPath, val)
+		if err != nil {
+			return err
+		}
 
-	for _, key := range keys {
-		switch value := data[key].(type) {
+		switch value := value.(type) {
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
-			tw.AppendRow(table.Row{key, value})
+			tw.AppendRow(table.Row{col.Name, value})
 		case map[string]any, []any:
 			subTable, err := buildSubTable(value, options)
 			if err != nil {
 				return err
 			}
-			tw.AppendRow(table.Row{key, subTable})
+			tw.AppendRow(table.Row{col.Name, subTable})
 		default:
 			// Marshall the value for easier reading when printing to console, even if inside of a table
 			marshalled, err := json.Marshal(value)
 			if err != nil {
 				return err
 			}
-			tw.AppendRow(table.Row{key, string(marshalled)})
+			tw.AppendRow(table.Row{col.Name, string(marshalled)})
 		}
-	}
-
-	// Merge the key column
-	if len(keys) == 1 {
-		configs := []table.ColumnConfig{{Number: 1, AutoMerge: true}}
-		tw.SetColumnConfigs(configs)
 	}
 
 	return nil
@@ -646,8 +640,8 @@ func formatTable(val any, options *tableOptions) (table.Writer, error) {
 	tw := table.NewWriter()
 	var err error
 
-	if mapVal, ok := val.(map[string]any); ok && len(mapVal) > 1 && len(options.Columns) > 1 {
-		err = buildTableVertically(tw, mapVal, options)
+	if options.BuildVertically {
+		err = buildTableVertically(tw, val, options)
 	} else {
 		err = buildTableHorizontally(tw, val, options)
 	}
@@ -681,17 +675,23 @@ func renderWriterWithFormat(writer table.Writer, format tableRenderFormat) strin
 
 func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 	var columns []*column
+	var buildVertically bool
+
 	if options != "" {
 		columns, err = columnsFromString(options)
 	} else {
 		columns, err = columnsFromAny(val, "$")
+
+		if mapVal, ok := val.(map[string]any); ok && len(mapVal) > 1 && len(columns) > 1 {
+			buildVertically = true
+		}
 	}
 
 	if err != nil {
 		return err
 	}
 
-	tableOptions := &tableOptions{Columns: columns}
+	tableOptions := &tableOptions{Columns: columns, BuildVertically: buildVertically}
 
 	return formatTableWithOptions(val, tableOptions)
 }
