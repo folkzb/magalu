@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +18,6 @@ func addHideProgressFlag(cmd *cobra.Command) {
 }
 
 func getHideProgressFlag(cmd *cobra.Command) bool {
-	_ = cmd.ParseFlags(os.Args[1:])
 	value, err := cmd.Root().PersistentFlags().GetBool(hideProgressFlag)
 	if err != nil {
 		return false
