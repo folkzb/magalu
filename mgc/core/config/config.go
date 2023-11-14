@@ -67,10 +67,12 @@ func (c *Config) BuiltInConfigs() (map[string]*core.Schema, error) {
 	}
 
 	logfilterSchema := logfilterSchema()
+	defaultOutputSchema := defaultOutputSchema()
 
 	configMap := map[string]*core.Schema{
-		"logging":   loggerConfigSchema,
-		"logfilter": logfilterSchema,
+		"logging":       loggerConfigSchema,
+		"logfilter":     logfilterSchema,
+		"defaultOutput": defaultOutputSchema,
 	}
 
 	return configMap, nil
