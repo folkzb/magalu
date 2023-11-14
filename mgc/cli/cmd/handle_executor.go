@@ -8,22 +8,24 @@ import (
 	"magalu.cloud/cli/ui"
 	"magalu.cloud/core"
 	"magalu.cloud/core/progress_report"
+	mgcSdk "magalu.cloud/sdk"
 )
 
-func handleExecutorResult(ctx context.Context, cmd *cobra.Command, result core.Result, err error) error {
+func handleExecutorResult(ctx context.Context, sdk *mgcSdk.Sdk, cmd *cobra.Command, result core.Result, err error) error {
 	if err != nil {
 		var failedTerminationError core.FailedTerminationError
 		if errors.As(err, &failedTerminationError) {
-			_ = formatResult(cmd, failedTerminationError.Result)
+			_ = formatResult(sdk, cmd, failedTerminationError.Result)
 		}
 		return err
 	}
 
-	return formatResult(cmd, result)
+	return formatResult(sdk, cmd, result)
 }
 
 func handleExecutor(
 	ctx context.Context,
+	sdk *mgcSdk.Sdk,
 	cmd *cobra.Command,
 	exec core.Executor,
 	parameters core.Parameters,
@@ -70,7 +72,7 @@ func handleExecutor(
 
 	result, err := retry.Run(ctx, cb)
 
-	err = handleExecutorResult(ctx, cmd, result, err)
+	err = handleExecutorResult(ctx, sdk, cmd, result, err)
 	if err != nil {
 		return nil, err
 	}

@@ -7,10 +7,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"magalu.cloud/core"
+	mgcSdk "magalu.cloud/sdk"
 )
 
-func formatResult(cmd *cobra.Command, result core.Result) error {
-	output := getOutputFor(cmd, result)
+func formatResult(sdk *mgcSdk.Sdk, cmd *cobra.Command, result core.Result) error {
+	output := getOutputFor(sdk, cmd, result)
 
 	if resultWithReader, ok := core.ResultAs[core.ResultWithReader](result); ok {
 		return handleResultWithReader(resultWithReader.Reader(), output)

@@ -208,14 +208,14 @@ func addAction(
 			}
 
 			ctx := sdk.NewContext()
-			result, err := handleExecutor(ctx, cmd, exec, parameters, configs)
+			result, err := handleExecutor(ctx, sdk, cmd, exec, parameters, configs)
 			if err != nil {
 				return err
 			}
 
 			// First chained args structure is MainArgs
 			linkChainedArgs := argParser.ChainedArgs()[1:]
-			return handleLinkArgs(ctx, cmd, linkChainedArgs, links, config, result)
+			return handleLinkArgs(ctx, sdk, cmd, linkChainedArgs, links, config, result)
 		},
 	}
 
@@ -251,6 +251,7 @@ func addGroup(
 
 func addLink(
 	ctx context.Context,
+	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
 	config *mgcSdk.Config,
 	originalResult core.Result,
@@ -282,12 +283,12 @@ func addLink(
 				return fmt.Errorf("unable to resolve link %s: %w", link.Name(), err)
 			}
 
-			result, err := handleExecutor(ctx, cmd, exec, additionalParameters, additionalConfigs)
+			result, err := handleExecutor(ctx, sdk, cmd, exec, additionalParameters, additionalConfigs)
 			if err != nil {
 				return err
 			}
 
-			return handleLinkArgs(ctx, cmd, followingLinkArgs, exec.Links(), config, result)
+			return handleLinkArgs(ctx, sdk, cmd, followingLinkArgs, exec.Links(), config, result)
 		},
 	}
 

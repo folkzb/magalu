@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"magalu.cloud/core"
+	mgcSdk "magalu.cloud/sdk"
 )
 
 const outputFlag = "cli.output"
@@ -44,6 +45,16 @@ func getOutputFlag(cmd *cobra.Command) string {
 	return cmd.Root().PersistentFlags().Lookup(outputFlag).Value.String()
 }
 
+// TODO: Bind config to PFlag. Investigate how to make it work correctly
+func getOutpuConfig(sdk *mgcSdk.Sdk) string {
+	var defaultOutput string
+	err := sdk.Config().Get("defaultOutput", &defaultOutput)
+	if err != nil {
+		return ""
+	}
+	return defaultOutput
+}
+
 func hasOutputFormatHelp(cmd *cobra.Command) bool {
 	value := getOutputFlag(cmd)
 	if value == helpFormatter {
@@ -74,8 +85,12 @@ func getOutputFormatter(name, options string) (formatter OutputFormatter, err er
 	return nil, fmt.Errorf("unknown formatter %q", name)
 }
 
-func getOutputFor(cmd *cobra.Command, result core.Result) string {
+func getOutputFor(sdk *mgcSdk.Sdk, cmd *cobra.Command, result core.Result) string {
 	output := getOutputFlag(cmd)
+	if output == "" {
+		output = getOutpuConfig(sdk)
+	}
+
 	if output == "" {
 		if outputOptions, ok := core.ResultAs[core.ResultWithDefaultOutputOptions](result); ok {
 			return outputOptions.DefaultOutputOptions()
