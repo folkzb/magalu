@@ -69,6 +69,28 @@ func (r FilterRuleNot[T]) RecursiveWrap(wrapper filterRuleWrapper[T]) FilterRule
 var _ FilterRule[any] = (*FilterRuleNot[any])(nil)
 var _ FilterRuleRecursiveWrapper[any] = (*FilterRuleNot[any])(nil)
 
+// Excludes every entry that didn't return FilterInclude, which applies for FilterExclude and FilterUnknown
+type FilterRuleIncludeOnly[T any] struct {
+	Pattern FilterRule[T]
+}
+
+func (r FilterRuleIncludeOnly[T]) Filter(ctx context.Context, entry T) FilterStatus {
+	switch r.Pattern.Filter(ctx, entry) {
+	case FilterInclude:
+		return FilterInclude
+	default:
+		return FilterExclude
+	}
+}
+
+func (r FilterRuleIncludeOnly[T]) RecursiveWrap(wrapper filterRuleWrapper[T]) FilterRule[T] {
+	wrapped := wrapper(r.Pattern)
+	return &FilterRuleIncludeOnly[T]{wrapped}
+}
+
+var _ FilterRule[any] = (*FilterRuleIncludeOnly[any])(nil)
+var _ FilterRuleRecursiveWrapper[any] = (*FilterRuleIncludeOnly[any])(nil)
+
 // All must match (either FilterInclude or FilterExclude, FilterUnknown is skipped)
 type FilterRuleAll[T any] struct {
 	All []FilterRule[T]
