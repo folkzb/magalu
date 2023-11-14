@@ -24,6 +24,7 @@ type ListObjectsParams struct {
 	PaginationParams `json:",squash"` // nolint
 	Recursive        bool             `json:"recursive,omitempty" jsonschema:"description=List folders and subfolders,default=false"`
 	Include          string           `json:"include,omitempty" jsonschema:"description=Filename pattern to include,default=*"`
+	Exclude          string           `json:"exclude,omitempty" jsonschema:"description=Filename pattern to exclude"`
 }
 
 type PaginationParams struct {

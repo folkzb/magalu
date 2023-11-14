@@ -40,6 +40,13 @@ func List(ctx context.Context, params common.ListObjectsParams, cfg common.Confi
 		objects = pipeline.Filter[pipeline.WalkDirEntry](ctx, objects, includeFilter)
 	}
 
+	if params.Exclude != "" {
+		excludeFilter := pipeline.FilterRuleNot[pipeline.WalkDirEntry]{
+			Not: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Exclude},
+		}
+		objects = pipeline.Filter[pipeline.WalkDirEntry](ctx, objects, excludeFilter)
+	}
+
 	entries, err := pipeline.SliceItemLimitedConsumer[[]pipeline.WalkDirEntry](ctx, params.MaxItems, objects)
 	if err != nil {
 		return result, err
