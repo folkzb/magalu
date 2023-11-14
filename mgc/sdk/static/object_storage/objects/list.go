@@ -30,9 +30,17 @@ func List(ctx context.Context, params common.ListObjectsParams, cfg common.Confi
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	objChan := common.ListGenerator(ctx, params, cfg)
+	objects := common.ListGenerator(ctx, params, cfg)
 
-	entries, err := pipeline.SliceItemLimitedConsumer[[]pipeline.WalkDirEntry](ctx, params.MaxItems, objChan)
+	if params.Include != "" {
+		includeFilter := pipeline.FilterRuleIncludeOnly[pipeline.WalkDirEntry]{
+			Pattern: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Include},
+		}
+
+		objects = pipeline.Filter[pipeline.WalkDirEntry](ctx, objects, includeFilter)
+	}
+
+	entries, err := pipeline.SliceItemLimitedConsumer[[]pipeline.WalkDirEntry](ctx, params.MaxItems, objects)
 	if err != nil {
 		return result, err
 	}

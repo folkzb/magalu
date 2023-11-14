@@ -23,6 +23,7 @@ type ListObjectsParams struct {
 	Destination      string           `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/"`
 	PaginationParams `json:",squash"` // nolint
 	Recursive        bool             `json:"recursive,omitempty" jsonschema:"description=List folders and subfolders,default=false"`
+	Include          string           `json:"include,omitempty" jsonschema:"description=Filename pattern to include,default=*"`
 }
 
 type PaginationParams struct {
