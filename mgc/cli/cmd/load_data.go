@@ -20,14 +20,13 @@ func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[strin
 			return err
 		}
 
-		if flag == nil {
-			if propSchema.Default != nil {
-				dst[name] = propSchema.Default
-			}
-			continue
+		if propSchema.Default != nil {
+			dst[name] = propSchema.Default
 		}
 
-		dst[name] = val
+		if flag.Changed {
+			dst[name] = val
+		}
 	}
 
 	return nil
