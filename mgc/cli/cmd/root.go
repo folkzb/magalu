@@ -52,6 +52,10 @@ can generate a command line on-demand for Rest manipulation`,
 	addHideProgressFlag(rootCmd)
 	addShowInternalFlag(rootCmd)
 
+	rootCmd.PersistentFlags().VisitAll(func(f *pflag.Flag) { f.Hidden = true })
+
+	addShowCliGlobalFlags(rootCmd)
+
 	// Immediately parse flags for root command because we'll access the global flags prior
 	// to calling Execute (which is when Cobra parses the flags)
 	_ = rootCmd.ParseFlags(argParser.MainArgs())
@@ -62,6 +66,10 @@ can generate a command line on-demand for Rest manipulation`,
 
 	if err = initLogger(sdk, getLogFilterFlag(rootCmd)); err != nil {
 		return err
+	}
+
+	if getShowCliGlobalFlags(rootCmd) {
+		rootCmd.PersistentFlags().VisitAll(func(f *pflag.Flag) { f.Hidden = false })
 	}
 
 	rootCmd.AddCommand(newDumpTreeCmd(sdk))
