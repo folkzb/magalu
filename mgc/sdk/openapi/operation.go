@@ -595,7 +595,7 @@ func (o *operation) Execute(
 
 	if err = parametersSchema.VisitJSON(parameters, openapi3.MultiErrors()); err != nil {
 		if isVisitJSONErrFatal(err) {
-			return nil, err
+			return nil, core.UsageError{Err: err}
 		} else {
 			o.logger.Warn(err)
 		}
@@ -612,7 +612,7 @@ func (o *operation) Execute(
 
 	if err = configsSchema.VisitJSON(configs, openapi3.MultiErrors()); err != nil {
 		if isVisitJSONErrFatal(err) {
-			return nil, err
+			return nil, core.UsageError{Err: err}
 		} else {
 			o.logger.Warn(err)
 		}
