@@ -1,17 +1,13 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"net/url"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 	"magalu.cloud/core"
-	mgcHttpPkg "magalu.cloud/core/http"
-	"magalu.cloud/sdk/static/profile"
 )
 
 func showFormatHelp() {
@@ -47,21 +43,11 @@ func showFormatHelp() {
 
 func showHelpForError(cmd *cobra.Command, args []string, err error) {
 	switch {
-	case err == nil:
-		break
-
-	case errors.As(err, new(*mgcHttpPkg.HttpError)),
-		errors.As(err, new(*url.Error)),
-		errors.As(err, new(core.FailedTerminationError)),
-		errors.As(err, new(core.UserDeniedConfirmationError)),
-		errors.As(err, new(profile.ProfileError)),
-		errors.Is(err, context.Canceled),
-		errors.Is(err, context.DeadlineExceeded):
-		break
-
-	default:
+	case errors.As(err, new(core.UsageError)):
 		// we can't call UsageString() on the root, we need to find the actual leaf command that failed:
 		subCmd, _, _ := cmd.Find(args)
 		cmd.PrintErrln(subCmd.UsageString())
+	default:
+		break
 	}
 }
