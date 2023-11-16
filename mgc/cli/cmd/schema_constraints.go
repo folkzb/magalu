@@ -102,6 +102,12 @@ func getSchemaJSONrepresentation(s *mgcSdk.Schema) string {
 			}
 
 			result += fmt.Sprintf("%s%s: %s", prefix, name, getSchemaJSONrepresentation((*mgcSdk.Schema)(prop.Value)))
+			if constraint := schemaValueConstraints((*mgcSdk.Schema)(prop.Value)); constraint != "" {
+				result += fmt.Sprintf(" (%s)", constraint)
+				if prop.Value.Default != "" {
+					result += fmt.Sprintf(" (default %s)", prop.Value.Default)
+				}
+			}
 			i++
 		}
 		result += " }"
