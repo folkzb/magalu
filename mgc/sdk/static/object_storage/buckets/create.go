@@ -45,7 +45,7 @@ func newCreateRequest(ctx context.Context, cfg common.Config, bucket string) (*h
 	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, bucket)
 	if err != nil {
-		return nil, err
+		return nil, core.UsageError{Err: err}
 	}
 	return http.NewRequestWithContext(ctx, http.MethodPut, url, nil)
 }

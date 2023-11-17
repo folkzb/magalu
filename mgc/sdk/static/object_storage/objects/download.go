@@ -81,7 +81,7 @@ func newDownloadRequest(ctx context.Context, cfg common.Config, pathURIs ...stri
 	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
-		return nil, err
+		return nil, core.UsageError{Err: err}
 	}
 	return http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 }
@@ -173,7 +173,7 @@ func newHeadObjectRequest(ctx context.Context, cfg common.Config, pathURIs ...st
 	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
-		return nil, err
+		return nil, core.UsageError{Err: err}
 	}
 	return http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
 }

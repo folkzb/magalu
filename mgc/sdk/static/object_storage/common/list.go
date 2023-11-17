@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"magalu.cloud/core"
 	"magalu.cloud/core/pipeline"
 	"magalu.cloud/core/utils"
 )
@@ -135,7 +136,7 @@ var _ fs.FileInfo = (*BucketContent)(nil)
 func newListRequest(ctx context.Context, cfg Config, bucket string, page PaginationParams, recursive bool) (*http.Request, error) {
 	parsedUrl, err := parseURL(cfg, bucket)
 	if err != nil {
-		return nil, err
+		return nil, core.UsageError{Err: err}
 	}
 
 	listReqQuery := parsedUrl.Query()
@@ -144,7 +145,7 @@ func newListRequest(ctx context.Context, cfg Config, bucket string, page Paginat
 		listReqQuery.Set("continuation-token", page.ContinuationToken)
 	}
 	if page.MaxItems <= 0 {
-		return nil, fmt.Errorf("invalid item limit MaxItems, must be higher than zero: %d", page.MaxItems)
+		return nil, core.UsageError{Err: fmt.Errorf("invalid item limit MaxItems, must be higher than zero: %d", page.MaxItems)}
 	} else if page.MaxItems > ApiLimitMaxItems {
 		page.MaxItems = ApiLimitMaxItems
 	}

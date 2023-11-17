@@ -78,7 +78,7 @@ func newDeleteRequest(ctx context.Context, cfg common.Config, pathURIs ...string
 	host := common.BuildHost(cfg)
 	url, err := url.JoinPath(host, pathURIs...)
 	if err != nil {
-		return nil, err
+		return nil, core.UsageError{Err: err}
 	}
 	return http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 }

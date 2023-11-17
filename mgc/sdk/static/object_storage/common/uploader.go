@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+
+	"magalu.cloud/core"
 )
 
 type uploader interface {
@@ -51,7 +53,7 @@ func newUploadRequest(ctx context.Context, cfg Config, dst string, reader io.Rea
 	host := BuildHost(cfg)
 	url, err := url.JoinPath(host, dst)
 	if err != nil {
-		return nil, err
+		return nil, core.UsageError{Err: err}
 	}
 	return http.NewRequestWithContext(ctx, http.MethodPut, url, reader)
 }
@@ -59,7 +61,7 @@ func newUploadRequest(ctx context.Context, cfg Config, dst string, reader io.Rea
 func readContent(path string) (*os.File, fs.FileInfo, error) {
 	file, err := os.Stat(path)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, core.UsageError{Err: err}
 	}
 
 	switch mode := file.Mode(); {
