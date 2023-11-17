@@ -298,14 +298,14 @@ func (o *operation) getResponseSchemas() map[string]*core.Schema {
 	return o.responseSchemas
 }
 
-func replaceInPath(path string, param *openapi3.Parameter, val core.Value) (string, error) {
+func replaceInPath(path string, param *openapi3.Parameter, val core.Value) string {
 	// TODO: handle complex conversion using openapi style values
 	// https://spec.openapis.org/oas/latest.html#style-values
 	if val == nil || fmt.Sprintf("%v", val) == "" {
-		return path, nil
+		return path
 	}
 	paramTemplate := "{" + param.Name + "}"
-	return strings.ReplaceAll(path, paramTemplate, fmt.Sprintf("%v", val)), nil
+	return strings.ReplaceAll(path, paramTemplate, fmt.Sprintf("%v", val))
 }
 
 func addQueryParam(qValues *url.Values, param *openapi3.Parameter, val core.Value) {
@@ -354,10 +354,7 @@ func (o *operation) getRequestUrl(
 	_, err = o.parameters.forEachWithValue(paramValues, parametersLocations, func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
 		switch parameter.In {
 		case openapi3.ParameterInPath:
-			path, err = replaceInPath(path, parameter, value)
-			if err != nil {
-				return false, err
-			}
+			path = replaceInPath(path, parameter, value)
 		case openapi3.ParameterInQuery:
 			addQueryParam(&queryValues, parameter, value)
 		}
@@ -378,8 +375,8 @@ func (o *operation) getRequestUrl(
 func (o *operation) configureRequest(
 	req *http.Request,
 	configs core.Configs,
-) (err error) {
-	_, err = o.parameters.forEachWithValue(configs, configLocations, func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
+) {
+	_, _ = o.parameters.forEachWithValue(configs, configLocations, func(externalName string, parameter *openapi3.Parameter, value any) (run bool, err error) {
 		switch parameter.In {
 		case openapi3.ParameterInHeader:
 			addHeaderParam(req, parameter, value)
@@ -388,7 +385,6 @@ func (o *operation) configureRequest(
 		}
 		return true, nil
 	})
-	return
 }
 
 func (o *operation) buildRequestFromParams(
@@ -419,11 +415,7 @@ func (o *operation) buildRequestFromParams(
 		req.ContentLength = size
 	}
 
-	err = o.configureRequest(req, configs)
-	if err != nil {
-		closeIfCloser(reader)
-		return
-	}
+	o.configureRequest(req, configs)
 	return
 }
 
