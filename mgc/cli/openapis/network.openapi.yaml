@@ -4714,7 +4714,7 @@ components:
                 remote_ip_prefix: 100.94.0.0/24
                 resource_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                 status: created
-$id: https://vpc.jaxyendy.com/openapi.json
+$id: https://network.jaxyendy.com/openapi.json
 servers:
 -   url: https://api-vpc{env}.{region}.jaxyendy.com
     variables:

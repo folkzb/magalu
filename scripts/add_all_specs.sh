@@ -20,4 +20,4 @@ $BASEDIR/add_specs.sh mke https://mke.br-ne-1.jaxyendy.com/docs/openapi-with-sni
 
 $BASEDIR/add_specs.sh virtual-machine https://virtual-machine.br-ne-1.jaxyendy.com/openapi.json https://virtual-machine.jaxyendy.com/openapi.json
 
-$BASEDIR/add_specs.sh vpc https://vpc.br-ne-1.jaxyendy.com/openapi.json https://vpc.jaxyendy.com/openapi.json
+$BASEDIR/add_specs.sh network https://vpc.br-ne-1.jaxyendy.com/openapi.json https://network.jaxyendy.com/openapi.json
