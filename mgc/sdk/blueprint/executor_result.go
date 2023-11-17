@@ -13,20 +13,20 @@ import (
 )
 
 type executorStepResult struct {
-	step       *executeStep
-	parameters core.Parameters
-	configs    core.Configs
-	result     core.Result
-	err        error
-	skipped    bool
+	Step       *executeStep
+	Parameters core.Parameters
+	Configs    core.Configs
+	Result     core.Result
+	Err        error
+	Skipped    bool
 }
 
 type executorResult struct {
 	core.ResultSource
-	steps          []*executorStepResult
-	logger         *zap.SugaredLogger
-	resultJsonPath string
-	value          core.Value
+	Steps          []*executorStepResult
+	Logger         *zap.SugaredLogger
+	ResultJsonPath string
+	ResultValue    core.Value
 
 	// these are populated by jsonPathDocument:
 
@@ -47,11 +47,11 @@ func (r *executorResult) ValidateSchema() error {
 }
 
 func (r *executorResult) Value() core.Value {
-	return r.value
+	return r.ResultValue
 }
 
 func (r *executorResult) adjustValueToSchema(value core.Value) (v core.Value, err error) {
-	return adjustValueToSchema(r.Schema(), value, r.logger.Named("result"))
+	return adjustValueToSchema(r.Schema(), value, r.Logger.Named("result"))
 }
 
 // Try our best to be compliant to the desired schema, recursive
@@ -141,24 +141,24 @@ func adjustValueToSchema(schema *schemaPkg.Schema, value core.Value, logger *zap
 
 func (r *executorResult) realizeValue() (err error) {
 	jsonPathDocument := r.jsonPathDocument()
-	logger := r.logger.With("jsonPathDocument", jsonPathDocument)
-	if r.resultJsonPath == "" {
-		r.value = nil
+	logger := r.Logger.With("jsonPathDocument", jsonPathDocument)
+	if r.ResultJsonPath == "" {
+		r.ResultValue = nil
 		if last, ok := jsonPathDocument["last"].(map[string]any); !ok {
 			logger.Warnw("all steps were skipped")
 		} else if value, ok := last["result"]; !ok {
 			logger.Warnw("last step result has no value")
 		} else {
-			r.value, err = r.adjustValueToSchema(value)
+			r.ResultValue, err = r.adjustValueToSchema(value)
 		}
 	} else {
-		r.value, err = utils.GetJsonPath(r.resultJsonPath, jsonPathDocument)
+		r.ResultValue, err = utils.GetJsonPath(r.ResultJsonPath, jsonPathDocument)
 	}
 
 	if err != nil {
 		logger.Warnw(
 			"could not create result",
-			"resultJsonPath", r.resultJsonPath,
+			"resultJsonPath", r.ResultJsonPath,
 			"error", err,
 		)
 		return fmt.Errorf("could not create result: %w", err)
@@ -168,13 +168,13 @@ func (r *executorResult) realizeValue() (err error) {
 }
 
 func (r *executorResult) finalize() (result core.ResultWithValue, err error) {
-	for i := len(r.steps) - 1; i >= 0; i-- {
-		step := r.steps[i]
-		if step.skipped {
+	for i := len(r.Steps) - 1; i >= 0; i-- {
+		step := r.Steps[i]
+		if step.Skipped {
 			continue
 		}
-		if step.err != nil {
-			return nil, fmt.Errorf("step %q finished with error: %w", step.step.Id, step.err)
+		if step.Err != nil {
+			return nil, fmt.Errorf("step %q finished with error: %w", step.Step.Id, step.Err)
 		}
 		break
 	}
@@ -184,15 +184,15 @@ func (r *executorResult) finalize() (result core.ResultWithValue, err error) {
 }
 
 func (r *executorResult) reportResult(step *executeStep, parameters core.Parameters, configs core.Configs, result core.Result) {
-	r.steps = append(r.steps, &executorStepResult{step, parameters, configs, result, nil, false})
+	r.Steps = append(r.Steps, &executorStepResult{step, parameters, configs, result, nil, false})
 }
 
 func (r *executorResult) reportError(step *executeStep, parameters core.Parameters, configs core.Configs, err error) {
-	r.steps = append(r.steps, &executorStepResult{step, parameters, configs, nil, err, false})
+	r.Steps = append(r.Steps, &executorStepResult{step, parameters, configs, nil, err, false})
 }
 
 func (r *executorResult) skip(step *executeStep) {
-	r.steps = append(r.steps, &executorStepResult{step, nil, nil, nil, nil, true})
+	r.Steps = append(r.Steps, &executorStepResult{step, nil, nil, nil, nil, true})
 }
 
 func getResultValueJsonPathDocument(result core.Result) any {
@@ -216,17 +216,17 @@ func (r *executorResult) initJsonPathDocument() {
 
 func createStepResultJsonDocument(stepResult *executorStepResult) map[string]any {
 	return map[string]any{
-		"id":         stepResult.step.Id,
-		"parameters": stepResult.parameters,
-		"configs":    stepResult.configs,
-		"result":     getResultValueJsonPathDocument(stepResult.result),
-		"error":      stepResult.err,
-		"skipped":    stepResult.skipped,
+		"id":         stepResult.Step.Id,
+		"parameters": stepResult.Parameters,
+		"configs":    stepResult.Configs,
+		"result":     getResultValueJsonPathDocument(stepResult.Result),
+		"error":      stepResult.Err,
+		"skipped":    stepResult.Skipped,
 	}
 }
 
 func (r *executorResult) fillMissingSteps() {
-	nSteps := len(r.steps)
+	nSteps := len(r.Steps)
 	start := r.lastJsonPathStep + 1
 	if start == nSteps {
 		return
@@ -235,10 +235,10 @@ func (r *executorResult) fillMissingSteps() {
 	steps := r.lastJsonPathDocument["steps"].(map[string]any)
 	var lastProcessedResultJsonDocument map[string]any
 	for i := start; i < nSteps; i++ {
-		stepResult := r.steps[i]
+		stepResult := r.Steps[i]
 		resultJsonDocument := createStepResultJsonDocument(stepResult)
-		steps[stepResult.step.Id] = resultJsonDocument
-		if !stepResult.skipped {
+		steps[stepResult.Step.Id] = resultJsonDocument
+		if !stepResult.Skipped {
 			lastProcessedResultJsonDocument = resultJsonDocument
 		}
 	}

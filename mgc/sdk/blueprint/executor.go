@@ -195,9 +195,9 @@ func (e *executor) Execute(
 			Parameters: parameters,
 			Configs:    configs,
 		},
-		steps:          nil,
-		logger:         e.logger,
-		resultJsonPath: e.spec.Result,
+		Steps:          nil,
+		Logger:         e.logger,
+		ResultJsonPath: e.spec.Result,
 	}
 
 	for _, step := range e.spec.Steps {
