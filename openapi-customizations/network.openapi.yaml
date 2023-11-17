@@ -34,11 +34,17 @@ paths:
       x-mgc-description: List VPC ports
       parameters:
         - name: vpc_id
+          schema:
+            type: string
           x-mgc-name: vpc
       security:
         - OAuth2:
             - network.read
     post:
+      parameters:
+        - name: vpc_id
+          schema:
+            type: string
       responses:
         '200':
           links:
@@ -57,6 +63,10 @@ paths:
             - network.write
   /v0/ports/{port_id}:
     get:
+      parameters:
+        - name: port_id
+          schema:
+            type: string
       responses:
         '200':
           links:
@@ -86,11 +96,19 @@ paths:
         - OAuth2:
             - network.read
     delete:
+      parameters:
+        - name: port_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.write
   /v0/vpcs/{vpc_id}/public_ips:
     post:
+      parameters:
+        - name: vpc_id
+          schema:
+            type: string
       responses:
         '200':
           links:
@@ -147,11 +165,19 @@ paths:
         - OAuth2:
             - network.write
     get:
+      parameters:
+        - name: vpc_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.read
   /v0/security_groups/{security_group_id}:
     get:
+      parameters:
+        - name: security_group_id
+          schema:
+            type: string
       responses:
         '200':
           links:
@@ -164,11 +190,19 @@ paths:
         - OAuth2:
             - network.read
     delete:
+      parameters:
+        - name: security_group_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.write
   /v0/security_groups/{security_group_id}/rules:
     post:
+      parameters:
+        - name: security_group_id
+          schema:
+            type: string
       responses:
         '200':
           links:
@@ -186,6 +220,10 @@ paths:
         - OAuth2:
             - network.write
     get:
+      parameters:
+        - name: security_group_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.read
@@ -228,6 +266,13 @@ paths:
             - network.write
   /v0/ports/{port_id}/attach/{security_group_id}:
     post:
+      parameters:
+        - name: port_id
+          schema:
+            type: string
+        - name: security_group_id
+          schema:
+            type: string
       responses:
         '200':
           links:
@@ -249,16 +294,37 @@ paths:
             - network.write
   /v0/ports/{port_id}/detach/{security_group_id}:
     post:
+      parameters:
+        - name: port_id
+          schema:
+            type: string
+        - name: security_group_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.write
   /v0/public_ips/{public_ip_id}/attach/{port_id}:
     post:
+      parameters:
+        - name: public_ip_id
+          schema:
+            type: string
+        - name: port_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.write
   /v0/public_ips/{public_ip_id}/detach/{port_id}:
     post:
+      parameters:
+        - name: public_ip_id
+          schema:
+            type: string
+        - name: port_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.write
@@ -303,10 +369,18 @@ paths:
             - network.write
   /v0/vpcs/{vpc_id}/subnets:
     get:
+      parameters:
+        - name: vpc_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.read
     post:
+      parameters:
+        - name: vpc_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.write
@@ -339,10 +413,18 @@ paths:
             - network.write
   /v0/vpcs/{vpc_id}:
     get:
+      parameters:
+        - name: vpc_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.read
     delete:
+      parameters:
+        - name: vpc_id
+          schema:
+            type: string
       security:
         - OAuth2:
             - network.write

@@ -105,6 +105,7 @@ paths:
                 required: true
                 schema:
                     title: Vpc Id
+                    type: string
             requestBody:
                 required: true
                 content:
@@ -151,6 +152,7 @@ paths:
                 required: true
                 schema:
                     title: Vpc Id
+                    type: string
                 x-mgc-name: vpc
             -   name: detailed
                 in: query
@@ -217,6 +219,7 @@ paths:
                 required: true
                 schema:
                     title: Port Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -271,6 +274,7 @@ paths:
                 required: true
                 schema:
                     title: Port Id
+                    type: string
             responses:
                 '204':
                     description: Successful Response
@@ -307,6 +311,7 @@ paths:
             security:
             -   OAuth2:
                 - network.write
+            x-mgc-hidden: true
     /v0/ports/{port_id}/attach/{security_group_id}:
         post:
             tags:
@@ -320,11 +325,13 @@ paths:
                 required: true
                 schema:
                     title: Port Id
+                    type: string
             -   name: security_group_id
                 in: path
                 required: true
                 schema:
                     title: Security Group Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -370,11 +377,13 @@ paths:
                 required: true
                 schema:
                     title: Port Id
+                    type: string
             -   name: security_group_id
                 in: path
                 required: true
                 schema:
                     title: Security Group Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -602,6 +611,7 @@ paths:
                 required: true
                 schema:
                     title: Vpc Id
+                    type: string
             -   name: validate_quota
                 in: query
                 required: false
@@ -746,11 +756,13 @@ paths:
                 required: true
                 schema:
                     title: Public Ip Id
+                    type: string
             -   name: port_id
                 in: path
                 required: true
                 schema:
                     title: Port Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -780,11 +792,13 @@ paths:
                 required: true
                 schema:
                     title: Public Ip Id
+                    type: string
             -   name: port_id
                 in: path
                 required: true
                 schema:
                     title: Port Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -962,6 +976,7 @@ paths:
                 required: true
                 schema:
                     title: Security Group Id
+                    type: string
             -   name: validate_quota
                 in: query
                 required: false
@@ -1038,6 +1053,7 @@ paths:
                 required: true
                 schema:
                     title: Security Group Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -1483,6 +1499,7 @@ paths:
                 required: true
                 schema:
                     title: Vpc Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -1513,6 +1530,7 @@ paths:
                 required: true
                 schema:
                     title: Security Group Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -1548,6 +1566,7 @@ paths:
                 required: true
                 schema:
                     title: Security Group Id
+                    type: string
             responses:
                 '204':
                     description: Successful Response
@@ -2334,6 +2353,7 @@ paths:
                 required: true
                 schema:
                     title: Vpc Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -2363,6 +2383,7 @@ paths:
                 required: true
                 schema:
                     title: Vpc Id
+                    type: string
             responses:
                 '204':
                     description: Successful Response
