@@ -115,11 +115,21 @@ func getCoalescedPath(path []operationTreePath) []string {
 	wasVariable := false
 	for i, p := range path {
 		pathEntry, isVariable := getPathEntry(p.key)
-		if i == 0 || len(p.parent.tree) > 1 || wasVariable {
+		if isVariable {
+			wasVariable = isVariable
+			continue
+		}
+
+		// Last entry is always the HTTP Method renamed ("create", "list"...)
+		isLast := i == len(path)-1
+
+		if isLast || len(p.parent.tree) > 1 || wasVariable {
 			parts = append(parts, pathEntry)
 		}
-		wasVariable = isVariable
+
+		wasVariable = false
 	}
+
 	return parts
 }
 
@@ -129,7 +139,16 @@ func getFullPath(path []operationTreePath) []string {
 		pathEntry, _ := getPathEntry(p.key)
 		parts = append(parts, pathEntry)
 	}
+
 	return parts
+}
+
+func moveActionForward(path []string) []string {
+	// Move the last element to the beginning to get "create-x" instead of "x-create"
+	if n := len(path); n >= 2 {
+		path = append([]string{path[n-1]}, path[:n-1]...)
+	}
+	return path
 }
 
 func renamePath(httpMethod string, pathName string) string {
@@ -155,8 +174,7 @@ func renamePath(httpMethod string, pathName string) string {
 }
 
 func getFullOperationName(httpMethod string, pathName string) []string {
-	actionName := renamePath(httpMethod, pathName)
-	name := []string{actionName}
+	name := []string{}
 
 	for _, pathEntry := range strings.Split(pathName, "/") {
 		if pathEntry == "" {
@@ -164,6 +182,8 @@ func getFullOperationName(httpMethod string, pathName string) []string {
 		}
 		name = append(name, pathEntry)
 	}
+
+	name = append(name, renamePath(httpMethod, pathName))
 
 	return name
 }
@@ -227,9 +247,12 @@ func newResource(
 			_, err = opTree.VisitDesc([]operationTreePath{}, func(path []operationTreePath, desc *operationDesc) (bool, error) {
 				opName := getNameExtension(extensionPrefix, desc.op.Extensions, "")
 				if opName == "" {
-					opName = strings.Join(getCoalescedPath(path), "-")
+					namePath := moveActionForward(getCoalescedPath(path))
+					opName = strings.Join(namePath, "-")
+
 					if _, ok := operationsByName[opName]; ok {
-						opName = strings.Join(getFullPath(path), "-")
+						namePath = moveActionForward(getFullPath(path))
+						opName = strings.Join(namePath, "-")
 					}
 				}
 
