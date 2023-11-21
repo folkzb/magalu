@@ -56,11 +56,12 @@ func finalizeParameters(byNameAndLocation map[string]map[string]*parameterWithNa
 
 type parameters struct {
 	getParameters   func() []*parameterWithName
+	getPositionals  func() []string
 	extensionPrefix *string
 }
 
 func newParameters(parentParameters openapi3.Parameters, opParameters openapi3.Parameters, extensionPrefix *string) *parameters {
-	return &parameters{
+	p := &parameters{
 		getParameters: utils.NewLazyLoader(func() []*parameterWithName {
 			// operation parameters take precedence over path:
 			// https://spec.openapis.org/oas/latest.html#fixed-fields-7
@@ -73,6 +74,17 @@ func newParameters(parentParameters openapi3.Parameters, opParameters openapi3.P
 		}),
 		extensionPrefix: extensionPrefix,
 	}
+
+	p.getPositionals = utils.NewLazyLoader(func() []string {
+		var positionals []string
+		_, _ = p.forEach([]string{openapi3.ParameterInPath}, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
+			positionals = append(positionals, externalName)
+			return true, nil
+		})
+		return positionals
+	})
+
+	return p
 }
 
 type cbForEachParameter func(externalName string, parameter *openapi3.Parameter) (run bool, err error)

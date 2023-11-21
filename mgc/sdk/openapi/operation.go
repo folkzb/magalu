@@ -142,6 +142,10 @@ func (o *operation) ParametersSchema() *core.Schema {
 	return o.paramsSchema
 }
 
+func (o *operation) PositionalArgs() []string {
+	return o.parameters.getPositionals()
+}
+
 func (o *operation) ConfigsSchema() *core.Schema {
 	if o.configsSchema == nil {
 		rootSchema := mgcSchemaPkg.NewObjectSchema(map[string]*core.Schema{}, []string{})
@@ -648,3 +652,4 @@ func (o *operation) Execute(
 
 // implemented by embedded SimpleDescriptor
 var _ core.Executor = (*operation)(nil)
+var _ core.PositionalArgsExecutor = (*operation)(nil)
