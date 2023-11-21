@@ -8,6 +8,16 @@ import (
 	mgcSdk "magalu.cloud/sdk"
 )
 
+func loadDataFromArgs(argNames, argValues []string, flags *flag.FlagSet) error {
+	for i, value := range argValues {
+		if err := flags.Set(argNames[i], value); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func loadDataFromFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, dst map[string]core.Value) error {
 	if flags == nil || schema == nil || dst == nil {
 		return fmt.Errorf("invalid command or parameter schema")

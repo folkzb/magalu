@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	"github.com/stoewer/go-strcase"
 	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
@@ -17,6 +18,8 @@ const (
 )
 
 var allExecutorChildren = []string{listLinksCmd}
+
+func isConfigRequired(string) bool { return false }
 
 func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (*cobra.Command, error) {
 	if childGroup, ok := child.(mgcSdk.Grouper); ok {
@@ -42,8 +45,21 @@ func loadGrouperChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Group
 	}
 
 	if childExec, ok := child.(mgcSdk.Executor); ok {
-		addFlags(childCmd.Flags(), childExec.ParametersSchema())
-		addFlags(childCmd.Root().PersistentFlags(), childExec.ConfigsSchema())
+		var positionalArgs []string
+		if pArgsExec, ok := core.ExecutorAs[core.PositionalArgsExecutor](childExec); ok {
+			positionalArgs = pArgsExec.PositionalArgs()
+		}
+
+		isParameterRequired := func(name string) bool {
+			if slices.Contains(childExec.ParametersSchema().Required, name) {
+				return !slices.Contains(positionalArgs, name)
+			}
+
+			return false
+		}
+
+		addFlags(childCmd.Flags(), childExec.ParametersSchema(), isParameterRequired)
+		addFlags(childCmd.Root().PersistentFlags(), childExec.ConfigsSchema(), isConfigRequired)
 	}
 
 	return childCmd, child, nil
@@ -117,16 +133,17 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 			return loadAllErr
 		}
 
-		return err
+		if _, ok := cmdDesc.(core.Executor); !ok {
+			return err
+		}
 	}
 
 	return loadCommandTree(sdk, childCmd, childCmdDesc, childArgs)
 }
 
-func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
+func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, isRequired func(string) bool) {
 	for name, propRef := range schema.Properties {
 		prop := propRef.Value
-		isRequired := slices.Contains(schema.Required, name)
 
 		propType := getPropType((*mgcSdk.Schema)(prop))
 
@@ -163,7 +180,7 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 			})
 		}
 
-		if isRequired {
+		if isRequired(name) {
 			if err := cobra.MarkFlagRequired(flags, name); err != nil {
 				// Will probably never happen
 				logger().Warnw(
@@ -176,6 +193,14 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema) {
 	}
 }
 
+func buildUse(desc core.Descriptor, args []string) string {
+	use := desc.Name()
+	for _, name := range args {
+		use += " " + fmt.Sprintf("[%s]", strcase.KebabCase(name))
+	}
+	return use
+}
+
 func addAction(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
@@ -184,8 +209,14 @@ func addAction(
 	desc := exec.(mgcSdk.Descriptor)
 	links := exec.Links()
 
+	var argNames []string
+	if pArgsExec, ok := core.ExecutorAs[core.PositionalArgsExecutor](exec); ok {
+		argNames = pArgsExec.PositionalArgs()
+	}
+
 	actionCmd := &cobra.Command{
-		Use:     desc.Name(),
+		Use:     buildUse(desc, argNames),
+		Args:    cobra.MaximumNArgs(len(argNames)),
 		Short:   desc.Summary(),
 		Long:    desc.Description(),
 		Version: desc.Version(),
@@ -195,6 +226,10 @@ func addAction(
 			configs := core.Configs{}
 
 			config := sdk.Config()
+
+			if err := loadDataFromArgs(argNames, args, cmd.Flags()); err != nil {
+				return err
+			}
 
 			if err := loadDataFromFlags(cmd.Flags(), exec.ParametersSchema(), parameters); err != nil {
 				return err
@@ -293,8 +328,13 @@ func addLink(
 	}
 
 	parentCmd.AddCommand(linkCmd)
-	addFlags(linkCmd.Flags(), link.AdditionalParametersSchema())
-	addFlags(linkCmd.Root().PersistentFlags(), link.AdditionalConfigsSchema())
+
+	isParameterRequired := func(name string) bool {
+		return slices.Contains(link.AdditionalParametersSchema().Required, name)
+	}
+
+	addFlags(linkCmd.Flags(), link.AdditionalParametersSchema(), isParameterRequired)
+	addFlags(linkCmd.Root().PersistentFlags(), link.AdditionalConfigsSchema(), isConfigRequired)
 
 	logger().Debugw("Link added to command tree", "name", link.Name())
 
