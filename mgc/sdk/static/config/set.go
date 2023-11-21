@@ -40,7 +40,7 @@ func newSet() core.Executor {
 			}
 
 			if err := s.VisitJSON(parameter.Value, openapi3.MultiErrors()); err != nil {
-				return nil, err
+				return nil, core.UsageError{Err: err}
 			}
 
 			if err := config.Set(parameter.Key, parameter.Value); err != nil {
