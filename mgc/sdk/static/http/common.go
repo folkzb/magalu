@@ -120,7 +120,7 @@ func executeHttpWithDefaultHeaders(ctx context.Context, params httpParams, confi
 
 	url, err := getUrl(params, configs)
 	if err != nil {
-		err = &core.ChainedError{Name: "url", Err: err}
+		err = &core.ChainedError{Name: "url", Err: core.UsageError{Err: err}}
 		return
 	}
 
