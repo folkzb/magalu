@@ -23,9 +23,13 @@ var listObjectsLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
 type ListObjectsParams struct {
 	Destination      string           `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/"`
 	PaginationParams `json:",squash"` // nolint
+	FilterParams     `json:",squash"` // nolint
 	Recursive        bool             `json:"recursive,omitempty" jsonschema:"description=List folders and subfolders,default=false"`
-	Include          string           `json:"include,omitempty" jsonschema:"description=Filename pattern to include,default=*"`
-	Exclude          string           `json:"exclude,omitempty" jsonschema:"description=Filename pattern to exclude"`
+}
+
+type FilterParams struct {
+	Include string `json:"include,omitempty" jsonschema:"description=Filename pattern to include,default=*"`
+	Exclude string `json:"exclude,omitempty" jsonschema:"description=Filename pattern to exclude"`
 }
 
 type PaginationParams struct {
