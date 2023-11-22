@@ -8,6 +8,8 @@ from spec_types import OAPISchema, SpecTranformer
 from spec_version_convert import ConvertVersionTransformer
 from spec_remove_tenant_id import RemoveParamTransformer
 from spec_update_error import UpdateErrorTransformer
+from spec_remove_path import RemovePathTransformer
+from spec_remove_component import RemoveComponentTransformer
 
 from validate_openapi_specs import validate_oapi
 
@@ -70,6 +72,8 @@ if __name__ == "__main__":
     transformers: List[SpecTranformer] = [
         ConvertVersionTransformer(),
         UpdateErrorTransformer(),
+        RemovePathTransformer("/xaas"),
+        RemoveComponentTransformer("xaas"),
         RemoveParamTransformer("x-tenant-id"),
     ]
     for t in transformers:

@@ -8,16 +8,16 @@ class RemoveParamTransformer(SpecTranformer):
         self.param_name = param_name
 
     def transform(self, spec: OAPISchema) -> OAPISchema:
-        return self.__remove_param(spec, param_name="x-tenant-id")
+        return self._remove_param(spec, param_name=self.param_name)
 
-    def __remove_param(self, spec: OAPISchema, param_name: str) -> OAPISchema:
+    def _remove_param(self, spec: OAPISchema, param_name: str) -> OAPISchema:
         refs_for_removal = set()
         for path in spec.get("paths", {}).values():
             for action in path.values():
                 if not isinstance(action, dict) or "parameters" not in action:
                     continue
 
-                filtered_params, removable_refs = self.__filter_params_and_refs(
+                filtered_params, removable_refs = self._filter_params_and_refs(
                     action.get("parameters", [{}]), spec, param_name
                 )
                 refs_for_removal.update(removable_refs)
@@ -27,10 +27,10 @@ class RemoveParamTransformer(SpecTranformer):
                 else:
                     action["parameters"] = filtered_params
 
-        self.__remove_param_refs(spec, refs_for_removal)
+        self._remove_param_refs(spec, refs_for_removal)
         return spec
 
-    def __filter_params_and_refs(
+    def _filter_params_and_refs(
         self, params: List[str], spec: OAPISchema, param_name: str
     ) -> Tuple[List[str], List[str]]:
         refs = []
@@ -55,7 +55,7 @@ class RemoveParamTransformer(SpecTranformer):
 
         return filtered_params, refs
 
-    def __remove_param_refs(self, spec: OAPISchema, refs: List[str]):
+    def _remove_param_refs(self, spec: OAPISchema, refs: List[str]):
         def should_delete(value: Any, keys: List[str]):
             if len(keys) == 0:
                 return True
