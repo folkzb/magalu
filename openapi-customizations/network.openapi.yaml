@@ -32,7 +32,6 @@ paths:
   /v0/vpcs/{vpc_id}/ports:
     get:
       x-mgc-description: List VPC ports
-      x-mgc-name: list-vpc-ports
       parameters:
         - name: vpc_id
           x-mgc-name: vpc

@@ -201,7 +201,6 @@ paths:
                                 $ref: '#/components/schemas/HTTPValidationError'
             viveiro: true
             x-mgc-description: List VPC ports
-            x-mgc-name: list-vpc-ports
             security:
             -   OAuth2:
                 - network.read
