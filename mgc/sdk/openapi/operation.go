@@ -69,7 +69,7 @@ func newOperation(
 			Summary:     desc.op.Summary,
 			IsInternal:  getHiddenExtension(extensionPrefix, desc.op.Extensions),
 		}},
-		key:             desc.key,
+		key:             desc.pathKey,
 		method:          method,
 		path:            desc.path,
 		operation:       desc.op,

@@ -2,7 +2,6 @@ package openapi
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"go.uber.org/zap"
@@ -33,168 +32,14 @@ func getServers(p *openapi3.PathItem, op *openapi3.Operation) openapi3.Servers {
 	return servers
 }
 
-// NOTE: some OpenAPIs may have have similar operations with the same tag (== Resource),
-// in order to disambiguate, we need to pass the whole set of names and then find the
-// the action name, simplifying if no collisions
-type operationDesc struct {
-	path   *openapi3.PathItem
-	op     *openapi3.Operation
-	method string
-	key    string
-}
-
-// a tree based on other maps or operationDesc
-type operationTree struct {
-	tree map[string]*operationTree
-	desc *operationDesc
-}
-
-func (t *operationTree) Add(key []string, desc *operationDesc) error {
-	if len(key) == 0 {
-		t.desc = desc
-		return nil
-	}
-
-	if t.tree == nil {
-		t.tree = map[string]*operationTree{}
-	}
-
-	current := key[0]
-	childT, ok := t.tree[current]
-	if !ok {
-		childT = &operationTree{}
-		t.tree[current] = childT
-	}
-
-	return childT.Add(key[1:], desc)
-}
-
-type operationTreePath struct {
-	key    string
-	parent *operationTree
-}
-
-func (t *operationTree) VisitDesc(path []operationTreePath, visitor func(path []operationTreePath, desc *operationDesc) (bool, error)) (bool, error) {
-	if t.desc != nil {
-		if run, err := visitor(path, t.desc); !run || err != nil {
-			return false, err
-		}
-	}
-
-	for k, childT := range t.tree {
-		oldLen := len(path)
-		path = append(path, operationTreePath{k, t})
-
-		if run, err := childT.VisitDesc(path, visitor); !run || err != nil {
-			return false, err
-		}
-
-		path = path[:oldLen]
-	}
-
-	return true, nil
-}
-
-var openAPIPathArgRegex = regexp.MustCompile("[{](?P<name>[^}]+)[}]")
-
-func getPathEntry(pathEntry string) (string, bool) {
-	match := openAPIPathArgRegex.FindStringSubmatch(pathEntry)
-	if len(match) > 0 {
-		for i, substr := range match {
-			if openAPIPathArgRegex.SubexpNames()[i] == "name" {
-				return substr, true
-			}
-		}
-	}
-
-	return pathEntry, false
-}
-
-func getCoalescedPath(path []operationTreePath) []string {
-	parts := []string{}
-	wasVariable := false
-	for i, p := range path {
-		pathEntry, isVariable := getPathEntry(p.key)
-		if isVariable {
-			wasVariable = isVariable
-			continue
-		}
-
-		// Last entry is always the HTTP Method renamed ("create", "list"...)
-		isLast := i == len(path)-1
-
-		if isLast || len(p.parent.tree) > 1 || wasVariable {
-			parts = append(parts, pathEntry)
-		}
-
-		wasVariable = false
-	}
-
-	return parts
-}
-
-func getFullPath(path []operationTreePath) []string {
-	parts := []string{}
-	for _, p := range path {
-		pathEntry, _ := getPathEntry(p.key)
-		parts = append(parts, pathEntry)
-	}
-
-	return parts
-}
-
-func moveActionForward(path []string) []string {
-	// Move the last element to the beginning to get "create-x" instead of "x-create"
-	if n := len(path); n >= 2 {
-		path = append([]string{path[n-1]}, path[:n-1]...)
-	}
-	return path
-}
-
-func renamePath(httpMethod string, pathName string) string {
-	switch httpMethod {
-	case "post":
-		return "create"
-	case "put":
-		return "replace"
-	case "patch":
-		return "update"
-	case "get":
-		// only consider "get" if ends with, mid-path are still list, ex:
-		// GET:  /resource/{id}
-		// LIST: /{containerId}/resource
-		// GET:  /{containerId}/resource/{id}
-		if strings.HasSuffix(pathName, "}") {
-			return "get"
-		}
-		return "list"
-	}
-
-	return httpMethod
-}
-
-func getFullOperationName(httpMethod string, pathName string) []string {
-	name := []string{}
-
-	for _, pathEntry := range strings.Split(pathName, "/") {
-		if pathEntry == "" {
-			continue
-		}
-		name = append(name, pathEntry)
-	}
-
-	name = append(name, renamePath(httpMethod, pathName))
-
-	return name
-}
-
 func collectOperations(
 	tag *openapi3.Tag,
 	doc *openapi3.T,
 	extensionPrefix *string,
 	logger *zap.SugaredLogger,
-) *operationTree {
-	tree := &operationTree{}
+) *operationTable {
+	descs := []*operationDesc{}
+
 	for key, path := range doc.Paths {
 		pathOps := map[string]*openapi3.Operation{
 			"get":    path.Get,
@@ -213,14 +58,85 @@ func collectOperations(
 				continue
 			}
 
-			name := getFullOperationName(method, key)
-			if err := tree.Add(name, &operationDesc{path, op, method, key}); err != nil {
-				logger.Warnw("failed to add operation", "method", method, "key", key, "error", err)
-			}
+			descs = append(descs, &operationDesc{path, op, method, key})
 		}
 	}
 
-	return tree
+	return newOperationTable(tag.Name, descs)
+}
+
+func collectResourceChildren(
+	descriptionPrefix string,
+	table *operationTable,
+	doc *openapi3.T,
+	extensionPrefix *string,
+	logger *zap.SugaredLogger,
+	refResolver *core.BoundRefPathResolver,
+) (children []core.Descriptor, err error) {
+	children = []core.Descriptor{}
+	childrenByName := map[string]core.Descriptor{}
+
+	for _, opTableEntry := range table.childOperations {
+		desc := opTableEntry.desc
+
+		opName := getNameExtension(extensionPrefix, desc.op.Extensions, opTableEntry.key)
+		servers := getServers(desc.path, desc.op)
+		if servers == nil {
+			servers = doc.Servers
+		}
+
+		outputFlag, _ := getExtensionString(extensionPrefix, "output-flag", desc.op.Extensions, "")
+		method := strings.ToUpper(desc.method)
+
+		var operation core.Executor = newOperation(
+			opName,
+			desc,
+			doc.Info.Version,
+			method,
+			extensionPrefix,
+			servers,
+			logger,
+			outputFlag,
+			refResolver,
+		)
+
+		isDelete := method == "DELETE"
+		cExt, ok := getExtensionObject(extensionPrefix, "confirmable", desc.op.Extensions, nil)
+
+		if (ok && cExt != nil) || isDelete {
+			cExec, err := wrapInConfirmableExecutor(cExt, isDelete, operation)
+			if err != nil {
+				return children, err
+			}
+			operation = cExec
+		}
+
+		if wtExt, ok := getExtensionObject(extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
+			if tExec, err := wrapInTerminatorExecutor(operation, wtExt); err == nil {
+				operation = tExec
+			} else {
+				return children, err
+			}
+		}
+
+		children = append(children, operation)
+		childrenByName[opName] = operation
+	}
+
+	for _, childTable := range table.childTables {
+		subResource := newSubResource(
+			descriptionPrefix,
+			childTable,
+			doc,
+			extensionPrefix,
+			logger,
+			refResolver,
+		)
+		children = append(children, subResource)
+		childrenByName[childTable.name] = subResource
+	}
+
+	return children, nil
 }
 
 func newResource(
@@ -229,78 +145,42 @@ func newResource(
 	extensionPrefix *string,
 	logger *zap.SugaredLogger,
 	refResolver *core.BoundRefPathResolver,
-) *core.SimpleGrouper[core.Executor] {
+) *core.SimpleGrouper[core.Descriptor] {
 	logger = logger.Named(tag.Name)
-	version := doc.Info.Version
-	return core.NewSimpleGrouper[core.Executor](
+	name := getNameExtension(extensionPrefix, tag.Extensions, tag.Name)
+	description := getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description)
+	return core.NewSimpleGrouper[core.Descriptor](
 		core.DescriptorSpec{
-			Name:        getNameExtension(extensionPrefix, tag.Extensions, tag.Name),
-			Description: getDescriptionExtension(extensionPrefix, tag.Extensions, tag.Description),
-			Version:     version,
+			Name:        name,
+			Description: description,
+			Version:     doc.Info.Version,
 			IsInternal:  getHiddenExtension(extensionPrefix, tag.Extensions),
 		},
-		func() (operations []core.Executor, err error) {
-			operations = []core.Executor{}
-			operationsByName := map[string]core.Executor{}
-			opTree := collectOperations(tag, doc, extensionPrefix, logger)
+		func() ([]core.Descriptor, error) {
+			opTable := collectOperations(tag, doc, extensionPrefix, logger)
 
-			_, err = opTree.VisitDesc([]operationTreePath{}, func(path []operationTreePath, desc *operationDesc) (bool, error) {
-				opName := getNameExtension(extensionPrefix, desc.op.Extensions, "")
-				if opName == "" {
-					namePath := moveActionForward(getCoalescedPath(path))
-					opName = strings.Join(namePath, "-")
+			return collectResourceChildren(description, opTable, doc, extensionPrefix, logger, refResolver)
+		},
+	)
+}
 
-					if _, ok := operationsByName[opName]; ok {
-						namePath = moveActionForward(getFullPath(path))
-						opName = strings.Join(namePath, "-")
-					}
-				}
-
-				servers := getServers(desc.path, desc.op)
-				if servers == nil {
-					servers = doc.Servers
-				}
-
-				outputFlag, _ := getExtensionString(extensionPrefix, "output-flag", desc.op.Extensions, "")
-				method := strings.ToUpper(desc.method)
-
-				var operation core.Executor = newOperation(
-					opName,
-					desc,
-					version,
-					method,
-					extensionPrefix,
-					servers,
-					logger,
-					outputFlag,
-					refResolver,
-				)
-
-				isDelete := method == "DELETE"
-				cExt, ok := getExtensionObject(extensionPrefix, "confirmable", desc.op.Extensions, nil)
-
-				if (ok && cExt != nil) || isDelete {
-					cExec, err := wrapInConfirmableExecutor(cExt, isDelete, operation)
-					if err != nil {
-						return false, err
-					}
-					operation = cExec
-				}
-
-				if wtExt, ok := getExtensionObject(extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
-					if tExec, err := wrapInTerminatorExecutor(operation, wtExt); err == nil {
-						operation = tExec
-					} else {
-						return false, err
-					}
-				}
-
-				operations = append(operations, operation)
-				operationsByName[opName] = operation
-				return true, nil
-			})
-
-			return operations, err
+func newSubResource(
+	descriptionPrefix string,
+	table *operationTable,
+	doc *openapi3.T,
+	extensionPrefix *string,
+	logger *zap.SugaredLogger,
+	refResolver *core.BoundRefPathResolver,
+) *core.SimpleGrouper[core.Descriptor] {
+	logger = logger.Named(table.name)
+	return core.NewSimpleGrouper(
+		core.DescriptorSpec{
+			Name:        table.name,
+			Version:     doc.Info.Version,
+			Description: fmt.Sprintf("%s | %s", descriptionPrefix, table.name),
+		},
+		func() ([]core.Descriptor, error) {
+			return collectResourceChildren(descriptionPrefix, table, doc, extensionPrefix, logger, refResolver)
 		},
 	)
 }
