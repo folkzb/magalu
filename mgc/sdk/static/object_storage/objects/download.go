@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -129,7 +130,7 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src, dst string)
 
 func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst string, paginationParams common.PaginationParams) error {
 	bucketRoot := strings.Split(src, "/")[0]
-	objs, err := List(ctx, common.ListObjectsParams{Destination: src, PaginationParams: paginationParams}, cfg)
+	objs, err := List(ctx, common.ListObjectsParams{Destination: src, Recursive: true, PaginationParams: paginationParams}, cfg)
 	if err != nil {
 		return err
 	}
@@ -218,6 +219,7 @@ func download(ctx context.Context, p downloadObjectParams, cfg common.Config) (r
 		if !isDirPath(dst) {
 			return nil, fmt.Errorf("bucket resource %s is a directory but given local path is a file %s", p.Source, p.Destination)
 		}
+		p.MaxItems = math.MaxInt64
 		err = downloadMultipleFiles(ctx, cfg, src, dst, p.PaginationParams)
 	}
 

@@ -3,6 +3,7 @@ package buckets
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"path"
@@ -104,7 +105,14 @@ func createObjectDeletionProcessor(cfg common.Config, bucketName string) pipelin
 }
 
 func delete(ctx context.Context, params deleteParams, cfg common.Config) (core.Value, error) {
-	objs, err := objects.List(ctx, common.ListObjectsParams{Destination: params.Name}, cfg)
+	listParams := common.ListObjectsParams{
+		Destination: params.Name,
+		Recursive:   true,
+		PaginationParams: common.PaginationParams{
+			MaxItems: math.MaxInt64,
+		},
+	}
+	objs, err := objects.List(ctx, listParams, cfg)
 	if err != nil {
 		return nil, err
 	}
