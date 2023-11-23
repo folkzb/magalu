@@ -19,6 +19,36 @@ import (
 
 const operationIdsDocKey = "operationIds"
 
+func loadResourceRefs(resource core.Grouper, byPaths map[string]map[string]core.Executor, byId map[string]core.Executor) (bool, error) {
+	return resource.VisitChildren(func(child core.Descriptor) (bool, error) {
+		if subresource, ok := child.(core.Grouper); ok {
+			return loadResourceRefs(subresource, byPaths, byId)
+		}
+
+		if exec, ok := child.(core.Executor); ok {
+			op, ok := core.ExecutorAs[*operation](exec)
+			if !ok {
+				return false, fmt.Errorf("expected operation, got %#v", child)
+			}
+
+			keyMethods, ok := byPaths[op.key]
+			if !ok {
+				keyMethods = map[string]core.Executor{}
+				byPaths[op.key] = keyMethods
+			}
+
+			keyMethods[strings.ToLower(op.method)] = op
+			byId[op.operation.OperationID] = op
+			return true, nil
+		}
+
+		return false, fmt.Errorf(
+			"found unknown Descriptor when traversing resource. Expected core.Executor or core.Grouper, got %#v",
+			child,
+		)
+	})
+}
+
 func newRefsDocumentLoader(pRoot *core.Grouper) utils.LoadWithError[map[string]any] {
 	return utils.NewLazyLoaderWithError(func() (doc map[string]any, err error) {
 		if pRoot == nil {
@@ -28,27 +58,10 @@ func newRefsDocumentLoader(pRoot *core.Grouper) utils.LoadWithError[map[string]a
 		byId := map[string]core.Executor{}
 		_, err = (*pRoot).VisitChildren(func(child core.Descriptor) (bool, error) {
 			if resource, ok := child.(core.Grouper); ok {
-				return resource.VisitChildren(func(child core.Descriptor) (bool, error) {
-					exec, ok := child.(core.Executor)
-					if !ok {
-						return false, fmt.Errorf("expected core.Executor, got %#v", child)
-					}
-					if op, ok := core.ExecutorAs[*operation](exec); ok {
-						keyMethods, ok := byPaths[op.key]
-						if !ok {
-							keyMethods = map[string]core.Executor{}
-							byPaths[op.key] = keyMethods
-						}
-						keyMethods[strings.ToLower(op.method)] = op
-						byId[op.operation.OperationID] = op
-						return true, nil
-					} else {
-						return false, fmt.Errorf("expected operation, got %#v", child)
-					}
-				})
-			} else {
-				return false, fmt.Errorf("expected resource to be grouper, got %#v", child)
+				return loadResourceRefs(resource, byPaths, byId)
 			}
+
+			return false, fmt.Errorf("expected resource to be grouper, got %#v", child)
 		})
 		if err != nil {
 			return
