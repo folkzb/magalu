@@ -237,9 +237,17 @@ var FilterWalkDirEntryIncludeFile = &filterWalkDirEntryIncludeFile{}
 // Exclude regular files, others are left as unknown
 var FilterWalkDirEntryExcludeFile = &FilterRuleNot[WalkDirEntry]{FilterWalkDirEntryIncludeFile}
 
-type filterWalkDirEntryIncludeDir struct{}
+type filterWalkDirEntryIncludeDir struct {
+	CancelOnError func(error)
+}
 
 func (r filterWalkDirEntryIncludeDir) Filter(ctx context.Context, entry WalkDirEntry) FilterStatus {
+	if err := entry.Err(); err != nil {
+		if r.CancelOnError != nil {
+			r.CancelOnError(err)
+		}
+		return FilterExclude
+	}
 	if entry.DirEntry().IsDir() {
 		return FilterInclude
 	}
@@ -266,10 +274,17 @@ var FilterWalkDirEntryExcludeDir = &FilterRuleNot[WalkDirEntry]{FilterWalkDirEnt
 // Non-matching files are NOT excluded, they are just left as unknown.
 // to exclude them, use &FilterRuleNot[WalkDirEntry]{FilterWalkDirEntryIncludeRegExp{...}}
 type FilterWalkDirEntryIncludeRegExp struct {
-	Regexp *regexp.Regexp
+	Regexp        *regexp.Regexp
+	CancelOnError func(error)
 }
 
 func (r FilterWalkDirEntryIncludeRegExp) Filter(ctx context.Context, entry WalkDirEntry) FilterStatus {
+	if err := entry.Err(); err != nil {
+		if r.CancelOnError != nil {
+			r.CancelOnError(err)
+		}
+		return FilterExclude
+	}
 	if r.Regexp.MatchString(entry.DirEntry().Name()) {
 		return FilterInclude
 	}
@@ -290,10 +305,17 @@ var _ json.Marshaler = (*FilterWalkDirEntryIncludeRegExp)(nil)
 // Non-matching files are NOT excluded, they are just left as unknown.
 // to exclude them, use &FilterRuleNot[WalkDirEntry]{FilterWalkDirEntryIncludeGlobMatch{...}}
 type FilterWalkDirEntryIncludeGlobMatch struct {
-	Pattern string
+	Pattern       string
+	CancelOnError func(error)
 }
 
 func (r FilterWalkDirEntryIncludeGlobMatch) Filter(ctx context.Context, entry WalkDirEntry) FilterStatus {
+	if err := entry.Err(); err != nil {
+		if r.CancelOnError != nil {
+			r.CancelOnError(err)
+		}
+		return FilterExclude
+	}
 	match, _ := filepath.Match(r.Pattern, entry.DirEntry().Name())
 	if match {
 		return FilterInclude

@@ -27,14 +27,14 @@ func newList() core.Executor {
 }
 
 func List(ctx context.Context, params common.ListObjectsParams, cfg common.Config) (result listResponse, err error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
 
 	objects := common.ListGenerator(ctx, params, cfg)
 
 	if params.Include != "" {
 		includeFilter := pipeline.FilterRuleIncludeOnly[pipeline.WalkDirEntry]{
-			Pattern: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Include},
+			Pattern: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Include, CancelOnError: cancel},
 		}
 
 		objects = pipeline.Filter[pipeline.WalkDirEntry](ctx, objects, includeFilter)
@@ -42,7 +42,7 @@ func List(ctx context.Context, params common.ListObjectsParams, cfg common.Confi
 
 	if params.Exclude != "" {
 		excludeFilter := pipeline.FilterRuleNot[pipeline.WalkDirEntry]{
-			Not: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Exclude},
+			Not: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Exclude, CancelOnError: cancel},
 		}
 		objects = pipeline.Filter[pipeline.WalkDirEntry](ctx, objects, excludeFilter)
 	}
