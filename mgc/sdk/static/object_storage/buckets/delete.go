@@ -86,8 +86,17 @@ func newDeleteRequest(ctx context.Context, cfg common.Config, pathURIs ...string
 
 // Deleting an object does not yield result except there is an error. So this processor will *Skip*
 // success results and *Output* errors
-func createObjectDeletionProcessor(cfg common.Config, bucketName string) pipeline.Processor[*common.BucketContent, deleteObjectsError] {
-	return func(ctx context.Context, obj *common.BucketContent) (deleteObjectsError, pipeline.ProcessStatus) {
+func createObjectDeletionProcessor(cfg common.Config, bucketName string) pipeline.Processor[pipeline.WalkDirEntry, deleteObjectsError] {
+	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (deleteObjectsError, pipeline.ProcessStatus) {
+		if err := dirEntry.Err(); err != nil {
+			return deleteObjectsError{err: err}, pipeline.ProcessAbort
+		}
+
+		obj, ok := dirEntry.DirEntry().(*common.BucketContent)
+		if !ok {
+			return deleteObjectsError{err: fmt.Errorf("expected object, got directory")}, pipeline.ProcessAbort
+		}
+
 		objURI := path.Join(bucketName, obj.Key)
 		_, err := objects.Delete(
 			ctx,
@@ -112,14 +121,9 @@ func delete(ctx context.Context, params deleteParams, cfg common.Config) (core.V
 			MaxItems: math.MaxInt64,
 		},
 	}
-	objs, err := objects.List(ctx, listParams, cfg)
-	if err != nil {
-		return nil, err
-	}
 
-	objChan := pipeline.SliceItemGenerator(ctx, objs.Contents)
-
-	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objChan, createObjectDeletionProcessor(cfg, params.Name), nil)
+	objs := common.ListGenerator(ctx, listParams, cfg)
+	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectDeletionProcessor(cfg, params.Name), nil)
 
 	// This cannot error, there is no cancel call in processor
 	objErr, _ := pipeline.SliceItemConsumer[deleteObjectsErrors](ctx, deleteObjectsErrorChan)
