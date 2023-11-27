@@ -2,4 +2,4 @@ package objects
 
 import mgcLoggerPkg "magalu.cloud/core/logger"
 
-var logger = mgcLoggerPkg.NewLazy[DeleteObjectParams]()
+var logger = mgcLoggerPkg.NewLazy[downloadObjectParams]()

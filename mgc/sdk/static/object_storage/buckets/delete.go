@@ -2,18 +2,11 @@ package buckets
 
 import (
 	"context"
-	"fmt"
-	"math"
-	"net/http"
-	"net/url"
-	"path"
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
-	"magalu.cloud/core/pipeline"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
-	"magalu.cloud/sdk/static/object_storage/objects"
 )
 
 var deleteBucketsLogger *zap.SugaredLogger
@@ -26,35 +19,10 @@ func deleteLogger() *zap.SugaredLogger {
 }
 
 type deleteParams struct {
-	Name string `json:"name" jsonschema:"description=Name of the bucket to be deleted"`
+	BucketName string `json:"name" jsonschema:"description=Name of the bucket to be deleted"`
 }
 
-type deleteObjectsError struct {
-	uri string
-	err error
-}
-
-type deleteObjectsErrors []deleteObjectsError
-
-func (o deleteObjectsErrors) Error() string {
-	var errorMsg string
-	for _, objError := range o {
-		errorMsg += fmt.Sprintf("%s - %s, ", objError.uri, objError.err)
-	}
-	// Remove trailing `, `
-	if len(errorMsg) != 0 {
-		errorMsg = errorMsg[:len(errorMsg)-2]
-	}
-	return fmt.Sprintf("failed to delete objects from bucket: %s", errorMsg)
-}
-
-func (o deleteObjectsErrors) HasError() bool {
-	return len(o) != 0
-}
-
-var getDelete = utils.NewLazyLoader[core.Executor](newDelete)
-
-func newDelete() core.Executor {
+var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "delete",
@@ -63,7 +31,7 @@ func newDelete() core.Executor {
 		delete,
 	)
 
-	msg := "This command will delete bucket {{.parameters.name}}, and it's result is NOT reversible."
+	msg := "This command will delete bucket {{.parameters.name}}, and its result is NOT reversible."
 
 	cExecutor := core.NewConfirmableExecutor(
 		executor,
@@ -73,74 +41,28 @@ func newDelete() core.Executor {
 	return core.NewExecuteResultOutputOptions(cExecutor, func(exec core.Executor, result core.Result) string {
 		return "template=Deleted bucket {{.name}}\n"
 	})
-}
-
-func newDeleteRequest(ctx context.Context, cfg common.Config, pathURIs ...string) (*http.Request, error) {
-	host := common.BuildHost(cfg)
-	url, err := url.JoinPath(host, pathURIs...)
-	if err != nil {
-		return nil, core.UsageError{Err: err}
-	}
-	return http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
-}
-
-// Deleting an object does not yield result except there is an error. So this processor will *Skip*
-// success results and *Output* errors
-func createObjectDeletionProcessor(cfg common.Config, bucketName string) pipeline.Processor[pipeline.WalkDirEntry, deleteObjectsError] {
-	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (deleteObjectsError, pipeline.ProcessStatus) {
-		if err := dirEntry.Err(); err != nil {
-			return deleteObjectsError{err: err}, pipeline.ProcessAbort
-		}
-
-		obj, ok := dirEntry.DirEntry().(*common.BucketContent)
-		if !ok {
-			return deleteObjectsError{err: fmt.Errorf("expected object, got directory")}, pipeline.ProcessAbort
-		}
-
-		objURI := path.Join(bucketName, obj.Key)
-		_, err := objects.Delete(
-			ctx,
-			objects.DeleteObjectParams{Destination: objURI},
-			cfg,
-		)
-
-		if err != nil {
-			return deleteObjectsError{uri: objURI, err: err}, pipeline.ProcessOutput
-		} else {
-			deleteLogger().Infow("Deleted objects", "uri", common.URIPrefix+objURI)
-			return deleteObjectsError{}, pipeline.ProcessSkip
-		}
-	}
-}
+})
 
 func delete(ctx context.Context, params deleteParams, cfg common.Config) (core.Value, error) {
-	listParams := common.ListObjectsParams{
-		Destination: params.Name,
-		Recursive:   true,
-		PaginationParams: common.PaginationParams{
-			MaxItems: math.MaxInt64,
-		},
+	logger := deleteLogger().Named("delete").With(
+		"params", params,
+		"cfg", cfg,
+	)
+
+	objErr, err := common.DeleteAllObjects(ctx, common.DeleteAllObjectsParams{BucketName: params.BucketName}, cfg)
+	if err != nil {
+		return nil, err
 	}
-
-	objs := common.ListGenerator(ctx, listParams, cfg)
-	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectDeletionProcessor(cfg, params.Name), nil)
-
-	// This cannot error, there is no cancel call in processor
-	objErr, _ := pipeline.SliceItemConsumer[deleteObjectsErrors](ctx, deleteObjectsErrorChan)
 
 	if objErr.HasError() {
 		return nil, objErr
 	}
 
-	req, err := newDeleteRequest(ctx, cfg, params.Name)
+	result, err := common.Delete(ctx, common.DeleteObjectParams{Destination: params.BucketName}, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	_, _, err = common.SendRequest[core.Value](ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	return params, nil
+	logger.Info("Deleted bucket")
+	return result, nil
 }
