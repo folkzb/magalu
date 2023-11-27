@@ -54,7 +54,7 @@ paths:
         patch:
             x-mgc-description: Update a Virtual Machine instance
             responses:
-                '200':
+                '204':
                     links:
                         read:
                             description: Read Virtual Machine instance
@@ -115,7 +115,8 @@ paths:
                             parameters:
                                 keypair_name: $response.body#/name
     /v0/instance_types_all:
-        x-mgc-hidden: true
+        get:
+            x-mgc-hidden: true
 
 components:
     schemas:

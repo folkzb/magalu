@@ -35,7 +35,7 @@ paths:
         post:
             x-mgc-description: Create a Block Storage volume
             responses:
-                '200':
+                '201':
                     links:
                         read:
                             operationId: volume_details_v0_volumes__id__get
@@ -148,7 +148,8 @@ paths:
         post:
             x-mgc-name: restore
     /v0/volume_types_all:
-        x-mgc-hidden: true
+        get:
+            x-mgc-hidden: true
 
 
 tags:

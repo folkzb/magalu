@@ -69,6 +69,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/CreateClusterResponse'
+                    links:
+                        read:
+                            operationId: getClusterById
+                            description: Read cluster
+                            parameters:
+                                custer_id: $response.body#/id
+                        delete:
+                            operationId: deleteCluster
+                            description: Delete cluster
+                            parameters:
+                                custer_id: $response.body#/id
                 '400':
                     description: Bad Request
                     content:
@@ -359,6 +370,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ClusterByIdResponse'
+                    links:
+                        delete:
+                            operationId: deleteCluster
+                            description: Delete cluster
+                            parameters:
+                                custer_id: $request.path.id
                 '400':
                     description: Bad Request
                     content:
@@ -737,6 +754,25 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/NodePoolsResponse'
+                    links:
+                        read:
+                            operationId: getNodePool
+                            description: Read node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $response.body#/id
+                        update:
+                            operationId: patchNodePool
+                            description: Read node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $response.body#/id
+                        delete:
+                            operationId: deleteNodePool
+                            description: Delete node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $response.body#/id
                 '400':
                     description: Bad Request
                     content:
@@ -1025,6 +1061,19 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/NodePoolsResponse'
+                    links:
+                        update:
+                            operationId: patchNodePool
+                            description: Read node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
+                        delete:
+                            operationId: deleteNodePool
+                            description: Delete node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
                 '400':
                     description: Bad Request
                     content:
@@ -1160,6 +1209,19 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/NodePoolsResponse'
+                    links:
+                        read:
+                            operationId: getNodePool
+                            description: Read node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
+                        delete:
+                            operationId: deleteNodePool
+                            description: Delete node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
                 '400':
                     description: Bad Request
                     content:
@@ -2711,87 +2773,4 @@ tags:
     description: Rotas relacionadas a api de Nodepool dentro da api de Cluster.
 -   name: info
     description: Rotas relacionadas a informações de configurações do mke-api.
-path:
-    /v0/clusters:
-        post:
-            responses:
-                '201':
-                    links:
-                        read:
-                            operationId: getClusterById
-                            description: Read cluster
-                            parameters:
-                            -   custer_id: $response.body#/id
-                        delete:
-                            operationId: deleteCluster
-                            description: Delete cluster
-                            parameters:
-                            -   custer_id: $response.body#/id
-    /v0/clusters/{cluster_id}:
-        get:
-            responses:
-                '200':
-                    links:
-                        delete:
-                            operationId: deleteCluster
-                            description: Delete cluster
-                            parameters:
-                            -   custer_id: $request.path.id
-    /v0/clusters/{cluster_id}/node_pools:
-        post:
-            responses:
-                '201':
-                    links:
-                        read:
-                            operationId: getNodePool
-                            description: Read node pool
-                            parameters:
-                            -   cluster_id: $request.path.cluster_id
-                            -   node_pool_id: $response.body#/id
-                        update:
-                            operationId: patchNodePool
-                            description: Read node pool
-                            parameters:
-                            -   cluster_id: $request.path.cluster_id
-                            -   node_pool_id: $response.body#/id
-                        delete:
-                            operationId: deleteNodePool
-                            description: Delete node pool
-                            parameters:
-                            -   cluster_id: $request.path.cluster_id
-                            -   node_pool_id: $response.body#/id
-    /v0/clusters/{cluster_id}/node_pools/{node_pool_id}:
-        get:
-            responses:
-                '200':
-                    links:
-                        update:
-                            operationId: patchNodePool
-                            description: Read node pool
-                            parameters:
-                            -   cluster_id: $request.path.cluster_id
-                            -   node_pool_id: $request.path.node_pool_id
-                            -   node_pool_id: response.body#/id
-                        delete:
-                            operationId: deleteNodePool
-                            description: Delete node pool
-                            parameters:
-                            -   cluster_id: $request.path.cluster_id
-                            -   node_pool_id: $request.path.node_pool_id
-        post:
-            responses:
-                '200':
-                    links:
-                        read:
-                            operationId: getNodePool
-                            description: Read node pool
-                            parameters:
-                            -   cluster_id: $request.path.cluster_id
-                            -   node_pool_id: $request.path.node_pool_id
-                        delete:
-                            operationId: deleteNodePool
-                            description: Delete node pool
-                            parameters:
-                            -   cluster_id: $request.path.cluster_id
-                            -   node_pool_id: $request.path.node_pool_id
 $id: https://mke.br-ne-1.com/docs/openapi-with-snippets.json

@@ -174,7 +174,7 @@ paths:
             security:
             -   OAuth2:
                 - virtual-machine.read
-        x-mgc-hidden: true
+            x-mgc-hidden: true
     /v0/instance_types/{instance_type_id}:
         delete:
             tags:
@@ -376,13 +376,6 @@ paths:
             responses:
                 '204':
                     description: Successful Response
-                '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
-                '200':
                     links:
                         read:
                             description: Read Virtual Machine instance
@@ -398,6 +391,12 @@ paths:
                             operationId: instance_delete_v0_instances__id__delete
                             parameters:
                                 id: $request.path.id
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
             security:
             -   OAuth2:
                 - virtual-machine.write
@@ -624,7 +623,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
-        x-mgc-hidden: true
 components:
     schemas:
         CreateResponse:

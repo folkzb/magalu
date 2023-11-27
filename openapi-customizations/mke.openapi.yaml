@@ -28,7 +28,7 @@ servers:
                 -   from: pre-prod
                     to: .pre-prod
 
-path:
+paths:
     /v0/clusters:
         post:
             responses:
@@ -38,12 +38,12 @@ path:
                             operationId: getClusterById
                             description: Read cluster
                             parameters:
-                                - custer_id: $response.body#/id
+                                custer_id: $response.body#/id
                         delete:
                             operationId: deleteCluster
                             description: Delete cluster
                             parameters:
-                                - custer_id: $response.body#/id
+                                custer_id: $response.body#/id
     /v0/clusters/{cluster_id}:
         get:
             responses:
@@ -53,7 +53,7 @@ path:
                             operationId: deleteCluster
                             description: Delete cluster
                             parameters:
-                                - custer_id: $request.path.id
+                                custer_id: $request.path.id
     /v0/clusters/{cluster_id}/node_pools:
         post:
             responses:
@@ -63,20 +63,20 @@ path:
                             operationId: getNodePool
                             description: Read node pool
                             parameters:
-                                - cluster_id: $request.path.cluster_id
-                                - node_pool_id: $response.body#/id
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $response.body#/id
                         update:
                             operationId: patchNodePool
                             description: Read node pool
                             parameters:
-                                - cluster_id: $request.path.cluster_id
-                                - node_pool_id: $response.body#/id
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $response.body#/id
                         delete:
                             operationId: deleteNodePool
                             description: Delete node pool
                             parameters:
-                                - cluster_id: $request.path.cluster_id
-                                - node_pool_id: $response.body#/id
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $response.body#/id
     /v0/clusters/{cluster_id}/node_pools/{node_pool_id}:
         get:
             responses:
@@ -86,15 +86,15 @@ path:
                             operationId: patchNodePool
                             description: Read node pool
                             parameters:
-                                - cluster_id: $request.path.cluster_id
-                                - node_pool_id: $request.path.node_pool_id
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
                         delete:
                             operationId: deleteNodePool
                             description: Delete node pool
                             parameters:
-                                - cluster_id: $request.path.cluster_id
-                                - node_pool_id: $request.path.node_pool_id
-        post:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
+        patch:
             responses:
                 '200':
                     links:
@@ -102,11 +102,11 @@ path:
                             operationId: getNodePool
                             description: Read node pool
                             parameters:
-                                - cluster_id: $request.path.cluster_id
-                                - node_pool_id: $request.path.node_pool_id
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
                         delete:
                             operationId: deleteNodePool
                             description: Delete node pool
                             parameters:
-                                - cluster_id: $request.path.cluster_id
-                                - node_pool_id: $request.path.node_pool_id
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id

@@ -87,7 +87,7 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.read
-        x-mgc-hidden: true
+            x-mgc-hidden: true
     /v0/usage:
         get:
             tags:
@@ -286,13 +286,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VolumeCreateResponse'
-                '422':
-                    description: Validation Error
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/HTTPValidationError'
-                '200':
                     links:
                         read:
                             operationId: volume_details_v0_volumes__id__get
@@ -309,6 +302,12 @@ paths:
                             description: Delete Block Storage volume
                             parameters:
                                 id: $response.body#/id
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
             security:
             -   OAuth2:
                 - block-storage.write
