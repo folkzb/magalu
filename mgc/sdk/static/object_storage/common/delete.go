@@ -28,7 +28,8 @@ type DeleteObjectParams struct {
 }
 
 type DeleteAllObjectsParams struct {
-	BucketName string `json:"name,omitempty" jsonschema:"description=Name of the bucket to delete objects from"`
+	BucketName   string           `json:"name,omitempty" jsonschema:"description=Name of the bucket to delete objects from"`
+	FilterParams `json:",squash"` // nolint
 }
 
 type deleteObjectsError struct {
@@ -92,7 +93,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName string) pipeline.Proce
 	}
 }
 
-func DeleteAllObjects(ctx context.Context, params DeleteObjectParams, cfg Config) (deleteObjectsErrors, error) {
+func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Config) (deleteObjectsErrors, error) {
 	listParams := ListObjectsParams{
 		Destination: params.BucketName,
 		Recursive:   true,
@@ -123,7 +124,7 @@ func DeleteAllObjects(ctx context.Context, params DeleteObjectParams, cfg Config
 	// This cannot error, there is no cancel call in processor
 	objErr, _ := pipeline.SliceItemConsumer[deleteObjectsErrors](ctx, deleteObjectsErrorChan)
 
-	return objErr
+	return objErr, nil
 }
 
 func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (result core.Value, err error) {

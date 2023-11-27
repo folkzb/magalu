@@ -14,10 +14,11 @@ func newGroup() core.Grouper {
 			Description: "Object operations for Object Storage API",
 		},
 		[]core.Descriptor{
-			getDelete(),   // object-storage objects delete
-			getDownload(), // object-storage objects download
-			getList(),     // object-storage objects list
-			getUpload(),   // object-storage objects upload
+			getDelete(),    // object-storage objects delete
+			getDeleteAll(), // object-storage objects delete-all
+			getDownload(),  // object-storage objects download
+			getList(),      // object-storage objects list
+			getUpload(),    // object-storage objects upload
 		},
 	)
 }
