@@ -9,6 +9,10 @@ import (
 )
 
 func getPropType(prop *mgcSdk.Schema) string {
+	if prop.Format != "" {
+		return prop.Format
+	}
+
 	result := prop.Type
 
 	if prop.Type == "array" && prop.Items != nil {

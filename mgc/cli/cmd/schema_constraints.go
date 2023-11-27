@@ -35,10 +35,6 @@ func addStringConstraints(s *mgcSdk.Schema, dst *[]string) {
 		*dst = append(*dst, fmt.Sprintf("max character count: %v", int(*s.MaxLength)))
 	}
 
-	if s.Format != "" {
-		*dst = append(*dst, "format: "+s.Format)
-	}
-
 	addEnumConstraint(s, dst)
 }
 
