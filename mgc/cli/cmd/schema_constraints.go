@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/exp/slices"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -88,26 +89,23 @@ func getSchemaJSONrepresentation(s *mgcSdk.Schema) string {
 			return "array"
 		}
 	case "object":
-		result := "{"
-		i := 0
+		sortedProps := make([]string, 0, len(s.Properties))
 
 		for name, prop := range s.Properties {
-			prefix := " "
-			if i > 0 {
-				prefix = ", "
-			}
-
-			result += fmt.Sprintf("%s%s: %s", prefix, name, getSchemaJSONrepresentation((*mgcSdk.Schema)(prop.Value)))
+			strProp := fmt.Sprintf("%s: %s", name, getSchemaJSONrepresentation((*mgcSdk.Schema)(prop.Value)))
 			if constraint := schemaValueConstraints((*mgcSdk.Schema)(prop.Value)); constraint != "" {
-				result += fmt.Sprintf(" (%s)", constraint)
+				strProp += fmt.Sprintf(" (%s)", constraint)
 				if prop.Value.Default != "" {
-					result += fmt.Sprintf(" (default %s)", prop.Value.Default)
+					strProp += fmt.Sprintf(" (default %s)", prop.Value.Default)
 				}
 			}
-			i++
+
+			sortedProps = append(sortedProps, strProp)
 		}
-		result += " }"
-		return result
+
+		slices.Sort(sortedProps)
+
+		return "{ " + strings.Join(sortedProps, ", ") + " }"
 	default:
 		return t
 	}
@@ -132,6 +130,8 @@ func addEnumConstraint(s *mgcSdk.Schema, dst *[]string) {
 	for _, e := range s.Enum {
 		asStrings = append(asStrings, fmt.Sprintf("%v", e))
 	}
+
+	slices.Sort(asStrings)
 
 	*dst = append(*dst, fmt.Sprintf("one of %v", strings.Join(asStrings, "|")))
 }
