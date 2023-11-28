@@ -9,6 +9,8 @@ from spec_version_convert import ConvertVersionTransformer
 from spec_remove_tenant_id import RemoveParamTransformer
 from spec_update_error import UpdateErrorTransformer
 
+from validate_openapi_specs import validate_oapi
+
 
 def fetch_and_parse(json_oapi_url: str) -> OAPISchema:
     with request.urlopen(json_oapi_url, timeout=5) as response:
@@ -75,4 +77,5 @@ if __name__ == "__main__":
 
     # Write external to output file
     add_spec_uid(product_spec, args.spec_uid)
+    validate_oapi(product_spec)
     save_external(product_spec, args.output)
