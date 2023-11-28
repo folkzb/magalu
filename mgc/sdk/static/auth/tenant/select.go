@@ -10,7 +10,7 @@ import (
 )
 
 type tenantSetParams struct {
-	ID string `jsonschema_description:"The UUID of the desired Tenant. To list all possible IDs, run auth tenant list"`
+	ID string `json:"id" jsonschema_description:"The UUID of the desired Tenant. To list all possible IDs, run auth tenant list"`
 }
 
 var getSelect = utils.NewLazyLoader[core.Executor](newSelect)

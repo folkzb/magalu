@@ -10,7 +10,7 @@ import (
 )
 
 type configDeleteParams struct {
-	Key string `jsonschema_description:"Name of the config to be deleted"`
+	Key string `json:"key" jsonschema_description:"Name of the config to be deleted"`
 }
 
 var getDelete = utils.NewLazyLoader[core.Executor](newDelete)

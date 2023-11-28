@@ -11,8 +11,8 @@ import (
 )
 
 type authSetParams struct {
-	AccessKeyId     string `jsonschema_description:"Access key id value"`
-	SecretAccessKey string `jsonschema_description:"Secret access key value"`
+	AccessKeyId     string `json:"access_key_id" jsonschema_description:"Access key id value"`
+	SecretAccessKey string `json:"secret_access_key" jsonschema_description:"Secret access key value"`
 }
 
 var getSet = utils.NewLazyLoader[core.Executor](newSet)
