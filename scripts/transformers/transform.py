@@ -5,6 +5,7 @@ from typing import List
 from urllib import request, parse
 
 from spec_types import OAPISchema, SpecTranformer
+from spec_version_convert import ConvertVersionTransformer
 from spec_remove_tenant_id import RemoveParamTransformer
 from spec_update_error import UpdateErrorTransformer
 
@@ -65,6 +66,7 @@ if __name__ == "__main__":
 
     # Perform changes in the spec
     transformers: List[SpecTranformer] = [
+        ConvertVersionTransformer(),
         UpdateErrorTransformer(),
         RemoveParamTransformer("x-tenant-id"),
     ]
