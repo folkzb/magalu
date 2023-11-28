@@ -186,13 +186,14 @@ func collectGroupResources(
 			update = core.NoOpExecutor()
 		}
 		res := &MgcResource{
-			sdk:    sdk,
-			name:   name,
-			group:  group,
-			create: create,
-			read:   read,
-			update: update,
-			delete: delete,
+			sdk:         sdk,
+			name:        name,
+			description: group.Description(),
+			group:       group,
+			create:      create,
+			read:        read,
+			update:      update,
+			delete:      delete,
 		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Export resource %q", name), debugMap)

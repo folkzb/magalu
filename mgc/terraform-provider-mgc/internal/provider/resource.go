@@ -26,17 +26,18 @@ type splitMgcAttribute struct {
 
 // MgcResource defines the resource implementation.
 type MgcResource struct {
-	sdk        *mgcSdk.Sdk
-	name       string
-	group      mgcSdk.Grouper // TODO: is this needed?
-	create     mgcSdk.Executor
-	read       mgcSdk.Executor
-	update     mgcSdk.Executor
-	delete     mgcSdk.Executor
-	inputAttr  mgcAttributes
-	outputAttr mgcAttributes
-	splitAttr  []splitMgcAttribute
-	tfschema   *schema.Schema
+	sdk         *mgcSdk.Sdk
+	name        string
+	description string
+	group       mgcSdk.Grouper // TODO: is this needed?
+	create      mgcSdk.Executor
+	read        mgcSdk.Executor
+	update      mgcSdk.Executor
+	delete      mgcSdk.Executor
+	inputAttr   mgcAttributes
+	outputAttr  mgcAttributes
+	splitAttr   []splitMgcAttribute
+	tfschema    *schema.Schema
 }
 
 // BEGIN: tfSchemaHandler implementation
@@ -232,7 +233,7 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 			return
 		}
 
-		tfs.MarkdownDescription = r.name
+		tfs.MarkdownDescription = r.description
 		r.tfschema = &tfs
 	}
 
