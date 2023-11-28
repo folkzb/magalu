@@ -5,12 +5,7 @@ Usage:
   ./cli [flags]
   ./cli [command]
 
-Other commands:
-  completion      Generate the autocompletion script for the specified shell
-  dump-tree       Print command tree
-  help            Help about any command
-
-Additional Commands:
+Product catalog:
   auth            Actions with ID Magalu to log in, refresh tokens, change tenants and others
   block-storage   Operations for Block Storage API
   config          Manage Configuration values
@@ -20,6 +15,11 @@ Additional Commands:
   object-storage  Operations for Object Storage API
   profile         Profile related commands
   virtual-machine APIs referentes ao produto de Virtual Machine
+
+Other commands:
+  completion      Generate the autocompletion script for the specified shell
+  dump-tree       Print command tree
+  help            Help about any command
 
 Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

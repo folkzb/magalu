@@ -4,7 +4,7 @@ Usage:
   ./cli dbaas datastores [flags]
   ./cli dbaas datastores [command]
 
-Available Commands:
+Commands:
   get         Datastore detail.
   list        List available datastores.
 

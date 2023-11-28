@@ -4,7 +4,7 @@ Usage:
   ./cli network subnets vpcs-subnets [flags]
   ./cli network subnets vpcs-subnets [command]
 
-Available Commands:
+Commands:
   create      Create Subnet
   list        List Subnets
 

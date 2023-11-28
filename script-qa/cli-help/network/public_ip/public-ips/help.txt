@@ -4,7 +4,7 @@ Usage:
   ./cli network public_ip public-ips [flags]
   ./cli network public_ip public-ips [command]
 
-Available Commands:
+Commands:
   attach      Attach Public IP
   delete      Delete Public IP
   detach      Detach Public IP

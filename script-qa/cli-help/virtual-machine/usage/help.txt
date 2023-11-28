@@ -4,7 +4,7 @@ Usage:
   ./cli virtual-machine usage [flags]
   ./cli virtual-machine usage [command]
 
-Available Commands:
+Commands:
   list        Get usage
 
 Flags:

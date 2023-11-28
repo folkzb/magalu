@@ -4,7 +4,7 @@ Usage:
   ./cli network rule [flags]
   ./cli network rule [command]
 
-Available Commands:
+Commands:
   rules                 rules
   security-groups-rules security-groups-rules
 

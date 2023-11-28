@@ -4,7 +4,7 @@ Usage:
   ./cli dbaas [flags]
   ./cli dbaas [command]
 
-Available Commands:
+Commands:
   backups     Database backups management.
   datastores  Datastores available for database instances.
   flavors     Flavors available for database instances.

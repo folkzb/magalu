@@ -4,7 +4,7 @@ Usage:
   ./cli network port ports [flags]
   ./cli network port ports [command]
 
-Available Commands:
+Commands:
   attach      Attach Security Group
   create      Create Port VPC Default
   delete      Delete Port

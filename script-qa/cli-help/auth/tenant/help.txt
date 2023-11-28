@@ -6,7 +6,7 @@ Usage:
   ./cli auth tenant [flags]
   ./cli auth tenant [command]
 
-Available Commands:
+Commands:
   current     Get the currently active Tenant
   list        List all available tenants for current login
   select      Set the active Tenant to be used for all subsequential requests

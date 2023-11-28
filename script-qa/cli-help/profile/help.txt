@@ -6,7 +6,7 @@ Usage:
   ./cli profile [flags]
   ./cli profile [command]
 
-Available Commands:
+Commands:
   create      Creates a new profile
   current     Shows current selected profile. Any changes to auth or config values will only affect this profile
   delete      Deletes the profile with the specified name

@@ -4,7 +4,7 @@ Usage:
   ./cli network public_ip [flags]
   ./cli network public_ip [command]
 
-Available Commands:
+Commands:
   public-ips      public-ips
   vpcs-public-ips vpcs-public-ips
 

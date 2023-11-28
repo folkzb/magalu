@@ -4,7 +4,7 @@ Usage:
   ./cli block-storage [flags]
   ./cli block-storage [command]
 
-Available Commands:
+Commands:
   snapshots               snapshots
   usage                   usage
   volume                  Block Storage Volume Resources

@@ -4,7 +4,7 @@ Usage:
   ./cli http [flags]
   ./cli http [command]
 
-Available Commands:
+Commands:
   do          Execute generic http request
   json        JSON HTTP access
 

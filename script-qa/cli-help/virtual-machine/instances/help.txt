@@ -4,7 +4,7 @@ Usage:
   ./cli virtual-machine instances [flags]
   ./cli virtual-machine instances [command]
 
-Available Commands:
+Commands:
   create      Instance Create
   delete      Instance Delete
   events      events

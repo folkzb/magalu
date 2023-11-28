@@ -4,7 +4,7 @@ Usage:
   ./cli virtual-machine [flags]
   ./cli virtual-machine [command]
 
-Available Commands:
+Commands:
   images         images
   instance-types instance types
   instances      instances

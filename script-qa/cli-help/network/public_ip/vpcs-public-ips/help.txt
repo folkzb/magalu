@@ -4,7 +4,7 @@ Usage:
   ./cli network public_ip vpcs-public-ips [flags]
   ./cli network public_ip vpcs-public-ips [command]
 
-Available Commands:
+Commands:
   create      Create Public IP
   list        List Public IPs
 

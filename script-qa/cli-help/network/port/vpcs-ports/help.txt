@@ -4,7 +4,7 @@ Usage:
   ./cli network port vpcs-ports [flags]
   ./cli network port vpcs-ports [command]
 
-Available Commands:
+Commands:
   create      Create Port
   list        List Ports
 

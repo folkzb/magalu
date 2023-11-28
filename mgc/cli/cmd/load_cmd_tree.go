@@ -222,6 +222,7 @@ func addAction(
 		Short:   desc.Summary(),
 		Long:    desc.Description(),
 		Version: desc.Version(),
+		GroupID: "catalog",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			parameters := core.Parameters{}
@@ -275,10 +276,16 @@ func addGroup(
 		Short:   desc.Summary(),
 		Long:    desc.Description(),
 		Version: desc.Version(),
+		GroupID: "catalog",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
 	}
+
+	moduleCmd.AddGroup(&cobra.Group{
+		ID:    "catalog",
+		Title: "Commands:",
+	})
 
 	parentCmd.AddCommand(moduleCmd)
 	logger().Debugw("Groupper added to command tree", "name", group.Name())

@@ -4,7 +4,7 @@ Usage:
   ./cli network security_group [flags]
   ./cli network security_group [command]
 
-Available Commands:
+Commands:
   security-groups      security-groups
   vpcs-security-groups vpcs-security-groups
 

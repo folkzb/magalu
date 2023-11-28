@@ -6,7 +6,7 @@ Usage:
   ./cli auth [flags]
   ./cli auth [command]
 
-Available Commands:
+Commands:
   access_token   Retrieve the access token used in the APIs
   login          Authenticate with Magalu Cloud
   object-storage Credentials used for Object Storage

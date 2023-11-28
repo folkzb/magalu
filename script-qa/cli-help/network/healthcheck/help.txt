@@ -2,7 +2,7 @@ Usage:
   ./cli network healthcheck [flags]
   ./cli network healthcheck [command]
 
-Available Commands:
+Commands:
   list        Healthcheck
 
 Flags:

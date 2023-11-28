@@ -4,7 +4,7 @@ Usage:
   ./cli block-storage snapshots [flags]
   ./cli block-storage snapshots [command]
 
-Available Commands:
+Commands:
   create      Create snapshot
   delete      Delete Snapshot
   list        List snapshots

@@ -4,7 +4,7 @@ Usage:
   ./cli dbaas instances [flags]
   ./cli dbaas instances [command]
 
-Available Commands:
+Commands:
   backups     backups
   create      Creates a new database instance.
   delete      Deletes a database instance.

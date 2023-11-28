@@ -4,7 +4,7 @@ Usage:
   ./cli mke info [flags]
   ./cli mke info [command]
 
-Available Commands:
+Commands:
   flavors     Lists all available flavors
   versions    Lists all available versios
 

@@ -4,7 +4,7 @@ Usage:
   ./cli virtual-machine keypairs [flags]
   ./cli virtual-machine keypairs [command]
 
-Available Commands:
+Commands:
   create              Create Keypair
   create-keypair-name Create Private Public Key
   delete              Delete Keypair

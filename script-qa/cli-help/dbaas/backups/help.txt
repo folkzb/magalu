@@ -4,7 +4,7 @@ Usage:
   ./cli dbaas backups [flags]
   ./cli dbaas backups [command]
 
-Available Commands:
+Commands:
   delete      Delete Backup.
   get         Backup Detail.
   list        Backups List.

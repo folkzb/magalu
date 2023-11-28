@@ -38,6 +38,10 @@ can generate a command line on-demand for Rest manipulation`,
 	}
 	rootCmd.SetGlobalNormalizationFunc(normalizeFlagName)
 	rootCmd.AddGroup(&cobra.Group{
+		ID:    "catalog",
+		Title: "Product catalog:",
+	})
+	rootCmd.AddGroup(&cobra.Group{
 		ID:    "other",
 		Title: "Other commands:",
 	})

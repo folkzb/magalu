@@ -4,7 +4,7 @@ Usage:
   ./cli dbaas flavors [flags]
   ./cli dbaas flavors [command]
 
-Available Commands:
+Commands:
   get         Flavor detail.
   list        List available flavors.
 

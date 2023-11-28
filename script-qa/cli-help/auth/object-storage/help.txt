@@ -7,7 +7,7 @@ Usage:
   ./cli auth object-storage [flags]
   ./cli auth object-storage [command]
 
-Available Commands:
+Commands:
   get         Get the current Object Storage credentials
   set         Set the credentials values used for Object Storage requests
 

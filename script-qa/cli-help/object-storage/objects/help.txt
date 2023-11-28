@@ -4,7 +4,7 @@ Usage:
   ./cli object-storage objects [flags]
   ./cli object-storage objects [command]
 
-Available Commands:
+Commands:
   delete      Delete an object from a bucket
   delete-all  Delete all objects from a bucket
   download    download an object from a bucket

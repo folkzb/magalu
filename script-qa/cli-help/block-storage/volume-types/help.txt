@@ -4,7 +4,7 @@ Usage:
   ./cli block-storage volume-types [flags]
   ./cli block-storage volume-types [command]
 
-Available Commands:
+Commands:
   create      Create Volume Type
   list        List Volume Types
 

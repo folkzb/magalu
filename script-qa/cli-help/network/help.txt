@@ -4,7 +4,7 @@ Usage:
   ./cli network [flags]
   ./cli network [command]
 
-Available Commands:
+Commands:
   port           VPC Port
   public_ip      VPC Public IPs
   quotas         VPC Quotas

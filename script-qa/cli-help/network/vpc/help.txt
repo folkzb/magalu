@@ -4,7 +4,7 @@ Usage:
   ./cli network vpc [flags]
   ./cli network vpc [command]
 
-Available Commands:
+Commands:
   create         Create VPC
   create-default Create Vpc Default
   delete         Delete VPC

@@ -4,7 +4,7 @@ Usage:
   ./cli network subnets [flags]
   ./cli network subnets [command]
 
-Available Commands:
+Commands:
   subnets      subnets
   vpcs-subnets vpcs-subnets
 

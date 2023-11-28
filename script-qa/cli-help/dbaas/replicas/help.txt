@@ -4,7 +4,7 @@ Usage:
   ./cli dbaas replicas [flags]
   ./cli dbaas replicas [command]
 
-Available Commands:
+Commands:
   create      Replica Create.
   delete      Deletes a replica instance.
   get         Replica Detail.

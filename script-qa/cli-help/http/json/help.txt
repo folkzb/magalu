@@ -4,7 +4,7 @@ Usage:
   ./cli http json [flags]
   ./cli http json [command]
 
-Available Commands:
+Commands:
   delete      Call using HTTP DELETE
   get         Call using HTTP GET
   head        Call using HTTP HEAD

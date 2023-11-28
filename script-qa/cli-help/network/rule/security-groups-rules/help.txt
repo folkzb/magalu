@@ -4,7 +4,7 @@ Usage:
   ./cli network rule security-groups-rules [flags]
   ./cli network rule security-groups-rules [command]
 
-Available Commands:
+Commands:
   create      Create Rule
   list        List Rules
 

@@ -4,7 +4,7 @@ Usage:
   ./cli network rule rules [flags]
   ./cli network rule rules [command]
 
-Available Commands:
+Commands:
   delete      Delete a Rule
   get         Rule Details
 

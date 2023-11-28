@@ -4,7 +4,7 @@ Usage:
   ./cli network port [flags]
   ./cli network port [command]
 
-Available Commands:
+Commands:
   ports       ports
   vpcs-ports  vpcs-ports
 

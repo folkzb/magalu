@@ -4,7 +4,7 @@ Usage:
   ./cli dbaas instances backups [flags]
   ./cli dbaas instances backups [command]
 
-Available Commands:
+Commands:
   create      Backup Create.
   delete      Delete Backup.
   get         Backup Detail.

@@ -4,7 +4,7 @@ Usage:
   ./cli network security_group vpcs-security-groups [flags]
   ./cli network security_group vpcs-security-groups [command]
 
-Available Commands:
+Commands:
   create      Create Security Group
   list        List Security Groups
 

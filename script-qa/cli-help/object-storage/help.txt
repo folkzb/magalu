@@ -4,7 +4,7 @@ Usage:
   ./cli object-storage [flags]
   ./cli object-storage [command]
 
-Available Commands:
+Commands:
   buckets     Bucket operations for Object Storage API
   objects     Object operations for Object Storage API
 
