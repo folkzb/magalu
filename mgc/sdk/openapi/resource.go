@@ -178,6 +178,7 @@ func newSubResource(
 			Name:        table.name,
 			Version:     doc.Info.Version,
 			Description: fmt.Sprintf("%s | %s", descriptionPrefix, table.name),
+			Summary:     table.name,
 		},
 		func() ([]core.Descriptor, error) {
 			return collectResourceChildren(descriptionPrefix, table, doc, extensionPrefix, logger, refResolver)
