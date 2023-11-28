@@ -1,4 +1,4 @@
-openapi: 3.0.1
+openapi: 3.0.3
 info:
     title: k8s-api-product
     description: APIs referentes ao produto de kubernetes
