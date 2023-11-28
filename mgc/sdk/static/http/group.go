@@ -10,7 +10,7 @@ var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 		core.DescriptorSpec{
 			Name:        "http",
 			Description: "HTTP access",
-			IsInternal:  false, // TODO: true
+			IsInternal:  true,
 		},
 		[]core.Descriptor{
 			getJsonGroup(),    // http json
