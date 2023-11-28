@@ -199,35 +199,6 @@ paths:
             -   OAuth2:
                 - dbaas.write
 
-# ExclusiveMinimum must be replaced from number to boolean. JSON Schema new draft
-# proposes as a number, but this is only available in OpenAPI 3.1.0. Since kin-openapi
-# only supports up to 3.0.0, we need to patch to be a boolean
-components:
-    schemas:
-        BackupDetailResponse:
-            properties:
-                db_size:
-                    minimum: 0.0
-                    exclusiveMinimum: true
-                size:
-                    minimum: 0.0
-                    exclusiveMinimum: true
-        InstanceCreateRequest:
-            properties:
-                backup_retention_days:
-                    minimum: 0.0
-                    exclusiveMinimum: true
-        DatabaseInstance:
-            properties:
-                backup_retention_days:
-                    minimum: 0.0
-                    exclusiveMinimum: true
-        DatabaseInstanceUpdateRequest:
-            properties:
-                backup_retention_days:
-                    minimum: 0.0
-                    exclusiveMinimum: true
-
 servers:
 -   url: https://api-dbaas{env}.{region}.jaxyendy.com
     variables:
