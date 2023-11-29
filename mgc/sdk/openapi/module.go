@@ -26,19 +26,24 @@ func loadResourceRefs(resource core.Grouper, byPaths map[string]map[string]core.
 		}
 
 		if exec, ok := child.(core.Executor); ok {
-			op, ok := core.ExecutorAs[*operation](exec)
-			if !ok {
+			var key, method, id string
+			// Op should not be used outside of the if! We must resolve to exec, not op!
+			if op, ok := core.ExecutorAs[*operation](exec); ok {
+				key = op.key
+				method = op.method
+				id = op.operation.OperationID
+			} else {
 				return false, fmt.Errorf("expected operation, got %#v", child)
 			}
 
-			keyMethods, ok := byPaths[op.key]
+			keyMethods, ok := byPaths[key]
 			if !ok {
 				keyMethods = map[string]core.Executor{}
-				byPaths[op.key] = keyMethods
+				byPaths[key] = keyMethods
 			}
 
-			keyMethods[strings.ToLower(op.method)] = op
-			byId[op.operation.OperationID] = op
+			keyMethods[strings.ToLower(method)] = exec
+			byId[id] = exec
 			return true, nil
 		}
 
