@@ -243,7 +243,7 @@ func (r *MgcResource) performOperation(ctx context.Context, exec core.Executor, 
 	}
 
 	if outState != nil {
-		applyStateAfter(r, result, ctx, outState, diag)
+		applyStateAfter(r, result, r.read, ctx, outState, diag)
 	}
 }
 

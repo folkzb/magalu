@@ -107,9 +107,47 @@ func castToMap(result core.ResultWithValue, diag *diag.Diagnostics) map[string]a
 	return resultMap
 }
 
+// If 'result.Source().Executor' has a "read" link, return that. Otherwise, return 'resourceRead'
+func getReadForApplyStateAfter(
+	ctx context.Context,
+	handler tfStateHandler,
+	result core.ResultWithValue,
+	resourceRead core.Executor,
+	diag *diag.Diagnostics,
+) core.Executor {
+	if readLink, ok := result.Source().Executor.Links()["read"]; ok {
+		var err error
+		resourceRead, err = readLink.CreateExecutor(result)
+		if err != nil {
+			diag.AddError(
+				"Read link failed",
+				fmt.Sprintf("Unable to create Read link executor for applying new state on resource %q: %s", handler.Name(), err),
+			)
+			return nil
+		}
+		tflog.Debug(ctx, "[resource] will read using link")
+		return resourceRead
+	}
+
+	tflog.Debug(ctx, "[resource] will read using resource read call")
+
+	// Should not happen, but check just in case, to avoid potential crashes
+	if resourceRead == nil {
+		diag.AddError(
+			"applying state after failed",
+			fmt.Sprintf("operation has no 'read' link and resource has no 'read' call. Reading is impossible for %q'.", handler.Name()),
+		)
+		return nil
+	}
+
+	return resourceRead
+}
+
+// 'read' parameter may be nil ONLY IF 'result.Source().Executor' already has a Link named "read"
 func applyStateAfter(
 	handler tfStateHandler,
 	result core.ResultWithValue,
+	read core.Executor,
 	ctx context.Context,
 	tfState *tfsdk.State,
 	diag *diag.Diagnostics,
@@ -127,19 +165,10 @@ func applyStateAfter(
 	applyMgcOutputMap(handler, resultMap, ctx, tfState, diag)
 	verifyCurrentDesiredMismatch(handler, result.Source().Parameters, resultMap, diag)
 
-	// Finally, read the resource to confirm that the result matches the parameters requested by the user
-	readLink, ok := result.Source().Executor.Links()["read"]
-	if !ok {
-		diag.AddError(
-			"Read link failed",
-			fmt.Sprintf("Unable to resolve Read link for applying new state on resource %q. Available links: %v", handler.Name(), result.Source().Executor.Links()),
-		)
+	// Then, try to retrieve the Read executor for the Resource via links ('read' parameter may have been nil)
+	read = getReadForApplyStateAfter(ctx, handler, result, read, diag)
+	if diag.HasError() {
 		return
-	}
-
-	read, err := readLink.CreateExecutor(result)
-	if err != nil {
-		diag.AddError("Read link failed", fmt.Sprintf("Unable to create Read link executor for applying new state on resource %q: %s", handler.Name(), err))
 	}
 
 	// If the original result schema is the same as the resource read, no need for further state appliance

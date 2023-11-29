@@ -256,7 +256,7 @@ func (r *MgcActionResource) performLinkOperation(ctx context.Context, link core.
 		return
 	}
 	if outState != nil {
-		applyStateAfter(r, result, ctx, outState, diag)
+		applyStateAfter(r, result, nil, ctx, outState, diag)
 	}
 }
 
