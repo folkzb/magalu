@@ -10,8 +10,8 @@ import (
 )
 
 type createParams struct {
-	Name string `json:"name" jsonschema_description:"Profile name"`
-	Copy string `json:"copy,omitempty" jsonschema_description:"Name of the profile to copy content from. If this paramater is passed, the new Profile will be pre-populated with the contents of the Profile with the specified name"`
+	Name string `json:"name" jsonschema_description:"Profile name" mgc:"positional"`
+	Copy string `json:"copy,omitempty" jsonschema_description:"Name of the profile to copy content from. If this paramater is passed, the new Profile will be pre-populated with the contents of the Profile with the specified name" mgc:"positional"`
 }
 
 var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {

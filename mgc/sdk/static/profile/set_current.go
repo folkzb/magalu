@@ -10,7 +10,7 @@ import (
 )
 
 type setCurrentParams struct {
-	Name string `json:"name" jsonschema_description:"Profile name"`
+	Name string `json:"name" jsonschema_description:"Profile name" mgc:"positional"`
 }
 
 var getSetCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
