@@ -86,6 +86,10 @@ func (e *executor) ResultSchema() *core.Schema {
 	return e.spec.resultSchema
 }
 
+func (e *executor) PositionalArgs() []string {
+	return e.spec.PositionalArgs
+}
+
 func (e *executor) executeStep(
 	step *executeStep,
 	result *executorResult,

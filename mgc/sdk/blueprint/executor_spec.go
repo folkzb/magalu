@@ -20,6 +20,8 @@ type executorSpec struct {
 	Related          map[string]core.RefPath `json:"related,omitempty"`
 	relatedExecutors map[string]core.Executor
 
+	PositionalArgs []string `json:"positionalArgs,omitempty"`
+
 	// Resolved schemas, populated by resolve():
 
 	parametersSchema *schemaPkg.Schema
