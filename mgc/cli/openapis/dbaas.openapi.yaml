@@ -791,7 +791,7 @@ paths:
                             parameters:
                                 replica_id: $response.body#/id
                         delete:
-                            operationId: replica_delete_v1_replicas__replica_id__delete
+                            operationId: replica_v1_delete
                             description: Delete Database replica
                             parameters:
                                 replica_id: $response.body#/id
@@ -828,7 +828,7 @@ paths:
                                 $ref: '#/components/schemas/ReplicaDetailResponse'
                     links:
                         delete:
-                            operationId: replica_delete_v1_replicas__replica_id__delete
+                            operationId: replica_v1_delete
                             description: Delete Database replica
                             parameters:
                                 replica_id: $request.path.replica_id

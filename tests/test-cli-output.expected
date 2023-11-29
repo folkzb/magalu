@@ -1653,8 +1653,6 @@ Global Flags:
 Use "./cli dbaas instances update [command] --help" for more information about a command.
 
 # dbaas replicas
-[33mWARN[0m    magalu.cloud/sdk/openapi.dbaas.replicas.create    ignored broken link    {"link": "delete", "error": "linked operationId=\"replica_delete_v1_replicas__replica_id__delete\": could not resolve \"/operationIds/replica_delete_v1_replicas__replica_id__delete\": missing field: \"replica_delete_v1_replicas__replica_id__delete\""}
-[33mWARN[0m    magalu.cloud/sdk/openapi.dbaas.replicas.get    ignored broken link    {"link": "delete", "error": "linked operationId=\"replica_delete_v1_replicas__replica_id__delete\": could not resolve \"/operationIds/replica_delete_v1_replicas__replica_id__delete\": missing field: \"replica_delete_v1_replicas__replica_id__delete\""}
 Database replicas management.
 
 Usage:
@@ -1680,7 +1678,6 @@ Global Flags:
 Use "./cli dbaas replicas [command] --help" for more information about a command.
 
 # dbaas replicas create
-[33mWARN[0m    magalu.cloud/sdk/openapi.dbaas.replicas.create    ignored broken link    {"link": "delete", "error": "linked operationId=\"replica_delete_v1_replicas__replica_id__delete\": could not resolve \"/operationIds/replica_delete_v1_replicas__replica_id__delete\": missing field: \"replica_delete_v1_replicas__replica_id__delete\""}
 Creates a new replica for an instance asynchronously.
 
 Usage:
@@ -1729,7 +1726,6 @@ Global Flags:
 Use "./cli dbaas replicas delete [command] --help" for more information about a command.
 
 # dbaas replicas get
-[33mWARN[0m    magalu.cloud/sdk/openapi.dbaas.replicas.get    ignored broken link    {"link": "delete", "error": "linked operationId=\"replica_delete_v1_replicas__replica_id__delete\": could not resolve \"/operationIds/replica_delete_v1_replicas__replica_id__delete\": missing field: \"replica_delete_v1_replicas__replica_id__delete\""}
 Get an instance replica detail.
 
 Usage:
