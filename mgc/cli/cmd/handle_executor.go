@@ -31,6 +31,14 @@ func handleExecutor(
 	parameters core.Parameters,
 	configs core.Configs,
 ) (core.Result, error) {
+	if err := exec.ParametersSchema().VisitJSON(parameters); err != nil {
+		return nil, core.UsageError{Err: err}
+	}
+
+	if err := exec.ConfigsSchema().VisitJSON(configs); err != nil {
+		return nil, core.UsageError{Err: err}
+	}
+
 	if pb != nil {
 		ctx = progress_report.NewContext(ctx, pb.ReportProgress)
 	}
