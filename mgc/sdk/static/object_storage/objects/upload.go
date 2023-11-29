@@ -11,8 +11,8 @@ import (
 )
 
 type uploadParams struct {
-	Destination string `json:"dst" jsonschema:"description=Full destination path in the bucket with s3 prefix, i.e: s3://<bucket-name>"`
-	Source      string `json:"src" jsonschema:"description=Source file path to be uploaded"`
+	Destination string `json:"dst" jsonschema:"description=Full destination path in the bucket with s3 prefix, i.e: s3://<bucket-name>" mgc:"positional"`
+	Source      string `json:"src" jsonschema:"description=Source file path to be uploaded" mgc:"positional"`
 }
 
 type uploadTemplateResult struct {

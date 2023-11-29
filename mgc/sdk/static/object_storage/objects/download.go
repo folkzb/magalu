@@ -57,8 +57,8 @@ func NewDownloadObjectsError() downloadObjectsError {
 }
 
 type downloadObjectParams struct {
-	Source                  string           `json:"src" jsonschema:"description=Path of the object to be downloaded" example:"s3://bucket1/file1"`
-	Destination             string           `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved" example:"file1.txt"`
+	Source                  string           `json:"src" jsonschema:"description=Path of the object to be downloaded" example:"s3://bucket1/file1" mgc:"positional"`
+	Destination             string           `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved" example:"file1.txt" mgc:"positional"`
 	common.PaginationParams `json:",squash"` // nolint
 }
 

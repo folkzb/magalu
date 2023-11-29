@@ -11,7 +11,7 @@ import (
 )
 
 type createParams struct {
-	Name     string `json:"name" jsonschema:"description=Name of the bucket to be created"`
+	Name     string `json:"name" jsonschema:"description=Name of the bucket to be created" mgc:"positional"`
 	ACL      string `json:"acl,omitempty" jsonschema:"description=ACL Rules for the bucket"`
 	Location string `json:"location,omitempty" jsonschema:"description=Location constraint for the bucket,default=br-ne-1"`
 }
