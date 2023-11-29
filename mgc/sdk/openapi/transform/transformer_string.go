@@ -36,9 +36,9 @@ func init() {
 		{strings.ToUpper, []string{"uppercase", "upper-case", "upper"}},
 		{strings.ToLower, []string{"lowercase", "lower-case", "lower"}},
 		{strcase.KebabCase, []string{"kebabcase", "kebab-case", "kebab"}},
-		{strcase.KebabCase, []string{"snakecase", "snake-case", "snake"}},
+		{strcase.SnakeCase, []string{"snakecase", "snake-case", "snake"}},
 		{strcase.UpperCamelCase, []string{"pascalcase", "pascal-case", "pascal", "upper-camel"}},
-		{strcase.UpperCamelCase, []string{"camelcase", "camel-case", "camel", "lower-camel"}},
+		{strcase.LowerCamelCase, []string{"camelcase", "camel-case", "camel", "lower-camel"}},
 	}
 	for _, t := range transformers {
 		addTransformer[struct{}](func(spec *transformSpec) (transformer, error) {
