@@ -73,26 +73,13 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 
 func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	k := string(mgcName)
-	isCreated := r.create.ResultSchema().Properties[k] != nil
+	isComputed := r.create.ResultSchema().Properties[k] != nil
 	required := slices.Contains(mgcSchema.Required, k)
 
 	return attributeModifiers{
-		isRequired:                 required && !isCreated,
-		isOptional:                 !required && !isCreated,
-		isComputed:                 !required || isCreated,
-		useStateForUnknown:         true,
-		requiresReplaceWhenChanged: false,
-		getChildModifiers:          getInputChildModifiers,
-	}
-}
-
-func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
-	// For now we consider all delete params as optionals, we need to think a way for the user to define
-	// required delete params
-	return attributeModifiers{
-		isRequired:                 false,
-		isOptional:                 true,
-		isComputed:                 false,
+		isRequired:                 required && !isComputed,
+		isOptional:                 !required && !isComputed,
+		isComputed:                 !required || isComputed,
 		useStateForUnknown:         true,
 		requiresReplaceWhenChanged: false,
 		getChildModifiers:          getInputChildModifiers,
@@ -133,7 +120,7 @@ func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics 
 	err = addMgcSchemaAttributes(
 		input,
 		r.delete.ParametersSchema(),
-		r.getDeleteParamsModifiers,
+		r.getUpdateParamsModifiers,
 		ctx,
 	)
 	if err != nil {
