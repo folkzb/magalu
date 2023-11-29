@@ -1,6 +1,6 @@
 module magalu.cloud/core
 
-go 1.20
+go 1.21.4
 
 require (
 	github.com/PaesslerAG/gval v1.2.2
