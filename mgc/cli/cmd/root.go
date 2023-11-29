@@ -58,6 +58,8 @@ can generate a command line on-demand for Rest manipulation`,
 
 	rootCmd.PersistentFlags().VisitAll(func(f *pflag.Flag) { f.Hidden = true })
 
+	rootCmd.InitDefaultHelpFlag()
+	rootCmd.InitDefaultVersionFlag()
 	addShowCliGlobalFlags(rootCmd)
 
 	// Immediately parse flags for root command because we'll access the global flags prior
