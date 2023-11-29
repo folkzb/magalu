@@ -32,7 +32,6 @@ for D in `go tool dist list | grep "$DESIRED_DIST_REGEXP"`; do
 done
 
 cp mgc/cli/RUNNING.md "$BUILDDIR/README.md"
-cp -a mgc/cli/openapis "$BUILDDIR"
 cp -a mgc/cli/examples "$BUILDDIR"
 cp mgc/sdk/openapi/README.md "$BUILDDIR/OPENAPI.md"
 cp -r mgc/terraform-provider-mgc/docs "$BUILDDIR"
