@@ -340,7 +340,7 @@ func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executo
 		}
 	}
 
-	var exec core.LinkExecutor = core.NewLinkExecutor(target, preparedParams, preparedConfigs, l.additionalParameters, l.additionalConfigs)
+	var exec core.LinkExecutor = core.NewLinkExecutor(target, preparedParams, preparedConfigs, l.AdditionalParametersSchema(), l.AdditionalConfigsSchema())
 	if _, ok := core.ExecutorAs[core.TerminatorExecutor](target); ok {
 		exec = core.NewLinkTerminatorExecutor(exec)
 	}
