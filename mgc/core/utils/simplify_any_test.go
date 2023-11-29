@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 type testCase struct {

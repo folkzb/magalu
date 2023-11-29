@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/spf13/afero"
 

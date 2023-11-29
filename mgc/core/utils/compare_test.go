@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 func checkCompareError(t *testing.T, prefix string, err error, wantError error) {

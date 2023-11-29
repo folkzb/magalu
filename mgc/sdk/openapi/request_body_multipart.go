@@ -8,9 +8,10 @@ import (
 	"os"
 	"strings"
 
+	"slices"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"

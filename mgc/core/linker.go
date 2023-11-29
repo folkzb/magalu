@@ -1,7 +1,8 @@
 package core
 
 import (
-	"golang.org/x/exp/slices"
+	"slices"
+
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )

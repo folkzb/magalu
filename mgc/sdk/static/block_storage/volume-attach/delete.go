@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"golang.org/x/exp/slices"
+	"slices"
+
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 )

@@ -5,9 +5,10 @@ import (
 	"reflect"
 	"testing"
 
+	"slices"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core/utils"
 )
 

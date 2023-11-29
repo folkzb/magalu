@@ -1,6 +1,6 @@
 package utils
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 // Slice that will be copied before its first write, the original value is used if no writes were done
 type COWSlice[V any] struct {

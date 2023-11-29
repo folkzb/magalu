@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"slices"
+
 	"github.com/PaesslerAG/gval"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	schemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"

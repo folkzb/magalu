@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"slices"
+
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/stoewer/go-strcase"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 	mgcSdk "magalu.cloud/sdk"

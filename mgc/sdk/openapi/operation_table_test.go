@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 func operationTableToStrings(t *operationTable, prefix string) (lines []string) {

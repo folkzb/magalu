@@ -3,9 +3,10 @@ package openapi
 import (
 	"fmt"
 
+	"slices"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/jsonpointer"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/http"
 	mgcSchemaPkg "magalu.cloud/core/schema"

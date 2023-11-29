@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 type Decoder struct {

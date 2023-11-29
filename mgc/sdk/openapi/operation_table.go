@@ -5,9 +5,10 @@ import (
 	"regexp"
 	"strings"
 
+	"slices"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/stoewer/go-strcase"
-	"golang.org/x/exp/slices"
 )
 
 // If slice is empty, returns a zero value

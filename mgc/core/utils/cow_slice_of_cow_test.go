@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 func TestCOWSliceOfCOWChildInvalidation(t *testing.T) {

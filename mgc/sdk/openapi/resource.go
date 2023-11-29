@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"slices"
+
 	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 

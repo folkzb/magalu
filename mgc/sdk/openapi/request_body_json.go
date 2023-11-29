@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"io"
 
+	"slices"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 )

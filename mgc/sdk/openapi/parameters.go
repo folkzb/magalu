@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"slices"
+
 	"github.com/getkin/kin-openapi/openapi3"
-	"golang.org/x/exp/slices"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )

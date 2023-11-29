@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 // Checks if the value is exactly the same, it's basically a "=="

@@ -8,7 +8,8 @@ import (
 	"strings"
 	"text/scanner"
 
-	"golang.org/x/exp/slices"
+	"slices"
+
 	"magalu.cloud/core/utils"
 
 	"github.com/jedib0t/go-pretty/v6/table"

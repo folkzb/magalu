@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"slices"
+
 	"github.com/jedib0t/go-pretty/v6/table"
 	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core"
 	mgcConfigPkg "magalu.cloud/core/config"
 	mgcSchemaPkg "magalu.cloud/core/schema"

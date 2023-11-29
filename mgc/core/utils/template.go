@@ -5,7 +5,7 @@ import (
 	"strings"
 	"text/template"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 var finishedTemplateStrings = []string{

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
+	"slices"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/invopop/jsonschema"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core/utils"
 )
 

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"reflect"
 
+	"slices"
+
 	"github.com/getkin/kin-openapi/openapi3"
-	"golang.org/x/exp/slices"
 	"magalu.cloud/core/utils"
 )
 
