@@ -105,7 +105,7 @@ Use "./cli auth object-storage get [command] --help" for more information about 
 Set the credentials values used for Object Storage requests
 
 Usage:
-  ./cli auth object-storage set [flags]
+  ./cli auth object-storage set [access-key-id] [secret-access-key] [flags]
   ./cli auth object-storage set [command]
 
 Available Commands:
@@ -183,7 +183,7 @@ Use "./cli auth tenant list [command] --help" for more information about a comma
 Set the active Tenant to be used for all subsequential requests
 
 Usage:
-  ./cli auth tenant select [flags]
+  ./cli auth tenant select [id] [flags]
   ./cli auth tenant select [command]
 
 Available Commands:
@@ -258,7 +258,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage healthchecks list [command] --help" for more information about a command.
 
@@ -299,13 +299,13 @@ Flags:
   -h, --help                 help for create
       --name string          
   -v, --version              version for create
-      --volume-id string     (format: uuid)
+      --volume-id uuid
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage snapshots create [command] --help" for more information about a command.
 
@@ -320,15 +320,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help                 help for delete
-      --snapshot-id string   snapshot_id (format: uuid)
-  -v, --version              version for delete
+  -h, --help               help for delete
+      --snapshot-id uuid   snapshot_id
+  -v, --version            version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage snapshots delete [command] --help" for more information about a command.
 
@@ -350,7 +350,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage snapshots list [command] --help" for more information about a command.
 
@@ -368,14 +368,14 @@ Flags:
       --description string   
   -h, --help                 help for restore
       --name string          
-      --snapshot-id string   snapshot_id (format: uuid)
+      --snapshot-id uuid     snapshot_id
   -v, --version              version for restore
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage snapshots restore [command] --help" for more information about a command.
 
@@ -410,14 +410,14 @@ Available Commands:
 
 Flags:
   -h, --help                help for list
-      --quota-slug string   quota_slug (format: string)
+      --quota-slug string   quota_slug
   -v, --version             version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage usage list [command] --help" for more information about a command.
 
@@ -457,16 +457,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help                        help for attach
-      --id string                   id (format: uuid)
-  -v, --version                     version for attach
-      --virtual-machine-id string   virtual_machine_id (format: uuid)
+  -h, --help                      help for attach
+      --id uuid                   id
+  -v, --version                   version for attach
+      --virtual-machine-id uuid   virtual_machine_id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume attach [command] --help" for more information about a command.
 
@@ -492,7 +492,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume create [command] --help" for more information about a command.
 
@@ -507,16 +507,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --force       force
-  -h, --help        help for delete
-      --id string   id (format: uuid)
-  -v, --version     version for delete
+      --force     force
+  -h, --help      help for delete
+      --id uuid   id
+  -v, --version   version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume delete [command] --help" for more information about a command.
 
@@ -536,17 +536,17 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --force                       force
-  -h, --help                        help for detach
-      --id string                   id (format: uuid)
-  -v, --version                     version for detach
-      --virtual-machine-id string   virtual_machine_id (format: uuid)
+      --force                     force
+  -h, --help                      help for detach
+      --id uuid                   id
+  -v, --version                   version for detach
+      --virtual-machine-id uuid   virtual_machine_id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume detach [command] --help" for more information about a command.
 
@@ -561,15 +561,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help        help for get
-      --id string   id (format: uuid)
-  -v, --version     version for get
+  -h, --help      help for get
+      --id uuid   id
+  -v, --version   version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume get [command] --help" for more information about a command.
 
@@ -591,7 +591,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume list [command] --help" for more information about a command.
 
@@ -607,7 +607,7 @@ Available Commands:
 
 Flags:
   -h, --help          help for update
-      --id string     id (format: uuid)
+      --id uuid       id
       --name string   
   -v, --version       version for update
 
@@ -615,7 +615,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume update [command] --help" for more information about a command.
 
@@ -651,15 +651,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --block-storage-id string     id (format: uuid)
-  -h, --help                        help for create
-      --virtual-machine-id string   (format: uuid)
+      --block-storage-id uuid     id
+  -h, --help                      help for create
+      --virtual-machine-id uuid
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume-attach-blueprint create [command] --help" for more information about a command.
 
@@ -674,15 +674,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --block-storage-id string     id (format: uuid)
-  -h, --help                        help for delete
-      --virtual-machine-id string   (format: uuid)
+      --block-storage-id uuid     id
+  -h, --help                      help for delete
+      --virtual-machine-id uuid
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume-attach-blueprint delete [command] --help" for more information about a command.
 
@@ -697,15 +697,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --block-storage-id string     id (format: uuid)
-  -h, --help                        help for get
-      --virtual-machine-id string   (format: uuid)
+      --block-storage-id uuid     id
+  -h, --help                      help for get
+      --virtual-machine-id uuid
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume-attach-blueprint get [command] --help" for more information about a command.
 
@@ -720,15 +720,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --block-storage-id string     id (format: uuid)
-  -h, --help                        help for update
-      --virtual-machine-id string   (format: uuid)
+      --block-storage-id uuid     id
+  -h, --help                      help for update
+      --virtual-machine-id uuid
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume-attach-blueprint update [command] --help" for more information about a command.
 
@@ -874,7 +874,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume-types create [command] --help" for more information about a command.
 
@@ -896,7 +896,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume-types list [command] --help" for more information about a command.
 
@@ -918,7 +918,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli block-storage volume-types list-all [command] --help" for more information about a command.
 
@@ -951,7 +951,7 @@ Delete/unset a Config value that had been previously set. This does not
 affect the environment variables
 
 Usage:
-  ./cli config delete [flags]
+  ./cli config delete [key] [flags]
   ./cli config delete [command]
 
 Available Commands:
@@ -972,7 +972,7 @@ matching the key (in uppercase and with the 'MGC_' prefix), it'll be retreived.
 Otherwise, the value will be searched for in the YAML file
 
 Usage:
-  ./cli config get [flags]
+  ./cli config get [key] [flags]
   ./cli config get [command]
 
 Available Commands:
@@ -1009,7 +1009,7 @@ Use "./cli config list [command] --help" for more information about a command.
 Set a specific Config value in the configuration file
 
 Usage:
-  ./cli config set [flags]
+  ./cli config set [key] [value] [flags]
   ./cli config set [command]
 
 Available Commands:
@@ -1080,15 +1080,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --backup-id string   Value referring to backup Id. (format: uuid)
-  -h, --help               help for delete
-  -v, --version            version for delete
+      --backup-id uuid   Value referring to backup Id.
+  -h, --help             help for delete
+  -v, --version          version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas backups delete [command] --help" for more information about a command.
 
@@ -1103,15 +1103,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --backup-id string   Value referring to backup Id. (format: uuid)
-  -h, --help               help for get
-  -v, --version            version for get
+      --backup-id uuid   Value referring to backup Id.
+  -h, --help             help for get
+  -v, --version          version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas backups get [command] --help" for more information about a command.
 
@@ -1138,7 +1138,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas backups list [command] --help" for more information about a command.
 
@@ -1173,15 +1173,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --datastore-id string   Value referring to datastore Id. (format: uuid)
-  -h, --help                  help for get
-  -v, --version               version for get
+      --datastore-id uuid   Value referring to datastore Id.
+  -h, --help                help for get
+  -v, --version             version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas datastores get [command] --help" for more information about a command.
 
@@ -1206,7 +1206,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas datastores list [command] --help" for more information about a command.
 
@@ -1241,15 +1241,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --flavor-id string   Flavor Unique Id. (format: uuid)
-  -h, --help               help for get
-  -v, --version            version for get
+      --flavor-id uuid   Flavor Unique Id.
+  -h, --help             help for get
+  -v, --version          version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas flavors get [command] --help" for more information about a command.
 
@@ -1274,7 +1274,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas flavors list [command] --help" for more information about a command.
 
@@ -1286,7 +1286,7 @@ Usage:
   ./cli dbaas instances [command]
 
 Available Commands:
-  backups     Database instances management. | backups
+  backups     backups
   create      Creates a new database instance.
   delete      Deletes a database instance.
   get         Database instance details.
@@ -1340,7 +1340,7 @@ Available Commands:
 
 Flags:
   -h, --help        help for create
-      --id string   Value referring to instance Id. (format: uuid)
+      --id uuid     Value referring to instance Id.
       --mode enum   An enumeration. (one of FULL)
   -v, --version     version for create
 
@@ -1348,7 +1348,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances backups create [command] --help" for more information about a command.
 
@@ -1363,16 +1363,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --backup-id string   Value referring to backup Id. (format: uuid)
-  -h, --help               help for delete
-      --id string          Value referring to instance Id. (format: uuid)
-  -v, --version            version for delete
+      --backup-id uuid   Value referring to backup Id.
+  -h, --help             help for delete
+      --id uuid          Value referring to instance Id.
+  -v, --version          version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances backups delete [command] --help" for more information about a command.
 
@@ -1387,16 +1387,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --backup-id string   Value referring to backup Id. (format: uuid)
-  -h, --help               help for get
-      --id string          Value referring to instance Id. (format: uuid)
-  -v, --version            version for get
+      --backup-id uuid   Value referring to backup Id.
+  -h, --help             help for get
+      --id uuid          Value referring to instance Id.
+  -v, --version          version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances backups get [command] --help" for more information about a command.
 
@@ -1414,7 +1414,7 @@ Flags:
       ---limit integer    limit (range: 1 - 25) (default 10)
       ---offset integer   offset (min: 0)
   -h, --help              help for list
-      --id string         Value referring to instance Id. (format: uuid)
+      --id uuid           Value referring to instance Id.
       --mode enum         Value referring to backup mode. (one of FULL|INCREMENTAL)
       --status enum       Value referring to backup status. (one of CREATED|CREATING|DELETED|DELETING|ERROR|PENDING)
       --type enum         Value referring to backup type. (one of AUTOMATED|ON_DEMAND)
@@ -1424,7 +1424,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances backups list [command] --help" for more information about a command.
 
@@ -1440,9 +1440,9 @@ Available Commands:
 
 Flags:
       --backup-retention-days integer   The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
-      --backup-start-at string          Start time which is allowed to start the automated backup process. (format: time) (default "01:00:00")
-      --datastore-id string             (format: uuid)
-      --flavor-id string                (format: uuid)
+      --backup-start-at time            Start time which is allowed to start the automated backup process. (default 01:00:00)
+      --datastore-id uuid               
+      --flavor-id uuid                  
   -h, --help                            help for create
       --name string                     (max character count: 255)
       --password string                 (max character count: 50)
@@ -1454,7 +1454,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances create [command] --help" for more information about a command.
 
@@ -1469,15 +1469,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help        help for delete
-      --id string   Database Instance Unique Id. (format: uuid)
-  -v, --version     version for delete
+  -h, --help      help for delete
+      --id uuid   Database Instance Unique Id.
+  -v, --version   version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances delete [command] --help" for more information about a command.
 
@@ -1494,14 +1494,14 @@ Available Commands:
 Flags:
       ---expand _expand=value1,value2   Instance extra attributes or relations to show with the main query. When available, more than one value can be informed using commas. e.g: _expand=value1,value2 (one of replicas)
   -h, --help                            help for get
-      --id string                       Database Instance Unique Id. (format: uuid)
+      --id uuid                         Database Instance Unique Id.
   -v, --version                         version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances get [command] --help" for more information about a command.
 
@@ -1527,7 +1527,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances list [command] --help" for more information about a command.
 
@@ -1542,17 +1542,17 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --flavor-id string   (format: uuid)
-  -h, --help               help for resize
-      --id string          Database Instance Unique Id. (format: uuid)
-  -v, --version            version for resize
-      --volume object      ({ size: number })
+      --flavor-id uuid   
+  -h, --help             help for resize
+      --id uuid          Database Instance Unique Id.
+  -v, --version          version for resize
+      --volume object    ({ size: number })
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances resize [command] --help" for more information about a command.
 
@@ -1567,16 +1567,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --backup-id string   (format: uuid)
-  -h, --help               help for restores
-      --id string          Value referring to instance Id. (format: uuid)
-  -v, --version            version for restores
+      --backup-id uuid   
+  -h, --help             help for restores
+      --id uuid          Value referring to instance Id.
+  -v, --version          version for restores
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances restores [command] --help" for more information about a command.
 
@@ -1591,15 +1591,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help        help for start
-      --id string   Database Instance Unique Id. (format: uuid)
-  -v, --version     version for start
+  -h, --help      help for start
+      --id uuid   Database Instance Unique Id.
+  -v, --version   version for start
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances start [command] --help" for more information about a command.
 
@@ -1614,15 +1614,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help        help for stop
-      --id string   Database Instance Unique Id. (format: uuid)
-  -v, --version     version for stop
+  -h, --help      help for stop
+      --id uuid   Database Instance Unique Id.
+  -v, --version   version for stop
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances stop [command] --help" for more information about a command.
 
@@ -1638,9 +1638,9 @@ Available Commands:
 
 Flags:
       --backup-retention-days integer   The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
-      --backup-start-at string          Start time which is allowed to start the automated backup process. (format: time) (default "01:00:00")
+      --backup-start-at time            Start time which is allowed to start the automated backup process. (default 01:00:00)
   -h, --help                            help for update
-      --id string                       Database Instance Unique Id. (format: uuid)
+      --id uuid                         Database Instance Unique Id.
       --status enum                     (one of ACTIVE|STOPPED)
   -v, --version                         version for update
 
@@ -1648,11 +1648,13 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances update [command] --help" for more information about a command.
 
 # dbaas replicas
+[33mWARN[0m    magalu.cloud/sdk/openapi.dbaas.replicas.create    ignored broken link    {"link": "delete", "error": "linked operationId=\"replica_delete_v1_replicas__replica_id__delete\": could not resolve \"/operationIds/replica_delete_v1_replicas__replica_id__delete\": missing field: \"replica_delete_v1_replicas__replica_id__delete\""}
+[33mWARN[0m    magalu.cloud/sdk/openapi.dbaas.replicas.get    ignored broken link    {"link": "delete", "error": "linked operationId=\"replica_delete_v1_replicas__replica_id__delete\": could not resolve \"/operationIds/replica_delete_v1_replicas__replica_id__delete\": missing field: \"replica_delete_v1_replicas__replica_id__delete\""}
 Database replicas management.
 
 Usage:
@@ -1678,6 +1680,7 @@ Global Flags:
 Use "./cli dbaas replicas [command] --help" for more information about a command.
 
 # dbaas replicas create
+[33mWARN[0m    magalu.cloud/sdk/openapi.dbaas.replicas.create    ignored broken link    {"link": "delete", "error": "linked operationId=\"replica_delete_v1_replicas__replica_id__delete\": could not resolve \"/operationIds/replica_delete_v1_replicas__replica_id__delete\": missing field: \"replica_delete_v1_replicas__replica_id__delete\""}
 Creates a new replica for an instance asynchronously.
 
 Usage:
@@ -1688,17 +1691,17 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --flavor-id string   (format: uuid)
-  -h, --help               help for create
-      --name string        (max character count: 255)
-      --source-id string   (format: uuid)
-  -v, --version            version for create
+      --flavor-id uuid   
+  -h, --help             help for create
+      --name string      (max character count: 255)
+      --source-id uuid   
+  -v, --version          version for create
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas replicas create [command] --help" for more information about a command.
 
@@ -1713,19 +1716,20 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help                help for delete
-      --replica-id string   Database Replica Unique Id (format: uuid)
-  -v, --version             version for delete
+  -h, --help              help for delete
+      --replica-id uuid   Database Replica Unique Id
+  -v, --version           version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas replicas delete [command] --help" for more information about a command.
 
 # dbaas replicas get
+[33mWARN[0m    magalu.cloud/sdk/openapi.dbaas.replicas.get    ignored broken link    {"link": "delete", "error": "linked operationId=\"replica_delete_v1_replicas__replica_id__delete\": could not resolve \"/operationIds/replica_delete_v1_replicas__replica_id__delete\": missing field: \"replica_delete_v1_replicas__replica_id__delete\""}
 Get an instance replica detail.
 
 Usage:
@@ -1736,15 +1740,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help                help for get
-      --replica-id string   Value referring to replica Id. (format: uuid)
-  -v, --version             version for get
+  -h, --help              help for get
+      --replica-id uuid   Value referring to replica Id.
+  -v, --version           version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas replicas get [command] --help" for more information about a command.
 
@@ -1759,17 +1763,17 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      ---limit integer     limit (range: 1 - 25) (default 10)
-      ---offset integer    offset (min: 0)
-  -h, --help               help for list
-      --source-id string   Value referring to source Id. (format: uuid)
-  -v, --version            version for list
+      ---limit integer    limit (range: 1 - 25) (default 10)
+      ---offset integer   offset (min: 0)
+  -h, --help              help for list
+      --source-id uuid    Value referring to source Id.
+  -v, --version           version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas replicas list [command] --help" for more information about a command.
 
@@ -1784,16 +1788,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --flavor-id string    (format: uuid)
-  -h, --help                help for resize
-      --replica-id string   Value referring to replica Id. (format: uuid)
-  -v, --version             version for resize
+      --flavor-id uuid    
+  -h, --help              help for resize
+      --replica-id uuid   Value referring to replica Id.
+  -v, --version           version for resize
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas replicas resize [command] --help" for more information about a command.
 
@@ -1808,15 +1812,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help                help for start
-      --replica-id string   Value referring to replica Id. (format: uuid)
-  -v, --version             version for start
+  -h, --help              help for start
+      --replica-id uuid   Value referring to replica Id.
+  -v, --version           version for start
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas replicas start [command] --help" for more information about a command.
 
@@ -1831,15 +1835,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help                help for stop
-      --replica-id string   Value referring to replica Id. (format: uuid)
-  -v, --version             version for stop
+  -h, --help              help for stop
+      --replica-id uuid   Value referring to replica Id.
+  -v, --version           version for stop
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas replicas stop [command] --help" for more information about a command.
 
@@ -1884,7 +1888,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http do [command] --help" for more information about a command.
 
@@ -1933,7 +1937,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http json delete [command] --help" for more information about a command.
 
@@ -1957,7 +1961,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http json get [command] --help" for more information about a command.
 
@@ -1981,7 +1985,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http json head [command] --help" for more information about a command.
 
@@ -2006,7 +2010,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http json options [command] --help" for more information about a command.
 
@@ -2031,7 +2035,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http json patch [command] --help" for more information about a command.
 
@@ -2056,7 +2060,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http json post [command] --help" for more information about a command.
 
@@ -2081,7 +2085,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http json put [command] --help" for more information about a command.
 
@@ -2105,7 +2109,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli http json trace [command] --help" for more information about a command.
 
@@ -2182,7 +2186,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke cluster create [command] --help" for more information about a command.
 
@@ -2197,15 +2201,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cluster-id string   Identificador no padrão uuid para identificar o cluster (format: uuid)
-  -h, --help                help for delete
-  -v, --version             version for delete
+      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster
+  -h, --help              help for delete
+  -v, --version           version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke cluster delete [command] --help" for more information about a command.
 
@@ -2220,15 +2224,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cluster-id string   Identificador no padrão uuid para identificar o cluster (format: uuid)
-  -h, --help                help for get
-  -v, --version             version for get
+      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster
+  -h, --help              help for get
+  -v, --version           version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke cluster get [command] --help" for more information about a command.
 
@@ -2243,15 +2247,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cluster-id string   Esquema de obter o arquivo do kubeconfig do cluster (format: uuid)
-  -h, --help                help for kubeconfig
-  -v, --version             version for kubeconfig
+      --cluster-id uuid   Esquema de obter o arquivo do kubeconfig do cluster
+  -h, --help              help for kubeconfig
+  -v, --version           version for kubeconfig
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke cluster kubeconfig [command] --help" for more information about a command.
 
@@ -2273,7 +2277,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke cluster list [command] --help" for more information about a command.
 
@@ -2315,7 +2319,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke info flavors [command] --help" for more information about a command.
 
@@ -2337,7 +2341,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke info versions [command] --help" for more information about a command.
 
@@ -2377,7 +2381,7 @@ Available Commands:
 
 Flags:
       --auto-scale object      Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes ({ enabled: boolean, max_replicas: integer (min: 1) (default %!s(float64=1)), min_replicas: integer (min: 1) (default %!s(float64=1)) })
-      --cluster-id string      Identificador no padrão uuid para identificar o cluster (format: uuid)
+      --cluster-id uuid        Identificador no padrão uuid para identificar o cluster
       --flavor enum            Definição da capacidade de CPU, memória RAM e armazenamento dos nodes
                                <table>
                                  <tr>
@@ -2417,7 +2421,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke nodepool create [command] --help" for more information about a command.
 
@@ -2432,16 +2436,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cluster-id string     Identificador no padrão uuid para identificar o cluster (format: uuid)
-  -h, --help                  help for delete
-      --node-pool-id string   Identificador no padrão uuid para identificar o nodepool (format: uuid)
-  -v, --version               version for delete
+      --cluster-id uuid     Identificador no padrão uuid para identificar o cluster
+  -h, --help                help for delete
+      --node-pool-id uuid   Identificador no padrão uuid para identificar o nodepool
+  -v, --version             version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke nodepool delete [command] --help" for more information about a command.
 
@@ -2456,16 +2460,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cluster-id string     Identificador no padrão uuid para identificar o cluster (format: uuid)
-  -h, --help                  help for get
-      --node-pool-id string   Identificador no padrão uuid para identificar o nodepool (format: uuid)
-  -v, --version               version for get
+      --cluster-id uuid     Identificador no padrão uuid para identificar o cluster
+  -h, --help                help for get
+      --node-pool-id uuid   Identificador no padrão uuid para identificar o nodepool
+  -v, --version             version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke nodepool get [command] --help" for more information about a command.
 
@@ -2480,15 +2484,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cluster-id string   Identificador no padrão uuid para identificar o cluster (format: uuid)
-  -h, --help                help for list
-  -v, --version             version for list
+      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster
+  -h, --help              help for list
+  -v, --version           version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke nodepool list [command] --help" for more information about a command.
 
@@ -2503,16 +2507,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cluster-id string     Identificador no padrão uuid para identificar o cluster (format: uuid)
-  -h, --help                  help for nodes
-      --node-pool-id string   Identificador no padrão uuid para identificar o nodepool (format: uuid)
-  -v, --version               version for nodes
+      --cluster-id uuid     Identificador no padrão uuid para identificar o cluster
+  -h, --help                help for nodes
+      --node-pool-id uuid   Identificador no padrão uuid para identificar o nodepool
+  -v, --version             version for nodes
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke nodepool nodes [command] --help" for more information about a command.
 
@@ -2527,18 +2531,18 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --auto-scale object     Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes ({ enabled: boolean, max_replicas: integer (min: 1) (default %!s(float64=1)), min_replicas: integer (min: 1) (default %!s(float64=1)) })
-      --cluster-id string     Identificador no padrão uuid para identificar o cluster (format: uuid)
-  -h, --help                  help for update
-      --node-pool-id string   Identificador no padrão uuid para identificar o nodepool (format: uuid)
-      --replicas integer      Quantidade de réplicas dos nós do nodepool
-  -v, --version               version for update
+      --auto-scale object   Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes ({ enabled: boolean, max_replicas: integer (min: 1) (default %!s(float64=1)), min_replicas: integer (min: 1) (default %!s(float64=1)) })
+      --cluster-id uuid     Identificador no padrão uuid para identificar o cluster
+  -h, --help                help for update
+      --node-pool-id uuid   Identificador no padrão uuid para identificar o nodepool
+      --replicas integer    Quantidade de réplicas dos nós do nodepool
+  -v, --version             version for update
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli mke nodepool update [command] --help" for more information about a command.
 
@@ -2602,7 +2606,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network healthcheck list [command] --help" for more information about a command.
 
@@ -2614,8 +2618,8 @@ Usage:
   ./cli network port [command]
 
 Available Commands:
-  ports       VPC Port | ports
-  vpcs-ports  VPC Port | vpcs-ports
+  ports       ports
+  vpcs-ports  vpcs-ports
 
 Flags:
   -h, --help      help for port
@@ -2670,7 +2674,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port ports attach [command] --help" for more information about a command.
 
@@ -2697,7 +2701,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port ports create [command] --help" for more information about a command.
 
@@ -2720,7 +2724,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port ports delete [command] --help" for more information about a command.
 
@@ -2742,7 +2746,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port ports delete-all [command] --help" for more information about a command.
 
@@ -2766,7 +2770,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port ports detach [command] --help" for more information about a command.
 
@@ -2789,7 +2793,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port ports get [command] --help" for more information about a command.
 
@@ -2812,7 +2816,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port ports list [command] --help" for more information about a command.
 
@@ -2860,7 +2864,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port vpcs-ports create [command] --help" for more information about a command.
 
@@ -2887,7 +2891,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network port vpcs-ports list [command] --help" for more information about a command.
 
@@ -2899,8 +2903,8 @@ Usage:
   ./cli network public_ip [command]
 
 Available Commands:
-  public-ips      VPC Public IPs | public-ips
-  vpcs-public-ips VPC Public IPs | vpcs-public-ips
+  public-ips      public-ips
+  vpcs-public-ips vpcs-public-ips
 
 Flags:
   -h, --help      help for public_ip
@@ -2954,7 +2958,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network public_ip public-ips attach [command] --help" for more information about a command.
 
@@ -2977,7 +2981,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network public_ip public-ips delete [command] --help" for more information about a command.
 
@@ -3001,7 +3005,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network public_ip public-ips detach [command] --help" for more information about a command.
 
@@ -3024,7 +3028,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network public_ip public-ips get [command] --help" for more information about a command.
 
@@ -3046,7 +3050,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network public_ip public-ips list [command] --help" for more information about a command.
 
@@ -3091,7 +3095,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network public_ip vpcs-public-ips create [command] --help" for more information about a command.
 
@@ -3114,7 +3118,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network public_ip vpcs-public-ips list [command] --help" for more information about a command.
 
@@ -3156,7 +3160,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network quotas list [command] --help" for more information about a command.
 
@@ -3168,8 +3172,8 @@ Usage:
   ./cli network rule [command]
 
 Available Commands:
-  rules                 VPC Rules | rules
-  security-groups-rules VPC Rules | security-groups-rules
+  rules                 rules
+  security-groups-rules security-groups-rules
 
 Flags:
   -h, --help      help for rule
@@ -3219,7 +3223,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network rule rules delete [command] --help" for more information about a command.
 
@@ -3242,7 +3246,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network rule rules get [command] --help" for more information about a command.
 
@@ -3295,7 +3299,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network rule security-groups-rules create [command] --help" for more information about a command.
 
@@ -3318,7 +3322,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network rule security-groups-rules list [command] --help" for more information about a command.
 
@@ -3330,8 +3334,8 @@ Usage:
   ./cli network security_group [command]
 
 Available Commands:
-  security-groups      VPC Security Groups | security-groups
-  vpcs-security-groups VPC Security Groups | vpcs-security-groups
+  security-groups      security-groups
+  vpcs-security-groups vpcs-security-groups
 
 Flags:
   -h, --help      help for security_group
@@ -3387,7 +3391,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network security_group security-groups create [command] --help" for more information about a command.
 
@@ -3409,7 +3413,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network security_group security-groups create-default [command] --help" for more information about a command.
 
@@ -3432,7 +3436,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network security_group security-groups delete [command] --help" for more information about a command.
 
@@ -3454,7 +3458,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network security_group security-groups delete-all [command] --help" for more information about a command.
 
@@ -3477,7 +3481,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network security_group security-groups get [command] --help" for more information about a command.
 
@@ -3499,7 +3503,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network security_group security-groups list [command] --help" for more information about a command.
 
@@ -3546,7 +3550,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network security_group vpcs-security-groups create [command] --help" for more information about a command.
 
@@ -3569,7 +3573,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network security_group vpcs-security-groups list [command] --help" for more information about a command.
 
@@ -3581,8 +3585,8 @@ Usage:
   ./cli network subnets [command]
 
 Available Commands:
-  subnets      VPC Subnets | subnets
-  vpcs-subnets VPC Subnets | vpcs-subnets
+  subnets      subnets
+  vpcs-subnets vpcs-subnets
 
 Flags:
   -h, --help      help for subnets
@@ -3633,7 +3637,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network subnets subnets delete [command] --help" for more information about a command.
 
@@ -3656,7 +3660,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network subnets subnets get [command] --help" for more information about a command.
 
@@ -3671,16 +3675,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --dns-nameservers array(string)   (string:(format: ipvanyaddress)) (default [])
-  -h, --help                            help for update
-      --subnet-id string                
-  -v, --version                         version for update
+      --dns-nameservers array(ipvanyaddress)    (default [])
+  -h, --help                                   help for update
+      --subnet-id string                       
+  -v, --version                                version for update
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network subnets subnets update [command] --help" for more information about a command.
 
@@ -3715,20 +3719,20 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cidr-block string               
-      --description string              
-      --dns-nameservers array(string)   (string:(format: ipvanyaddress)) (default [])
-  -h, --help                            help for create
-      --ip-version integer              
-      --name string                     
-  -v, --version                         version for create
+      --cidr-block string                      
+      --description string                     
+      --dns-nameservers array(ipvanyaddress)    (default [])
+  -h, --help                                   help for create
+      --ip-version integer                     
+      --name string                            
+  -v, --version                                version for create
       --vpc-id string
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network subnets vpcs-subnets create [command] --help" for more information about a command.
 
@@ -3751,7 +3755,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network subnets vpcs-subnets list [command] --help" for more information about a command.
 
@@ -3799,7 +3803,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network vpc create [command] --help" for more information about a command.
 
@@ -3821,7 +3825,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network vpc create-default [command] --help" for more information about a command.
 
@@ -3844,7 +3848,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network vpc delete [command] --help" for more information about a command.
 
@@ -3866,7 +3870,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network vpc delete-all [command] --help" for more information about a command.
 
@@ -3889,7 +3893,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network vpc get [command] --help" for more information about a command.
 
@@ -3911,7 +3915,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network vpc list [command] --help" for more information about a command.
 
@@ -3922,7 +3926,7 @@ Usage:
 
 Available Commands:
   create      Create Port Xaas
-  ports        | ports
+  ports       ports
 
 Flags:
   -h, --help      help for xaas_port
@@ -3959,7 +3963,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_port create [command] --help" for more information about a command.
 
@@ -4008,7 +4012,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_port ports attach [command] --help" for more information about a command.
 
@@ -4033,7 +4037,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_port ports delete [command] --help" for more information about a command.
 
@@ -4057,7 +4061,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_port ports delete-all [command] --help" for more information about a command.
 
@@ -4083,7 +4087,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_port ports detach [command] --help" for more information about a command.
 
@@ -4108,7 +4112,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_port ports get [command] --help" for more information about a command.
 
@@ -4118,8 +4122,8 @@ Usage:
   ./cli network xaas_rule [command]
 
 Available Commands:
-  rules                  | rules
-  security-groups-rules  | security-groups-rules
+  rules                 rules
+  security-groups-rules security-groups-rules
 
 Flags:
   -h, --help      help for xaas_rule
@@ -4172,7 +4176,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_rule rules delete [command] --help" for more information about a command.
 
@@ -4197,7 +4201,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_rule rules get [command] --help" for more information about a command.
 
@@ -4233,7 +4237,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
       --x-request-id
 
 Use "./cli network xaas_rule rules update [command] --help" for more information about a command.
@@ -4288,7 +4292,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_rule security-groups-rules create [command] --help" for more information about a command.
 
@@ -4313,7 +4317,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_rule security-groups-rules list [command] --help" for more information about a command.
 
@@ -4323,8 +4327,8 @@ Usage:
   ./cli network xaas_security_group [command]
 
 Available Commands:
-  security-groups       | security-groups
-  vpcs-security-groups  | vpcs-security-groups
+  security-groups      security-groups
+  vpcs-security-groups vpcs-security-groups
 
 Flags:
   -h, --help      help for xaas_security_group
@@ -4382,7 +4386,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_security_group security-groups create [command] --help" for more information about a command.
 
@@ -4406,7 +4410,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_security_group security-groups create-default [command] --help" for more information about a command.
 
@@ -4431,7 +4435,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_security_group security-groups delete [command] --help" for more information about a command.
 
@@ -4455,7 +4459,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_security_group security-groups delete-all [command] --help" for more information about a command.
 
@@ -4480,7 +4484,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_security_group security-groups get [command] --help" for more information about a command.
 
@@ -4504,7 +4508,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_security_group security-groups list [command] --help" for more information about a command.
 
@@ -4533,7 +4537,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
       --x-request-id
 
 Use "./cli network xaas_security_group security-groups update [command] --help" for more information about a command.
@@ -4583,7 +4587,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_security_group vpcs-security-groups create [command] --help" for more information about a command.
 
@@ -4607,7 +4611,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_security_group vpcs-security-groups list [command] --help" for more information about a command.
 
@@ -4617,8 +4621,8 @@ Usage:
   ./cli network xaas_subnetpools [command]
 
 Available Commands:
-  subnetpools       | subnetpools
-  vpcs-subnetpools  | vpcs-subnetpools
+  subnetpools      subnetpools
+  vpcs-subnetpools vpcs-subnetpools
 
 Flags:
   -h, --help      help for xaas_subnetpools
@@ -4671,7 +4675,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_subnetpools subnetpools delete [command] --help" for more information about a command.
 
@@ -4696,7 +4700,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_subnetpools subnetpools get [command] --help" for more information about a command.
 
@@ -4720,7 +4724,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_subnetpools subnetpools list [command] --help" for more information about a command.
 
@@ -4772,7 +4776,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_subnetpools vpcs-subnetpools create [command] --help" for more information about a command.
 
@@ -4797,7 +4801,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_subnetpools vpcs-subnetpools list [command] --help" for more information about a command.
 
@@ -4839,7 +4843,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_subnets list [command] --help" for more information about a command.
 
@@ -4849,9 +4853,9 @@ Usage:
   ./cli network xaas_vpc [command]
 
 Available Commands:
-  add          | add
+  add         add
   create      Create Vpc Xaas
-  delete       | delete
+  delete      delete
   delete-all  Delete Vpc Xaas All
   interfaces  List VPC Router interface with project type
   list        List VPC with project type
@@ -4908,7 +4912,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_vpc add interface [command] --help" for more information about a command.
 
@@ -4935,7 +4939,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_vpc add route [command] --help" for more information about a command.
 
@@ -4963,7 +4967,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_vpc create [command] --help" for more information about a command.
 
@@ -5009,7 +5013,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_vpc delete delete-interface [command] --help" for more information about a command.
 
@@ -5036,7 +5040,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_vpc delete route [command] --help" for more information about a command.
 
@@ -5060,7 +5064,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_vpc delete-all [command] --help" for more information about a command.
 
@@ -5085,7 +5089,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_vpc interfaces [command] --help" for more information about a command.
 
@@ -5109,7 +5113,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli network xaas_vpc list [command] --help" for more information about a command.
 
@@ -5156,7 +5160,7 @@ Use "./cli object-storage buckets [command] --help" for more information about a
 Buckets are "containers" that are able to store various Objects inside
 
 Usage:
-  ./cli object-storage buckets create [flags]
+  ./cli object-storage buckets create [name] [flags]
   ./cli object-storage buckets create [command]
 
 Available Commands:
@@ -5171,8 +5175,7 @@ Flags:
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
-      --token string           Token for object-storage Credentials
+      --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
 
 Use "./cli object-storage buckets create [command] --help" for more information about a command.
@@ -5181,7 +5184,7 @@ Use "./cli object-storage buckets create [command] --help" for more information 
 Delete an existing Bucket
 
 Usage:
-  ./cli object-storage buckets delete [flags]
+  ./cli object-storage buckets delete [name] [flags]
   ./cli object-storage buckets delete [command]
 
 Available Commands:
@@ -5194,8 +5197,7 @@ Flags:
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
-      --token string           Token for object-storage Credentials
+      --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
 
 Use "./cli object-storage buckets delete [command] --help" for more information about a command.
@@ -5216,8 +5218,7 @@ Flags:
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
-      --token string           Token for object-storage Credentials
+      --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
 
 Use "./cli object-storage buckets list [command] --help" for more information about a command.
@@ -5231,6 +5232,7 @@ Usage:
 
 Available Commands:
   delete      Delete an object from a bucket
+  delete-all  Delete all objects from a bucket
   download    download an object from a bucket
   list        List all objects from a bucket
   upload      Upload a file to a bucket
@@ -5247,7 +5249,7 @@ Use "./cli object-storage objects [command] --help" for more information about a
 Delete an object from a bucket
 
 Usage:
-  ./cli object-storage objects delete [flags]
+  ./cli object-storage objects delete [dst] [flags]
   ./cli object-storage objects delete [command]
 
 Available Commands:
@@ -5260,17 +5262,40 @@ Flags:
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
-      --token string           Token for object-storage Credentials
+      --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
 
 Use "./cli object-storage objects delete [command] --help" for more information about a command.
+
+# object-storage objects delete-all
+Delete all objects from a bucket
+
+Usage:
+  ./cli object-storage objects delete-all [name] [flags]
+  ./cli object-storage objects delete-all [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --exclude string   Filename pattern to exclude
+  -h, --help             help for delete-all
+      --include string   Filename pattern to include (default "*")
+      --name string      Name of the bucket to delete objects from
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+      --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
+
+Use "./cli object-storage objects delete-all [command] --help" for more information about a command.
 
 # object-storage objects download
 download an object from a bucket
 
 Usage:
-  ./cli object-storage objects download [flags]
+  ./cli object-storage objects download [src] [dst] [flags]
   ./cli object-storage objects download [command]
 
 Available Commands:
@@ -5286,8 +5311,7 @@ Flags:
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
-      --token string           Token for object-storage Credentials
+      --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
 
 Use "./cli object-storage objects download [command] --help" for more information about a command.
@@ -5296,7 +5320,7 @@ Use "./cli object-storage objects download [command] --help" for more informatio
 List all objects from a bucket
 
 Usage:
-  ./cli object-storage objects list [flags]
+  ./cli object-storage objects list [dst] [flags]
   ./cli object-storage objects list [command]
 
 Available Commands:
@@ -5314,8 +5338,7 @@ Flags:
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
-      --token string           Token for object-storage Credentials
+      --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
 
 Use "./cli object-storage objects list [command] --help" for more information about a command.
@@ -5324,7 +5347,7 @@ Use "./cli object-storage objects list [command] --help" for more information ab
 Upload a file to a bucket
 
 Usage:
-  ./cli object-storage objects upload [flags]
+  ./cli object-storage objects upload [dst] [src] [flags]
   ./cli object-storage objects upload [command]
 
 Available Commands:
@@ -5338,8 +5361,7 @@ Flags:
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
-      --token string           Token for object-storage Credentials
+      --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
 
 Use "./cli object-storage objects upload [command] --help" for more information about a command.
@@ -5372,7 +5394,7 @@ Use "./cli profile [command] --help" for more information about a command.
 Creates a new profile
 
 Usage:
-  ./cli profile create [flags]
+  ./cli profile create [name] [copy] [flags]
   ./cli profile create [command]
 
 Available Commands:
@@ -5410,7 +5432,7 @@ Use "./cli profile current [command] --help" for more information about a comman
 Deletes the profile with the specified name
 
 Usage:
-  ./cli profile delete [flags]
+  ./cli profile delete [name] [flags]
   ./cli profile delete [command]
 
 Available Commands:
@@ -5447,7 +5469,7 @@ Use "./cli profile list [command] --help" for more information about a command.
 Sets profile to be used
 
 Usage:
-  ./cli profile set-current [flags]
+  ./cli profile set-current [name] [flags]
   ./cli profile set-current [command]
 
 Available Commands:
@@ -5521,7 +5543,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine healthchecks list [command] --help" for more information about a command.
 
@@ -5558,7 +5580,7 @@ Available Commands:
 
 Flags:
   -h, --help         help for create
-      --id string    (format: uuid)
+      --id uuid      
       --internal     
       --sku string   
   -v, --version      version for create
@@ -5567,7 +5589,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine images create [command] --help" for more information about a command.
 
@@ -5582,15 +5604,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help              help for delete
-      --image-id string   image_id (format: uuid)
-  -v, --version           version for delete
+  -h, --help            help for delete
+      --image-id uuid   image_id
+  -v, --version         version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine images delete [command] --help" for more information about a command.
 
@@ -5612,7 +5634,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine images list [command] --help" for more information about a command.
 
@@ -5647,7 +5669,7 @@ Available Commands:
 
 Flags:
   -h, --help         help for create
-      --id string    (format: uuid)
+      --id uuid      
       --internal     
       --sku string   
   -v, --version      version for create
@@ -5656,7 +5678,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instance-types create [command] --help" for more information about a command.
 
@@ -5671,15 +5693,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help                      help for delete
-      --instance-type-id string   instance_type_id (format: uuid)
-  -v, --version                   version for delete
+  -h, --help                    help for delete
+      --instance-type-id uuid   instance_type_id
+  -v, --version                 version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instance-types delete [command] --help" for more information about a command.
 
@@ -5701,7 +5723,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instance-types list [command] --help" for more information about a command.
 
@@ -5723,7 +5745,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instance-types list-all [command] --help" for more information about a command.
 
@@ -5737,7 +5759,7 @@ Usage:
 Available Commands:
   create      Instance Create
   delete      Instance Delete
-  events      instances | events
+  events      events
   get         Instance Details
   list        List Instances
   update      Update Instance Status
@@ -5777,7 +5799,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instances create [command] --help" for more information about a command.
 
@@ -5792,15 +5814,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help        help for delete
-      --id string   id (format: uuid)
-  -v, --version     version for delete
+  -h, --help      help for delete
+      --id uuid   id
+  -v, --version   version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instances delete [command] --help" for more information about a command.
 
@@ -5835,16 +5857,16 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --event-id string   event_id (format: uuid)
-  -h, --help              help for get
-      --id string         id (format: uuid)
-  -v, --version           version for get
+      --event-id uuid   event_id
+  -h, --help            help for get
+      --id uuid         id
+  -v, --version         version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instances events get [command] --help" for more information about a command.
 
@@ -5859,15 +5881,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help        help for list
-      --id string   id (format: uuid)
-  -v, --version     version for list
+  -h, --help      help for list
+      --id uuid   id
+  -v, --version   version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instances events list [command] --help" for more information about a command.
 
@@ -5882,15 +5904,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help        help for get
-      --id string   id (format: uuid)
-  -v, --version     version for get
+  -h, --help      help for get
+      --id uuid   id
+  -v, --version   version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instances get [command] --help" for more information about a command.
 
@@ -5912,7 +5934,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instances list [command] --help" for more information about a command.
 
@@ -5928,7 +5950,7 @@ Available Commands:
 
 Flags:
   -h, --help          help for update
-      --id string     id (format: uuid)
+      --id uuid       id
       --status enum   An enumeration. (one of active|shutoff)
   -v, --version       version for update
 
@@ -5936,7 +5958,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine instances update [command] --help" for more information about a command.
 
@@ -5982,7 +6004,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine keypairs create [command] --help" for more information about a command.
 
@@ -6005,7 +6027,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine keypairs create-keypair-name [command] --help" for more information about a command.
 
@@ -6028,7 +6050,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine keypairs delete [command] --help" for more information about a command.
 
@@ -6050,7 +6072,7 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine keypairs list [command] --help" for more information about a command.
 
@@ -6086,14 +6108,14 @@ Available Commands:
 Flags:
       --force-authentication   Force authentication by sending the header even if this API doesn't require it
   -h, --help                   help for list
-      --quota-slug string      quota_slug (format: string)
+      --quota-slug string      quota_slug
   -v, --version                version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of pre-prod|prod) (default prod)
       --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
-      --server-url string      Manually specify the server to use (format: uri)
+      --server-url uri         Manually specify the server to use
 
 Use "./cli virtual-machine usage list [command] --help" for more information about a command.
 
