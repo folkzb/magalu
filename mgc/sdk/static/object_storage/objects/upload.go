@@ -20,9 +20,7 @@ type uploadTemplateResult struct {
 	URI  string `json:"uri"`
 }
 
-var getUpload = utils.NewLazyLoader[core.Executor](newUpload)
-
-func newUpload() core.Executor {
+var getUpload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "upload",
@@ -34,7 +32,7 @@ func newUpload() core.Executor {
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Uploaded file {{.file}} to {{.uri}}\n"
 	})
-}
+})
 
 func formatURI(uri string) string {
 	if !strings.Contains(uri, common.URIPrefix) {

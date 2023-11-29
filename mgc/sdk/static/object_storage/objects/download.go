@@ -62,9 +62,7 @@ type downloadObjectParams struct {
 	common.PaginationParams `json:",squash"` // nolint
 }
 
-var getDownload = utils.NewLazyLoader[core.Executor](newDownload)
-
-func newDownload() core.Executor {
+var getDownload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "download",
@@ -76,7 +74,7 @@ func newDownload() core.Executor {
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Downloaded from {{.src}} to {{.dst}}\n"
 	})
-}
+})
 
 func newDownloadRequest(ctx context.Context, cfg common.Config, pathURIs ...string) (*http.Request, error) {
 	host := common.BuildHost(cfg)

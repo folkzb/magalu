@@ -16,9 +16,7 @@ type createParams struct {
 	Location string `json:"location,omitempty" jsonschema:"description=Location constraint for the bucket,default=br-ne-1"`
 }
 
-var getCreate = utils.NewLazyLoader[core.Executor](newCreate)
-
-func newCreate() core.Executor {
+var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	executor := core.NewReflectedSimpleExecutor[createParams, common.Config, core.Value](
 		core.ExecutorSpec{
 			DescriptorSpec: core.DescriptorSpec{
@@ -39,7 +37,7 @@ func newCreate() core.Executor {
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template=Created bucket {{.name}}\n"
 	})
-}
+})
 
 func newCreateRequest(ctx context.Context, cfg common.Config, bucket string) (*http.Request, error) {
 	host := common.BuildHost(cfg)

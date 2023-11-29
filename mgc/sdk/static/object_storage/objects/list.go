@@ -14,9 +14,7 @@ type listResponse struct {
 	CommonPrefixes []*common.Prefix        `xml:"CommonPrefixes"`
 }
 
-var getList = utils.NewLazyLoader[core.Executor](newList)
-
-func newList() core.Executor {
+var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "list",
@@ -24,7 +22,7 @@ func newList() core.Executor {
 		},
 		List,
 	)
-}
+})
 
 func List(ctx context.Context, params common.ListObjectsParams, cfg common.Config) (result listResponse, err error) {
 	ctx, cancel := context.WithCancelCause(ctx)

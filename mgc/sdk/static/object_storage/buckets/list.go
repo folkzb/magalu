@@ -25,13 +25,11 @@ type ListResponse struct {
 	Owner   *Owner            `xml:"Owner"`
 }
 
-var getList = utils.NewLazyLoader[core.Executor](newList)
-
 func newListRequest(ctx context.Context, cfg common.Config) (*http.Request, error) {
 	return http.NewRequestWithContext(ctx, http.MethodGet, common.BuildHost(cfg), nil)
 }
 
-func newList() core.Executor {
+var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	return core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "list",
@@ -39,7 +37,7 @@ func newList() core.Executor {
 		},
 		list,
 	)
-}
+})
 
 func list(ctx context.Context, _ struct{}, cfg common.Config) (result ListResponse, err error) {
 	req, err := newListRequest(ctx, cfg)

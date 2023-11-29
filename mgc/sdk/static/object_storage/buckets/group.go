@@ -5,9 +5,7 @@ import (
 	"magalu.cloud/core/utils"
 )
 
-var GetGroup = utils.NewLazyLoader[core.Grouper](newGroup)
-
-func newGroup() core.Grouper {
+var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:        "buckets",
@@ -19,4 +17,4 @@ func newGroup() core.Grouper {
 			getList(),   // object-storage buckets list
 		},
 	)
-}
+})
