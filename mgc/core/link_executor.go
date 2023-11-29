@@ -46,8 +46,18 @@ func NewLinkExecutor(
 }
 
 func (l *linkExecutor) extendParametersAndConfigs(parameters Parameters, configs Configs) (p Parameters, c Configs) {
+	if len(l.preparedParameters) == 0 && len(l.preparedConfigs) == 0 {
+		return parameters, configs
+	}
+
 	p = maps.Clone(parameters)
+	if p == nil {
+		p = Parameters{}
+	}
 	c = maps.Clone(configs)
+	if c == nil {
+		c = Configs{}
+	}
 	maps.Copy(p, l.preparedParameters)
 	maps.Copy(c, l.preparedConfigs)
 	return
