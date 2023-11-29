@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strings"
 
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
@@ -28,7 +30,35 @@ func ReflectExecutorSpecSchemas[ParamsT any, ConfigsT any, ResultT any](baseSpec
 		return
 	}
 
+	spec.PositionalArgs = getPositionals[ParamsT]()
+
 	return spec, nil
+}
+
+func getPositionals[T any]() []string {
+	t := reflect.TypeOf(new(T)).Elem()
+
+	if t.Kind() != reflect.Struct {
+		return nil
+	}
+
+	var positionals []string
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if !GetMgcTagBool(field.Tag, "positional") {
+			continue
+		}
+
+		name := field.Name
+		if jsonName := strings.Split(field.Tag.Get("json"), ",")[0]; jsonName != "" {
+			name = jsonName
+		}
+
+		positionals = append(positionals, name)
+	}
+
+	return positionals
 }
 
 func ReflectExecutorSpecFn[ParamsT any, ConfigsT any, ResultT any](

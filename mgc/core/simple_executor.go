@@ -17,6 +17,7 @@ type ExecutorSpec struct {
 	ResultSchema     *Schema
 	Links            LinksSpecFn
 	Related          RelatedSpecFn
+	PositionalArgs   []string
 	Execute          ExecutorSpecFn
 }
 
@@ -59,6 +60,7 @@ type SimpleExecutor struct {
 	resultSchema     *Schema
 	links            LinksSpecFn
 	related          RelatedSpecFn
+	positionalArgs   []string
 	execute          ExecutorSpecFn
 }
 
@@ -74,6 +76,7 @@ func NewSimpleExecutor(spec ExecutorSpec) *SimpleExecutor {
 		spec.ResultSchema,
 		spec.Links,
 		spec.Related,
+		spec.PositionalArgs,
 		spec.Execute,
 	}
 }
@@ -102,6 +105,10 @@ func (e *SimpleExecutor) Related() map[string]Executor {
 		return nil
 	}
 	return e.related()
+}
+
+func (e *SimpleExecutor) PositionalArgs() []string {
+	return e.positionalArgs
 }
 
 func (e *SimpleExecutor) Execute(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
