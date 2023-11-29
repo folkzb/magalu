@@ -77,7 +77,7 @@ func newOperation(
 		logger:          logger,
 		outputFlag:      outputFlag,
 		refResolver:     refResolver,
-		parameters:      newParameters(desc.path.Parameters, desc.op.Parameters, extensionPrefix),
+		parameters:      newParameters(desc.pathKey, desc.path.Parameters, desc.op.Parameters, extensionPrefix),
 		requestBody:     newRequestBody(method, desc.op, logger, extensionPrefix),
 		server:          newServer(servers, extensionPrefix),
 	}

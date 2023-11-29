@@ -60,7 +60,7 @@ type parameters struct {
 	extensionPrefix *string
 }
 
-func newParameters(parentParameters openapi3.Parameters, opParameters openapi3.Parameters, extensionPrefix *string) *parameters {
+func newParameters(key string, parentParameters openapi3.Parameters, opParameters openapi3.Parameters, extensionPrefix *string) *parameters {
 	p := &parameters{
 		getParameters: utils.NewLazyLoader(func() []*parameterWithName {
 			// operation parameters take precedence over path:
@@ -76,11 +76,32 @@ func newParameters(parentParameters openapi3.Parameters, opParameters openapi3.P
 	}
 
 	p.getPositionals = utils.NewLazyLoader(func() []string {
-		var positionals []string
+		type paramIndex struct {
+			pos          int
+			externalName string
+		}
+		var params []paramIndex
 		_, _ = p.forEach([]string{openapi3.ParameterInPath}, func(externalName string, parameter *openapi3.Parameter) (run bool, err error) {
-			positionals = append(positionals, externalName)
+			pos := strings.Index(key, "{"+parameter.Name+"}")
+			params = append(params, paramIndex{pos, externalName})
 			return true, nil
 		})
+		if len(params) == 0 {
+			return nil
+		}
+
+		slices.SortFunc(params, func(a, b paramIndex) int {
+			if a.pos < b.pos {
+				return -1
+			} else if a.pos > b.pos {
+				return 1
+			}
+			return 0
+		})
+		positionals := make([]string, len(params))
+		for i, p := range params {
+			positionals[i] = p.externalName
+		}
 		return positionals
 	})
 
