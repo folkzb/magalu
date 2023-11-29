@@ -45,14 +45,9 @@ func loadGrouperChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Group
 	}
 
 	if childExec, ok := child.(mgcSdk.Executor); ok {
-		var positionalArgs []string
-		if pArgsExec, ok := core.ExecutorAs[core.PositionalArgsExecutor](childExec); ok {
-			positionalArgs = pArgsExec.PositionalArgs()
-		}
-
 		isParameterRequired := func(name string) bool {
 			if slices.Contains(childExec.ParametersSchema().Required, name) {
-				return !slices.Contains(positionalArgs, name)
+				return !slices.Contains(childExec.PositionalArgs(), name)
 			}
 
 			return false
@@ -220,14 +215,9 @@ func addAction(
 	desc := exec.(mgcSdk.Descriptor)
 	links := exec.Links()
 
-	var argNames []string
-	if pArgsExec, ok := core.ExecutorAs[core.PositionalArgsExecutor](exec); ok {
-		argNames = pArgsExec.PositionalArgs()
-	}
-
 	actionCmd := &cobra.Command{
-		Use:     buildUse(desc, argNames),
-		Args:    cobra.MaximumNArgs(len(argNames)),
+		Use:     buildUse(desc, exec.PositionalArgs()),
+		Args:    cobra.MaximumNArgs(len(exec.PositionalArgs())),
 		Short:   desc.Summary(),
 		Long:    desc.Description(),
 		Version: desc.Version(),
@@ -238,7 +228,7 @@ func addAction(
 
 			config := sdk.Config()
 
-			if err := loadDataFromArgs(argNames, args, cmd.Flags()); err != nil {
+			if err := loadDataFromArgs(exec.PositionalArgs(), args, cmd.Flags()); err != nil {
 				return err
 			}
 

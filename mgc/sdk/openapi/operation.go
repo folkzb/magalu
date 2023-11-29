@@ -652,4 +652,3 @@ func (o *operation) Execute(
 
 // implemented by embedded SimpleDescriptor
 var _ core.Executor = (*operation)(nil)
-var _ core.PositionalArgsExecutor = (*operation)(nil)
