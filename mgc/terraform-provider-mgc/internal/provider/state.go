@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"golang.org/x/exp/maps"
 	"magalu.cloud/core"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -112,50 +114,59 @@ func applyStateAfter(
 	tfState *tfsdk.State,
 	diag *diag.Diagnostics,
 ) {
-	var resultMap map[string]any
-	resultSchema := result.Schema()
+	tflog.Debug(ctx, fmt.Sprintf("[resource] applying state after for %q", handler.Name()))
 
-	if mgcSchemaPkg.CheckSimilarJsonSchemas(resultSchema, handler.ReadResultSchema()) {
-		if resultMap = castToMap(result, diag); diag.HasError() {
-			return
-		}
-	} else {
-		readLink, ok := result.Source().Executor.Links()["read"]
-		if !ok {
-			diag.AddError(
-				"Read link failed",
-				fmt.Sprintf("Unable to resolve Read link for applying new state on resource %q. Available links: %v", handler.Name(), result.Source().Executor.Links()),
-			)
-			return
-		}
-
-		additionalParametersSchema := readLink.AdditionalParametersSchema()
-		if len(additionalParametersSchema.Required) > 0 {
-			diag.AddError("Read link failed", fmt.Sprintf("Unable to resolve parameters on Read link for applying new state on resource %q", handler.Name()))
-			return
-		}
-
-		exec, err := readLink.CreateExecutor(result)
-		if err != nil {
-			diag.AddError("Read link failed", fmt.Sprintf("Unable to create Read link executor for applying new state on resource %q: %s", handler.Name(), err))
-			return
-		}
-
-		result := execute(handler.Name(), ctx, exec, core.Parameters{}, core.Configs{}, diag)
-		if diag.HasError() {
-			return
-		}
-
-		if resultMap = castToMap(result, diag); diag.HasError() {
-			return
-		}
-	}
-
-	// We must apply the input parameters in the state, considering that the request went successfully.
-	// BE CAREFUL: Don't apply Plan.Raw values into the State they might be Unknown! State only handles Known/Null values.
-	// Also, this must come BEFORE applying the result to the state, as that should override these values when valid.
+	// First, apply the values that the user passed as Parameters to the state (assuming success)
 	applyMgcInputMap(handler, result.Source().Parameters, ctx, tfState, diag)
 
+	resultMap := castToMap(result, diag)
+	if diag.HasError() {
+		return
+	}
+	// Then, apply the result values of the request that was performed
 	applyMgcOutputMap(handler, resultMap, ctx, tfState, diag)
 	verifyCurrentDesiredMismatch(handler, result.Source().Parameters, resultMap, diag)
+
+	// Finally, read the resource to confirm that the result matches the parameters requested by the user
+	readLink, ok := result.Source().Executor.Links()["read"]
+	if !ok {
+		diag.AddError(
+			"Read link failed",
+			fmt.Sprintf("Unable to resolve Read link for applying new state on resource %q. Available links: %v", handler.Name(), result.Source().Executor.Links()),
+		)
+		return
+	}
+
+	read, err := readLink.CreateExecutor(result)
+	if err != nil {
+		diag.AddError("Read link failed", fmt.Sprintf("Unable to create Read link executor for applying new state on resource %q: %s", handler.Name(), err))
+	}
+
+	// If the original result schema is the same as the resource read, no need for further state appliance
+	if mgcSchemaPkg.CheckSimilarJsonSchemas(result.Schema(), read.ResultSchema()) {
+		return
+	}
+
+	paramsSchema := read.ParametersSchema()
+	params := readMgcMap(handler, paramsSchema, ctx, *tfState, diag)
+	if err := paramsSchema.VisitJSON(params); err != nil {
+		diag.AddError(
+			"applying state after failed",
+			fmt.Sprintf("unable to read resource due to insufficient state information. %s", err),
+		)
+		return
+	}
+
+	readResult := execute(handler.Name(), ctx, read, params, core.Configs{}, diag)
+	if diag.HasError() {
+		return
+	}
+
+	readResultMap := castToMap(readResult, diag)
+	if diag.HasError() {
+		return
+	}
+
+	applyMgcOutputMap(handler, readResultMap, ctx, tfState, diag)
+	verifyCurrentDesiredMismatch(handler, result.Source().Parameters, readResultMap, diag)
 }
