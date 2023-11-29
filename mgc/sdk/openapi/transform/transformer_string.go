@@ -41,8 +41,9 @@ func init() {
 		{strcase.LowerCamelCase, []string{"camelcase", "camel-case", "camel", "lower-camel"}},
 	}
 	for _, t := range transformers {
+		transformerDef := t
 		addTransformer[struct{}](func(spec *transformSpec) (transformer, error) {
-			return &transformerString{t.f}, nil
-		}, t.names...)
+			return &transformerString{transformerDef.f}, nil
+		}, transformerDef.names...)
 	}
 }
