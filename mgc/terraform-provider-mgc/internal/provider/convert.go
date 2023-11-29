@@ -183,6 +183,8 @@ func (c *tfStateConverter) toMgcSchemaArray(atinfo *attribute, tfValue tftypes.V
 	return
 }
 
+// If 'atinfo' doesn't have a property present in 'atinfo.mgcSchema', it will be ignored. This means that the resulting MgcMap may be incomplete and it is up
+// to the caller to ensure that all properties of 'atinfo.mgcSchema' were fulfilled in the resulting mgcMap
 func (c *tfStateConverter) toMgcSchemaMap(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcMap map[string]any, isKnown bool) {
 	tflog.Debug(
 		c.ctx,
@@ -204,12 +206,9 @@ func (c *tfStateConverter) toMgcSchemaMap(atinfo *attribute, tfValue tftypes.Val
 	isKnown = true
 	for attr := range mgcSchema.Properties {
 		mgcName := mgcName(attr)
-		itemAttr := atinfo.attributes[mgcName]
-		if itemAttr == nil {
-			c.diag.AddError(
-				"Schema attribute missing from attribute information",
-				fmt.Sprintf("[convert] schema attribute %q doesn't have attribute information", mgcName),
-			)
+		itemAttr, ok := atinfo.attributes[mgcName]
+		if !ok {
+			// Ignore non existing values
 			continue
 		}
 

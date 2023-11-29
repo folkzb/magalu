@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"golang.org/x/exp/maps"
 	"magalu.cloud/core"
-	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -25,9 +25,32 @@ type tfStateHandler interface {
 	SplitAttributes() []splitMgcAttribute
 }
 
+// Try to read attributes from both Input and Output to fill a map that matches the 'mgcSchema'. If any values are missing in the end, errors are diagnosed
 func readMgcMap(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
+	result := readMgcOutputMap(handler, mgcSchema, ctx, tfState, diag)
+	input := readMgcInputMap(handler, mgcSchema, ctx, tfState, diag)
+	maps.Copy(result, input)
+
+	if err := mgcSchema.VisitJSON(result); err != nil {
+		diag.AddError(
+			"unable to read MgcMap from Input and Output Terraform attributes",
+			fmt.Sprintf("Reading Input and Output attributes into MgcMap didn't match requested schema. Error: %v", err),
+		)
+	}
+
+	return result
+}
+
+// If the Input Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
+func readMgcInputMap(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
 	conv := newTFStateConverter(ctx, diag, handler.TFSchema())
 	return conv.readMgcMap(mgcSchema, handler.InputAttributes(), tfState)
+}
+
+// If the Output Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
+func readMgcOutputMap(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
+	conv := newTFStateConverter(ctx, diag, handler.TFSchema())
+	return conv.readMgcMap(mgcSchema, handler.OutputAttributes(), tfState)
 }
 
 func applyMgcInputMap(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
