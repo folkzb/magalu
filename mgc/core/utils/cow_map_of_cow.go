@@ -1,6 +1,6 @@
 package utils
 
-import "golang.org/x/exp/maps"
+import "maps"
 
 // Map that will be copied before its first write, the original value is used if no writes were done
 //

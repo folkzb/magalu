@@ -3,9 +3,10 @@ package blueprint
 import (
 	"fmt"
 
+	"maps"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"go.uber.org/zap"
-	"golang.org/x/exp/maps"
 	"magalu.cloud/core"
 	schemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"

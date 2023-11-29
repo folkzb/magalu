@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"text/template"
 
-	"golang.org/x/exp/maps"
+	"maps"
+
 	"magalu.cloud/core/utils"
 )
 

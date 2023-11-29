@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"golang.org/x/exp/maps"
+	"maps"
 )
 
 func TestNewCOWMapOfCOWChildInvalidation(t *testing.T) {

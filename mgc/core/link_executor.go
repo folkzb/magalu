@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 
-	"golang.org/x/exp/maps"
+	"maps"
 )
 
 type LinkExecutor interface {

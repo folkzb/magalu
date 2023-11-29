@@ -7,8 +7,9 @@ import (
 
 	"slices"
 
+	"maps"
+
 	"github.com/getkin/kin-openapi/openapi3"
-	"golang.org/x/exp/maps"
 	"magalu.cloud/core/utils"
 )
 
