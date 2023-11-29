@@ -11,8 +11,8 @@ import (
 )
 
 type configSetParams struct {
-	Key   string `json:"key" jsonschema_description:"Name of the desired config"`
-	Value any    `json:"value" jsonschema_description:"New flag value"`
+	Key   string `json:"key" jsonschema_description:"Name of the desired config" mgc:"positional"`
+	Value any    `json:"value" jsonschema_description:"New flag value" mgc:"positional"`
 }
 
 var getSet = utils.NewLazyLoader[core.Executor](newSet)

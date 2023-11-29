@@ -10,7 +10,7 @@ import (
 )
 
 type configGetParams struct {
-	Key string `json:"key" validate:"required" jsonschema_description:"Name of the desired config"`
+	Key string `json:"key" validate:"required" jsonschema_description:"Name of the desired config" mgc:"positional"`
 }
 
 var getGet = utils.NewLazyLoader[core.Executor](newGet)
