@@ -5,25 +5,27 @@ set -xe
 PS4='\[\e[36m\]RAN COMMAND: \[\e[m\]'
 
 MGC_CLI=${MGC_CLI:-./mgc}
+SSH_KEY_NAME=$1
+
+if [ "$SSH_KEY_NAME" == "" ]
+then
+    echo "SSH key name must be passed as argument"
+    exit 1
+fi
 
 # 1. Login
 $MGC_CLI auth login
 
-# 2. Create Keypair for your SSH, if more than one pub key it will fail
-SSH_KEY_NAME="example-key";
-ssh-keygen -t ed25519 -N "" -f /tmp/$SSH_KEY_NAME
-$MGC_CLI virtual-machine keypairs create --name=$SSH_KEY_NAME --public-key="$(cat /tmp/$SSH_KEY_NAME.pub)"
-rm /tmp/$SSH_KEY_NAME
-
 # 3. Create VM
-IMAGE="cloud-debian-11 LTS"
-TYPE="cloud-bs1.xsmall"
+IMAGE_NAME="cloud-debian-11 LTS"
+MACHINE_TYPE_NAME="cloud-bs1.xsmall"
 INSTANCE_NAME="vm-example-1"
 read VM_ID < <($MGC_CLI virtual-machine instances create \
-    --image="$IMAGE" \
-    --type=$TYPE \
-    --key_name=$SSH_KEY_NAME \
-    --name=$INSTANCE_NAME -o jsonpath='$.id')
+    --image=name:"$IMAGE_NAME" \
+    --machine-type=name:"$MACHINE_TYPE_NAME" \
+    --key_name="$SSH_KEY_NAME" \
+    --name="$INSTANCE_NAME" \
+    -o="jsonpath=$.id")
 
 # 4. Create Disk
 DESCRIPTION="example-volume"
@@ -37,15 +39,13 @@ read DISK_ID < <($MGC_CLI block-storage volume create \
     --size=$DISK_SIZE -o jsonpath='$.id')
 
 # 5. Wait for the VM to transition to a terminal state (active, shutoff or error)
-read CUR_STATUS < <($MGC_CLI virtual-machine instances \
-    -o jsonpath='$.status' \
-    -l 'fatal:*' \
-    -w \
-    get --id=$VM_ID)
+read ACTIVE_VM_ID < <($MGC_CLI virtual-machine instances get \
+    $VM_ID \
+    -U="30,1s,jsonpath=\$.status == \"completed\"" \
+    -o jsonpath='$.id')
 
 # 6. Check if VM is in active state
-DESIRED_STATUS='"active"'
-if [ "$CUR_STATUS" != "$DESIRED_STATUS" ]
+if [ "$VM_ID" != "$ACTIVE_VM_ID" ]
 then
     $MGC_CLI virtual-machine instances delete --id=$VM_ID
     exit 1
