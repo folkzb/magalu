@@ -1448,7 +1448,7 @@ Flags:
       --password string                 (max character count: 50)
       --user string                     (max character count: 25)
   -v, --version                         version for create
-      --volume object                   ({ size: number, type: string (one of CLOUD_HDD|CLOUD_NVME) (default CLOUD_NVME) })
+      --volume object                   ({"size": number, "type": string (one of CLOUD_HDD|CLOUD_NVME) (default CLOUD_NVME)})
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
@@ -1546,7 +1546,7 @@ Flags:
   -h, --help             help for resize
       --id uuid          Database Instance Unique Id.
   -v, --version          version for resize
-      --volume object    ({ size: number })
+      --volume object    ({"size": number})
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
@@ -2175,7 +2175,7 @@ Flags:
                                      - deve começar com um caractere alfabético
                                      - deve terminar com um caractere alfanumérico
                                    
-      --node-pools array(object)   Conjunto de nodes em um cluster kubernetes (object:({ auto_scale: { enabled: boolean, max_replicas: integer (min: 1) (default %!s(float64=1)), min_replicas: integer (min: 1) (default %!s(float64=1)) } ({ enabled: boolean, max_replicas: integer (min: 1) (default %!s(float64=1)), min_replicas: integer (min: 1) (default %!s(float64=1)) }) (default %!s(<nil>)), flavor: string (one of cloud-k8s.gp1.large|cloud-k8s.gp1.small) (default %!s(<nil>)), name: string, replicas: integer, tags: array(string), taints: array({ effect: string (one of NoExecute|NoSchedule|PreferNoSchedule) (default %!s(<nil>)), key: string, value: string }) (object:({ effect: string (one of NoExecute|NoSchedule|PreferNoSchedule) (default %!s(<nil>)), key: string, value: string })) (default %!s(<nil>)) }))
+      --node-pools array(object)   Conjunto de nodes em um cluster kubernetes ([{"auto_scale": {"enabled": boolean (default false), "max_replicas": integer (min: 1) (default 1), "min_replicas": integer (min: 1) (default 1)}, "flavor": string (one of cloud-k8s.gp1.large|cloud-k8s.gp1.small), "name": string, "replicas": integer (default 1), "tags": [string], "taints": [{"effect": string (one of NoExecute|NoSchedule|PreferNoSchedule), "key": string, "value": string}]}])
       --version enum               Versão do kubernetes nativa do cluster (one of v1.22.9|v1.24.10|v1.26.1|v1.28.2) (default v1.28.2)
 
 Global Flags:
@@ -2376,7 +2376,7 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --auto-scale object      Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes ({ enabled: boolean, max_replicas: integer (min: 1) (default %!s(float64=1)), min_replicas: integer (min: 1) (default %!s(float64=1)) })
+      --auto-scale object      Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes ({"enabled": boolean (default false), "max_replicas": integer (min: 1) (default 1), "min_replicas": integer (min: 1) (default 1)})
       --cluster-id uuid        Identificador no padrão uuid para identificar o cluster
       --flavor enum            Definição da capacidade de CPU, memória RAM e armazenamento dos nodes
                                <table>
@@ -2410,7 +2410,7 @@ Flags:
                                
       --replicas integer       Número de réplicas dos nós do nodepool (default 1)
       --tags array(string)     Lista de tags aplicadas ao nodepool
-      --taints array(object)   Propriedade de associação de um conjunto se nós (object:({ effect: string (one of NoExecute|NoSchedule|PreferNoSchedule) (default %!s(<nil>)), key: string, value: string }))
+      --taints array(object)   Propriedade de associação de um conjunto se nós ([{"effect": string (one of NoExecute|NoSchedule|PreferNoSchedule), "key": string, "value": string}])
   -v, --version                version for create
 
 Global Flags:
@@ -2527,7 +2527,7 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --auto-scale object   Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes ({ enabled: boolean, max_replicas: integer (min: 1) (default %!s(float64=1)), min_replicas: integer (min: 1) (default %!s(float64=1)) })
+      --auto-scale object   Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes ({"enabled": boolean (default false), "max_replicas": integer (min: 1) (default 1), "min_replicas": integer (min: 1) (default 1)})
       --cluster-id uuid     Identificador no padrão uuid para identificar o cluster
   -h, --help                help for update
       --node-pool-id uuid   Identificador no padrão uuid para identificar o nodepool
@@ -4524,7 +4524,7 @@ Flags:
       --force-authentication   Force authentication by sending the header even if this API doesn't require it
   -h, --help                   help for update
       --project-type enum      (one of dbaas|default|iamaas|k8saas)
-      --rules array(object)    (object:({ direction: string, error: string, external_id: string, port_range_max: integer, port_range_min: integer, protocol: string, remote_group_id: string, remote_ip_prefix: string, resource_id: string, status: string (one of created|error|pending) (default %!s(<nil>)) })) (default [])
+      --rules array(object)    ([{"direction": string, "error": string, "external_id": string, "port_range_max": integer, "port_range_min": integer, "protocol": string, "remote_group_id": string, "remote_ip_prefix": string, "resource_id": string, "status": string (one of created|error|pending)}]) (default [])
       --security-group-id      
       --status string          
   -v, --version                version for update
@@ -5786,7 +5786,7 @@ Flags:
       --image string                       
       --key-name string                    
       --name string                        
-      --network-interfaces array(object)   (object:({ id: string }))
+      --network-interfaces array(object)   ([{"id": string}])
       --type string                        
       --user-data string                   
   -v, --version                            version for create

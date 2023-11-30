@@ -168,7 +168,7 @@ func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, isRequired func(string
 				value = prop.Default
 			}
 
-			constraints := fmt.Sprintf("(%s)", schemaValueConstraints((*mgcSdk.Schema)(prop)))
+			constraints := fmt.Sprintf("(%s)", schemaJSONRepAndConstraints((*mgcSdk.Schema)(prop), false))
 			description := prop.Description
 			if constraints != "()" {
 				if description == "" {

@@ -11,10 +11,12 @@ require (
 
 require (
 	github.com/erikgeiser/promptkit v0.9.0
+	github.com/getkin/kin-openapi v0.118.0
 	github.com/invopop/yaml v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.4.8
 	github.com/stoewer/go-strcase v1.3.0
 	go.uber.org/zap v1.25.0
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/term v0.11.0
 	gopkg.in/yaml.v3 v3.0.1
 	moul.io/zapfilter v1.7.0
@@ -30,7 +32,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.7.1 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/getkin/kin-openapi v0.118.0 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -61,7 +62,6 @@ require (
 	github.com/spf13/viper v1.16.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect

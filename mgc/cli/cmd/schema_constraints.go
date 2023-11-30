@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"golang.org/x/exp/slices"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -20,8 +21,6 @@ func getSchemaConstraintFiller(t string) (schemaConstraintFiller, bool) {
 		return addNumberConstraints, true
 	case "array":
 		return addArrayConstraints, true
-	case "object":
-		return addObjectConstraints, true
 	}
 
 	return nil, false
@@ -66,58 +65,77 @@ func addArrayConstraints(s *mgcSdk.Schema, dst *[]string) {
 	} else if s.MaxItems != nil {
 		*dst = append(*dst, fmt.Sprintf("at most %v items", int(*s.MaxItems)))
 	}
+}
 
-	if s.Items != nil {
-		items := (*mgcSdk.Schema)(s.Items.Value)
-		if filler, ok := getSchemaConstraintFiller(items.Type); ok {
-			itemsConstraints := []string{}
-			filler(items, &itemsConstraints)
-			if len(itemsConstraints) > 0 {
-				itemsStr := fmt.Sprintf("%s:(%s)", items.Type, strings.Join(itemsConstraints, " and "))
-				*dst = append(*dst, itemsStr)
-			}
-		}
+func getXOfJSONRepresentation(xOf openapi3.SchemaRefs, xOfType string) string {
+	xOfs := make([]string, len(xOf))
+	for i, sub := range xOf {
+		xOfs[i] = getSchemaJSONrepresentation((*mgcSdk.Schema)(sub.Value))
 	}
+	return fmt.Sprintf("%s(%s)", xOfType, strings.Join(xOfs, ", "))
+}
+
+func getArrayJSONRepresentation(s *mgcSdk.Schema) string {
+	if s.Items != nil {
+		return fmt.Sprintf("[%s]", schemaJSONRepAndConstraints((*mgcSdk.Schema)(s.Items.Value), true))
+	} else {
+		return "[]"
+	}
+}
+
+func getXOfJSONRepresentations(s *mgcSdk.Schema) string {
+	allReps := []string{}
+	if len(s.AnyOf) > 0 {
+		allReps = append(allReps, getXOfJSONRepresentation(s.AnyOf, "anyOf"))
+	}
+	if len(s.AllOf) > 0 {
+		allReps = append(allReps, getXOfJSONRepresentation(s.AllOf, "allOf"))
+	}
+	if len(s.OneOf) > 0 {
+		allReps = append(allReps, getXOfJSONRepresentation(s.OneOf, "oneOf"))
+	}
+
+	return strings.Join(allReps, ", ")
+}
+
+func getObjectJSONRepresentation(s *mgcSdk.Schema) string {
+	propReps := make([]string, 0, len(s.Properties))
+
+	for name, prop := range s.Properties {
+		propRep := fmt.Sprintf("%q: %s", name, schemaJSONRepAndConstraints((*mgcSdk.Schema)(prop.Value), true))
+		if prop.Value.Default != nil {
+			propRep += fmt.Sprintf(" (default %v)", prop.Value.Default)
+		}
+
+		propReps = append(propReps, propRep)
+	}
+
+	slices.Sort(propReps)
+
+	return "{" + strings.Join(propReps, ", ") + "}"
 }
 
 func getSchemaJSONrepresentation(s *mgcSdk.Schema) string {
+	allReps := []string{}
+
+	if xOfReps := getXOfJSONRepresentations(s); len(xOfReps) > 1 {
+		allReps = append(allReps, xOfReps)
+	}
+
 	switch t := s.Type; t {
 	case "array":
-		if s.Items != nil {
-			return fmt.Sprintf("array(%s)", getSchemaJSONrepresentation((*mgcSdk.Schema)(s.Items.Value)))
-		} else {
-			return "array"
-		}
+		allReps = append(allReps, getArrayJSONRepresentation(s))
 	case "object":
-		sortedProps := make([]string, 0, len(s.Properties))
-
-		for name, prop := range s.Properties {
-			strProp := fmt.Sprintf("%s: %s", name, getSchemaJSONrepresentation((*mgcSdk.Schema)(prop.Value)))
-			if constraint := schemaValueConstraints((*mgcSdk.Schema)(prop.Value)); constraint != "" {
-				strProp += fmt.Sprintf(" (%s)", constraint)
-				if prop.Value.Default != "" {
-					strProp += fmt.Sprintf(" (default %s)", prop.Value.Default)
-				}
-			}
-
-			sortedProps = append(sortedProps, strProp)
+		if len(s.Properties) > 0 {
+			allReps = append(allReps, getObjectJSONRepresentation(s))
 		}
-
-		slices.Sort(sortedProps)
-
-		return "{ " + strings.Join(sortedProps, ", ") + " }"
+	case "":
+		break
 	default:
-		return t
-	}
-}
-
-func addObjectConstraints(s *mgcSdk.Schema, dst *[]string) {
-	propLen := len(s.Properties)
-	if propLen == 0 {
-		return
+		allReps = append(allReps, t)
 	}
 
-	*dst = append(*dst, getSchemaJSONrepresentation(s))
+	return strings.Join(allReps, ", ")
 }
 
 func addEnumConstraint(s *mgcSdk.Schema, dst *[]string) {
@@ -136,14 +154,37 @@ func addEnumConstraint(s *mgcSdk.Schema, dst *[]string) {
 	*dst = append(*dst, fmt.Sprintf("one of %v", strings.Join(asStrings, "|")))
 }
 
-func schemaValueConstraints(s *mgcSdk.Schema) string {
+func isJSONRepresentationNeeded(s *mgcSdk.Schema, representation string) bool {
+	if representation == s.Type {
+		return false
+	}
+
+	if s.Items != nil {
+		return representation != fmt.Sprintf("[%s]", s.Items.Value.Type) && representation != "[]"
+	}
+
+	return true
+}
+
+// If the JSON representation is simple (for simple types like 'string' or for simple arrays like '[string]'),
+// only the constraints are returned. If the JSON representation is more complex (for objects, object arrays, xOfs...),
+// both the JSON representation and constraints are returned.
+// To always return the JSON representation regardless, set 'includeSimpleReturn' to true
+func schemaJSONRepAndConstraints(s *mgcSdk.Schema, includeSimpleReturn bool) string {
 	constraints := []string{}
 
 	if filler, ok := getSchemaConstraintFiller(s.Type); ok {
 		filler(s, &constraints)
 	}
 
-	return strings.Join(constraints, " and ")
+	if jsonRepresentation := getSchemaJSONrepresentation(s); includeSimpleReturn || isJSONRepresentationNeeded(s, jsonRepresentation) {
+		if len(constraints) > 0 {
+			return fmt.Sprintf("%s (%s)", jsonRepresentation, strings.Join(constraints, " and "))
+		}
+		return jsonRepresentation
+	} else {
+		return strings.Join(constraints, " and ")
+	}
 }
 
 func getMinNumber(s *mgcSdk.Schema) *float64 {
