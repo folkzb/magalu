@@ -25,20 +25,20 @@ repos:
     -   id: check-commands-outputs
         name: check-commands-outputs
         language: system
-        entry: bash -c './tests/test-cli-output.sh'
+        entry: bash -c './scripts/gen_expected_cli_full_help_output_file.sh'
         stages: [pre-commit]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
     -   id: trailing-whitespace
         stages: [pre-commit, pre-push]
-        exclude: tests/test-cli-output.expected
+        exclude: script-qa/cli-full-help-output.txt
     -   id: end-of-file-fixer
         stages: [pre-commit, pre-push]
         exclude: >
           (?x)(
             ^mgc/sdk/version.txt|
-            ^tests/test-cli-output.expected
+            ^script-qa/cli-full-help-output.txt
           )
     -   id: check-yaml
         stages: [pre-commit, pre-push]
