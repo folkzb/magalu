@@ -1,12 +1,12 @@
 Create a private and public key
 
 Usage:
-  ./cli virtual-machine keypairs create-keypair-name [keypair-name] [flags]
+  ./cli virtual-machine keypairs create-keypair-name [name] [flags]
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for create-keypair-name
-      --keypair-name string           Keypair Name: keypair_name
+      --name string                   Keypair Name: keypair_name
   -v, --version                       version for create-keypair-name
 
 Global Flags:

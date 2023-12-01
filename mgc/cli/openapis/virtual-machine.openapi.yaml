@@ -93,6 +93,7 @@ paths:
                     format: uuid
                 name: image_id
                 in: path
+                x-mgc-name: id
             responses:
                 '204':
                     description: Successful Response
@@ -191,6 +192,7 @@ paths:
                     format: uuid
                 name: instance_type_id
                 in: path
+                x-mgc-name: id
             responses:
                 '204':
                     description: Successful Response
@@ -545,6 +547,7 @@ paths:
                     type: string
                 name: keypair_name
                 in: path
+                x-mgc-name: name
             responses:
                 '201':
                     description: Successful Response
@@ -581,6 +584,7 @@ paths:
                     type: string
                 name: keypair_name
                 in: path
+                x-mgc-name: name
             responses:
                 '204':
                     description: Successful Response

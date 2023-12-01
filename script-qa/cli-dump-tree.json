@@ -17467,7 +17467,7 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "image_id": {
+        "id": {
          "description": "image_id",
          "format": "uuid",
          "title": "Image Id",
@@ -17475,7 +17475,7 @@
         }
        },
        "required": [
-        "image_id"
+        "id"
        ],
        "type": "object"
       },
@@ -17746,7 +17746,7 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "instance_type_id": {
+        "id": {
          "description": "instance_type_id",
          "format": "uuid",
          "title": "Instance Type Id",
@@ -17754,7 +17754,7 @@
         }
        },
        "required": [
-        "instance_type_id"
+        "id"
        ],
        "type": "object"
       },
@@ -19242,14 +19242,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "keypair_name": {
+        "name": {
          "description": "keypair_name",
          "title": "Keypair Name",
          "type": "string"
         }
        },
        "required": [
-        "keypair_name"
+        "name"
        ],
        "type": "object"
       },
@@ -19320,14 +19320,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "keypair_name": {
+        "name": {
          "description": "keypair_name",
          "title": "Keypair Name",
          "type": "string"
         }
        },
        "required": [
-        "keypair_name"
+        "name"
        ],
        "type": "object"
       },

@@ -1,12 +1,12 @@
 Deletes a instance type in DB only
 
 Usage:
-  ./cli virtual-machine instance-types delete [instance-type-id] [flags]
+  ./cli virtual-machine instance-types delete [id] [flags]
 
 Flags:
-  -h, --help                    help for delete
-      --instance-type-id uuid   Instance Type Id: instance_type_id
-  -v, --version                 version for delete
+  -h, --help      help for delete
+      --id uuid   Instance Type Id: instance_type_id
+  -v, --version   version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

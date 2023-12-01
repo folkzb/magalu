@@ -80,6 +80,11 @@ paths:
                             description: Delete image in DB
                             parameters:
                                 image_id: $response.body#/id
+    /v0/images/{image_id}:
+        delete:
+            parameters:
+            -   name: image_id
+                x-mgc-name: id
     /v0/instance_types:
         post:
             x-mgc-hidden: true
@@ -93,6 +98,9 @@ paths:
                                 instance_type_id: $response.body#/id
     /v0/instance_types/{instance_type_id}:
         delete:
+            parameters:
+            -   name: instance_type_id
+                x-mgc-name: id
             x-mgc-hidden: true
     /v0/keypairs:
         post:
@@ -106,6 +114,9 @@ paths:
                                 keypair_name: $response.body#/name
     /v0/keypairs/{keypair_name}:
         post:
+            parameters:
+            -   name: keypair_name
+                x-mgc-name: name
             responses:
                 '201':
                     links:
@@ -114,6 +125,10 @@ paths:
                             description: Delete keypair
                             parameters:
                                 keypair_name: $response.body#/name
+        delete:
+            parameters:
+            -   name: keypair_name
+                x-mgc-name: name
     /v0/instance_types_all:
         get:
             x-mgc-hidden: true

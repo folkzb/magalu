@@ -1,12 +1,12 @@
 Deletes images only in DB
 
 Usage:
-  ./cli virtual-machine images delete [image-id] [flags]
+  ./cli virtual-machine images delete [id] [flags]
 
 Flags:
-  -h, --help            help for delete
-      --image-id uuid   Image Id: image_id
-  -v, --version         version for delete
+  -h, --help      help for delete
+      --id uuid   Image Id: image_id
+  -v, --version   version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

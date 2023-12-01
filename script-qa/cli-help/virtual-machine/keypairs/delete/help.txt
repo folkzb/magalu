@@ -1,12 +1,12 @@
 Delete a keypair
 
 Usage:
-  ./cli virtual-machine keypairs delete [keypair-name] [flags]
+  ./cli virtual-machine keypairs delete [name] [flags]
 
 Flags:
-  -h, --help                  help for delete
-      --keypair-name string   Keypair Name: keypair_name
-  -v, --version               version for delete
+  -h, --help          help for delete
+      --name string   Keypair Name: keypair_name
+  -v, --version       version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
