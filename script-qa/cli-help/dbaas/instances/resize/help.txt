@@ -8,11 +8,11 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --flavor-id uuid   
+      --flavor-id uuid   Flavor Id
   -h, --help             help for resize
-      --id uuid          Database Instance Unique Id.
+      --id uuid          Database Instance Id: Database Instance Unique Id.
   -v, --version          version for resize
-      --volume object    ({"size": number (range: 10 - 50000)})
+      --volume object    Instance Volume Request ({"size": number (range: 10 - 50000)})
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

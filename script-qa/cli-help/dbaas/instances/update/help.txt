@@ -8,10 +8,10 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --backup-retention-days integer   The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
-      --backup-start-at time            Start time which is allowed to start the automated backup process. (default "01:00:00")
+      --backup-retention-days integer   Backup Retention Days: The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
+      --backup-start-at time            Backup Start At: Start time which is allowed to start the automated backup process. (default "01:00:00")
   -h, --help                            help for update
-      --id uuid                         Database Instance Unique Id.
+      --id uuid                         Database Instance Id: Database Instance Unique Id.
       --status enum                     (one of "ACTIVE" or "STOPPED")
   -v, --version                         version for update
 

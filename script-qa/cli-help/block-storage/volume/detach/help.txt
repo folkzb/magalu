@@ -13,11 +13,11 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --force                     force
+      --force                     Force: force
   -h, --help                      help for detach
-      --id uuid                   id
+      --id uuid                   Volume Id: id
   -v, --version                   version for detach
-      --virtual-machine-id uuid   virtual_machine_id
+      --virtual-machine-id uuid   Virtual Machine Id: virtual_machine_id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

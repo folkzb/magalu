@@ -8,9 +8,9 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --dns-nameservers array(ipvanyaddress)    (default [])
+      --dns-nameservers array(ipvanyaddress)   Dns Nameservers (default [])
   -h, --help                                   help for update
-      --subnet-id string                       
+      --subnet-id string                       Subnet Id
   -v, --version                                version for update
 
 Global Flags:

@@ -9,8 +9,8 @@ Available Commands:
 
 Flags:
   -h, --help                  help for detach
-      --port-id string        
-      --public-ip-id string   
+      --port-id string        Port Id
+      --public-ip-id string   Public Ip Id
   -v, --version               version for detach
 
 Global Flags:

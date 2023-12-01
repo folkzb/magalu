@@ -9,8 +9,8 @@ Available Commands:
 
 Flags:
   -h, --help          help for update
-      --id uuid       id
-      --name string   
+      --id uuid       Volume Id: id
+      --name string   Name
   -v, --version       version for update
 
 Global Flags:

@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help               help for get
-      --subnet-id string   
+      --subnet-id string   Subnet Id
   -v, --version            version for get
 
 Global Flags:

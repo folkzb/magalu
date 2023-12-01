@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help                help for list
-      --quota-slug string   quota_slug
+      --quota-slug string   Quota Slug: quota_slug
   -v, --version             version for list
 
 Global Flags:

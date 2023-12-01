@@ -9,8 +9,8 @@ Available Commands:
 
 Flags:
   -h, --help          help for update
-      --id uuid       id
-      --status enum   An enumeration. (one of "active" or "shutoff")
+      --id uuid       Id: id
+      --status enum   InstanceStatus: An enumeration. (one of "active" or "shutoff")
   -v, --version       version for update
 
 Global Flags:

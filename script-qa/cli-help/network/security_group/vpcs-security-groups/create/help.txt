@@ -8,13 +8,13 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --description string     
+      --description string     Description
   -h, --help                   help for create
-      --name string            (between 5 and 100 characters)
+      --name string            Name (between 5 and 100 characters)
   -v, --version                version for create
-      --vpc-id string          
-      --wait                   The request will be asynchronous. The wait parameter tells the API that you want the request to simulate synchronous behavior (to maintain endpoint compatibility). You can set an approximate timeout with the waitTimeout parameter (default true)
-      --wait-timeout integer   the approximate time in seconds you want to wait when simulating the request as synchronous (only works with wait=true) (default 120)
+      --vpc-id string          Vpc Id
+      --wait                   wait: The request will be asynchronous. The wait parameter tells the API that you want the request to simulate synchronous behavior (to maintain endpoint compatibility). You can set an approximate timeout with the waitTimeout parameter (default true)
+      --wait-timeout integer   waitTimeout: the approximate time in seconds you want to wait when simulating the request as synchronous (only works with wait=true) (default 120)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

@@ -8,10 +8,10 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --flavor-id uuid   
+      --flavor-id uuid   Flavor Id
   -h, --help             help for create
-      --name string      (max character count: 255)
-      --source-id uuid   
+      --name string      Name (max character count: 255)
+      --source-id uuid   Source Id
   -v, --version          version for create
 
 Global Flags:

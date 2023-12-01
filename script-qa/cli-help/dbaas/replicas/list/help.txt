@@ -11,7 +11,7 @@ Flags:
       ---limit integer    limit (range: 1 - 25) (default 10)
       ---offset integer   offset (min: 0)
   -h, --help              help for list
-      --source-id uuid    Value referring to source Id.
+      --source-id uuid    Source Id: Value referring to source Id.
   -v, --version           version for list
 
 Global Flags:

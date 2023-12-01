@@ -8,14 +8,14 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --cidr-block string                      
-      --description string                     
-      --dns-nameservers array(ipvanyaddress)    (default [])
+      --cidr-block string                      Cidr Block
+      --description string                     Description
+      --dns-nameservers array(ipvanyaddress)   Dns Nameservers (default [])
   -h, --help                                   help for create
-      --ip-version integer                     
-      --name string                            
+      --ip-version integer                     Ip Version
+      --name string                            Name
   -v, --version                                version for create
-      --vpc-id string
+      --vpc-id string                          Vpc Id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

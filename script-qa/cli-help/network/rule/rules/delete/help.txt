@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help             help for delete
-      --rule-id string   
+      --rule-id string   Rule Id
   -v, --version          version for delete
 
 Global Flags:

@@ -9,8 +9,8 @@ Available Commands:
 
 Flags:
   -h, --help                help for create
-      --name string         
-      --public-key string   
+      --name string         Name
+      --public-key string   Public Key
   -v, --version             version for create
 
 Global Flags:

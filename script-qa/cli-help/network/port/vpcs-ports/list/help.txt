@@ -8,13 +8,13 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      ---limit integer               (min: 1) (default 10)
-      ---offset integer              (min: 1) (default 1)
-      --detailed                      (default true)
+      ---limit integer               Items Per Page (min: 1) (default 10)
+      ---offset integer              Page Number (min: 1) (default 1)
+      --detailed                     Detailed (default true)
   -h, --help                         help for list
-      --port-id-list array(string)    (default [])
+      --port-id-list array(string)   Port Id List (default [])
   -v, --version                      version for list
-      --vpc string
+      --vpc string                   Vpc Id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

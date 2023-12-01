@@ -9,8 +9,8 @@ Available Commands:
 
 Flags:
   -h, --help        help for create
-      --id uuid     Value referring to instance Id.
-      --mode enum   An enumeration. (must be "FULL")
+      --id uuid     Instance Id: Value referring to instance Id.
+      --mode enum   Backup Mode Request: An enumeration. (must be "FULL")
   -v, --version     version for create
 
 Global Flags:

@@ -8,12 +8,12 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --description string   
+      --description string   Description
   -h, --help                 help for create
-      --name string          
-      --size integer         Gibibytes (GiB)
+      --name string          Name
+      --size integer         Size: Gibibytes (GiB)
   -v, --version              version for create
-      --volume-type string
+      --volume-type string   Volume Type
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

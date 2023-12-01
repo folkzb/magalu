@@ -75,7 +75,14 @@ func (d *SchemaFlagValueDesc) RawDefaultValue() string {
 }
 
 func (d *SchemaFlagValueDesc) Usage() (usage string) {
-	usage = d.Schema.Description
+	usage = d.Schema.Title
+
+	if d.Schema.Description != "" {
+		if usage != "" {
+			usage += ": "
+		}
+		usage += d.Schema.Description
+	}
 
 	constraints := schemaJSONRepAndConstraints(d.Schema, false)
 	if constraints != "" {

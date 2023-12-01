@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help              help for delete
-      --replica-id uuid   Database Replica Unique Id
+      --replica-id uuid   Database Replica Id: Database Replica Unique Id
   -v, --version           version for delete
 
 Global Flags:

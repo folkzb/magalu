@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help                  help for delete
-      --public-ip-id string   
+      --public-ip-id string   Public Ip Id
   -v, --version               version for delete
 
 Global Flags:

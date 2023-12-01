@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help                       help for list
-      --security-group-id string   
+      --security-group-id string   Security Group Id
   -v, --version                    version for list
 
 Global Flags:

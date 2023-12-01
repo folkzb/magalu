@@ -8,7 +8,7 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --backup-id uuid   Value referring to backup Id.
+      --backup-id uuid   Backup Id: Value referring to backup Id.
   -h, --help             help for delete
   -v, --version          version for delete
 

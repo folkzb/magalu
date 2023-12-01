@@ -9,9 +9,9 @@ Available Commands:
 
 Flags:
   -h, --help                      help for attach
-      --id uuid                   id
+      --id uuid                   Volume Id: id
   -v, --version                   version for attach
-      --virtual-machine-id uuid   virtual_machine_id
+      --virtual-machine-id uuid   Virtual Machine Id: virtual_machine_id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

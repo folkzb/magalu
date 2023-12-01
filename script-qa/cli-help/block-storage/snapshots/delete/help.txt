@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help               help for delete
-      --snapshot-id uuid   snapshot_id
+      --snapshot-id uuid   Snapshot Id: snapshot_id
   -v, --version            version for delete
 
 Global Flags:

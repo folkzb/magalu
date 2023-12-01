@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help              help for get
-      --replica-id uuid   Value referring to replica Id.
+      --replica-id uuid   Replica Id: Value referring to replica Id.
   -v, --version           version for get
 
 Global Flags:

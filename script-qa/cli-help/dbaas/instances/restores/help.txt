@@ -8,9 +8,9 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --backup-id uuid   
+      --backup-id uuid   Backup Id
   -h, --help             help for restores
-      --id uuid          Value referring to instance Id.
+      --id uuid          Instance Id: Value referring to instance Id.
   -v, --version          version for restores
 
 Global Flags:

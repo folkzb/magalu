@@ -8,9 +8,9 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --block-storage-id uuid     id
+      --block-storage-id uuid     Volume Id: id
   -h, --help                      help for delete
-      --virtual-machine-id uuid
+      --virtual-machine-id uuid   Virtual Machine Id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

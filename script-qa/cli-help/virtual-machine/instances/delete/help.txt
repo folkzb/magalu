@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help      help for delete
-      --id uuid   id
+      --id uuid   Id: id
   -v, --version   version for delete
 
 Global Flags:

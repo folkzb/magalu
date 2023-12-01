@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help      help for stop
-      --id uuid   Database Instance Unique Id.
+      --id uuid   Database Instance Id: Database Instance Unique Id.
   -v, --version   version for stop
 
 Global Flags:

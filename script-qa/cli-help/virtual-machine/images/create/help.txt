@@ -9,9 +9,9 @@ Available Commands:
 
 Flags:
   -h, --help         help for create
-      --id uuid      
-      --internal     
-      --sku string   
+      --id uuid      Id
+      --internal     Internal
+      --sku string   Sku
   -v, --version      version for create
 
 Global Flags:

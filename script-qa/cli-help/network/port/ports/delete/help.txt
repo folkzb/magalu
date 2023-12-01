@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help             help for delete
-      --port-id string   
+      --port-id string   Port Id
   -v, --version          version for delete
 
 Global Flags:

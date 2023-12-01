@@ -8,14 +8,14 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --has-pip                             (default true)
-      --has-sg                              (default true)
+      --has-pip                            Has Pip (default true)
+      --has-sg                             Has Sg (default true)
   -h, --help                               help for create
-      --name string                        (between 5 and 100 characters)
-      --security-groups-id array(string)    (default [])
-      --subnets array(string)               (default [])
+      --name string                        Name (between 5 and 100 characters)
+      --security-groups-id array(string)   Security Groups Id (default [])
+      --subnets array(string)              Subnets (default [])
   -v, --version                            version for create
-      --vpc-id string
+      --vpc-id string                      Vpc Id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

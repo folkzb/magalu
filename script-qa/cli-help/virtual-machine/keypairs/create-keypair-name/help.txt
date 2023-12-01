@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help                  help for create-keypair-name
-      --keypair-name string   keypair_name
+      --keypair-name string   Keypair Name: keypair_name
   -v, --version               version for create-keypair-name
 
 Global Flags:

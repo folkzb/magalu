@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help                         help for list
-      --port-id-list array(string)   
+      --port-id-list array(string)   Port Id List
   -v, --version                      version for list
 
 Global Flags:

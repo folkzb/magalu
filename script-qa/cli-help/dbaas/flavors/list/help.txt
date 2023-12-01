@@ -11,7 +11,7 @@ Flags:
       ---limit integer    limit (range: 1 - 25) (default 10)
       ---offset integer   offset (min: 0)
   -h, --help              help for list
-      --status enum       An enumeration. (one of "ACTIVE" or "DEPRECATED") (default "ACTIVE")
+      --status enum       Flavor Status: An enumeration. (one of "ACTIVE" or "DEPRECATED") (default "ACTIVE")
   -v, --version           version for list
 
 Global Flags:

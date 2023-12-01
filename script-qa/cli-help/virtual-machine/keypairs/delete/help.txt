@@ -9,7 +9,7 @@ Available Commands:
 
 Flags:
   -h, --help                  help for delete
-      --keypair-name string   keypair_name
+      --keypair-name string   Keypair Name: keypair_name
   -v, --version               version for delete
 
 Global Flags:

@@ -8,9 +8,9 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --flavor-id uuid    
+      --flavor-id uuid    Flavor Id
   -h, --help              help for resize
-      --replica-id uuid   Value referring to replica Id.
+      --replica-id uuid   Replica Id: Value referring to replica Id.
   -v, --version           version for resize
 
 Global Flags:

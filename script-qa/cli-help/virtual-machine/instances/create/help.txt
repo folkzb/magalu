@@ -8,15 +8,15 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --allocate-fip                        (default true)
-      --availability-zone string           
+      --allocate-fip                       Allocate Fip (default true)
+      --availability-zone string           Availability Zone
   -h, --help                               help for create
-      --image string                       
-      --key-name string                    
-      --name string                        
-      --network-interfaces array(object)   ([{"id": string}])
-      --type string                        
-      --user-data string                   
+      --image string                       Image
+      --key-name string                    Key Name
+      --name string                        Name
+      --network-interfaces array(object)   Network Interfaces ([{"id": string}])
+      --type string                        Type
+      --user-data string                   User Data
   -v, --version                            version for create
 
 Global Flags:
