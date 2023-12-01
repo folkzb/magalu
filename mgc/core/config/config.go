@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/profile_manager"
@@ -175,6 +176,7 @@ func (c *Config) Set(key string, value interface{}) error {
 
 func (c *Config) Delete(key string) error {
 	configMap := c.viper.AllSettings()
+	key = strings.ToLower(key)
 	if _, ok := configMap[key]; !ok {
 		return nil
 	}
