@@ -146,7 +146,14 @@ paths:
                                 snapshot_id: $response.body#/id
     /v0/snapshots/{snapshot_id}:
         post:
+            parameters:
+            -   name: snapshot_id
+                x-mgc-name: id
             x-mgc-name: restore
+        delete:
+            parameters:
+            -   name: snapshot_id
+                x-mgc-name: id
     /v0/volume_types_all:
         get:
             x-mgc-hidden: true

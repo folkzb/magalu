@@ -1,13 +1,13 @@
 Restore a snapshot
 
 Usage:
-  ./cli block-storage snapshots restore [snapshot-id] [flags]
+  ./cli block-storage snapshots restore [id] [flags]
 
 Flags:
       --description string   Description
   -h, --help                 help for restore
+      --id uuid              Snapshot Id: snapshot_id
       --name string          Name
-      --snapshot-id uuid     Snapshot Id: snapshot_id
   -v, --version              version for restore
 
 Global Flags:
