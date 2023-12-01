@@ -68,8 +68,11 @@ func handleLinkArgs(
 	linkName := currentLinkArgs[0]
 
 	if link, ok := links[linkName]; ok {
-		linkCmd := addLink(ctx, sdk, parentCmd, config, originalResult, link, linkChainedArgs[1:])
-		err := linkCmd.ParseFlags(currentLinkArgs[1:])
+		linkCmd, err := addLink(ctx, sdk, parentCmd, config, originalResult, link, linkChainedArgs[1:])
+		if err != nil {
+			return err
+		}
+		err = linkCmd.ParseFlags(currentLinkArgs[1:])
 		if err != nil {
 			return err
 		}

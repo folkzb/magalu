@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/stoewer/go-strcase"
-	"magalu.cloud/cli/cmd/schema_flags"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 	mgcSdk "magalu.cloud/sdk"
@@ -21,17 +20,15 @@ const (
 
 var allExecutorChildren = []string{listLinksCmd}
 
-func isConfigRequired(string) bool { return false }
-
-func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (*cobra.Command, error) {
+func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (cmd *cobra.Command, flags *cmdFlags, err error) {
 	if childGroup, ok := child.(mgcSdk.Grouper); ok {
-		cmd, err := addGroup(sdk, parentCmd, childGroup)
-		return cmd, err
+		cmd, err = addGroup(sdk, parentCmd, childGroup)
+		return
 	} else if childExec, ok := child.(mgcSdk.Executor); ok {
-		cmd, err := addAction(sdk, parentCmd, childExec)
-		return cmd, err
+		return addAction(sdk, parentCmd, childExec)
 	} else {
-		return nil, fmt.Errorf("child %v not group/executor", child)
+		err = fmt.Errorf("child %v not group/executor", child)
+		return
 	}
 }
 
@@ -41,22 +38,13 @@ func loadGrouperChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Group
 		return nil, nil, err
 	}
 
-	childCmd, err := addChildDesc(sdk, cmd, child)
+	childCmd, flags, err := addChildDesc(sdk, cmd, child)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if childExec, ok := child.(mgcSdk.Executor); ok {
-		isParameterRequired := func(name string) bool {
-			if slices.Contains(childExec.ParametersSchema().Required, name) {
-				return !slices.Contains(childExec.PositionalArgs(), name)
-			}
-
-			return false
-		}
-
-		addFlags(childCmd.Flags(), childExec.ParametersSchema(), isParameterRequired)
-		addFlags(childCmd.Root().PersistentFlags(), childExec.ConfigsSchema(), isConfigRequired)
+	if flags != nil {
+		flags.addFlags(childCmd)
 	}
 
 	return childCmd, child, nil
@@ -83,7 +71,7 @@ func loadAllGrouperChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core
 		if child.IsInternal() && !getShowInternalFlag(cmd.Root()) {
 			return true, nil
 		}
-		_, err = addChildDesc(sdk, cmd, child)
+		_, _, err = addChildDesc(sdk, cmd, child)
 		return true, err
 	})
 	return err
@@ -149,34 +137,6 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 	return loadCommandTree(sdk, childCmd, childCmdDesc, childArgs)
 }
 
-func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, isRequired func(string) bool) {
-	for name := range schema.Properties {
-		// Prevents flags be added twice by Link command
-		if flags.Lookup(name) != nil {
-			continue
-		}
-
-		flags.AddFlag(schema_flags.NewSchemaFlag(
-			schema,
-			name,
-			flags.GetNormalizeFunc()(flags, name),
-			isRequired(name),
-			false,
-		))
-
-		if isRequired(name) {
-			if err := cobra.MarkFlagRequired(flags, name); err != nil {
-				// Will probably never happen
-				logger().Warnw(
-					"unable to mark flag as required, but it should be required",
-					"flag name", name,
-					"error", err.Error(),
-				)
-			}
-		}
-	}
-}
-
 func buildUse(desc core.Descriptor, args []string) string {
 	use := desc.Name()
 	for _, name := range args {
@@ -189,36 +149,27 @@ func addAction(
 	sdk *mgcSdk.Sdk,
 	parentCmd *cobra.Command,
 	exec mgcSdk.Executor,
-) (*cobra.Command, error) {
+) (actionCmd *cobra.Command, flags *cmdFlags, err error) {
+	flags, err = newExecutorCmdFlags(parentCmd, exec)
+	if err != nil {
+		return
+	}
+
 	desc := exec.(mgcSdk.Descriptor)
 	links := exec.Links()
 
-	actionCmd := &cobra.Command{
-		Use:     buildUse(desc, exec.PositionalArgs()),
-		Args:    cobra.MaximumNArgs(len(exec.PositionalArgs())),
+	actionCmd = &cobra.Command{
+		Use:     buildUse(desc, flags.positionalArgsNames()),
+		Args:    cobra.MaximumNArgs(len(flags.positionalArgs)),
 		Short:   desc.Summary(),
 		Long:    desc.Description(),
 		Version: desc.Version(),
 		GroupID: "catalog",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			parameters := core.Parameters{}
-			configs := core.Configs{}
-
 			config := sdk.Config()
-
-			if err := loadDataFromArgs(exec.PositionalArgs(), args, cmd.Flags()); err != nil {
-				return err
-			}
-
-			if err := loadDataFromFlags(cmd.Flags(), exec.ParametersSchema(), parameters); err != nil {
-				return err
-			}
-
-			// Load from 'Flags' instead of 'PersistentFlags' because Cobra merges them before executing the command
-			// (and in other scenarios too). The canonical way to load the flags is always via cmd.Flags(), PersistentFlags
-			// are only to be used for inserting new flags
-			if err := loadDataFromConfig(config, cmd.Flags(), exec.ConfigsSchema(), configs); err != nil {
+			parameters, configs, err := flags.getValues(config, args)
+			if err != nil {
 				return err
 			}
 
@@ -238,8 +189,7 @@ func addAction(
 
 	logger().Debugw("Executor added to command tree", "name", exec.Name())
 
-	// TODO: Parse this command's flags right after its creation
-	return actionCmd, nil
+	return
 }
 
 func addGroup(
@@ -278,24 +228,25 @@ func addLink(
 	originalResult core.Result,
 	link core.Linker,
 	followingLinkArgs [][]string,
-) *cobra.Command {
-	linkCmd := &cobra.Command{
+) (linkCmd *cobra.Command, err error) {
+	flags, err := newCmdFlags(
+		parentCmd,
+		link.AdditionalParametersSchema(),
+		link.AdditionalConfigsSchema(),
+		nil,
+	)
+	if err != nil {
+		return
+	}
+
+	linkCmd = &cobra.Command{
 		Use:   link.Name(),
 		Short: link.Description(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			printLinkExecutionTable(link.Name(), link.Description())
 
-			additionalParameters := core.Parameters{}
-			additionalConfigs := core.Configs{}
-
-			if err := loadDataFromFlags(cmd.Flags(), link.AdditionalParametersSchema(), additionalParameters); err != nil {
-				return err
-			}
-
-			// Load from 'Flags' instead of 'PersistentFlags' because Cobra merges them before executing the command
-			// (and in other scenarios too). The canonical way to load the flags is always via cmd.Flags(), PersistentFlags
-			// are only to be used for inserting new flags
-			if err := loadDataFromConfig(config, cmd.Flags(), link.AdditionalConfigsSchema(), additionalConfigs); err != nil {
+			additionalParameters, additionalConfigs, err := flags.getValues(config, args)
+			if err != nil {
 				return err
 			}
 
@@ -314,13 +265,7 @@ func addLink(
 	}
 
 	parentCmd.AddCommand(linkCmd)
-
-	isParameterRequired := func(name string) bool {
-		return slices.Contains(link.AdditionalParametersSchema().Required, name)
-	}
-
-	addFlags(linkCmd.Flags(), link.AdditionalParametersSchema(), isParameterRequired)
-	addFlags(linkCmd.Root().PersistentFlags(), link.AdditionalConfigsSchema(), isConfigRequired)
+	flags.addFlags(linkCmd)
 
 	logger().Debugw("Link added to command tree", "name", link.Name())
 
@@ -329,7 +274,7 @@ func addLink(
 		_ = f.Value.Set(f.DefValue)
 	})
 
-	return linkCmd
+	return
 }
 
 func addListLinks(
