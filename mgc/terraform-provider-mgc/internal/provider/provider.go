@@ -132,7 +132,7 @@ func collectGroupResources(
 	debugMap := map[string]any{"path": path}
 	tflog.Debug(ctx, "Collecting resources", debugMap)
 	resources = make([]func() resource.Resource, 0)
-	var create, read, update, delete mgcSdk.Executor
+	var create, read, update, delete, list mgcSdk.Executor
 	_, err = group.VisitChildren(func(child mgcSdk.Descriptor) (run bool, err error) {
 		if group.IsInternal() {
 			return true, nil
@@ -159,6 +159,8 @@ func collectGroupResources(
 				update = exec
 			case "delete":
 				delete = exec
+			case "list":
+				list = exec
 			default:
 				tflog.Warn(ctx, fmt.Sprintf("TODO: uncovered action %s", exec.Name()), debugMap)
 			}
@@ -174,17 +176,31 @@ func collectGroupResources(
 	if create != nil {
 		name := strings.Join(path, "_")
 		tflog.Debug(ctx, fmt.Sprintf("Found resource %q", name), debugMap)
-		if read == nil {
-			tflog.Warn(ctx, fmt.Sprintf("Resource %q misses read", name))
-			return resources, nil
-		}
+
 		if delete == nil {
 			tflog.Warn(ctx, fmt.Sprintf("Resource %q misses delete", name))
 			return resources, nil
 		}
+
+		if read == nil {
+			tflog.Warn(ctx, fmt.Sprintf("Resource %q misses read", name))
+			if list == nil {
+				return resources, nil
+			}
+
+			readFromList, err := createReadFromList(list, create.ResultSchema(), delete.ParametersSchema())
+			if err != nil {
+				tflog.Warn(ctx, fmt.Sprintf("Unable to generate 'read' operation from 'list' for %q", name), map[string]any{"error": err})
+				return resources, nil
+			}
+			tflog.Debug(ctx, fmt.Sprintf("Generated 'read' operation based on 'list' for %q", name))
+			read = readFromList
+		}
+
 		if update == nil {
 			update = core.NoOpExecutor()
 		}
+
 		res := &MgcResource{
 			sdk:         sdk,
 			name:        name,
