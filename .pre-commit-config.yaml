@@ -22,6 +22,12 @@ repos:
         types_or: [yaml, json]
         stages: [pre-commit, pre-push]
         additional_dependencies: [jsonschema, PyYAML, typing, argparse]
+    -   id: check-cli-dump-tree-output
+        name: check "cli dump-tree" output
+        language: system
+        entry: bash -c './scripts/gen_expected_cli_dump_tree_output_file.sh'
+        require_serial: true
+        stages: [pre-commit]
     -   id: check-cli-help-outputs
         name: check "cli help" outputs
         language: system
@@ -48,6 +54,7 @@ repos:
     -   id: check-yaml
         stages: [pre-commit, pre-push]
     -   id: check-added-large-files
+        exclude: ^script-qa/
         stages: [pre-commit, pre-push]
     -   id: check-shebang-scripts-are-executable
         stages: [pre-commit, pre-push]

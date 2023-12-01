@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Iterator
+from typing import Any, Iterator
 
 import argparse
 import difflib
@@ -13,6 +13,11 @@ import sys
 
 logging.basicConfig(format="%(levelname).3s %(message)s")
 logger = logging.getLogger(__name__)
+
+
+def load_json(s: str) -> Any:
+    with open(s, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 def iter_tree(
@@ -32,14 +37,11 @@ def iter_tree(
             yield child_path
 
 
-def gen_cli_paths(cli: str) -> Iterator[list[str]]:
-    args = [cli, "dump-tree", "-o", "json"]
-    with subprocess.Popen(args, stdout=subprocess.PIPE, encoding="utf-8") as p:
-        tree = json.load(p.stdout)
-        assert isinstance(tree, list)
-        yield [cli]
-        for p in iter_tree(tree, [cli]):
-            yield p
+def gen_cli_paths(cli: str, tree: Any) -> Iterator[list[str]]:
+    assert isinstance(tree, list)
+    yield [cli]
+    for p in iter_tree(tree, [cli]):
+        yield p
 
 
 def gen_output(cmd: list[str]) -> str:
@@ -90,6 +92,11 @@ if __name__ == "__main__":
         help="the binary to use during executions",
     )
     parser.add_argument(
+        "cli-dump-tree.json",
+        type=load_json,
+        help="path to the result of cli dump-tree",
+    )
+    parser.add_argument(
         "output_directory",
         type=str,
         help="the root folder where to write help output",
@@ -111,7 +118,7 @@ if __name__ == "__main__":
     except FileNotFoundError:
         pass
 
-    for path in gen_cli_paths(args.cli):
+    for path in gen_cli_paths(args.cli, vars(args)["cli-dump-tree.json"]):
         logger.info("processing: %s", path)
         help_output = gen_help_output(path)
         h_flag = gen_output_h_flag(path)
