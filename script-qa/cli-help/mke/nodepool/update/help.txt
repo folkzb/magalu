@@ -1,7 +1,7 @@
 Atualiza nodes de um node pool
 
 Usage:
-  ./cli mke nodepool update [cluster-id] [node-pool-id] [flags]
+  ./cli mke nodepool update [cluster-id] [id] [flags]
 
 Flags:
       --auto-scale object             Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes (properties: enabled, max_replicas and min_replicas)
@@ -9,7 +9,7 @@ Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
       --cluster-id uuid               Identificador no padrão uuid para identificar o cluster
   -h, --help                          help for update
-      --node-pool-id uuid             Identificador no padrão uuid para identificar o nodepool
+      --id uuid                       Identificador no padrão uuid para identificar o nodepool
       --replicas integer              Quantidade de réplicas dos nós do nodepool
   -v, --version                       version for update
 

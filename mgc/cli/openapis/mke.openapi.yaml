@@ -363,6 +363,7 @@ paths:
                     type: string
                     format: uuid
                 description: Identificador no padrão uuid para identificar o cluster
+                x-mgc-name: id
             responses:
                 '200':
                     description: Successful operation
@@ -492,6 +493,7 @@ paths:
                     type: string
                     format: uuid
                 description: Identificador no padrão uuid para identificar o cluster
+                x-mgc-name: id
             responses:
                 '204':
                     description: Successful operation
@@ -618,6 +620,7 @@ paths:
                     type: string
                     format: uuid
                 description: Esquema de obter o arquivo do kubeconfig do cluster
+                x-mgc-name: id
             responses:
                 '200':
                     description: Successful operation
@@ -1054,6 +1057,7 @@ paths:
                     type: string
                     format: uuid
                 description: Identificador no padrão uuid para identificar o nodepool
+                x-mgc-name: id
             responses:
                 '200':
                     description: Successful operation
@@ -1197,6 +1201,7 @@ paths:
                     type: string
                     format: uuid
                 description: Identificador no padrão uuid para identificar o nodepool
+                x-mgc-name: id
             requestBody:
                 content:
                     application/json:
@@ -1365,6 +1370,7 @@ paths:
                     type: string
                     format: uuid
                 description: Identificador no padrão uuid para identificar o nodepool
+                x-mgc-name: id
             responses:
                 '204':
                     description: Successful operation

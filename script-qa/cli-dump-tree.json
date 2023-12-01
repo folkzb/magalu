@@ -8971,14 +8971,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "cluster_id": {
+        "id": {
          "description": "Identificador no padrão uuid para identificar o cluster",
          "format": "uuid",
          "type": "string"
         }
        },
        "required": [
-        "cluster_id"
+        "id"
        ],
        "type": "object"
       },
@@ -9025,14 +9025,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "cluster_id": {
+        "id": {
          "description": "Identificador no padrão uuid para identificar o cluster",
          "format": "uuid",
          "type": "string"
         }
        },
        "required": [
-        "cluster_id"
+        "id"
        ],
        "type": "object"
       },
@@ -9721,14 +9721,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "cluster_id": {
+        "id": {
          "description": "Esquema de obter o arquivo do kubeconfig do cluster",
          "format": "uuid",
          "type": "string"
         }
        },
        "required": [
-        "cluster_id"
+        "id"
        ],
        "type": "object"
       },
@@ -10624,7 +10624,7 @@
          "format": "uuid",
          "type": "string"
         },
-        "node_pool_id": {
+        "id": {
          "description": "Identificador no padrão uuid para identificar o nodepool",
          "format": "uuid",
          "type": "string"
@@ -10632,7 +10632,7 @@
        },
        "required": [
         "cluster_id",
-        "node_pool_id"
+        "id"
        ],
        "type": "object"
       },
@@ -10684,7 +10684,7 @@
          "format": "uuid",
          "type": "string"
         },
-        "node_pool_id": {
+        "id": {
          "description": "Identificador no padrão uuid para identificar o nodepool",
          "format": "uuid",
          "type": "string"
@@ -10692,7 +10692,7 @@
        },
        "required": [
         "cluster_id",
-        "node_pool_id"
+        "id"
        ],
        "type": "object"
       },
@@ -11683,7 +11683,7 @@
          "format": "uuid",
          "type": "string"
         },
-        "node_pool_id": {
+        "id": {
          "description": "Identificador no padrão uuid para identificar o nodepool",
          "format": "uuid",
          "type": "string"
@@ -11695,7 +11695,7 @@
        },
        "required": [
         "cluster_id",
-        "node_pool_id"
+        "id"
        ],
        "type": "object"
       },

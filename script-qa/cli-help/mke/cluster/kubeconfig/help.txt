@@ -1,12 +1,12 @@
 Obtem o arquivo do kubeconfig do cluster
 
 Usage:
-  ./cli mke cluster kubeconfig [cluster-id] [flags]
+  ./cli mke cluster kubeconfig [id] [flags]
 
 Flags:
-      --cluster-id uuid   Esquema de obter o arquivo do kubeconfig do cluster
-  -h, --help              help for kubeconfig
-  -v, --version           version for kubeconfig
+  -h, --help      help for kubeconfig
+      --id uuid   Esquema de obter o arquivo do kubeconfig do cluster
+  -v, --version   version for kubeconfig
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

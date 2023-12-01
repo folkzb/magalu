@@ -1,12 +1,12 @@
 Lista as informações de um cluster
 
 Usage:
-  ./cli mke cluster get [cluster-id] [flags]
+  ./cli mke cluster get [id] [flags]
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
-      --cluster-id uuid               Identificador no padrão uuid para identificar o cluster
   -h, --help                          help for get
+      --id uuid                       Identificador no padrão uuid para identificar o cluster
   -v, --version                       version for get
 
 Global Flags:

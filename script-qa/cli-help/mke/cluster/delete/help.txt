@@ -1,12 +1,12 @@
 Deleta um cluster
 
 Usage:
-  ./cli mke cluster delete [cluster-id] [flags]
+  ./cli mke cluster delete [id] [flags]
 
 Flags:
-      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster
-  -h, --help              help for delete
-  -v, --version           version for delete
+  -h, --help      help for delete
+      --id uuid   Identificador no padrão uuid para identificar o cluster
+  -v, --version   version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

@@ -46,6 +46,9 @@ paths:
                                 custer_id: $response.body#/id
     /v0/clusters/{cluster_id}:
         get:
+            parameters:
+            -   name: cluster_id
+                x-mgc-name: id
             responses:
                 '200':
                     links:
@@ -54,6 +57,15 @@ paths:
                             description: Delete cluster
                             parameters:
                                 custer_id: $request.path.id
+        delete:
+            parameters:
+            -   name: cluster_id
+                x-mgc-name: id
+    /v0/clusters/{cluster_id}/kubeconfig:
+        get:
+            parameters:
+            -   name: cluster_id
+                x-mgc-name: id
     /v0/clusters/{cluster_id}/node_pools:
         post:
             responses:
@@ -79,6 +91,10 @@ paths:
                                 node_pool_id: $response.body#/id
     /v0/clusters/{cluster_id}/node_pools/{node_pool_id}:
         get:
+            parameters:
+            -   name: cluster_id
+            -   name: node_pool_id
+                x-mgc-name: id
             responses:
                 '200':
                     links:
@@ -95,6 +111,10 @@ paths:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
         patch:
+            parameters:
+            -   name: cluster_id
+            -   name: node_pool_id
+                x-mgc-name: id
             responses:
                 '200':
                     links:
@@ -110,3 +130,8 @@ paths:
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
+        delete:
+            parameters:
+            -   name: cluster_id
+            -   name: node_pool_id
+                x-mgc-name: id

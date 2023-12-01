@@ -1,13 +1,13 @@
 Deleta um node pool em um cluster do Kubernetes
 
 Usage:
-  ./cli mke nodepool delete [cluster-id] [node-pool-id] [flags]
+  ./cli mke nodepool delete [cluster-id] [id] [flags]
 
 Flags:
-      --cluster-id uuid     Identificador no padrão uuid para identificar o cluster
-  -h, --help                help for delete
-      --node-pool-id uuid   Identificador no padrão uuid para identificar o nodepool
-  -v, --version             version for delete
+      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster
+  -h, --help              help for delete
+      --id uuid           Identificador no padrão uuid para identificar o nodepool
+  -v, --version           version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
