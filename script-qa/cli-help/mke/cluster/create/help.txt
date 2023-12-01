@@ -19,13 +19,13 @@ Flags:
                                      - deve começar com um caractere alfabético
                                      - deve terminar com um caractere alfanumérico
                                    
-      --node-pools array(object)   Conjunto de nodes em um cluster kubernetes ([{"auto_scale": {"enabled": boolean (default false), "max_replicas": integer (min: 1) (default 1), "min_replicas": integer (min: 1) (default 1)}, "flavor": string (one of cloud-k8s.gp1.large|cloud-k8s.gp1.small), "name": string, "replicas": integer (default 1), "tags": [string], "taints": [{"effect": string (one of NoExecute|NoSchedule|PreferNoSchedule), "key": string, "value": string}]}])
-      --version enum               Versão do kubernetes nativa do cluster (one of v1.22.9|v1.24.10|v1.26.1|v1.28.2) (default v1.28.2)
+      --node-pools array(object)   Conjunto de nodes em um cluster kubernetes ([{"auto_scale": {"enabled": boolean (default false), "max_replicas": integer (min: 1) (default 1), "min_replicas": integer (min: 1) (default 1)}, "flavor": string (one of "cloud-k8s.gp1.large" or "cloud-k8s.gp1.small"), "name": string, "replicas": integer (default 1), "tags": [string], "taints": [{"effect": string (one of "NoExecute", "NoSchedule" or "PreferNoSchedule"), "key": string, "value": string}]}])
+      --version enum               Versão do kubernetes nativa do cluster (one of "v1.22.9", "v1.24.10", "v1.26.1" or "v1.28.2") (default "v1.28.2")
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-      --env enum               Environment to use (one of pre-prod|prod) (default prod)
-      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
 
 Use "./cli mke cluster create [command] --help" for more information about a command.

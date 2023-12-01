@@ -11,13 +11,13 @@ Flags:
       ---limit integer    limit (range: 1 - 25) (default 10)
       ---offset integer   offset (min: 0)
   -h, --help              help for list
-      --status enum       Value referring to datastore status. (one of ACTIVE|DEPRECATED)
+      --status enum       Value referring to datastore status. (one of "ACTIVE" or "DEPRECATED")
   -v, --version           version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-      --env enum               Environment to use (one of pre-prod|prod) (default prod)
-      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas datastores list [command] --help" for more information about a command.

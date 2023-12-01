@@ -11,14 +11,14 @@ Flags:
       --body string              
       --headers object           
   -h, --help                     help for do
-      --method enum              (one of DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT|TRACE)
+      --method enum              (one of "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" or "TRACE")
       --security array(object)   
       --url string               Golang template with the URL
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-      --env enum               Environment to use (one of pre-prod|prod) (default prod)
-      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
 
 Use "./cli http do [command] --help" for more information about a command.

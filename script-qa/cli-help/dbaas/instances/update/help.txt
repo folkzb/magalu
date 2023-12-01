@@ -9,16 +9,16 @@ Available Commands:
 
 Flags:
       --backup-retention-days integer   The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
-      --backup-start-at time            Start time which is allowed to start the automated backup process. (default 01:00:00)
+      --backup-start-at time            Start time which is allowed to start the automated backup process. (default "01:00:00")
   -h, --help                            help for update
       --id uuid                         Database Instance Unique Id.
-      --status enum                     (one of ACTIVE|STOPPED)
+      --status enum                     (one of "ACTIVE" or "STOPPED")
   -v, --version                         version for update
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-      --env enum               Environment to use (one of pre-prod|prod) (default prod)
-      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances update [command] --help" for more information about a command.

@@ -20,7 +20,7 @@ func (o *schemaFlagValueString) unescapedIfNeeded(raw string) string {
 	}
 
 	// pflag will format "string" as %q, which will escape exiting quotes
-	if true { // TODO: next commit raw[0] == '"' && o.Type() == "string" {
+	if raw[0] == '"' && o.Type() == "string" {
 		var s string
 		if json.Unmarshal([]byte(raw), &s) == nil {
 			return s

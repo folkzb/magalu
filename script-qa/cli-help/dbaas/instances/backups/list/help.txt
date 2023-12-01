@@ -12,15 +12,15 @@ Flags:
       ---offset integer   offset (min: 0)
   -h, --help              help for list
       --id uuid           Value referring to instance Id.
-      --mode enum         Value referring to backup mode. (one of FULL|INCREMENTAL)
-      --status enum       Value referring to backup status. (one of CREATED|CREATING|DELETED|DELETING|ERROR|PENDING)
-      --type enum         Value referring to backup type. (one of AUTOMATED|ON_DEMAND)
+      --mode enum         Value referring to backup mode. (one of "FULL" or "INCREMENTAL")
+      --status enum       Value referring to backup status. (one of "CREATED", "CREATING", "DELETED", "DELETING", "ERROR" or "PENDING")
+      --type enum         Value referring to backup type. (one of "AUTOMATED" or "ON_DEMAND")
   -v, --version           version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-      --env enum               Environment to use (one of pre-prod|prod) (default prod)
-      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
 
 Use "./cli dbaas instances backups list [command] --help" for more information about a command.

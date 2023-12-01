@@ -31,7 +31,7 @@ Flags:
                                    <td>100</td>
                                  </tr>
                                </table>
-                                (one of cloud-k8s.gp1.large|cloud-k8s.gp1.small)
+                                (one of "cloud-k8s.gp1.large" or "cloud-k8s.gp1.small")
   -h, --help                   help for create
       --name string            Nome do node pool. O nome destina-se principalmente à idempotência, e deve ser exclusivo em um namespace. 0 nome não pode ser alterado.
                                O nome deve seguir as seguintes regras:
@@ -42,13 +42,13 @@ Flags:
                                
       --replicas integer       Número de réplicas dos nós do nodepool (default 1)
       --tags array(string)     Lista de tags aplicadas ao nodepool
-      --taints array(object)   Propriedade de associação de um conjunto se nós ([{"effect": string (one of NoExecute|NoSchedule|PreferNoSchedule), "key": string, "value": string}])
+      --taints array(object)   Propriedade de associação de um conjunto se nós ([{"effect": string (one of "NoExecute", "NoSchedule" or "PreferNoSchedule"), "key": string, "value": string}])
   -v, --version                version for create
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-      --env enum               Environment to use (one of pre-prod|prod) (default prod)
-      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
 
 Use "./cli mke nodepool create [command] --help" for more information about a command.

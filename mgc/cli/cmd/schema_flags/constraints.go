@@ -1,6 +1,7 @@
 package schema_flags
 
 import (
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -146,12 +147,34 @@ func addEnumConstraint(s *mgcSdk.Schema, dst *[]string) {
 
 	asStrings := make([]string, 0, length)
 	for _, e := range s.Enum {
-		asStrings = append(asStrings, fmt.Sprintf("%v", e))
+		data, err := json.Marshal(e)
+		var s string
+		if err != nil {
+			s = fmt.Sprint(e)
+		} else {
+			s = string(data)
+		}
+
+		asStrings = append(asStrings, s)
 	}
 
 	slices.Sort(asStrings)
 
-	*dst = append(*dst, fmt.Sprintf("one of %v", strings.Join(asStrings, "|")))
+	var message string
+	switch len(asStrings) {
+	case 0:
+		panic("cannot happen")
+
+	case 1:
+		message = fmt.Sprintf("must be %s", asStrings[0])
+
+	default:
+		lastIndex := len(asStrings) - 1
+		commaDelimited := strings.Join(asStrings[:lastIndex], ", ")
+		message = fmt.Sprintf("one of %s or %s", commaDelimited, asStrings[lastIndex])
+	}
+
+	*dst = append(*dst, message)
 }
 
 func isJSONRepresentationNeeded(s *mgcSdk.Schema, representation string) bool {
