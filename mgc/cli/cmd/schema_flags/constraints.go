@@ -1,12 +1,12 @@
-package cmd
+package schema_flags
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"golang.org/x/exp/slices"
 	mgcSdk "magalu.cloud/sdk"
 )
 

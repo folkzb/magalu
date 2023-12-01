@@ -15,7 +15,27 @@ For example:
 `./mgc virtual-machine instances delete --cli.log "*:*" --id ...`. Notice how
 `--cli.log` is going before `--id`.
 
-## Passing objects to flags
+### Passing array to flags
+
+Some commands have arrays as parameters. To pass these objects to the CLI one should pass it as a JSON enclosed by single
+quotes. Like so:
+
+```
+./mgc network port ports list --port-id-list='["a", "b", "c"]'
+```
+
+There's also the option to save the JSON in a file, and pass this file as the parameter. For more information see [Input
+handling with prefixes](#input-handling-with-prefixes)
+
+Alternatively, one can specify as comma-separated values (both delimiters ';' and ',' are accepted), multiple flags are allowed.
+The following are equivalent to the example above:
+
+```
+./mgc network port ports list --port-id-list=a,b,c
+./mgc network port ports list --port-id-list=a --port-id-list=b,c
+```
+
+### Passing objects to flags
 
 Some commands have objects as parameters. To pass these objects to the CLI one should pass it as a JSON enclosed by single
 quotes. Like so:
@@ -26,6 +46,14 @@ quotes. Like so:
 
 There's also the option to save the JSON in a file, and pass this file as the parameter. For more information see [Input
 handling with prefixes](#input-handling-with-prefixes)
+
+Alternatively, one can specify `key=value` pairs as comma-separated values (both delimiters ';' and ',' are accepted), multiple flags are allowed.
+The following are equivalent to the example above:
+
+```
+./mgc dbaas instances create --volume size=10,type=CLOUD_NVME
+./mgc dbaas instances create --volume size=10 --volume type=CLOUD_NVME
+```
 
 ## Input handling with prefixes
 

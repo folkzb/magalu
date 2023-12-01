@@ -5,24 +5,9 @@ import (
 	"os"
 
 	pflag "github.com/spf13/pflag"
+	"magalu.cloud/cli/cmd/schema_flags"
 	mgcSdk "magalu.cloud/sdk"
 )
-
-func getPropType(prop *mgcSdk.Schema) string {
-	if prop.Format != "" {
-		return prop.Format
-	}
-
-	result := prop.Type
-
-	if prop.Type == "array" && prop.Items != nil {
-		result += fmt.Sprintf("(%v)", getPropType((*mgcSdk.Schema)(prop.Items.Value)))
-	} else if len(prop.Enum) != 0 {
-		result = "enum"
-	}
-
-	return result
-}
 
 func getFlagValue(flags *pflag.FlagSet, name string) (mgcSdk.Value, *pflag.Flag, error) {
 	flag := flags.Lookup(name)
@@ -30,11 +15,10 @@ func getFlagValue(flags *pflag.FlagSet, name string) (mgcSdk.Value, *pflag.Flag,
 		return nil, nil, os.ErrNotExist
 	}
 
-	if f, ok := flag.Value.(*anyFlagValue); ok {
-		return f.Value(), flag, nil
-	} else if val, err := flags.GetBool(name); err == nil {
-		return val, flag, nil
-	} else {
-		return nil, flag, fmt.Errorf("Could not get flag value %q: %w", name, err)
+	if f, ok := flag.Value.(schema_flags.SchemaFlagValue); ok {
+		value, err := f.Parse()
+		return value, flag, err
 	}
+
+	return nil, flag, fmt.Errorf("flag is not a schema flag %q, but %#v", name, flag)
 }

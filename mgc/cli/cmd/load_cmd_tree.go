@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/stoewer/go-strcase"
+	"magalu.cloud/cli/cmd/schema_flags"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
 	mgcSdk "magalu.cloud/sdk"
@@ -149,43 +150,19 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 }
 
 func addFlags(flags *flag.FlagSet, schema *mgcSdk.Schema, isRequired func(string) bool) {
-	for name, propRef := range schema.Properties {
-		prop := propRef.Value
-
-		propType := getPropType((*mgcSdk.Schema)(prop))
-
+	for name := range schema.Properties {
 		// Prevents flags be added twice by Link command
 		if flags.Lookup(name) != nil {
 			continue
 		}
 
-		if propType == "boolean" {
-			def, _ := prop.Default.(bool)
-			flags.Bool(name, def, prop.Description)
-		} else {
-			var value any
-			if prop.Default != nil {
-				value = prop.Default
-			}
-
-			constraints := fmt.Sprintf("(%s)", schemaJSONRepAndConstraints((*mgcSdk.Schema)(prop), false))
-			description := prop.Description
-			if constraints != "()" {
-				if description == "" {
-					description += constraints
-				} else {
-					description += fmt.Sprintf(" %s", constraints)
-				}
-			}
-
-			f := &anyFlagValue{value: value, typeName: propType}
-			flags.AddFlag(&flag.Flag{
-				Name:     name,
-				DefValue: f.String(),
-				Usage:    description,
-				Value:    f,
-			})
-		}
+		flags.AddFlag(schema_flags.NewSchemaFlag(
+			schema,
+			name,
+			flags.GetNormalizeFunc()(flags, name),
+			isRequired(name),
+			false,
+		))
 
 		if isRequired(name) {
 			if err := cobra.MarkFlagRequired(flags, name); err != nil {
