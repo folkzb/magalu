@@ -34,6 +34,10 @@ repos:
         entry: bash -c './scripts/gen_expected_cli_full_help_output_file.sh'
         require_serial: true
         stages: [pre-commit]
+    -   id: apply-oapi-customizations
+        name: apply-oapi-customizations
+        language: system
+        entry: bash -c './scripts/oapi_apply_customizations.sh'
     -   id: oapi-index-gen
         name: oapi-index-gen
         language: system
