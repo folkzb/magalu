@@ -1,12 +1,12 @@
 Return a security group details
 
 Usage:
-  ./cli network security-group security-groups get [security-group-id] [flags]
+  ./cli network security-group security-groups get [id] [flags]
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for get
-      --security-group-id string      Security Group Id
+      --id string                     Security Group Id
   -v, --version                       version for get
 
 Global Flags:

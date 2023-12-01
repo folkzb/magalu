@@ -1,12 +1,12 @@
 Return a VPC details
 
 Usage:
-  ./cli network vpc get [vpc-id] [flags]
+  ./cli network vpc get [id] [flags]
 
 Flags:
-  -h, --help            help for get
-  -v, --version         version for get
-      --vpc-id string   Vpc Id
+  -h, --help        help for get
+      --id string   Vpc Id
+  -v, --version     version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

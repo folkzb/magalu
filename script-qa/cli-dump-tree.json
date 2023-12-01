@@ -12058,7 +12058,7 @@
         "parameters": {
          "additionalProperties": false,
          "properties": {
-          "port_id": {
+          "id": {
            "title": "Port Id",
            "type": "string"
           },
@@ -12068,7 +12068,7 @@
           }
          },
          "required": [
-          "port_id",
+          "id",
           "security_group_id"
          ],
          "type": "object"
@@ -12210,13 +12210,13 @@
         "parameters": {
          "additionalProperties": false,
          "properties": {
-          "port_id": {
+          "id": {
            "title": "Port Id",
            "type": "string"
           }
          },
          "required": [
-          "port_id"
+          "id"
          ],
          "type": "object"
         },
@@ -12341,7 +12341,7 @@
         "parameters": {
          "additionalProperties": false,
          "properties": {
-          "port_id": {
+          "id": {
            "title": "Port Id",
            "type": "string"
           },
@@ -12351,7 +12351,7 @@
           }
          },
          "required": [
-          "port_id",
+          "id",
           "security_group_id"
          ],
          "type": "object"
@@ -12396,13 +12396,13 @@
         "parameters": {
          "additionalProperties": false,
          "properties": {
-          "port_id": {
+          "id": {
            "title": "Port Id",
            "type": "string"
           }
          },
          "required": [
-          "port_id"
+          "id"
          ],
          "type": "object"
         },
@@ -14568,13 +14568,13 @@
         "parameters": {
          "additionalProperties": false,
          "properties": {
-          "security_group_id": {
+          "id": {
            "title": "Security Group Id",
            "type": "string"
           }
          },
          "required": [
-          "security_group_id"
+          "id"
          ],
          "type": "object"
         },
@@ -14684,13 +14684,13 @@
         "parameters": {
          "additionalProperties": false,
          "properties": {
-          "security_group_id": {
+          "id": {
            "title": "Security Group Id",
            "type": "string"
           }
          },
          "required": [
-          "security_group_id"
+          "id"
          ],
          "type": "object"
         },
@@ -16005,13 +16005,13 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "vpc_id": {
+        "id": {
          "title": "Vpc Id",
          "type": "string"
         }
        },
        "required": [
-        "vpc_id"
+        "id"
        ],
        "type": "object"
       },
@@ -16181,13 +16181,13 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "vpc_id": {
+        "id": {
          "title": "Vpc Id",
          "type": "string"
         }
        },
        "required": [
-        "vpc_id"
+        "id"
        ],
        "type": "object"
       },

@@ -67,6 +67,7 @@ paths:
         - name: port_id
           schema:
             type: string
+          x-mgc-name: id
       responses:
         '200':
           links:
@@ -100,6 +101,7 @@ paths:
         - name: port_id
           schema:
             type: string
+          x-mgc-name: id
       security:
         - OAuth2:
             - network.write
@@ -178,6 +180,7 @@ paths:
         - name: security_group_id
           schema:
             type: string
+          x-mgc-name: id
       responses:
         '200':
           links:
@@ -194,6 +197,7 @@ paths:
         - name: security_group_id
           schema:
             type: string
+          x-mgc-name: id
       security:
         - OAuth2:
             - network.write
@@ -270,6 +274,7 @@ paths:
         - name: port_id
           schema:
             type: string
+          x-mgc-name: id
         - name: security_group_id
           schema:
             type: string
@@ -298,6 +303,7 @@ paths:
         - name: port_id
           schema:
             type: string
+          x-mgc-name: id
         - name: security_group_id
           schema:
             type: string
@@ -417,6 +423,7 @@ paths:
         - name: vpc_id
           schema:
             type: string
+          x-mgc-name: id
       security:
         - OAuth2:
             - network.read
@@ -425,6 +432,7 @@ paths:
         - name: vpc_id
           schema:
             type: string
+          x-mgc-name: id
       security:
         - OAuth2:
             - network.write
