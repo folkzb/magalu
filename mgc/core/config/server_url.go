@@ -8,7 +8,7 @@ import (
 var networkConfigSchema *schema.Schema
 
 type NetworkConfig struct {
-	ServerUrl string `json:"serverUrl,omitempty" jsonschema:"description=Manually specify the server to use,format=uri,default="`
+	ServerUrl string `json:"serverUrl,omitempty" jsonschema:"description=Manually specify the server to use,format=uri"`
 }
 
 func NetworkConfigSchema() *schema.Schema {
