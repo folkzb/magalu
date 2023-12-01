@@ -10,6 +10,7 @@ from spec_remove_tenant_id import RemoveParamTransformer
 from spec_update_error import UpdateErrorTransformer
 from spec_remove_path import RemovePathTransformer
 from spec_remove_component import RemoveComponentTransformer
+from spec_add_security import AddSecurityTransformer
 
 from validate_openapi_specs import validate_oapi
 
@@ -41,6 +42,11 @@ if __name__ == "__main__":
         '"public" schema that can be used by the MGC SDK.',
     )
     # Internal = APIs generated directly from the code, always udpated
+    parser.add_argument(
+        "product_name",
+        type=str,
+        help="Product name as it will appear in CLI",
+    )
     parser.add_argument(
         "spec_file",
         type=str,
@@ -75,6 +81,7 @@ if __name__ == "__main__":
         RemovePathTransformer("/xaas"),
         RemoveComponentTransformer("xaas"),
         RemoveParamTransformer("x-tenant-id"),
+        AddSecurityTransformer(args.product_name),
     ]
     for t in transformers:
         product_spec = t.transform(product_spec)
