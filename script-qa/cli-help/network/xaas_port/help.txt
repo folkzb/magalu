@@ -1,9 +1,12 @@
 Usage:
-  ./cli network xaas_port [flags]
+  ./cli network xaas-port [flags]
+
+Aliases:
+  xaas-port, xaas_port
 
 Flags:
-  -h, --help      help for xaas_port
-  -v, --version   version for xaas_port
+  -h, --help      help for xaas-port
+  -v, --version   version for xaas-port
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

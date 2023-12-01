@@ -137,12 +137,20 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 	return loadCommandTree(sdk, childCmd, childCmdDesc, childArgs)
 }
 
-func buildUse(desc core.Descriptor, args []string) string {
-	use := desc.Name()
+func buildUse(name string, args []string) string {
+	use := name
 	for _, name := range args {
-		use += " " + fmt.Sprintf("[%s]", strcase.KebabCase(name))
+		use += " " + fmt.Sprintf("[%s]", name)
 	}
 	return use
+}
+
+func getCommandNameAndAliases(origName string) (name string, aliases []string) {
+	name = strcase.KebabCase(origName)
+	if name != origName {
+		aliases = append(aliases, origName)
+	}
+	return
 }
 
 func addAction(
@@ -155,15 +163,17 @@ func addAction(
 		return
 	}
 
-	desc := exec.(mgcSdk.Descriptor)
 	links := exec.Links()
 
+	name, aliases := getCommandNameAndAliases(exec.Name())
+
 	actionCmd = &cobra.Command{
-		Use:     buildUse(desc, flags.positionalArgsNames()),
+		Use:     buildUse(name, flags.positionalArgsNames()),
+		Aliases: aliases,
 		Args:    cobra.MaximumNArgs(len(flags.positionalArgs)),
-		Short:   desc.Summary(),
-		Long:    desc.Description(),
-		Version: desc.Version(),
+		Short:   exec.Summary(),
+		Long:    exec.Description(),
+		Version: exec.Version(),
 		GroupID: "catalog",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -197,12 +207,13 @@ func addGroup(
 	parentCmd *cobra.Command,
 	group mgcSdk.Grouper,
 ) (*cobra.Command, error) {
-	desc := group.(mgcSdk.Descriptor)
+	name, aliases := getCommandNameAndAliases(group.Name())
 	moduleCmd := &cobra.Command{
-		Use:     desc.Name(),
-		Short:   desc.Summary(),
-		Long:    desc.Description(),
-		Version: desc.Version(),
+		Use:     name,
+		Aliases: aliases,
+		Short:   group.Summary(),
+		Long:    group.Description(),
+		Version: group.Version(),
 		GroupID: "catalog",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
@@ -239,9 +250,12 @@ func addLink(
 		return
 	}
 
+	name, aliases := getCommandNameAndAliases(link.Name())
+
 	linkCmd = &cobra.Command{
-		Use:   link.Name(),
-		Short: link.Description(),
+		Use:     name,
+		Aliases: aliases,
+		Short:   link.Description(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			printLinkExecutionTable(link.Name(), link.Description())
 

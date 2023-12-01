@@ -6,10 +6,10 @@ Usage:
 
 Commands:
   port           VPC Port
-  public_ip      VPC Public IPs
+  public-ip      VPC Public IPs
   quotas         VPC Quotas
   rule           VPC Rules
-  security_group VPC Security Groups
+  security-group VPC Security Groups
   subnets        VPC Subnets
   vpc            Virtual Private Cloud (VPC)
 

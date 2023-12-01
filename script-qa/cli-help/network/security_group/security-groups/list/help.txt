@@ -1,8 +1,8 @@
 Returns a list of security groups for a provided tenant_id
 
 Usage:
-  ./cli network security_group security-groups list [flags]
-  ./cli network security_group security-groups list [command]
+  ./cli network security-group security-groups list [flags]
+  ./cli network security-group security-groups list [command]
 
 Available Commands:
   cli.list-links List all available links for this command
@@ -17,4 +17,4 @@ Global Flags:
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
 
-Use "./cli network security_group security-groups list [command] --help" for more information about a command.
+Use "./cli network security-group security-groups list [command] --help" for more information about a command.

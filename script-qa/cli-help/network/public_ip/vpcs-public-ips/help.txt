@@ -1,8 +1,8 @@
 VPC Public IPs | vpcs-public-ips
 
 Usage:
-  ./cli network public_ip vpcs-public-ips [flags]
-  ./cli network public_ip vpcs-public-ips [command]
+  ./cli network public-ip vpcs-public-ips [flags]
+  ./cli network public-ip vpcs-public-ips [command]
 
 Commands:
   create      Create Public IP
@@ -15,4 +15,4 @@ Flags:
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
 
-Use "./cli network public_ip vpcs-public-ips [command] --help" for more information about a command.
+Use "./cli network public-ip vpcs-public-ips [command] --help" for more information about a command.

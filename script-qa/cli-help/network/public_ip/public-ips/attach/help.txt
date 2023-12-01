@@ -1,8 +1,8 @@
 Attach a Public IP to a Port
 
 Usage:
-  ./cli network public_ip public-ips attach [public-ip-id] [port-id] [flags]
-  ./cli network public_ip public-ips attach [command]
+  ./cli network public-ip public-ips attach [public-ip-id] [port-id] [flags]
+  ./cli network public-ip public-ips attach [command]
 
 Available Commands:
   cli.list-links List all available links for this command
@@ -19,4 +19,4 @@ Global Flags:
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
 
-Use "./cli network public_ip public-ips attach [command] --help" for more information about a command.
+Use "./cli network public-ip public-ips attach [command] --help" for more information about a command.

@@ -1,9 +1,12 @@
 Usage:
-  ./cli network xaas_subnets [flags]
+  ./cli network xaas-subnets [flags]
+
+Aliases:
+  xaas-subnets, xaas_subnets
 
 Flags:
-  -h, --help      help for xaas_subnets
-  -v, --version   version for xaas_subnets
+  -h, --help      help for xaas-subnets
+  -v, --version   version for xaas-subnets
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
