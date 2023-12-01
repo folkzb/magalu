@@ -62,6 +62,9 @@ func loadDataFromConfig(config *mgcSdk.Config, flags *flag.FlagSet, schema *mgcS
 		if errCfg != nil {
 			return errCfg
 		}
+		if cfgVal == nil && !propSchema.Nullable {
+			continue
+		}
 
 		if flag.Changed || cfgVal == nil {
 			if err != nil {
