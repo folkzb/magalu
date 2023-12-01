@@ -1,6 +1,10 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
 
 type StaticGroup struct {
 	SimpleDescriptor
@@ -8,6 +12,10 @@ type StaticGroup struct {
 }
 
 func NewStaticGroup(spec DescriptorSpec, children []Descriptor) *StaticGroup {
+	slices.SortFunc(children, func(a, b Descriptor) int {
+		return strings.Compare(a.Name(), b.Name())
+	})
+
 	return &StaticGroup{SimpleDescriptor{spec}, children}
 }
 
