@@ -313,13 +313,27 @@ func replaceInPath(path string, param *openapi3.Parameter, val core.Value) strin
 }
 
 func addQueryParam(qValues *url.Values, param *openapi3.Parameter, val core.Value) {
-	// TODO: handle complex conversion using openapi style values
-	// https://spec.openapis.org/oas/latest.html#style-values
-	if val == nil || fmt.Sprintf("%v", val) == "" {
-		if param.Schema != nil && param.Schema.Value != nil && param.Schema.Value.Default != nil {
-			qValues.Set(param.Name, fmt.Sprintf("%v", param.Schema.Value.Default))
+	if slice, ok := val.([]any); ok {
+		join := func(delimiter string) string {
+			s := []string{}
+			for _, v := range slice {
+				s = append(s, fmt.Sprint(v))
+			}
+			return strings.Join(s, delimiter)
 		}
-		return
+
+		switch style := param.Style; style {
+		case "simple":
+			qValues.Add(param.Name, join(","))
+		case "spaceDelimited":
+			qValues.Add(param.Name, join(" "))
+		case "pipeDelimited":
+			qValues.Add(param.Name, join("|"))
+		default: // "form"
+			for _, val := range slice {
+				qValues.Add(param.Name, fmt.Sprint(val))
+			}
+		}
 	} else {
 		qValues.Set(param.Name, fmt.Sprintf("%v", val))
 	}
