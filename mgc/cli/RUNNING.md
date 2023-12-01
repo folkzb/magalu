@@ -63,6 +63,7 @@ parameter values:
 - `@` to load file content as JSON;
 - `%` to load file content as a string;
 - `#` to load value directly as a string;
+- `help` (exact value) to show the flag's detailed usage. Use `#help` to provide the `help` string as a value.
 - No prefix to load value directly as JSON;
 
 For example, let's say you have this file:

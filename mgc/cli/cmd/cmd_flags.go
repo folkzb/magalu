@@ -79,12 +79,16 @@ func (cf *cmdFlags) getValues(config *mgcSdk.Config, argValues []string) (
 	var missingRequiredFlags requiredFlagsError
 
 	for _, f := range cf.schemaFlags {
-		value, err := schema_flags.GetFlagValue(f, config)
+		var value any
+		value, err = schema_flags.GetFlagValue(f, config)
 		logger().Debugw("parsed flag", "flag", f.Name, "desc", f.Value.(schema_flags.SchemaFlagValue).Desc(), "value", value, "error", err)
 		if err == schema_flags.ErrNoFlagValue {
 			continue
 		} else if err == schema_flags.ErrRequiredFlag {
 			missingRequiredFlags = append(missingRequiredFlags, f)
+		} else if err == schema_flags.ErrWantHelp {
+			showFlagHelp(f)
+			return
 		} else if err != nil {
 			loadErrors = append(loadErrors, &flagError{Flag: f, Err: err})
 		} else {

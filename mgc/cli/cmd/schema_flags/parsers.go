@@ -20,6 +20,7 @@ const (
 	ValueLoadJSONFromFilePrefix     = "@"
 	ValueLoadVerbatimFromFilePrefix = "%"
 	ValueVerbatimStringPrefix       = "#"
+	ValueHelpIsRequired             = "help"
 )
 
 // handles special cases, in order:
@@ -45,7 +46,8 @@ func parseJSONFlagValue[T any](rawValue string) (value T, err error) {
 //  1. "%filename": load raw string from filename (no trim or parsing is done).
 //     Returns error if file was not found.
 //  2. "#string": use the rest of the string verbatim (no trim or parsing is done). No error.
-//  3. parseJSON(), if errors then use the rawValue instead. No error
+//  3. "help": show the flag help. To provide the value "help", use "#help" or provide it quoted.
+//  4. parseJSON(), if errors then use the rawValue instead. No error
 //
 // To pass a string with leading-and-trailing quotes (`"value"`)
 // one must either provide a version with escaped quotes (`"\"value\""`)
@@ -58,6 +60,9 @@ func parseStringFlagValue(rawValue string) (value string, err error) {
 	case strings.HasPrefix(rawValue, ValueVerbatimStringPrefix):
 		return rawValue[1:], nil
 
+	case rawValue == ValueHelpIsRequired:
+		return "", ErrWantHelp
+
 	default:
 		value, err = parseJSONFlagValue[string](rawValue)
 		if err != nil {
@@ -69,10 +74,16 @@ func parseStringFlagValue(rawValue string) (value string, err error) {
 }
 
 func parseBoolFlagValue(rawValue string) (value bool, err error) {
-	if rawValue == "" {
+	switch rawValue {
+	case "":
 		return // default to false
+
+	case ValueHelpIsRequired:
+		return false, ErrWantHelp
+
+	default:
+		return strconv.ParseBool(rawValue) // mimics pflag's boolValue
 	}
-	return strconv.ParseBool(rawValue) // mimics pflag's boolValue
 }
 
 func isWhiteSpace(c rune) bool {
@@ -291,6 +302,10 @@ func parseArrayFlagValueSingle(itemsSchema *core.Schema, rawValue string) (value
 }
 
 func parseArrayFlagValue(itemsSchema *core.Schema, rawValues []string) (items []any, err error) {
+	if len(rawValues) == 1 && rawValues[0] == ValueHelpIsRequired {
+		return nil, ErrWantHelp
+	}
+
 	for i, rawValue := range rawValues {
 		value, err := parseArrayFlagValueSingle(itemsSchema, rawValue)
 		if err != nil {
@@ -385,6 +400,10 @@ func parseObjectFlagValueSingle(schema *core.Schema, rawValue string) (value map
 }
 
 func parseObjectFlagValue(schema *core.Schema, rawValues []string) (items map[string]any, err error) {
+	if len(rawValues) == 1 && rawValues[0] == ValueHelpIsRequired {
+		return nil, ErrWantHelp
+	}
+
 	for i, rawValue := range rawValues {
 		value, err := parseObjectFlagValueSingle(schema, rawValue)
 		if err != nil {

@@ -68,6 +68,7 @@ func NewSchemaFlag(
 var (
 	ErrNoFlagValue  = errors.New("no value")
 	ErrRequiredFlag = errors.New("is required")
+	ErrWantHelp     = errors.New("help is needed")
 )
 
 func getUnchangedFlagValue(fv SchemaFlagValue, cfg *config.Config) (value any, err error) {

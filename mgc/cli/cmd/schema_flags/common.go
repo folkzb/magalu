@@ -50,6 +50,10 @@ func (o *schemaFlagValueCommon) Usage() string {
 }
 
 func (o *schemaFlagValueCommon) Parse() (value any, err error) {
+	if o.rawValue == ValueHelpIsRequired {
+		return nil, ErrWantHelp
+	}
+
 	value, err = parseJSONFlagValue[any](o.rawValue)
 	if err != nil {
 		value = o.rawValue

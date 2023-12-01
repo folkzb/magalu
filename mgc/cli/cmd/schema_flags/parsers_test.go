@@ -497,3 +497,20 @@ func Test_parseObjectFlagValue(t *testing.T) {
 	checkError(t, nil, err)
 	checkObject(t, expected, got)
 }
+
+func Test_help(t *testing.T) {
+	types := []string{"array", "boolean", "integer", "string", "object", ""}
+	for _, typ := range types {
+		t.Run(typ, func(t *testing.T) {
+			fv := newSchemaFlagValue(SchemaFlagValueDesc{
+				Schema:   &core.Schema{Type: typ},
+				PropName: "name",
+				FlagName: "name",
+			})
+
+			_ = fv.Set("help")
+			_, err := fv.Parse()
+			checkError(t, ErrWantHelp, err)
+		})
+	}
+}

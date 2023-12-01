@@ -100,6 +100,6 @@ can generate a command line on-demand for Rest manipulation`,
 	}
 
 	err = rootCmd.Execute()
-	showHelpForError(rootCmd, mainArgs, err) // since we SilenceUsage and SilenceErrors
+	err = showHelpForError(rootCmd, mainArgs, err) // since we SilenceUsage and SilenceErrors
 	return err
 }
