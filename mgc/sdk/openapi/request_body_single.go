@@ -3,6 +3,7 @@ package openapi
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -65,6 +66,7 @@ func (o *requestBodySingle) addToSchema(schema *mgcSchemaPkg.Schema) (err error)
 
 	schema.Properties[externalName] = ref
 	schema.Required = append(schema.Required, externalName)
+	slices.Sort(schema.Required)
 
 	return nil
 }

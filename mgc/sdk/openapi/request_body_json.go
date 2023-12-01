@@ -72,6 +72,9 @@ func (o *requestBodyJSON) addToSchema(schema *core.Schema) (err error) {
 		}
 		return true, nil
 	})
+
+	slices.Sort(schema.Required)
+
 	return
 }
 

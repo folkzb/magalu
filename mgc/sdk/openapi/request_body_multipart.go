@@ -69,6 +69,9 @@ func (o *requestBodyMultipart) addToSchema(schema *mgcSchemaPkg.Schema) (err err
 
 		return true, nil
 	})
+
+	slices.Sort(schema.Required)
+
 	return
 }
 

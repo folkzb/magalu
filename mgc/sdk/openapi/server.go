@@ -52,6 +52,9 @@ func (o *server) addToSchema(schema *mgcSchemaPkg.Schema) error {
 		schema.Properties[externalName] = &openapi3.SchemaRef{Value: varSchema}
 		return true, nil
 	})
+
+	slices.Sort(schema.Required)
+
 	return err
 }
 

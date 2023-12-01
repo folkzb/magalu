@@ -181,5 +181,7 @@ func (p *parameters) addToSchema(schema *mgcSchemaPkg.Schema, locations []string
 		return true, nil
 	})
 
+	slices.Sort(schema.Required)
+
 	return err
 }
