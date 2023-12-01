@@ -1,0 +1,9 @@
+Usage:
+  ./cli network xaas_security_group [flags]
+
+Flags:
+  -h, --help      help for xaas_security_group
+  -v, --version   version for xaas_security_group
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text

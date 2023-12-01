@@ -1,0 +1,21 @@
+Upload a file to a bucket
+
+Usage:
+  ./cli object-storage objects upload [dst] [src] [flags]
+  ./cli object-storage objects upload [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --dst string   Full destination path in the bucket with s3 prefix
+  -h, --help         help for upload
+      --src string   Source file path to be uploaded
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+      --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
+
+Use "./cli object-storage objects upload [command] --help" for more information about a command.

@@ -1,0 +1,21 @@
+Get a backup detail.
+
+Usage:
+  ./cli dbaas backups get [backup-id] [flags]
+  ./cli dbaas backups get [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --backup-id uuid   Value referring to backup Id.
+  -h, --help             help for get
+  -v, --version          version for get
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli dbaas backups get [command] --help" for more information about a command.

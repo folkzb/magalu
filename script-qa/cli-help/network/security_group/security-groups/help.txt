@@ -1,0 +1,22 @@
+VPC Security Groups | security-groups
+
+Usage:
+  ./cli network security_group security-groups [flags]
+  ./cli network security_group security-groups [command]
+
+Available Commands:
+  create         Create Security Group
+  create-default Create Security Group Default
+  delete         Delete a security group
+  delete-all     Delete all security groups
+  get            Security Group Details
+  list           List Security Groups by Tenant
+
+Flags:
+  -h, --help      help for security-groups
+  -v, --version   version for security-groups
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli network security_group security-groups [command] --help" for more information about a command.

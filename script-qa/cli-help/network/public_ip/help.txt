@@ -1,0 +1,18 @@
+VPC Public IPs
+
+Usage:
+  ./cli network public_ip [flags]
+  ./cli network public_ip [command]
+
+Available Commands:
+  public-ips      public-ips
+  vpcs-public-ips vpcs-public-ips
+
+Flags:
+  -h, --help      help for public_ip
+  -v, --version   version for public_ip
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli network public_ip [command] --help" for more information about a command.

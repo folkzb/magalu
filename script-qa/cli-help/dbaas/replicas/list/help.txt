@@ -1,0 +1,23 @@
+List all replicas for a given instance.
+
+Usage:
+  ./cli dbaas replicas list [flags]
+  ./cli dbaas replicas list [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      ---limit integer    limit (range: 1 - 25) (default 10)
+      ---offset integer   offset (min: 0)
+  -h, --help              help for list
+      --source-id uuid    Value referring to source Id.
+  -v, --version           version for list
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli dbaas replicas list [command] --help" for more information about a command.

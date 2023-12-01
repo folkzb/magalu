@@ -1,0 +1,20 @@
+APIs referentes ao produto de Virtual Machine
+
+Usage:
+  ./cli virtual-machine [flags]
+  ./cli virtual-machine [command]
+
+Available Commands:
+  images         images
+  instance-types instance types
+  instances      instances
+  keypairs       keypairs
+
+Flags:
+  -h, --help      help for virtual-machine
+  -v, --version   version for virtual-machine
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli virtual-machine [command] --help" for more information about a command.

@@ -1,0 +1,21 @@
+Create and manage Volumes via the Block Storage API
+
+Usage:
+  ./cli block-storage [flags]
+  ./cli block-storage [command]
+
+Available Commands:
+  snapshots               snapshots
+  usage                   usage
+  volume                  Block Storage Volume Resources
+  volume-attach-blueprint Block Storage Volume Attachment
+  volume-attachment       Block Storage Volume Attachment
+  volume-types            volume types
+
+Flags:
+  -h, --help   help for block-storage
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli block-storage [command] --help" for more information about a command.

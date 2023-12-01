@@ -1,0 +1,23 @@
+APIs referentes ao produto de Network
+
+Usage:
+  ./cli network [flags]
+  ./cli network [command]
+
+Available Commands:
+  port           VPC Port
+  public_ip      VPC Public IPs
+  quotas         VPC Quotas
+  rule           VPC Rules
+  security_group VPC Security Groups
+  subnets        VPC Subnets
+  vpc            Virtual Private Cloud (VPC)
+
+Flags:
+  -h, --help      help for network
+  -v, --version   version for network
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli network [command] --help" for more information about a command.

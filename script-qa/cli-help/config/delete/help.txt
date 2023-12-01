@@ -1,0 +1,18 @@
+Delete/unset a Config value that had been previously set. This does not
+affect the environment variables
+
+Usage:
+  ./cli config delete [key] [flags]
+  ./cli config delete [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+  -h, --help         help for delete
+      --key string   Name of the config to be deleted
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli config delete [command] --help" for more information about a command.

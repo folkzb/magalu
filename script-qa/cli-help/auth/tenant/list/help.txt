@@ -1,0 +1,16 @@
+List all available tenants for current login
+
+Usage:
+  ./cli auth tenant list [flags]
+  ./cli auth tenant list [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+  -h, --help   help for list
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli auth tenant list [command] --help" for more information about a command.

@@ -1,0 +1,19 @@
+images
+
+Usage:
+  ./cli virtual-machine images [flags]
+  ./cli virtual-machine images [command]
+
+Available Commands:
+  create      Create Image
+  delete      Delete Image
+  list        List Images
+
+Flags:
+  -h, --help      help for images
+  -v, --version   version for images
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli virtual-machine images [command] --help" for more information about a command.

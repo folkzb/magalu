@@ -1,0 +1,18 @@
+Datastores available for database instances.
+
+Usage:
+  ./cli dbaas datastores [flags]
+  ./cli dbaas datastores [command]
+
+Available Commands:
+  get         Datastore detail.
+  list        List available datastores.
+
+Flags:
+  -h, --help      help for datastores
+  -v, --version   version for datastores
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli dbaas datastores [command] --help" for more information about a command.

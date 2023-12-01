@@ -1,0 +1,25 @@
+List all objects from a bucket
+
+Usage:
+  ./cli object-storage objects list [dst] [flags]
+  ./cli object-storage objects list [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --continuation-token string   Token of result page to continue from
+      --dst string                  Path of the bucket to list objects from
+      --exclude string              Filename pattern to exclude
+  -h, --help                        help for list
+      --include string              Filename pattern to include (default "*")
+      --max-items integer           Limit of items to be listed (min: 1) (default 1000)
+      --recursive                   List folders and subfolders
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+      --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
+
+Use "./cli object-storage objects list [command] --help" for more information about a command.

@@ -1,0 +1,17 @@
+healthchecks
+
+Usage:
+  ./cli block-storage healthchecks [flags]
+  ./cli block-storage healthchecks [command]
+
+Available Commands:
+  list        Healthcheck
+
+Flags:
+  -h, --help      help for healthchecks
+  -v, --version   version for healthchecks
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli block-storage healthchecks [command] --help" for more information about a command.

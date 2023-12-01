@@ -1,0 +1,9 @@
+Usage:
+  ./cli network xaas_rule [flags]
+
+Flags:
+  -h, --help      help for xaas_rule
+  -v, --version   version for xaas_rule
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text

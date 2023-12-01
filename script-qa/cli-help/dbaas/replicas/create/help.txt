@@ -1,0 +1,23 @@
+Creates a new replica for an instance asynchronously.
+
+Usage:
+  ./cli dbaas replicas create [flags]
+  ./cli dbaas replicas create [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --flavor-id uuid   
+  -h, --help             help for create
+      --name string      (max character count: 255)
+      --source-id uuid   
+  -v, --version          version for create
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli dbaas replicas create [command] --help" for more information about a command.

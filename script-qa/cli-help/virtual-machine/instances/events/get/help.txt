@@ -1,0 +1,22 @@
+Returns the event details for the instance
+
+Usage:
+  ./cli virtual-machine instances events get [id] [event-id] [flags]
+  ./cli virtual-machine instances events get [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --event-id uuid   event_id
+  -h, --help            help for get
+      --id uuid         id
+  -v, --version         version for get
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli virtual-machine instances events get [command] --help" for more information about a command.

@@ -1,0 +1,9 @@
+Usage:
+  ./cli network xaas_port [flags]
+
+Flags:
+  -h, --help      help for xaas_port
+  -v, --version   version for xaas_port
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text

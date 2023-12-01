@@ -1,0 +1,17 @@
+instance types
+
+Usage:
+  ./cli virtual-machine instance-types [flags]
+  ./cli virtual-machine instance-types [command]
+
+Available Commands:
+  list        List Instance Types
+
+Flags:
+  -h, --help      help for instance-types
+  -v, --version   version for instance-types
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli virtual-machine instance-types [command] --help" for more information about a command.

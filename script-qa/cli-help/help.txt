@@ -1,0 +1,29 @@
+This CLI is a dynamic processor of OpenAPI files that
+can generate a command line on-demand for Rest manipulation
+
+Usage:
+  ./cli [flags]
+  ./cli [command]
+
+Other commands:
+  completion      Generate the autocompletion script for the specified shell
+  dump-tree       Print command tree
+  help            Help about any command
+
+Additional Commands:
+  auth            Actions with ID Magalu to log in, refresh tokens, change tenants and others
+  block-storage   Operations for Block Storage API
+  config          Manage Configuration values
+  dbaas           DBaaS API Product.
+  mke             APIs referentes ao produto de kubernetes
+  network         APIs referentes ao produto de Network
+  object-storage  Operations for Object Storage API
+  profile         Profile related commands
+  virtual-machine APIs referentes ao produto de Virtual Machine
+
+Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+  -h, --help                   help for ./cli
+  -v, --version                version for ./cli
+
+Use "./cli [command] --help" for more information about a command.

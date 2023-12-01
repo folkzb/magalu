@@ -1,0 +1,16 @@
+Get the current Object Storage credentials
+
+Usage:
+  ./cli auth object-storage get [flags]
+  ./cli auth object-storage get [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+  -h, --help   help for get
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli auth object-storage get [command] --help" for more information about a command.

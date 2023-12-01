@@ -22,10 +22,11 @@ repos:
         types_or: [yaml, json]
         stages: [pre-commit, pre-push]
         additional_dependencies: [jsonschema, PyYAML, typing, argparse]
-    -   id: check-commands-outputs
-        name: check-commands-outputs
+    -   id: check-cli-help-outputs
+        name: check "cli help" outputs
         language: system
         entry: bash -c './scripts/gen_expected_cli_full_help_output_file.sh'
+        require_serial: true
         stages: [pre-commit]
     -   id: oapi-index-gen
         name: oapi-index-gen
@@ -36,13 +37,13 @@ repos:
     hooks:
     -   id: trailing-whitespace
         stages: [pre-commit, pre-push]
-        exclude: script-qa/cli-full-help-output.txt
+        exclude: ^script-qa/
     -   id: end-of-file-fixer
         stages: [pre-commit, pre-push]
         exclude: >
           (?x)(
             ^mgc/sdk/version.txt|
-            ^script-qa/cli-full-help-output.txt
+            ^script-qa/
           )
     -   id: check-yaml
         stages: [pre-commit, pre-push]

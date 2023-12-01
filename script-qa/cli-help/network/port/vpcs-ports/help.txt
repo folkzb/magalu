@@ -1,0 +1,18 @@
+VPC Port | vpcs-ports
+
+Usage:
+  ./cli network port vpcs-ports [flags]
+  ./cli network port vpcs-ports [command]
+
+Available Commands:
+  create      Create Port
+  list        List Ports
+
+Flags:
+  -h, --help      help for vpcs-ports
+  -v, --version   version for vpcs-ports
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli network port vpcs-ports [command] --help" for more information about a command.

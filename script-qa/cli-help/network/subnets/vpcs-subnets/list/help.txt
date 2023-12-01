@@ -1,0 +1,21 @@
+Returns a list of subnets for a provided vpc_id
+
+Usage:
+  ./cli network subnets vpcs-subnets list [vpc-id] [flags]
+  ./cli network subnets vpcs-subnets list [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+  -h, --help            help for list
+  -v, --version         version for list
+      --vpc-id string
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli network subnets vpcs-subnets list [command] --help" for more information about a command.

@@ -1,0 +1,22 @@
+instances
+
+Usage:
+  ./cli virtual-machine instances [flags]
+  ./cli virtual-machine instances [command]
+
+Available Commands:
+  create      Instance Create
+  delete      Instance Delete
+  events      events
+  get         Instance Details
+  list        List Instances
+  update      Update Instance Status
+
+Flags:
+  -h, --help      help for instances
+  -v, --version   version for instances
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli virtual-machine instances [command] --help" for more information about a command.

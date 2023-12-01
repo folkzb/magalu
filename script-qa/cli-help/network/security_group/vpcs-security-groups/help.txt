@@ -1,0 +1,18 @@
+VPC Security Groups | vpcs-security-groups
+
+Usage:
+  ./cli network security_group vpcs-security-groups [flags]
+  ./cli network security_group vpcs-security-groups [command]
+
+Available Commands:
+  create      Create Security Group
+  list        List Security Groups
+
+Flags:
+  -h, --help      help for vpcs-security-groups
+  -v, --version   version for vpcs-security-groups
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli network security_group vpcs-security-groups [command] --help" for more information about a command.

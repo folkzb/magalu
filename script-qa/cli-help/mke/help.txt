@@ -1,0 +1,19 @@
+APIs referentes ao produto de kubernetes
+
+Usage:
+  ./cli mke [flags]
+  ./cli mke [command]
+
+Available Commands:
+  cluster     Rotas relacionadas a api de Cluster.
+  info        Rotas relacionadas a informações de configurações do mke-api.
+  nodepool    Rotas relacionadas a api de Nodepool dentro da api de Cluster.
+
+Flags:
+  -h, --help      help for mke
+  -v, --version   version for mke
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli mke [command] --help" for more information about a command.

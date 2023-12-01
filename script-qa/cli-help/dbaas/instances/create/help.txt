@@ -1,0 +1,28 @@
+Creates a new database instance asynchronously for a tenant.
+
+Usage:
+  ./cli dbaas instances create [flags]
+  ./cli dbaas instances create [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --backup-retention-days integer   The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
+      --backup-start-at time            Start time which is allowed to start the automated backup process. (default 01:00:00)
+      --datastore-id uuid               
+      --flavor-id uuid                  
+  -h, --help                            help for create
+      --name string                     (max character count: 255)
+      --password string                 (max character count: 50)
+      --user string                     (max character count: 25)
+  -v, --version                         version for create
+      --volume object                   ({"size": number, "type": string (one of CLOUD_HDD|CLOUD_NVME) (default CLOUD_NVME)})
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli dbaas instances create [command] --help" for more information about a command.

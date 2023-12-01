@@ -1,0 +1,26 @@
+Create a Subnet
+
+Usage:
+  ./cli network subnets vpcs-subnets create [vpc-id] [flags]
+  ./cli network subnets vpcs-subnets create [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --cidr-block string                      
+      --description string                     
+      --dns-nameservers array(ipvanyaddress)    (default [])
+  -h, --help                                   help for create
+      --ip-version integer                     
+      --name string                            
+  -v, --version                                version for create
+      --vpc-id string
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli network subnets vpcs-subnets create [command] --help" for more information about a command.

@@ -1,0 +1,20 @@
+Lista todas as versões de kubernetes disponiveis
+
+Usage:
+  ./cli mke info versions [flags]
+  ./cli mke info versions [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+  -h, --help      help for versions
+  -v, --version   version for versions
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli mke info versions [command] --help" for more information about a command.

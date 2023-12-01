@@ -1,0 +1,17 @@
+Set the active Tenant to be used for all subsequential requests
+
+Usage:
+  ./cli auth tenant select [id] [flags]
+  ./cli auth tenant select [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+  -h, --help        help for select
+      --id string   The UUID of the desired Tenant. To list all possible IDs, run auth tenant list
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli auth tenant select [command] --help" for more information about a command.

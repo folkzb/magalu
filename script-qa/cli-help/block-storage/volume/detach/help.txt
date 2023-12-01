@@ -1,0 +1,28 @@
+Detaches a volume from an instance. Make sure to unmount
+any file systems on the device within your operating system before
+detaching the volume. Failure to do so can result in the volume
+becoming stuck in the busy state while detaching. If this happens,
+detachment can be delayed indefinitely until you unmount the volume,
+force detachment, reboot the instance, or all three.
+
+Usage:
+  ./cli block-storage volume detach [id] [virtual-machine-id] [flags]
+  ./cli block-storage volume detach [command]
+
+Available Commands:
+  cli.list-links List all available links for this command
+
+Flags:
+      --force                     force
+  -h, --help                      help for detach
+      --id uuid                   id
+  -v, --version                   version for detach
+      --virtual-machine-id uuid   virtual_machine_id
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of pre-prod|prod) (default prod)
+      --region enum            Region to reach the service (one of br-ne-1|br-ne-2|br-se-1) (default br-ne-1)
+      --server-url uri         Manually specify the server to use
+
+Use "./cli block-storage volume detach [command] --help" for more information about a command.
