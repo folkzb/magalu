@@ -34,8 +34,6 @@ func addStringConstraints(s *mgcSdk.Schema, dst *[]string) {
 	} else if s.MaxLength != nil {
 		*dst = append(*dst, fmt.Sprintf("max character count: %v", int(*s.MaxLength)))
 	}
-
-	addEnumConstraint(s, dst)
 }
 
 func formatFloat(f float64) string {
@@ -53,8 +51,6 @@ func addNumberConstraints(s *mgcSdk.Schema, dst *[]string) {
 	} else if max != nil {
 		*dst = append(*dst, fmt.Sprintf("max: %s", formatFloat(*max)))
 	}
-
-	addEnumConstraint(s, dst)
 }
 
 func addArrayConstraints(s *mgcSdk.Schema, dst *[]string) {
@@ -176,6 +172,8 @@ func schemaJSONRepAndConstraints(s *mgcSdk.Schema, includeSimpleReturn bool) str
 	if filler, ok := getSchemaConstraintFiller(s.Type); ok {
 		filler(s, &constraints)
 	}
+
+	addEnumConstraint(s, &constraints)
 
 	if jsonRepresentation := getSchemaJSONrepresentation(s); includeSimpleReturn || isJSONRepresentationNeeded(s, jsonRepresentation) {
 		if len(constraints) > 0 {
