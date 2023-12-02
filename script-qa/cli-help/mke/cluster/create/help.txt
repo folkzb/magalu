@@ -19,7 +19,8 @@ Flags:
                                      - deve começar com um caractere alfabético
                                      - deve terminar com um caractere alfanumérico
                                    
-      --node-pools array(object)   Conjunto de nodes em um cluster kubernetes ([{"auto_scale": {"enabled": boolean (default false), "max_replicas": integer (min: 1) (default 1), "min_replicas": integer (min: 1) (default 1)}, "flavor": string (one of "cloud-k8s.gp1.large" or "cloud-k8s.gp1.small"), "name": string, "replicas": integer (default 1), "tags": [string], "taints": [{"effect": string (one of "NoExecute", "NoSchedule" or "PreferNoSchedule"), "key": string, "value": string}]}])
+      --node-pools array(object)   Conjunto de nodes em um cluster kubernetes
+                                   Use --node-pools=help for more details
       --param.version enum         Versão do kubernetes nativa do cluster (one of "v1.22.9", "v1.24.10", "v1.26.1" or "v1.28.2") (default "v1.28.2")
   -v, --version                    version for create
 

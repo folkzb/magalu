@@ -8,7 +8,8 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --auto-scale object      Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes ({"enabled": boolean (default false), "max_replicas": integer (min: 1) (default 1), "min_replicas": integer (min: 1) (default 1)})
+      --auto-scale object      Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes (properties: enabled, max_replicas and min_replicas)
+                               Use --auto-scale=help for more details
       --cluster-id uuid        Identificador no padrão uuid para identificar o cluster
       --flavor enum            Definição da capacidade de CPU, memória RAM e armazenamento dos nodes
                                <table>
@@ -42,7 +43,8 @@ Flags:
                                
       --replicas integer       Número de réplicas dos nós do nodepool (default 1)
       --tags array(string)     Lista de tags aplicadas ao nodepool
-      --taints array(object)   Propriedade de associação de um conjunto se nós ([{"effect": string (one of "NoExecute", "NoSchedule" or "PreferNoSchedule"), "key": string, "value": string}])
+      --taints array(object)   Propriedade de associação de um conjunto se nós
+                               Use --taints=help for more details
   -v, --version                version for create
 
 Global Flags:

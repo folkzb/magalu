@@ -197,6 +197,16 @@ func getFlagHelpUsageLine(f *flag.Flag) (s string) {
 	return
 }
 
+func getFlagDescription(f *flag.Flag) (description string) {
+	if fv, ok := f.Value.(schema_flags.SchemaFlagValue); ok {
+		description = fv.Desc().Description()
+	} else if f.Usage != "" {
+		description = f.Usage
+	}
+
+	return description
+}
+
 func showFlagHelp(f *flag.Flag) {
 	const (
 		indentPrefix = "    "
@@ -232,9 +242,9 @@ func showFlagHelp(f *flag.Flag) {
 	addSection("Flag usage")
 	addSectionBodyRaw(getFlagHelpUsageLine(f))
 
-	if f.Usage != "" {
+	if description := getFlagDescription(f); description != "" {
 		addSection("Description")
-		addSectionBodyText(f.Usage)
+		addSectionBodyText(description)
 	}
 
 	if f.DefValue != "" {

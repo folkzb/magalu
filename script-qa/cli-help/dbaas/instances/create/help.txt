@@ -17,7 +17,8 @@ Flags:
       --password string                 Password (max character count: 50)
       --user string                     User (max character count: 25)
   -v, --version                         version for create
-      --volume object                   Instance Volume Request ({"size": number (range: 10 - 50000), "type": string (one of "CLOUD_HDD" or "CLOUD_NVME") (default CLOUD_NVME)})
+      --volume object                   Instance Volume Request (properties: size and type)
+                                        Use --volume=help for more details
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

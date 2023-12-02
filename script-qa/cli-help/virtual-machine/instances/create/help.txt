@@ -14,7 +14,8 @@ Flags:
       --image string                       Image
       --key-name string                    Key Name
       --name string                        Name
-      --network-interfaces array(object)   Network Interfaces ([{"id": string}])
+      --network-interfaces array(object)   Network Interfaces
+                                           Use --network-interfaces=help for more details
       --type string                        Type
       --user-data string                   User Data
   -v, --version                            version for create

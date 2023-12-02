@@ -8,9 +8,9 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --headers object           
+      --headers object           Use --headers=help for more details
   -h, --help                     help for head
-      --security array(object)   
+      --security array(object)   Use --security=help for more details
       --url string               Golang template with the URL
 
 Global Flags:

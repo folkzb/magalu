@@ -33,8 +33,10 @@ func (e requiredFlagsError) Error() string {
 func formatFlagUsage(f *flag.Flag, showHelp bool) string {
 	s := fmt.Sprintf("--%s=%s", f.Name, f.Value.Type())
 
-	if showHelp && f.Usage != "" {
-		s += fmt.Sprintf(" (%s)", f.Usage)
+	if showHelp {
+		if description := getFlagDescription(f); description != "" {
+			s += fmt.Sprintf(" (%s)", description)
+		}
 	}
 
 	return s

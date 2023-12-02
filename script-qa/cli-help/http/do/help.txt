@@ -9,10 +9,10 @@ Available Commands:
 
 Flags:
       --body string              
-      --headers object           
+      --headers object           Use --headers=help for more details
   -h, --help                     help for do
       --method enum              (one of "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" or "TRACE")
-      --security array(object)   
+      --security array(object)   Use --security=help for more details
       --url string               Golang template with the URL
 
 Global Flags:

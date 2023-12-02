@@ -74,23 +74,36 @@ func (d *SchemaFlagValueDesc) RawDefaultValue() string {
 	return string(data)
 }
 
-func (d *SchemaFlagValueDesc) Usage() (usage string) {
-	usage = d.Schema.Title
+func (d SchemaFlagValueDesc) Description() (description string) {
+	description = d.Schema.Title
 
 	if d.Schema.Description != "" {
-		if usage != "" {
-			usage += ": "
+		if description != "" {
+			description += ": "
 		}
-		usage += d.Schema.Description
+		description += d.Schema.Description
 	}
 
-	constraints := schemaJSONRepAndConstraints(d.Schema, false)
+	constraints := getDescriptionConstraints(d.Schema)
 	if constraints != "" {
-		if usage != "" {
-			usage += " "
+		if description != "" {
+			description += " "
 		}
-		usage += fmt.Sprintf("(%s)", constraints)
+		description += fmt.Sprintf("(%s)", constraints)
 	}
 
-	return usage
+	return description
+}
+
+func (d SchemaFlagValueDesc) Usage() (usage string) {
+	usage = d.Description()
+
+	if shouldRecommendHelpValue(d.Schema) {
+		if usage != "" {
+			usage += "\n"
+		}
+		usage += fmt.Sprintf("Use --%s=%s for more details", d.FlagName, ValueHelpIsRequired)
+	}
+
+	return
 }

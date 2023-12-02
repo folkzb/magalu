@@ -11,6 +11,7 @@ Flags:
   -h, --help             help for set
       --key string       Name of the desired config
       --value anyValue   New flag value
+                         Use --value=help for more details
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
