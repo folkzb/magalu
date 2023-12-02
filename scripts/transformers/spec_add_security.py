@@ -30,7 +30,7 @@ class AddSecurityTransformer(SpecTranformer):
         paths = spec.get("paths", {})
         for operations in paths.values():
             for http_method, op in operations.items():
-                if op["security"] is not None:
+                if op.get("security") is not None:
                     continue
 
                 security = self.get_security_schema(http_method)
