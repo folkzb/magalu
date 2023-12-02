@@ -181,7 +181,8 @@ paths:
                 required: false
                 schema:
                     type: array
-                    items: {}
+                    items:
+                        type: string
                     default: []
                     title: Port Id List
             responses:
@@ -466,6 +467,7 @@ paths:
                 required: true
                 schema:
                     title: Vpc Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -496,6 +498,7 @@ paths:
                 required: true
                 schema:
                     title: Public Ip Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -531,6 +534,7 @@ paths:
                 required: true
                 schema:
                     title: Public Ip Id
+                    type: string
             responses:
                 '204':
                     description: Successful Response
@@ -836,6 +840,7 @@ paths:
                 required: true
                 schema:
                     title: Rule Id
+                    type: string
             responses:
                 '200':
                     description: Successful Response
@@ -871,6 +876,7 @@ paths:
                 required: true
                 schema:
                     title: Rule Id
+                    type: string
             responses:
                 '204':
                     description: Successful Response

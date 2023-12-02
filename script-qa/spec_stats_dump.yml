@@ -402,14 +402,9 @@ network.openapi:
   typeless-schemas:
     - paths./v0/ports/{port_id}/attach/{security_group_id}.post.responses.200.content.application/json.schema
     - paths./v0/ports/{port_id}/detach/{security_group_id}.post.responses.200.content.application/json.schema
-    - paths./v0/vpcs/{vpc_id}/public_ips.get.parameters.vpc_id.schema
-    - paths./v0/public_ips/{public_ip_id}.get.parameters.public_ip_id.schema
-    - paths./v0/public_ips/{public_ip_id}.delete.parameters.public_ip_id.schema
     - paths./v0/public_ips/{public_ip_id}/attach/{port_id}.post.responses.200.content.application/json.schema
     - paths./v0/public_ips/{public_ip_id}/detach/{port_id}.post.responses.200.content.application/json.schema
     - paths./v0/routers.get.responses.200.content.application/json.schema
-    - paths./v0/rules/{rule_id}.get.parameters.rule_id.schema
-    - paths./v0/rules/{rule_id}.delete.parameters.rule_id.schema
   uneven-resources:
     port:
       DELETE:

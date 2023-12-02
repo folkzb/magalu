@@ -8,7 +8,7 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      --body                     
+      --body anyValue            
       --headers object           
   -h, --help                     help for options
       --security array(object)   

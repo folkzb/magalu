@@ -12896,7 +12896,9 @@
           },
           "port_id_list": {
            "default": [],
-           "items": {},
+           "items": {
+            "type": "string"
+           },
            "title": "Port Id List",
            "type": "array"
           },
@@ -13275,7 +13277,8 @@
          "additionalProperties": false,
          "properties": {
           "public_ip_id": {
-           "title": "Public Ip Id"
+           "title": "Public Ip Id",
+           "type": "string"
           }
          },
          "required": [
@@ -13382,7 +13385,8 @@
          "additionalProperties": false,
          "properties": {
           "public_ip_id": {
-           "title": "Public Ip Id"
+           "title": "Public Ip Id",
+           "type": "string"
           }
          },
          "required": [
@@ -13683,7 +13687,8 @@
          "additionalProperties": false,
          "properties": {
           "vpc_id": {
-           "title": "Vpc Id"
+           "title": "Vpc Id",
+           "type": "string"
           }
          },
          "required": [
@@ -13934,7 +13939,8 @@
          "additionalProperties": false,
          "properties": {
           "rule_id": {
-           "title": "Rule Id"
+           "title": "Rule Id",
+           "type": "string"
           }
          },
          "required": [
@@ -13986,7 +13992,8 @@
          "additionalProperties": false,
          "properties": {
           "rule_id": {
-           "title": "Rule Id"
+           "title": "Rule Id",
+           "type": "string"
           }
          },
          "required": [

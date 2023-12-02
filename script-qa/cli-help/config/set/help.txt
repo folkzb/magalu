@@ -8,9 +8,9 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help         help for set
-      --key string   Name of the desired config
-      --value        New flag value
+  -h, --help             help for set
+      --key string       Name of the desired config
+      --value anyValue   New flag value
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

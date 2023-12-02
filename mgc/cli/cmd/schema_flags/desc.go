@@ -6,6 +6,7 @@ import (
 
 	flag "github.com/spf13/pflag"
 	"magalu.cloud/core"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 )
 
 type SchemaFlagValueDesc struct {
@@ -25,6 +26,20 @@ func getFlagType(schema *core.Schema) string {
 
 	if schema.Format != "" {
 		return schema.Format
+	}
+
+	if schema.Type == "" {
+		if (mgcSchemaPkg.CheckSimilarJsonSchemas(schema, &mgcSchemaPkg.Schema{}) || // this is like a bug in the schema, but config set takes it
+			mgcSchemaPkg.CheckSimilarJsonSchemas(schema, mgcSchemaPkg.NewAnySchema())) {
+			return "anyValue"
+		}
+		if len(schema.AnyOf) > 0 {
+			return "anyOf"
+		}
+		if len(schema.OneOf) > 0 {
+			return "oneOf"
+		}
+		return "anyValue"
 	}
 
 	return schema.Type

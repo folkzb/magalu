@@ -8,9 +8,9 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-  -h, --help      help for list
-  -v, --version   version for list
-      --vpc-id
+  -h, --help            help for list
+  -v, --version         version for list
+      --vpc-id string
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

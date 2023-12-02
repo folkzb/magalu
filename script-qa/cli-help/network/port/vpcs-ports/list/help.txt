@@ -8,12 +8,12 @@ Available Commands:
   cli.list-links List all available links for this command
 
 Flags:
-      ---limit integer         (min: 1) (default 10)
-      ---offset integer        (min: 1) (default 1)
-      --detailed                (default true)
-  -h, --help                   help for list
-      --port-id-list array()    (default [])
-  -v, --version                version for list
+      ---limit integer               (min: 1) (default 10)
+      ---offset integer              (min: 1) (default 1)
+      --detailed                      (default true)
+  -h, --help                         help for list
+      --port-id-list array(string)    (default [])
+  -v, --version                      version for list
       --vpc string
 
 Global Flags:
