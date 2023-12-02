@@ -2,10 +2,6 @@ List all existing Buckets
 
 Usage:
   ./cli object-storage buckets list [flags]
-  ./cli object-storage buckets list [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help   help for list
@@ -15,5 +11,3 @@ Global Flags:
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
-
-Use "./cli object-storage buckets list [command] --help" for more information about a command.

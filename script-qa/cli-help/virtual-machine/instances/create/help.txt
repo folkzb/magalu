@@ -2,14 +2,11 @@ Create a Virtual Machine instance
 
 Usage:
   ./cli virtual-machine instances create [flags]
-  ./cli virtual-machine instances create [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
       --allocate-fip                       Allocate Fip (default true)
       --availability-zone string           Availability Zone
+      --cli.list-links enum[=table]        List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                               help for create
       --image string                       Image
       --key-name string                    Key Name
@@ -25,5 +22,3 @@ Global Flags:
       --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
-
-Use "./cli virtual-machine instances create [command] --help" for more information about a command.

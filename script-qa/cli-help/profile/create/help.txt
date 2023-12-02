@@ -2,10 +2,6 @@ Creates a new profile
 
 Usage:
   ./cli profile create [name] [copy] [flags]
-  ./cli profile create [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
       --copy string   Name of the profile to copy content from. If this paramater is passed, the new Profile will be pre-populated with the contents of the Profile with the specified name
@@ -14,5 +10,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli profile create [command] --help" for more information about a command.

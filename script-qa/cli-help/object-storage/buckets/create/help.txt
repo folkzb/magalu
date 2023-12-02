@@ -2,21 +2,16 @@ Buckets are "containers" that are able to store various Objects inside
 
 Usage:
   ./cli object-storage buckets create [name] [flags]
-  ./cli object-storage buckets create [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
-      --acl string        ACL Rules for the bucket
-  -h, --help              help for create
-      --location string   Location constraint for the bucket (default "br-ne-1")
-      --name string       Name of the bucket to be created
+      --acl string                    ACL Rules for the bucket
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for create
+      --location string               Location constraint for the bucket (default "br-ne-1")
+      --name string                   Name of the bucket to be created
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
       --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
-
-Use "./cli object-storage buckets create [command] --help" for more information about a command.

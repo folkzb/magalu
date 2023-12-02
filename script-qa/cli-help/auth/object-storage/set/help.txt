@@ -2,10 +2,6 @@ Set the credentials values used for Object Storage requests
 
 Usage:
   ./cli auth object-storage set [access-key-id] [secret-access-key] [flags]
-  ./cli auth object-storage set [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
       --access-key-id string       Access key id value
@@ -14,5 +10,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli auth object-storage set [command] --help" for more information about a command.

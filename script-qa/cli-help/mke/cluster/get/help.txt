@@ -2,20 +2,15 @@ Lista as informações de um cluster
 
 Usage:
   ./cli mke cluster get [cluster-id] [flags]
-  ./cli mke cluster get [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
-      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster
-  -h, --help              help for get
-  -v, --version           version for get
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --cluster-id uuid               Identificador no padrão uuid para identificar o cluster
+  -h, --help                          help for get
+  -v, --version                       version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
-
-Use "./cli mke cluster get [command] --help" for more information about a command.

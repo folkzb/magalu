@@ -2,15 +2,9 @@ Shows current selected profile. Any changes to auth or config values will only a
 
 Usage:
   ./cli profile current [flags]
-  ./cli profile current [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help   help for current
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli profile current [command] --help" for more information about a command.

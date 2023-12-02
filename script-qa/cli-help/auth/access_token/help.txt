@@ -2,13 +2,9 @@ Retrieve the access token used in the APIs
 
 Usage:
   ./cli auth access-token [flags]
-  ./cli auth access-token [command]
 
 Aliases:
   access-token, access_token
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help       help for access-token
@@ -16,5 +12,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli auth access-token [command] --help" for more information about a command.

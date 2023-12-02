@@ -4,10 +4,6 @@ about a successful login, use the '--show' flag when logging in
 
 Usage:
   ./cli auth login [flags]
-  ./cli auth login [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help   help for login
@@ -15,5 +11,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli auth login [command] --help" for more information about a command.

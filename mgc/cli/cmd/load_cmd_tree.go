@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"slices"
@@ -10,15 +9,8 @@ import (
 	flag "github.com/spf13/pflag"
 	"github.com/stoewer/go-strcase"
 	"magalu.cloud/core"
-	"magalu.cloud/core/utils"
 	mgcSdk "magalu.cloud/sdk"
 )
-
-const (
-	listLinksCmd = "cli.list-links"
-)
-
-var allExecutorChildren = []string{listLinksCmd}
 
 func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (cmd *cobra.Command, flags *cmdFlags, err error) {
 	if childGroup, ok := child.(mgcSdk.Grouper); ok {
@@ -53,14 +45,6 @@ func loadGrouperChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Group
 func loadChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor, childName string) (*cobra.Command, core.Descriptor, error) {
 	if cmdGrouper, ok := cmdDesc.(core.Grouper); ok {
 		return loadGrouperChild(sdk, cmd, cmdGrouper, childName)
-	} else if cmdExec, ok := cmdDesc.(core.Executor); ok {
-		// Manually fail if specified child is invalid
-		if !slices.Contains(allExecutorChildren, childName) {
-			return nil, nil, fmt.Errorf("command %q has no child named %q", cmd.Name(), childName)
-		}
-
-		// Always load all executor children
-		return nil, nil, loadAllExecChildren(sdk, cmd, cmdExec)
 	}
 
 	return nil, nil, fmt.Errorf("command %q has no child named %q", cmd.Name(), childName)
@@ -77,16 +61,9 @@ func loadAllGrouperChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core
 	return err
 }
 
-func loadAllExecChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdExec core.Executor) error {
-	addListLinks(cmd, cmdExec)
-	return nil
-}
-
 func loadAllChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descriptor) error {
 	if cmdGrouper, ok := cmdDesc.(core.Grouper); ok {
 		return loadAllGrouperChildren(sdk, cmd, cmdGrouper)
-	} else if cmdExec, ok := cmdDesc.(core.Executor); ok {
-		return loadAllExecChildren(sdk, cmd, cmdExec)
 	}
 
 	return nil
@@ -231,6 +208,11 @@ func addAction(
 	}
 
 	links := exec.Links()
+	var listLinksFlag *flag.Flag
+	if len(links) > 0 {
+		listLinksFlag = newListLinkFlag()
+		flags.addExtraFlag(listLinksFlag)
+	}
 
 	name, aliases := getCommandNameAndAliases(exec.Name())
 
@@ -244,6 +226,10 @@ func addAction(
 		GroupID: "catalog",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err, used := listLinks(listLinksFlag, links); err != nil || used {
+				return err
+			}
+
 			config := sdk.Config()
 			parameters, configs, err := flags.getValues(config, args)
 			if err != nil {
@@ -296,98 +282,4 @@ func addGroup(
 	logger().Debugw("Groupper added to command tree", "name", group.Name())
 	// TODO: Parse this command's flags right after its creation
 	return moduleCmd, nil
-}
-
-func addLink(
-	ctx context.Context,
-	sdk *mgcSdk.Sdk,
-	parentCmd *cobra.Command,
-	config *mgcSdk.Config,
-	originalResult core.Result,
-	link core.Linker,
-	followingLinkArgs [][]string,
-) (linkCmd *cobra.Command, err error) {
-	flags, err := newCmdFlags(
-		parentCmd,
-		link.AdditionalParametersSchema(),
-		link.AdditionalConfigsSchema(),
-		nil,
-	)
-	if err != nil {
-		return
-	}
-
-	name, aliases := getCommandNameAndAliases(link.Name())
-
-	linkCmd = &cobra.Command{
-		Use:     name,
-		Aliases: aliases,
-		Short:   link.Description(),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			printLinkExecutionTable(link.Name(), link.Description())
-
-			additionalParameters, additionalConfigs, err := flags.getValues(config, args)
-			if err != nil {
-				return err
-			}
-
-			exec, err := link.CreateExecutor(originalResult)
-			if err != nil {
-				return fmt.Errorf("unable to resolve link %s: %w", link.Name(), err)
-			}
-
-			result, err := handleExecutor(ctx, sdk, cmd, exec, additionalParameters, additionalConfigs)
-			if err != nil {
-				return err
-			}
-
-			return handleLinkArgs(ctx, sdk, cmd, followingLinkArgs, exec.Links(), config, result)
-		},
-	}
-
-	parentCmd.AddCommand(linkCmd)
-	flags.addFlags(linkCmd)
-
-	logger().Debugw("Link added to command tree", "name", link.Name())
-
-	// Reset values of persistent flags to avoid inheriting the values set from previous actions/links
-	linkCmd.PersistentFlags().Visit(func(f *flag.Flag) {
-		_ = f.Value.Set(f.DefValue)
-	})
-
-	return
-}
-
-func addListLinks(
-	parentCmd *cobra.Command,
-	sourceExec core.Executor,
-) *cobra.Command {
-	type LinkerListEntry struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	}
-	type LinkerList []LinkerListEntry
-
-	listLinksCmd := &cobra.Command{
-		Use:   listLinksCmd,
-		Short: "List all available links for this command",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			links := sourceExec.Links()
-			result := make(LinkerList, 0, len(links))
-
-			for linkName, link := range links {
-				result = append(result, LinkerListEntry{Name: linkName, Description: link.Description()})
-			}
-
-			simplified, err := utils.SimplifyAny(result)
-			if err != nil {
-				return err
-			}
-
-			return handleSimpleResultValue(simplified, getOutputFlag(cmd))
-		},
-	}
-
-	parentCmd.AddCommand(listLinksCmd)
-	return listLinksCmd
 }

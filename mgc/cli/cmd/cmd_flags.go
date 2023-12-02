@@ -21,6 +21,7 @@ import (
 type cmdFlags struct {
 	schemaFlags    []*flag.Flag // only schema_flags.SchemaFlagValue elements
 	positionalArgs []*flag.Flag // subset schemaFlags that can be positional, in order
+	extraFlags     []*flag.Flag
 
 	knownFlags map[flag.NormalizedName]*flag.Flag // all known flags, both existing and schemaFlags
 }
@@ -56,6 +57,16 @@ func (cf *cmdFlags) addFlags(cmd *cobra.Command) {
 		logger().Debugw("adding schema flag", "flag", f.Name, "desc", desc)
 		flags.AddFlag(f)
 	}
+
+	for _, f := range cf.extraFlags {
+		logger().Debugw("adding extra flag", "flag", f.Name, "value", f.Value)
+		parametersFlags.AddFlag(f)
+	}
+}
+
+func (cf *cmdFlags) addExtraFlag(f *flag.Flag) {
+	cf.knownFlags[flag.NormalizedName(f.Name)] = f
+	cf.extraFlags = append(cf.extraFlags, f)
 }
 
 // parse, then validate flags and return the final values.

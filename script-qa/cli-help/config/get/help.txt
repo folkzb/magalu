@@ -4,10 +4,6 @@ Otherwise, the value will be searched for in the YAML file
 
 Usage:
   ./cli config get [key] [flags]
-  ./cli config get [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help         help for get
@@ -15,5 +11,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli config get [command] --help" for more information about a command.

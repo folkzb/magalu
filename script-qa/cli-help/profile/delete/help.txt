@@ -2,10 +2,6 @@ Deletes the profile with the specified name
 
 Usage:
   ./cli profile delete [name] [flags]
-  ./cli profile delete [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help          help for delete
@@ -13,5 +9,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli profile delete [command] --help" for more information about a command.

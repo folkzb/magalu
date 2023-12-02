@@ -2,10 +2,6 @@ Set a specific Config value in the configuration file
 
 Usage:
   ./cli config set [key] [value] [flags]
-  ./cli config set [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help             help for set
@@ -15,5 +11,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli config set [command] --help" for more information about a command.

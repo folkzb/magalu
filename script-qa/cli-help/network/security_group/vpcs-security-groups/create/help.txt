@@ -2,24 +2,19 @@ Create a Security Group
 
 Usage:
   ./cli network security-group vpcs-security-groups create [vpc-id] [flags]
-  ./cli network security-group vpcs-security-groups create [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
-      --description string     Description
-  -h, --help                   help for create
-      --name string            Name (between 5 and 100 characters)
-  -v, --version                version for create
-      --vpc-id string          Vpc Id
-      --wait                   wait: The request will be asynchronous. The wait parameter tells the API that you want the request to simulate synchronous behavior (to maintain endpoint compatibility). You can set an approximate timeout with the waitTimeout parameter (default true)
-      --wait-timeout integer   waitTimeout: the approximate time in seconds you want to wait when simulating the request as synchronous (only works with wait=true) (default 120)
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --description string            Description
+  -h, --help                          help for create
+      --name string                   Name (between 5 and 100 characters)
+  -v, --version                       version for create
+      --vpc-id string                 Vpc Id
+      --wait                          wait: The request will be asynchronous. The wait parameter tells the API that you want the request to simulate synchronous behavior (to maintain endpoint compatibility). You can set an approximate timeout with the waitTimeout parameter (default true)
+      --wait-timeout integer          waitTimeout: the approximate time in seconds you want to wait when simulating the request as synchronous (only works with wait=true) (default 120)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
-
-Use "./cli network security-group vpcs-security-groups create [command] --help" for more information about a command.

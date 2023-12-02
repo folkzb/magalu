@@ -2,10 +2,6 @@ Attach a volume to a virtual machine instance
 
 Usage:
   ./cli block-storage volume-attachment create [flags]
-  ./cli block-storage volume-attachment create [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help                        help for create
@@ -14,5 +10,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli block-storage volume-attachment create [command] --help" for more information about a command.

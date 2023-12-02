@@ -2,15 +2,9 @@ The current Tenant is used for all Magalu HTTP requests
 
 Usage:
   ./cli auth tenant current [flags]
-  ./cli auth tenant current [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help   help for current
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli auth tenant current [command] --help" for more information about a command.

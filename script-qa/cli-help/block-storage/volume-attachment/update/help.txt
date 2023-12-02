@@ -2,10 +2,6 @@ Update a block storage volume attachment
 
 Usage:
   ./cli block-storage volume-attachment update [flags]
-  ./cli block-storage volume-attachment update [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help                        help for update
@@ -14,5 +10,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli block-storage volume-attachment update [command] --help" for more information about a command.

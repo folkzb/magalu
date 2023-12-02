@@ -2,10 +2,6 @@ Restore a snapshot
 
 Usage:
   ./cli block-storage snapshots restore [snapshot-id] [flags]
-  ./cli block-storage snapshots restore [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
       --description string   Description
@@ -19,5 +15,3 @@ Global Flags:
       --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
-
-Use "./cli block-storage snapshots restore [command] --help" for more information about a command.

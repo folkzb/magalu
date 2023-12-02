@@ -2,14 +2,11 @@ Creates a new database instance asynchronously for a tenant.
 
 Usage:
   ./cli dbaas instances create [flags]
-  ./cli dbaas instances create [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
       --backup-retention-days integer   Backup Retention Days: The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
       --backup-start-at time            Backup Start At: Start time which is allowed to start the automated backup process. (default "01:00:00")
+      --cli.list-links enum[=table]     List all available links for this command (one of "json", "table" or "yaml")
       --datastore-id uuid               Datastore Id
       --flavor-id uuid                  Flavor Id
   -h, --help                            help for create
@@ -25,5 +22,3 @@ Global Flags:
       --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
-
-Use "./cli dbaas instances create [command] --help" for more information about a command.

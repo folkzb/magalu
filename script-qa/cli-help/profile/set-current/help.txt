@@ -2,10 +2,6 @@ Sets profile to be used
 
 Usage:
   ./cli profile set-current [name] [flags]
-  ./cli profile set-current [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
   -h, --help          help for set-current
@@ -13,5 +9,3 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli profile set-current [command] --help" for more information about a command.

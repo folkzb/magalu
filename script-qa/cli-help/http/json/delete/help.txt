@@ -2,10 +2,6 @@ Call using HTTP DELETE
 
 Usage:
   ./cli http json delete [flags]
-  ./cli http json delete [command]
-
-Available Commands:
-  cli.list-links List all available links for this command
 
 Flags:
       --headers object           Use --headers=help for more details
@@ -18,5 +14,3 @@ Global Flags:
       --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
-
-Use "./cli http json delete [command] --help" for more information about a command.
