@@ -34,6 +34,10 @@ func addStringConstraints(s *mgcSdk.Schema, dst *[]string) {
 	} else if s.MaxLength != nil {
 		*dst = append(*dst, fmt.Sprintf("max character count: %v", int(*s.MaxLength)))
 	}
+
+	if s.Pattern != "" {
+		*dst = append(*dst, fmt.Sprintf("pattern: %s", s.Pattern))
+	}
 }
 
 func formatFloat(f float64) string {
