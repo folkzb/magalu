@@ -139,8 +139,19 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 	}
 
 	if childName == nil {
+		logger().Debugw(
+			"no childName, load all children",
+			"descriptor", cmdDesc,
+			"childArgs", childArgs,
+		)
 		return loadAllChildren(sdk, cmd, cmdDesc)
 	} else if isExistingCommand(cmd, *childName) {
+		logger().Debugw(
+			"childName is an existing command",
+			"childName", *childName,
+			"descriptor", cmdDesc,
+			"childArgs", childArgs,
+		)
 		return nil
 	}
 
@@ -149,16 +160,45 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 		// If loading specified child fails, force load all children to print in help command
 		// as all available child commands
 		if loadAllErr := loadAllChildren(sdk, cmd, cmdDesc); loadAllErr != nil {
+			logger().Debugw(
+				"childName wasn't found and load all children failed.",
+				"childName", *childName,
+				"descriptor", cmdDesc,
+				"childArgs", childArgs,
+				"loadChildError", err,
+				"loadAllChildrenError", loadAllErr,
+			)
 			return loadAllErr
 		}
 
 		if keepLoadingChildren {
+			logger().Debugw(
+				"childName wasn't found, loaded all children.",
+				"childName", *childName,
+				"descriptor", cmdDesc,
+				"childArgs", childArgs,
+				"loadChildError", err,
+			)
 			return nil
 		}
 
 		if _, ok := cmdDesc.(core.Executor); !ok {
+			logger().Debugw(
+				"childName wasn't found, not an executor.",
+				"childName", *childName,
+				"descriptor", cmdDesc,
+				"childArgs", childArgs,
+				"loadChildError", err,
+			)
 			return err
 		}
+		logger().Debugw(
+			"childName wasn't found, process the executor.",
+			"childName", *childName,
+			"executor", cmdDesc,
+			"childArgs", childArgs,
+			"loadChildError", err,
+		)
 	}
 
 	return loadCommandTree(sdk, childCmd, childCmdDesc, childArgs)
