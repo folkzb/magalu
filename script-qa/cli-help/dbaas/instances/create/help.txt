@@ -17,7 +17,7 @@ Flags:
       --password string                 (max character count: 50)
       --user string                     (max character count: 25)
   -v, --version                         version for create
-      --volume object                   ({"size": number, "type": string (one of CLOUD_HDD|CLOUD_NVME) (default CLOUD_NVME)})
+      --volume object                   ({"size": number (range: 10 - 50000), "type": string (one of CLOUD_HDD|CLOUD_NVME) (default CLOUD_NVME)})
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

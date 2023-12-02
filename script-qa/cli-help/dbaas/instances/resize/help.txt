@@ -12,7 +12,7 @@ Flags:
   -h, --help             help for resize
       --id uuid          Database Instance Unique Id.
   -v, --version          version for resize
-      --volume object    ({"size": number})
+      --volume object    ({"size": number (range: 10 - 50000)})
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

@@ -17,7 +17,7 @@ func getSchemaConstraintFiller(t string) (schemaConstraintFiller, bool) {
 	switch t {
 	case "string":
 		return addStringConstraints, true
-	case "integer":
+	case "integer", "number":
 		return addNumberConstraints, true
 	case "array":
 		return addArrayConstraints, true
