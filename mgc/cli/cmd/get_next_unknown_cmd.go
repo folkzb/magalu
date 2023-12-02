@@ -52,7 +52,6 @@ func getNextUnknownCommand(c *cobra.Command, args []string) (*string, []string) 
 		switch {
 		// A long flag with a space separated value
 		case strings.HasPrefix(arg, "--") && !strings.Contains(arg, "="):
-			// TODO: this isn't quite right, we should really check ahead for 'true' or 'false'
 			inFlag = !hasNoOptDefVal(arg[2:], c.Flags())
 			continue
 		// A short flag with a space separated value
