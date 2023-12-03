@@ -47,29 +47,55 @@ func (cf *cmdFlags) example(cmdPath string) string {
 	return fmt.Sprintf("  %s %s", cmdPath, strings.Join(examples, " "))
 }
 
+func (cf *cmdFlags) positionalArgsArrayToExpand() int {
+	count := 0
+	first := -1
+	for i, f := range cf.positionalArgs {
+		if fv, ok := f.Value.(schema_flags.SchemaFlagValue); ok {
+			if fv.Desc().Schema.Type == "array" {
+				first = i
+				count++
+				if count > 1 {
+					return -1
+				}
+			}
+		}
+	}
+
+	return first
+}
+
 // these are the public/external/user-visible names
 func (cf *cmdFlags) positionalArgsNames() (names []string) {
 	if len(cf.positionalArgs) == 0 {
 		return
 	}
 
+	hasExpandedArrays := cf.positionalArgsArrayToExpand() >= 0
+
 	names = make([]string, len(cf.positionalArgs))
 	for i, f := range cf.positionalArgs {
+		if hasExpandedArrays {
+			if fv, ok := f.Value.(schema_flags.SchemaFlagValue); ok {
+				if fv.Desc().Schema.Type == "array" {
+					names[i] = f.Name + "..."
+					continue
+				}
+			}
+		}
 		names[i] = f.Name
 	}
 
 	return
 }
 
-func (cf *cmdFlags) positionalArgsFunction(cmd *cobra.Command, args []string) (err error) {
-	// TODO: if we have a single array in cf.positionalArgs, create positionalArgs [...array], considering it's minimum/maximum items
-	// this is useful for "cp src1 ... srcN dst"
-	if len(args) > len(cf.positionalArgs) {
-		return fmt.Errorf("accepts at most %d arg(s), received %d", len(cf.positionalArgs), len(args))
+func applyPositionalArgs(positionalArgs []*flag.Flag, args []string) (err error) {
+	if len(positionalArgs) < len(args) {
+		panic("programming error: len(positionalArgs) < len(args)")
 	}
 
 	for i, value := range args {
-		f := cf.positionalArgs[i]
+		f := positionalArgs[i]
 		if err = f.Value.Set(value); err != nil {
 			err = fmt.Errorf("invalid argument for %s: %s", f.Name, err.Error())
 			return
@@ -77,6 +103,61 @@ func (cf *cmdFlags) positionalArgsFunction(cmd *cobra.Command, args []string) (e
 	}
 
 	return
+}
+
+func (cf *cmdFlags) positionalArgsArrays(toExpand int, args []string) (err error) {
+	nArgs := len(args)
+	nPositionalArgs := len(cf.positionalArgs)
+
+	// pre:
+	//   [flag1] [flag2] [array...]     => toExpand == 2, nPositionalArgs == 3
+	//   value1                         => nArgs = 1, endPre = 1 (array is not populated)
+	//   value1  value2  value3 value4  => nArgs = 4, endPre = 2 (array: value3, value4)
+	endPre := toExpand
+	if endPre > nArgs {
+		endPre = nArgs
+	}
+	if endPre > 0 {
+		if err = applyPositionalArgs(cf.positionalArgs[:endPre], args[:endPre]); err != nil {
+			return
+		}
+	}
+
+	// post:
+	//   [flag1] [flag2] [array...] [flag3] [flag4]   => toExpand == 2, nPositionalArgs == 5, nPost = 2
+	//   value1                                       => nArgs = 1, startPost = -1 (array is not populated)
+	//   value1  value2  value3 value4                => nArgs = 4, startPost = 2  (array is not populated)
+	//   value1  value2  value3 value4 value5 value6  => nArgs = 6, startPost = 4  (array: value3, value4)
+	nPost := nPositionalArgs - toExpand - 1
+	startPost := nArgs - nPost
+	if toExpand <= startPost {
+		if err = applyPositionalArgs(cf.positionalArgs[toExpand+1:], args[startPost:]); err != nil {
+			return
+		}
+
+		// actual array to handle
+		f := cf.positionalArgs[toExpand]
+		for _, value := range args[toExpand:startPost] {
+			if err = f.Value.Set(value); err != nil {
+				err = fmt.Errorf("invalid argument for %s: %s", f.Name, err.Error())
+				return
+			}
+		}
+	}
+
+	return
+}
+
+func (cf *cmdFlags) positionalArgsFunction(cmd *cobra.Command, args []string) (err error) {
+	if toExpand := cf.positionalArgsArrayToExpand(); toExpand >= 0 {
+		return cf.positionalArgsArrays(toExpand, args)
+	}
+
+	if len(args) > len(cf.positionalArgs) {
+		return fmt.Errorf("accepts at most %d arg(s), received %d", len(cf.positionalArgs), len(args))
+	}
+
+	return applyPositionalArgs(cf.positionalArgs[:len(args)], args)
 }
 
 func completeEnum(f *flag.Flag, toComplete string, completions []string) []string {
@@ -113,8 +194,33 @@ func completeEnum(f *flag.Flag, toComplete string, completions []string) []strin
 	return append(completions, nonMatches...)
 }
 
+func (cf *cmdFlags) validateArgsArrays(toExpand int, cmd *cobra.Command, args []string, toComplete string) (completions []string, directive cobra.ShellCompDirective) {
+	if len(args) < toExpand {
+		f := cf.positionalArgs[len(args)]
+
+		return cf.completeFlag(f, cmd, args, toComplete, completions)
+	}
+
+	f := cf.positionalArgs[toExpand]
+
+	completions = cobra.AppendActiveHelp(completions, "The following arguments are accepted: multiple "+getFlagActiveHelp(f))
+	completions, directive = cf.completeFlagValues(f, cmd, args, toComplete, completions)
+
+	for _, f := range cf.positionalArgs[toExpand+1:] {
+		var curDirective cobra.ShellCompDirective
+		completions[0] += " or " + getFlagActiveHelp(f)
+		completions, curDirective = cf.completeFlagValues(f, cmd, args, toComplete, completions)
+		directive |= curDirective
+	}
+
+	return
+}
+
 func (cf *cmdFlags) validateArgs(cmd *cobra.Command, args []string, toComplete string) (completions []string, directive cobra.ShellCompDirective) {
 	logger().Debug("validateArgs", "cmd", cmd.Use, "args", args, "toComplete", toComplete)
+	if toExpand := cf.positionalArgsArrayToExpand(); toExpand >= 0 {
+		return cf.validateArgsArrays(toExpand, cmd, args, toComplete)
+	}
 
 	directive = cobra.ShellCompDirectiveNoFileComp
 	if len(cf.positionalArgs) == 0 {
@@ -139,9 +245,12 @@ func getFlagActiveHelp(f *flag.Flag) string {
 }
 
 func (cf *cmdFlags) completeFlag(f *flag.Flag, cmd *cobra.Command, args []string, toComplete string, completions []string) ([]string, cobra.ShellCompDirective) {
-	var directive cobra.ShellCompDirective
-
 	completions = cobra.AppendActiveHelp(completions, getFlagActiveHelp(f))
+	return cf.completeFlagValues(f, cmd, args, toComplete, completions)
+}
+
+func (cf *cmdFlags) completeFlagValues(f *flag.Flag, cmd *cobra.Command, args []string, toComplete string, completions []string) ([]string, cobra.ShellCompDirective) {
+	var directive cobra.ShellCompDirective
 
 	switch f.Value.Type() {
 	case "enum":
