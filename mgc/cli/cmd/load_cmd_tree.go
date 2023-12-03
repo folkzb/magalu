@@ -213,13 +213,14 @@ func addAction(
 	}
 
 	actionCmd = &cobra.Command{
-		Use:     buildUse(name, flags.positionalArgsNames()),
-		Aliases: aliases,
-		Args:    cobra.MaximumNArgs(len(flags.positionalArgs)),
-		Short:   exec.Summary(),
-		Long:    exec.Description(),
-		Version: exec.Version(),
-		GroupID: "catalog",
+		Use:               buildUse(name, flags.positionalArgsNames()),
+		Aliases:           aliases,
+		Args:              flags.positionalArgsFunction,
+		ValidArgsFunction: flags.validateArgs,
+		Short:             exec.Summary(),
+		Long:              exec.Description(),
+		Version:           exec.Version(),
+		GroupID:           "catalog",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// First chained args structure is MainArgs

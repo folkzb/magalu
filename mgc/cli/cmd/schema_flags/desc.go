@@ -19,6 +19,11 @@ type SchemaFlagValueDesc struct {
 	IsConfig   bool
 }
 
+const (
+	FlagTypeFile      = "file"
+	FlagTypeDirectory = "directory"
+)
+
 func getFlagType(schema *core.Schema) string {
 	if len(schema.Enum) > 0 {
 		return "enum"
@@ -26,6 +31,13 @@ func getFlagType(schema *core.Schema) string {
 
 	if schema.Format != "" {
 		return schema.Format
+	}
+
+	if mt := schema.Extensions["x-contentMediaType"]; mt != nil {
+		if mt == "inode/directory" {
+			return FlagTypeDirectory
+		}
+		return FlagTypeFile
 	}
 
 	if schema.Type == "" {

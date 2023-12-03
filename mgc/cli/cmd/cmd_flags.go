@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"slices"
 
@@ -42,6 +44,119 @@ func (cf *cmdFlags) positionalArgsNames() (names []string) {
 	return
 }
 
+func (cf *cmdFlags) positionalArgsFunction(cmd *cobra.Command, args []string) (err error) {
+	// TODO: if we have a single array in cf.positionalArgs, create positionalArgs [...array], considering it's minimum/maximum items
+	// this is useful for "cp src1 ... srcN dst"
+	if len(args) > len(cf.positionalArgs) {
+		return fmt.Errorf("accepts at most %d arg(s), received %d", len(cf.positionalArgs), len(args))
+	}
+
+	for i, value := range args {
+		f := cf.positionalArgs[i]
+		if err = f.Value.Set(value); err != nil {
+			err = fmt.Errorf("invalid argument for %s: %s", f.Name, err.Error())
+			return
+		}
+	}
+
+	return
+}
+
+func completeEnum(f *flag.Flag, toComplete string, completions []string) []string {
+	fv, ok := f.Value.(schema_flags.SchemaFlagValue)
+	if !ok {
+		return completions
+	}
+
+	var prefixMatches, containsMatches, nonMatches []string
+
+	for _, v := range fv.Desc().Schema.Enum {
+		s, ok := v.(string)
+		if !ok {
+			if data, err := json.Marshal(v); err != nil {
+				s = string(data)
+			}
+		}
+		if strings.HasPrefix(s, toComplete) {
+			prefixMatches = append(prefixMatches, s)
+		} else if strings.Contains(s, toComplete) {
+			containsMatches = append(containsMatches, s)
+		} else {
+			nonMatches = append(nonMatches, s)
+		}
+	}
+
+	if len(prefixMatches) > 0 {
+		return append(completions, prefixMatches...)
+	}
+	if len(containsMatches) > 0 {
+		return append(completions, containsMatches...)
+	}
+
+	return append(completions, nonMatches...)
+}
+
+func (cf *cmdFlags) validateArgs(cmd *cobra.Command, args []string, toComplete string) (completions []string, directive cobra.ShellCompDirective) {
+	logger().Debug("validateArgs", "cmd", cmd.Use, "args", args, "toComplete", toComplete)
+
+	directive = cobra.ShellCompDirectiveNoFileComp
+	if len(cf.positionalArgs) == 0 {
+		completions = cobra.AppendActiveHelp(completions, "This command does not take any arguments")
+		return
+	}
+	if len(args) >= len(cf.positionalArgs) {
+		completions = cobra.AppendActiveHelp(completions, "This command does not take any more arguments")
+		return
+	}
+
+	f := cf.positionalArgs[len(args)]
+
+	return cf.completeFlag(f, cmd, args, toComplete, completions)
+}
+
+func getFlagActiveHelp(f *flag.Flag) string {
+	if description := getFlagDescription(f); description != "" {
+		return fmt.Sprintf("%s (%s)", f.Name, description)
+	}
+	return f.Name
+}
+
+func (cf *cmdFlags) completeFlag(f *flag.Flag, cmd *cobra.Command, args []string, toComplete string, completions []string) ([]string, cobra.ShellCompDirective) {
+	var directive cobra.ShellCompDirective
+
+	completions = cobra.AppendActiveHelp(completions, getFlagActiveHelp(f))
+
+	switch f.Value.Type() {
+	case "enum":
+		completions = completeEnum(f, toComplete, completions)
+		directive = cobra.ShellCompDirectiveNoFileComp
+
+	case schema_flags.FlagTypeFile:
+		directive = cobra.ShellCompDirectiveDefault
+
+	case schema_flags.FlagTypeDirectory:
+		directive = cobra.ShellCompDirectiveFilterDirs
+
+	default:
+		if f.DefValue != "" {
+			completions = append(completions, f.DefValue)
+		}
+		if strings.HasPrefix(toComplete, schema_flags.ValueLoadJSONFromFilePrefix) || strings.HasPrefix(toComplete, schema_flags.ValueLoadVerbatimFromFilePrefix) {
+			directive = cobra.ShellCompDirectiveDefault
+		} else {
+			directive = cobra.ShellCompDirectiveNoFileComp
+		}
+	}
+
+	return completions, directive
+}
+
+func (cf *cmdFlags) newCompleteFlagFunc(f *flag.Flag) func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return cf.completeFlag(f, cmd, args, toComplete, nil)
+	}
+}
+
 func (cf *cmdFlags) addFlags(cmd *cobra.Command) {
 	configFlags := cmd.Root().PersistentFlags()
 	parametersFlags := cmd.Flags()
@@ -56,11 +171,13 @@ func (cf *cmdFlags) addFlags(cmd *cobra.Command) {
 		}
 		logger().Debugw("adding schema flag", "flag", f.Name, "desc", desc)
 		flags.AddFlag(f)
+		_ = cmd.RegisterFlagCompletionFunc(f.Name, cf.newCompleteFlagFunc(f))
 	}
 
 	for _, f := range cf.extraFlags {
 		logger().Debugw("adding extra flag", "flag", f.Name, "value", f.Value)
 		parametersFlags.AddFlag(f)
+		_ = cmd.RegisterFlagCompletionFunc(f.Name, cf.newCompleteFlagFunc(f))
 	}
 }
 
@@ -79,10 +196,6 @@ func (cf *cmdFlags) getValues(config *mgcSdk.Config, argValues []string) (
 	configs core.Configs,
 	err error,
 ) {
-	if err = cf.loadPositionalArgsValues(argValues); err != nil {
-		return
-	}
-
 	parameters = core.Parameters{}
 	configs = core.Configs{}
 
@@ -160,20 +273,6 @@ func newExecutorCmdFlags(parentCmd *cobra.Command, exec core.Executor) (*cmdFlag
 }
 
 // Internal Methods:
-
-func (cf *cmdFlags) loadPositionalArgsValues(argValues []string) (err error) {
-	if len(argValues) > len(cf.positionalArgs) {
-		argValues = argValues[:len(cf.positionalArgs)]
-	}
-
-	for i, value := range argValues {
-		if err = cf.positionalArgs[i].Value.Set(value); err != nil {
-			return
-		}
-	}
-
-	return
-}
 
 func (cf *cmdFlags) addExistingFlag(existingFlag *flag.Flag) {
 	cf.knownFlags[flag.NormalizedName(existingFlag.Name)] = existingFlag
