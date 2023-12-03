@@ -207,7 +207,8 @@ func addAction(
 	}
 
 	name, aliases := getCommandNameAndAliases(exec.Name())
-	links := newCmdLinks(sdk, exec, fmt.Sprintf("%s %s", parentCmd.CommandPath(), name))
+	cmdPath := fmt.Sprintf("%s %s", parentCmd.CommandPath(), name)
+	links := newCmdLinks(sdk, exec, cmdPath)
 	if links != nil {
 		flags.addExtraFlag(links.flag)
 	}
@@ -217,6 +218,7 @@ func addAction(
 		Aliases:           aliases,
 		Args:              flags.positionalArgsFunction,
 		ValidArgsFunction: flags.validateArgs,
+		Example:           flags.example(cmdPath),
 		Short:             exec.Summary(),
 		Long:              exec.Description(),
 		Version:           exec.Version(),

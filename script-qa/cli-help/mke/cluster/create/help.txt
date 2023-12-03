@@ -3,6 +3,9 @@ Criação de um cluster kubernetes
 Usage:
   ./cli mke cluster create [flags]
 
+Examples:
+  ./cli mke cluster create --description="Esse é um cluster de exemplo" --enabled-bastion=false --enabled-server-group=false --name="cluster-exemplo" --param.version="v1.24.10"
+
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
       --description string            Descrição do cluster

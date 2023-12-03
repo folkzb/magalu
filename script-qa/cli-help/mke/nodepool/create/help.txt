@@ -3,6 +3,9 @@ Cria um node pool em um cluster kubernetes
 Usage:
   ./cli mke nodepool create [cluster-id] [flags]
 
+Examples:
+  ./cli mke nodepool create --flavor="cloud-k8s.gp1.small" --name="nodepool-exemplo" --replicas=3 --tags='["tag-value1"]'
+
 Flags:
       --auto-scale object             Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes (properties: enabled, max_replicas and min_replicas)
                                       Use --auto-scale=help for more details

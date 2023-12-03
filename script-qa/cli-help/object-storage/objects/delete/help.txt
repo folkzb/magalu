@@ -3,6 +3,9 @@ Delete an object from a bucket
 Usage:
   ./cli object-storage objects delete [dst] [flags]
 
+Examples:
+  ./cli object-storage objects delete --dst="s3://bucket1/file1"
+
 Flags:
       --dst string   Path of the object to be deleted
   -h, --help         help for delete

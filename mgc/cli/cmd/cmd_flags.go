@@ -30,6 +30,23 @@ type cmdFlags struct {
 
 // Public Methods:
 
+func (cf *cmdFlags) example(cmdPath string) string {
+	var examples []string
+
+	for _, f := range cf.knownFlags {
+		if e := getFlagFormattedExample(f); e != "" {
+			examples = append(examples, e)
+		}
+	}
+
+	if len(examples) == 0 {
+		return ""
+	}
+
+	slices.Sort(examples)
+	return fmt.Sprintf("  %s %s", cmdPath, strings.Join(examples, " "))
+}
+
 // these are the public/external/user-visible names
 func (cf *cmdFlags) positionalArgsNames() (names []string) {
 	if len(cf.positionalArgs) == 0 {
@@ -352,4 +369,19 @@ func (cf *cmdFlags) addConfigsFlags(
 			true,
 		)
 	}
+}
+
+func getFlagFormattedExample(f *flag.Flag) (example string) {
+	fv, ok := f.Value.(schema_flags.SchemaFlagValue)
+	if !ok {
+		return
+	}
+
+	desc := fv.Desc()
+	example = getExampleFormattedValue(desc.Schema, desc.Container, desc.PropName)
+	if example == "" {
+		return
+	}
+
+	return fmt.Sprintf("--%s=%s", f.Name, example)
 }
