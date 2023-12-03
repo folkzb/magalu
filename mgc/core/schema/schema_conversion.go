@@ -55,6 +55,13 @@ func convertJsonSchemaNumberToOpenAPIPointer[T constraints.Integer | constraints
 	return
 }
 
+func addExtensions(output *openapi3.Schema, name string, value any) {
+	if output.Extensions == nil {
+		output.Extensions = map[string]interface{}{}
+	}
+	output.Extensions[name] = value
+}
+
 func convertJsonSchemaToOpenAPISchema(input *jsonschema.Schema) (output *openapi3.Schema) {
 	if input == nil {
 		return nil
@@ -116,6 +123,20 @@ func convertJsonSchemaToOpenAPISchema(input *jsonschema.Schema) (output *openapi
 		MaxProps:             convertJsonSchemaNumberToOpenAPIPointer[uint64](input.MaxProperties),
 		AdditionalProperties: additionalProperties,
 		// Does not exist: Discriminator:        input.Discriminator,
+	}
+
+	if len(input.Examples) > 0 {
+		output.Example = input.Examples[0]
+	}
+
+	if input.ContentMediaType != "" {
+		addExtensions(output, "x-contentMediaType", input.ContentMediaType)
+	}
+	if input.ContentEncoding != "" {
+		addExtensions(output, "x-contentEncoding", input.ContentEncoding)
+	}
+	if input.ContentSchema != nil {
+		addExtensions(output, "x-contentSchema", input.ContentSchema)
 	}
 
 	if reflect.DeepEqual(&Schema{}, output) {
@@ -202,9 +223,13 @@ func lookupDefByPath(defs jsonschema.Definitions, path []string) (*jsonschema.Sc
 }
 
 func initializeExtensions(s *openapi3.Schema) {
-	s.Extensions = make(map[string]any)
+	if s.Extensions == nil {
+		s.Extensions = make(map[string]any)
+	}
 	_, _ = visitAllSubRefs(s, func(ref *openapi3.SchemaRef) error {
-		ref.Value.Extensions = make(map[string]any)
+		if ref.Value.Extensions == nil {
+			ref.Value.Extensions = make(map[string]any)
+		}
 
 		return nil
 	})
