@@ -322,7 +322,7 @@ func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executo
 	preparedParams := core.Parameters{}
 	preparedConfigs := core.Configs{}
 
-	parameterValueResolver := opParameterValueResolver(op, originalResult.Source().Parameters)
+	parameterValueResolver := opParameterValueResolver(op, httpResult.Source().Parameters)
 	specResolver := linkSpecResolver{httpResult, parameterValueResolver}
 
 	if err := l.addParameters(op, &specResolver, preparedParams, preparedConfigs); err != nil {
@@ -333,7 +333,7 @@ func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executo
 		return nil, err
 	}
 
-	fillMissingConfigs(preparedConfigs, target.ConfigsSchema(), originalResult.Source().Configs)
+	fillMissingConfigs(preparedConfigs, target.ConfigsSchema(), httpResult.Source().Configs)
 
 	if wtExt, ok := getExtensionObject(l.owner.extensionPrefix, "wait-termination", l.link.Extensions, nil); ok && wtExt != nil {
 		if tExec, err := wrapInTerminatorExecutorWithOwnerResult(target, wtExt, originalResult); err == nil {
