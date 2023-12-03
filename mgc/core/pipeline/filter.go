@@ -324,3 +324,29 @@ func (r FilterWalkDirEntryIncludeGlobMatch) Filter(ctx context.Context, entry Wa
 }
 
 var _ FilterRule[WalkDirEntry] = (*FilterWalkDirEntryIncludeGlobMatch)(nil)
+
+// Only pass forward the non-nil elements
+type FilterNonNil[T any] struct{}
+
+func (r FilterNonNil[T]) Filter(ctx context.Context, entry T) FilterStatus {
+	var v any = entry
+	if v == nil {
+		return FilterExclude
+	}
+	return FilterUnknown
+}
+
+var _ FilterRule[any] = (*FilterNonNil[any])(nil)
+
+// Only pass forward the nil elements (likely to count?)
+type FilterNil[T any] struct{}
+
+func (r FilterNil[T]) Filter(ctx context.Context, entry T) FilterStatus {
+	var v any = entry
+	if v == nil {
+		return FilterInclude
+	}
+	return FilterUnknown
+}
+
+var _ FilterRule[any] = (*FilterNil[any])(nil)
