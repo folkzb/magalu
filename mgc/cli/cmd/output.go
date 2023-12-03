@@ -45,6 +45,10 @@ func getOutputFlag(cmd *cobra.Command) string {
 	return cmd.Root().PersistentFlags().Lookup(outputFlag).Value.String()
 }
 
+func setOutputFlag(cmd *cobra.Command, value string) {
+	_ = cmd.Root().PersistentFlags().Lookup(outputFlag).Value.Set(value)
+}
+
 // TODO: Bind config to PFlag. Investigate how to make it work correctly
 func getOutpuConfig(sdk *mgcSdk.Sdk) string {
 	var defaultOutput string

@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 	"github.com/stoewer/go-strcase"
 	"magalu.cloud/core"
 	mgcSdk "magalu.cloud/sdk"
@@ -207,14 +206,11 @@ func addAction(
 		return
 	}
 
-	links := exec.Links()
-	var listLinksFlag *flag.Flag
-	if len(links) > 0 {
-		listLinksFlag = newListLinkFlag()
-		flags.addExtraFlag(listLinksFlag)
-	}
-
 	name, aliases := getCommandNameAndAliases(exec.Name())
+	links := newCmdLinks(sdk, exec, fmt.Sprintf("%s %s", parentCmd.CommandPath(), name))
+	if links != nil {
+		flags.addExtraFlag(links.flag)
+	}
 
 	actionCmd = &cobra.Command{
 		Use:     buildUse(name, flags.positionalArgsNames()),
@@ -226,7 +222,9 @@ func addAction(
 		GroupID: "catalog",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err, used := listLinks(listLinksFlag, links); err != nil || used {
+			// First chained args structure is MainArgs
+			linkChainedArgs := argParser.ChainedArgs()[1:]
+			if err, stop := links.check(linkChainedArgs); err != nil || stop {
 				return err
 			}
 
@@ -242,9 +240,7 @@ func addAction(
 				return err
 			}
 
-			// First chained args structure is MainArgs
-			linkChainedArgs := argParser.ChainedArgs()[1:]
-			return handleLinkArgs(ctx, sdk, cmd, linkChainedArgs, links, config, result)
+			return links.handle(linkChainedArgs, result, getOutputFlag(cmd))
 		},
 	}
 
