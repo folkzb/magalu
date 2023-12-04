@@ -82,9 +82,9 @@ can generate a command line on-demand for Rest manipulation`,
 
 	mainArgs := argParser.MainArgs()
 
-	err = loadSdkCommandTree(sdk, rootCmd, mainArgs)
-	if err != nil {
-		rootCmd.PrintErrln("Warning: loading dynamic arguments:", err)
+	loadErr := loadSdkCommandTree(sdk, rootCmd, mainArgs)
+	if loadErr != nil {
+		rootCmd.PrintErrln("Warning: loading dynamic arguments:", loadErr)
 	}
 
 	defer func() {
@@ -99,6 +99,9 @@ can generate a command line on-demand for Rest manipulation`,
 	}
 
 	err = rootCmd.Execute()
+	if err == nil && loadErr != nil {
+		err = loadErr
+	}
 	err = showHelpForError(rootCmd, mainArgs, err) // since we SilenceUsage and SilenceErrors
 	return err
 }
