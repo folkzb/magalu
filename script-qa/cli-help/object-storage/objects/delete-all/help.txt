@@ -4,10 +4,11 @@ Usage:
   ./cli object-storage objects delete-all [bucket] [flags]
 
 Flags:
-      --bucket string    Name of the bucket to delete objects from
-      --exclude string   Filename pattern to exclude
-  -h, --help             help for delete-all
-      --include string   Filename pattern to include (default "*")
+      --batch-size integer   Limit of items per batch to delete (range: 1 - 1000) (default 1000)
+      --bucket string        Name of the bucket to delete objects from
+      --exclude string       Filename pattern to exclude
+  -h, --help                 help for delete-all
+      --include string       Filename pattern to include (default "*")
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

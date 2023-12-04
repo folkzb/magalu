@@ -42,5 +42,9 @@ const (
 
 	ApiLimitMaxItems = 1000
 
+	MaxBatchSize = 1000
+
+	minBatchSize = 1
+
 	delimiter = "/"
 )

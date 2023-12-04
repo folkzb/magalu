@@ -1,12 +1,13 @@
 package common
 
 import (
+	"bytes"
 	"context"
+	"encoding/xml"
 	"fmt"
 	"math"
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"go.uber.org/zap"
@@ -29,7 +30,17 @@ type DeleteObjectParams struct {
 
 type DeleteAllObjectsParams struct {
 	BucketName   string           `json:"bucket,omitempty" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
+	BatchSize    int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to delete,default=1000,minimum=1,maximum=1000" example:"1000"`
 	FilterParams `json:",squash"` // nolint
+}
+
+type objectIdentifier struct {
+	Key string `xml:"Key"`
+}
+
+type deleteBatchRequestBody struct {
+	XMLName struct{}           `xml:"Delete"`
+	Objects []objectIdentifier `xml:"Object"`
 }
 
 type deleteObjectsError struct {
@@ -64,30 +75,62 @@ func newDeleteRequest(ctx context.Context, cfg Config, pathURIs ...string) (*htt
 	return http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 }
 
+func newDeleteBatchRequest(ctx context.Context, cfg Config, bucketName string, objKeys []objectIdentifier) (*http.Request, error) {
+	host := BuildHost(cfg)
+	url, err := url.JoinPath(host, bucketName)
+	if err != nil {
+		return nil, core.UsageError{Err: err}
+	}
+	body := deleteBatchRequestBody{
+		Objects: objKeys,
+	}
+	marshalledBody, err := xml.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(marshalledBody))
+	if err != nil {
+		return nil, err
+	}
+
+	query := req.URL.Query()
+	query.Set("delete", "")
+	req.URL.RawQuery = query.Encode()
+
+	return req, nil
+}
+
 // Deleting an object does not yield result except there is an error. So this processor will *Skip*
 // success results and *Output* errors
-func createObjectDeletionProcessor(cfg Config, bucketName string) pipeline.Processor[pipeline.WalkDirEntry, deleteObjectsError] {
-	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (deleteObjectsError, pipeline.ProcessStatus) {
-		if err := dirEntry.Err(); err != nil {
+func createObjectDeletionProcessor(cfg Config, bucketName string) pipeline.Processor[[]pipeline.WalkDirEntry, deleteObjectsError] {
+	return func(ctx context.Context, dirEntries []pipeline.WalkDirEntry) (deleteObjectsError, pipeline.ProcessStatus) {
+		var objIdentifiers []objectIdentifier
+
+		for _, dirEntry := range dirEntries {
+			if err := dirEntry.Err(); err != nil {
+				return deleteObjectsError{err: err}, pipeline.ProcessAbort
+			}
+
+			obj, ok := dirEntry.DirEntry().(*BucketContent)
+			if !ok {
+				return deleteObjectsError{err: fmt.Errorf("expected object, got directory")}, pipeline.ProcessAbort
+			}
+
+			objIdentifiers = append(objIdentifiers, objectIdentifier{Key: obj.Key})
+		}
+
+		req, err := newDeleteBatchRequest(ctx, cfg, bucketName, objIdentifiers)
+		if err != nil {
 			return deleteObjectsError{err: err}, pipeline.ProcessAbort
 		}
 
-		obj, ok := dirEntry.DirEntry().(*BucketContent)
-		if !ok {
-			return deleteObjectsError{err: fmt.Errorf("expected object, got directory")}, pipeline.ProcessAbort
-		}
-
-		objURI := path.Join(bucketName, obj.Key)
-		_, err := Delete(
-			ctx,
-			DeleteObjectParams{Destination: objURI},
-			cfg,
-		)
+		_, _, err = SendRequest[any](ctx, req)
 
 		if err != nil {
-			return deleteObjectsError{uri: objURI, err: err}, pipeline.ProcessOutput
+			return deleteObjectsError{uri: bucketName, err: err}, pipeline.ProcessOutput
 		} else {
-			deleteLogger().Infow("Deleted objects", "uri", URIPrefix+objURI)
+			deleteLogger().Infow("Deleted objects", "uri", URIPrefix+bucketName)
 			return deleteObjectsError{}, pipeline.ProcessSkip
 		}
 	}
@@ -119,7 +162,12 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 		objs = pipeline.Filter[pipeline.WalkDirEntry](ctx, objs, excludeFilter)
 	}
 
-	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectDeletionProcessor(cfg, params.BucketName), nil)
+	if params.BatchSize < minBatchSize || params.BatchSize > MaxBatchSize {
+		return nil, core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", minBatchSize, MaxBatchSize, params.BatchSize)}
+	}
+
+	objsBatch := pipeline.Batch(ctx, objs, params.BatchSize)
+	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objsBatch, createObjectDeletionProcessor(cfg, params.BucketName), nil)
 
 	// This cannot error, there is no cancel call in processor
 	objErr, _ := pipeline.SliceItemConsumer[deleteObjectsErrors](ctx, deleteObjectsErrorChan)

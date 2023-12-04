@@ -16821,6 +16821,13 @@
       "name": "delete-all",
       "parameters": {
        "properties": {
+        "batch_size": {
+         "default": 1000,
+         "description": "Limit of items per batch to delete",
+         "maximum": 1000,
+         "minimum": 1,
+         "type": "integer"
+        },
         "bucket": {
          "description": "Name of the bucket to delete objects from",
          "type": "string"
