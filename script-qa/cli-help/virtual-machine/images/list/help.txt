@@ -1,4 +1,4 @@
-Retrive a list of images
+Retrieve a list of images allowed for the current tenant which is logged in.
 
 Usage:
   ./cli virtual-machine images list [flags]

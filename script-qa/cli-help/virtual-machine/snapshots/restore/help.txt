@@ -1,0 +1,36 @@
+Restore a snapshot of a Virtual Machine with the current tenant which is logged in. </br>
+A Snapshot is ready for restore when it's in available state.
+
+#### Notes
+- You can verify the state of snapshot using the snapshot list command.
+- Use machine-types list to see all machine types available.
+
+#### Rules
+- To restore a snapshot  you have to inform the new virtual machine information.
+- You can choose a machine-type that has a disk equal or larger
+than the original virtual machine type.
+
+Usage:
+  ./cli virtual-machine snapshots restore [id] [flags]
+
+Examples:
+  ./cli virtual-machine snapshots restore --network='{"associate_public_ip":true,"vpc":{"id":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}}'
+
+Flags:
+      --availability-zone string   Availability Zone (min character count: 1)
+  -h, --help                       help for restore
+      --id string                  Id
+      --key-name string            Key Name
+      --machine-type object        Machine Type
+                                   Use --machine-type=help for more details
+      --name string                Name (between 1 and 225 characters)
+      --network object             Network (properties: associate_public_ip and vpc)
+                                   Use --network=help for more details (default {"associate_public_ip":true,"vpc":{"name":"default"}})
+      --user-data string           User Data (between 1 and 65000 characters)
+  -v, --version                    version for restore
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
+      --server-url uri         Manually specify the server to use

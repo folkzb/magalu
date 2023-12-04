@@ -1,7 +1,11 @@
-List Virtual Machine instances
+List all snapshots in the current tenant which is logged in.
+
+#### Notes
+- You can use the **expand** argument to get more details from the inner objects
+like image and machine types.
 
 Usage:
-  ./cli virtual-machine instances list [flags]
+  ./cli virtual-machine snapshots list [flags]
 
 Flags:
       --control.limit integer     Limit (min: 1)

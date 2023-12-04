@@ -1,13 +1,11 @@
-images
+Operations with images for instances.
 
 Usage:
   ./cli virtual-machine images [flags]
   ./cli virtual-machine images [command]
 
 Commands:
-  create      Create Image
-  delete      Delete Image
-  list        List Images
+  list        Retrieves all images available in the region.
 
 Flags:
   -h, --help      help for images

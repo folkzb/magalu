@@ -465,50 +465,42 @@ network.openapi:
     - '#/components/schemas/vpc_api_product__vpc__models__rule__RuleDefaultStatusEvent'
 virtual-machine.openapi:
   computed-variables:
-    - POST /v0/images:
+    - POST /v1/instances:
         - '201':
             computed:
-              - name
-              - os_distribution
-              - size
-              - version
-            non-computed:
-              - id
-              - internal
-              - sku
-    - POST /v0/instance_types:
-        - '201':
-            computed:
-              - disk
-              - name
-              - ram
-              - vcpus
-            non-computed:
-              - id
-              - internal
-              - sku
-    - POST /v0/instances:
-        - '200':
-            computed:
               - id
             non-computed:
-              - allocate_fip
               - availability_zone
               - image
               - key_name
+              - machine_type
               - name
-              - network_interfaces
-              - type
+              - network
+              - project_type
               - user_data
-    - POST /v0/keypairs/{keypair_name}:
-        - '201':
+    - POST /v1/snapshots:
+        - '202':
             computed:
-              - name
-              - private_key
-              - public_key
+              - id
             non-computed:
-              - keypair_name
-  operation-missing-security:
-    - GET /v0/usage
+              - name
+              - virtual_machine
+  missing-crud:
+    - images:
+        - post
+        - delete
+    - machine-types:
+        - post
+        - delete
   unused-components:
     - '#/components/schemas/ValidationError'
+  xof-single-item:
+    - paths./v1/instances.get.parameters.project_type.schema
+    - paths./v1/instances.post.parameters.project_type.schema
+    - paths./v1/instances/{id}.delete.parameters.project_type.schema
+    - paths./v1/snapshots.get.parameters.project_type.schema
+    - paths./v1/snapshots/{id}.delete.parameters.project_type.schema
+    - paths./v1/snapshots/{id}/rename.patch.parameters.project_type.schema
+    - components.schemas.InstanceCreateRequestV1.network
+    - components.schemas.InstanceV1Response.network
+    - components.schemas.SnapshotRestoreRequestV1.network

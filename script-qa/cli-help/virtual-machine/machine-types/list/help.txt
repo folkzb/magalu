@@ -1,14 +1,11 @@
-Delete a Virtual Machine instance
+Retrieves a list of machine types allowed for the current tenant which is logged in.
 
 Usage:
-  ./cli virtual-machine instances delete [id] [flags]
+  ./cli virtual-machine machine-types list [flags]
 
 Flags:
-      --delete-public-ip    Delete Public Ip
-  -h, --help                help for delete
-      --id uuid             Id
-      --project-type enum   An enumeration. (one of "dbaas", "default", "iamaas", "k8saas" or "mngsvc") (default "default")
-  -v, --version             version for delete
+  -h, --help      help for list
+  -v, --version   version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

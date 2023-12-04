@@ -23,10 +23,10 @@ modules:
     summary: APIs referentes ao produto de Network
     url: https://network.jaxyendy.com/openapi.json
     version: 1.91.0
--   description: APIs referentes ao produto de Virtual Machine
+-   description: Virtual Machine Api Product
     name: virtual-machine
     path: virtual-machine.openapi.yaml
-    summary: APIs referentes ao produto de Virtual Machine
+    summary: Virtual Machine Api Product
     url: https://virtual-machine.jaxyendy.com/openapi.json
-    version: 1.60.0
+    version: 0.1.0
 version: 1.0.0

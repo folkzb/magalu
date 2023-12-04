@@ -17293,230 +17293,7 @@
        },
        "type": "object"
       },
-      "description": "Check api status",
-      "isInternal": false,
-      "name": "list",
-      "parameters": {
-       "additionalProperties": false,
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "status": "OK"
-       },
-       "properties": {
-        "status": {
-         "title": "Status",
-         "type": "string"
-        }
-       },
-       "required": [
-        "status"
-       ],
-       "title": "Healthcheck",
-       "type": "object"
-      },
-      "version": "1.60.0"
-     }
-    ],
-    "description": "healthchecks",
-    "isInternal": true,
-    "name": "healthchecks",
-    "version": "1.60.0"
-   },
-   {
-    "children": [
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Creates images only in DB",
-      "isInternal": false,
-      "name": "create",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "internal": {
-         "title": "Internal",
-         "type": "boolean"
-        },
-        "sku": {
-         "title": "Sku",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id",
-        "internal",
-        "sku"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "id": "76e3b8c4-407f-422b-a1e9-343a40faf1cd",
-        "name": "ubuntu",
-        "os_distribution": "Ubuntu",
-        "size": 10,
-        "sku": "sku1234",
-        "version": "yy.zz"
-       },
-       "properties": {
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "os_distribution": {
-         "title": "Os Distribution",
-         "type": "string"
-        },
-        "size": {
-         "title": "Size",
-         "type": "integer"
-        },
-        "sku": {
-         "title": "Sku",
-         "type": "string"
-        },
-        "version": {
-         "title": "Version",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id",
-        "name",
-        "size"
-       ],
-       "title": "ImageResponse",
-       "type": "object"
-      },
-      "version": "1.60.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Deletes images only in DB",
-      "isInternal": false,
-      "name": "delete",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "id": {
-         "description": "image_id",
-         "format": "uuid",
-         "title": "Image Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "nullable": true,
-       "type": "null"
-      },
-      "version": "1.60.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Retrive a list of images",
+      "description": "Retrieve a list of images allowed for the current tenant which is logged in.",
       "isInternal": false,
       "name": "list",
       "parameters": {
@@ -17527,12 +17304,14 @@
        "example": {
         "images": [
          {
-          "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-          "name": "ubuntu",
-          "os_distribution": "Ubuntu",
-          "size": 10,
-          "sku": "sku1234",
-          "version": "yy.zz"
+          "end_life_at": "2022-06-10T18:33:12Z",
+          "end_standard_support_at": "2022-06-10T18:33:12Z",
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "name": "ubuntu 22.10",
+          "platform": "linux",
+          "release_at": "2022-06-10T18:33:12Z",
+          "status": "active",
+          "version": "22.10"
          }
         ]
        },
@@ -17540,16 +17319,29 @@
         "images": {
          "items": {
           "example": {
-           "id": "76e3b8c4-407f-422b-a1e9-343a40faf1cd",
-           "name": "ubuntu",
-           "os_distribution": "Ubuntu",
-           "size": 10,
-           "sku": "sku1234",
-           "version": "yy.zz"
+           "end_life_at": "2022-06-10T18:33:12Z",
+           "end_standard_support_at": "2022-06-10T18:33:12Z",
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "name": "ubuntu 22.10",
+           "platform": "linux",
+           "release_at": "2022-06-10T18:33:12Z",
+           "status": "active",
+           "version": "22.10"
           },
           "properties": {
+           "end_life_at": {
+            "example": "2023-10-11T11:33:47Z",
+            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "title": "End Life At",
+            "type": "string"
+           },
+           "end_standard_support_at": {
+            "example": "2023-10-11T11:33:47Z",
+            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "title": "End Standard Support At",
+            "type": "string"
+           },
            "id": {
-            "format": "uuid",
             "title": "Id",
             "type": "string"
            },
@@ -17557,16 +17349,24 @@
             "title": "Name",
             "type": "string"
            },
-           "os_distribution": {
-            "title": "Os Distribution",
+           "platform": {
+            "title": "Platform",
             "type": "string"
            },
-           "size": {
-            "title": "Size",
-            "type": "integer"
+           "release_at": {
+            "example": "2023-10-11T11:33:47Z",
+            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "title": "Release At",
+            "type": "string"
            },
-           "sku": {
-            "title": "Sku",
+           "status": {
+            "description": "An enumeration.",
+            "enum": [
+             "active",
+             "deprecated",
+             "deleted"
+            ],
+            "title": "ImageV1Status",
             "type": "string"
            },
            "version": {
@@ -17577,9 +17377,9 @@
           "required": [
            "id",
            "name",
-           "size"
+           "status"
           ],
-          "title": "ImageResponse",
+          "title": "ImageResponseExternalV1",
           "type": "object"
          },
          "title": "Images",
@@ -17589,396 +17389,16 @@
        "required": [
         "images"
        ],
-       "title": "ListImageResponse",
+       "title": "ListImageExternalV1",
        "type": "object"
       },
-      "version": "1.60.0"
+      "version": "0.1.0"
      }
     ],
-    "description": "images",
+    "description": "Operations with images for instances.",
     "isInternal": false,
     "name": "images",
-    "version": "1.60.0"
-   },
-   {
-    "children": [
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Creates a instance type in DB only",
-      "isInternal": true,
-      "name": "create",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "internal": {
-         "title": "Internal",
-         "type": "boolean"
-        },
-        "sku": {
-         "title": "Sku",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id",
-        "internal",
-        "sku"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "disk": 10,
-        "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-        "name": "abc.small",
-        "ram": 2,
-        "sku": "sku1234",
-        "vcpus": 2
-       },
-       "properties": {
-        "disk": {
-         "title": "Disk",
-         "type": "integer"
-        },
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "ram": {
-         "title": "Ram",
-         "type": "integer"
-        },
-        "sku": {
-         "title": "Sku",
-         "type": "string"
-        },
-        "vcpus": {
-         "title": "Vcpus",
-         "type": "integer"
-        }
-       },
-       "required": [
-        "id",
-        "name",
-        "vcpus",
-        "ram",
-        "disk",
-        "sku"
-       ],
-       "title": "InstanceTypesResponse",
-       "type": "object"
-      },
-      "version": "1.60.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Deletes a instance type in DB only",
-      "isInternal": true,
-      "name": "delete",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "id": {
-         "description": "instance_type_id",
-         "format": "uuid",
-         "title": "Instance Type Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "nullable": true,
-       "type": "null"
-      },
-      "version": "1.60.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Returns a list of instance types",
-      "isInternal": false,
-      "name": "list",
-      "parameters": {
-       "additionalProperties": false,
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "instance_types": [
-         {
-          "disk": 10,
-          "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-          "name": "abc.small",
-          "ram": 2,
-          "sku": "sku1234",
-          "vcpus": 2
-         }
-        ]
-       },
-       "properties": {
-        "instance_types": {
-         "items": {
-          "example": {
-           "disk": 10,
-           "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-           "name": "abc.small",
-           "ram": 2,
-           "sku": "sku1234",
-           "vcpus": 2
-          },
-          "properties": {
-           "disk": {
-            "title": "Disk",
-            "type": "integer"
-           },
-           "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-           },
-           "name": {
-            "title": "Name",
-            "type": "string"
-           },
-           "ram": {
-            "title": "Ram",
-            "type": "integer"
-           },
-           "sku": {
-            "title": "Sku",
-            "type": "string"
-           },
-           "vcpus": {
-            "title": "Vcpus",
-            "type": "integer"
-           }
-          },
-          "required": [
-           "id",
-           "name",
-           "vcpus",
-           "ram",
-           "disk",
-           "sku"
-          ],
-          "title": "InstanceTypesResponse",
-          "type": "object"
-         },
-         "title": "Instance Types",
-         "type": "array"
-        }
-       },
-       "required": [
-        "instance_types"
-       ],
-       "title": "InstanceTypesListResponse",
-       "type": "object"
-      },
-      "version": "1.60.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Returns a list of all instance types",
-      "isInternal": true,
-      "name": "list-all",
-      "parameters": {
-       "additionalProperties": false,
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "instance_types": [
-         {
-          "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-          "internal": false,
-          "name": "abc.small",
-          "sku": "sku1234"
-         }
-        ]
-       },
-       "properties": {
-        "instance_types": {
-         "items": {
-          "example": {
-           "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-           "internal": false,
-           "name": "abc.small",
-           "sku": "sku1234"
-          },
-          "properties": {
-           "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-           },
-           "internal": {
-            "title": "Internal",
-            "type": "boolean"
-           },
-           "name": {
-            "title": "Name",
-            "type": "string"
-           },
-           "sku": {
-            "title": "Sku",
-            "type": "string"
-           }
-          },
-          "required": [
-           "id",
-           "name",
-           "sku",
-           "internal"
-          ],
-          "title": "InstanceTypeDbResponse",
-          "type": "object"
-         },
-         "title": "Instance Types",
-         "type": "array"
-        }
-       },
-       "required": [
-        "instance_types"
-       ],
-       "title": "InstanceTypeDbListResponse",
-       "type": "object"
-      },
-      "version": "1.60.0"
-     }
-    ],
-    "description": "instance types",
-    "isInternal": false,
-    "name": "instance-types",
-    "version": "1.60.0"
+    "version": "0.1.0"
    },
    {
     "children": [
@@ -18019,67 +17439,200 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "allocate_fip": {
-         "default": true,
-         "title": "Allocate Fip",
-         "type": "boolean"
-        },
         "availability_zone": {
+         "minLength": 1,
          "title": "Availability Zone",
          "type": "string"
         },
         "image": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "ID",
+           "type": "object"
+          },
+          {
+           "example": {
+            "name": "some_resource_name"
+           },
+           "properties": {
+            "name": {
+             "minLength": 1,
+             "title": "Name",
+             "type": "string"
+            }
+           },
+           "required": [
+            "name"
+           ],
+           "title": "Name",
+           "type": "object"
+          }
+         ],
          "title": "Image",
-         "type": "string"
+         "type": "object"
         },
         "key_name": {
          "title": "Key Name",
          "type": "string"
         },
+        "machine_type": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "ID",
+           "type": "object"
+          },
+          {
+           "example": {
+            "name": "some_resource_name"
+           },
+           "properties": {
+            "name": {
+             "minLength": 1,
+             "title": "Name",
+             "type": "string"
+            }
+           },
+           "required": [
+            "name"
+           ],
+           "title": "Name",
+           "type": "object"
+          }
+         ],
+         "title": "Machine Type",
+         "type": "object"
+        },
         "name": {
+         "maxLength": 225,
+         "minLength": 1,
          "title": "Name",
          "type": "string"
         },
-        "network_interfaces": {
-         "items": {
-          "properties": {
-           "id": {
-            "title": "Id",
-            "type": "string"
-           }
-          },
-          "required": [
-           "id"
-          ],
-          "title": "NetworkID",
-          "type": "object"
+        "network": {
+         "default": {
+          "associate_public_ip": true,
+          "vpc": {
+           "name": "default"
+          }
          },
-         "title": "Network Interfaces",
-         "type": "array"
+         "example": {
+          "associate_public_ip": true,
+          "vpc": {
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          }
+         },
+         "properties": {
+          "associate_public_ip": {
+           "default": true,
+           "title": "Associate Public Ip",
+           "type": "boolean"
+          },
+          "vpc": {
+           "anyOf": [
+            {
+             "example": {
+              "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+             },
+             "properties": {
+              "id": {
+               "minLength": 1,
+               "title": "Id",
+               "type": "string"
+              }
+             },
+             "required": [
+              "id"
+             ],
+             "title": "ID",
+             "type": "object"
+            },
+            {
+             "example": {
+              "name": "some_resource_name"
+             },
+             "properties": {
+              "name": {
+               "minLength": 1,
+               "title": "Name",
+               "type": "string"
+              }
+             },
+             "required": [
+              "name"
+             ],
+             "title": "Name",
+             "type": "object"
+            }
+           ],
+           "default": {
+            "name": "default"
+           },
+           "title": "Vpc",
+           "type": "object"
+          }
+         },
+         "title": "Network",
+         "type": "object"
         },
-        "type": {
-         "title": "Type",
+        "project_type": {
+         "default": "default",
+         "description": "An enumeration.",
+         "enum": [
+          "dbaas",
+          "iamaas",
+          "k8saas",
+          "mngsvc",
+          "default"
+         ],
          "type": "string"
         },
         "user_data": {
+         "maxLength": 65000,
+         "minLength": 1,
          "title": "User Data",
          "type": "string"
         }
        },
        "required": [
         "image",
-        "name",
-        "type"
+        "key_name",
+        "machine_type",
+        "name"
        ],
        "type": "object"
       },
       "result": {
        "example": {
-        "id": "76e3b8c4-407f-422b-a1e9-343a40faf1cd"
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
        },
        "properties": {
         "id": {
-         "format": "uuid",
          "title": "Id",
          "type": "string"
         }
@@ -18090,7 +17643,7 @@
        "title": "CreateResponse",
        "type": "object"
       },
-      "version": "1.60.0"
+      "version": "0.1.0"
      },
      {
       "configs": {
@@ -18129,10 +17682,26 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "delete_public_ip": {
+         "default": false,
+         "title": "Delete Public Ip",
+         "type": "boolean"
+        },
         "id": {
-         "description": "id",
          "format": "uuid",
          "title": "Id",
+         "type": "string"
+        },
+        "project_type": {
+         "default": "default",
+         "description": "An enumeration.",
+         "enum": [
+          "dbaas",
+          "iamaas",
+          "k8saas",
+          "mngsvc",
+          "default"
+         ],
          "type": "string"
         }
        },
@@ -18145,214 +17714,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.60.0"
-     },
-     {
-      "children": [
-       {
-        "configs": {
-         "additionalProperties": false,
-         "properties": {
-          "env": {
-           "default": "prod",
-           "description": "Environment to use",
-           "enum": [
-            "prod",
-            "pre-prod"
-           ],
-           "type": "string"
-          },
-          "region": {
-           "default": "br-ne-1",
-           "description": "Region to reach the service",
-           "enum": [
-            "br-ne-1",
-            "br-ne-2",
-            "br-se-1"
-           ],
-           "type": "string"
-          },
-          "serverUrl": {
-           "description": "Manually specify the server to use",
-           "format": "uri",
-           "type": "string"
-          }
-         },
-         "type": "object"
-        },
-        "description": "Returns the event details for the instance",
-        "isInternal": false,
-        "name": "get",
-        "parameters": {
-         "additionalProperties": false,
-         "properties": {
-          "event_id": {
-           "description": "event_id",
-           "format": "uuid",
-           "title": "Event Id",
-           "type": "string"
-          },
-          "id": {
-           "description": "id",
-           "format": "uuid",
-           "title": "Id",
-           "type": "string"
-          }
-         },
-         "required": [
-          "event_id",
-          "id"
-         ],
-         "type": "object"
-        },
-        "result": {
-         "example": {
-          "event": "suspend",
-          "event_id": "b4efbcdf-3529-4627-8d66-5aabf213df4e",
-          "message": "an error occurred",
-          "start_time": "2023-01-24T18:01:01.000000"
-         },
-         "properties": {
-          "event": {
-           "title": "Event",
-           "type": "string"
-          },
-          "event_id": {
-           "format": "uuid",
-           "title": "Event Id",
-           "type": "string"
-          },
-          "message": {
-           "title": "Message",
-           "type": "string"
-          },
-          "start_time": {
-           "title": "Start Time",
-           "type": "string"
-          }
-         },
-         "required": [
-          "event",
-          "event_id",
-          "start_time"
-         ],
-         "title": "InstanceEventDetailsResponse",
-         "type": "object"
-        },
-        "version": "1.60.0"
-       },
-       {
-        "configs": {
-         "additionalProperties": false,
-         "properties": {
-          "env": {
-           "default": "prod",
-           "description": "Environment to use",
-           "enum": [
-            "prod",
-            "pre-prod"
-           ],
-           "type": "string"
-          },
-          "region": {
-           "default": "br-ne-1",
-           "description": "Region to reach the service",
-           "enum": [
-            "br-ne-1",
-            "br-ne-2",
-            "br-se-1"
-           ],
-           "type": "string"
-          },
-          "serverUrl": {
-           "description": "Manually specify the server to use",
-           "format": "uri",
-           "type": "string"
-          }
-         },
-         "type": "object"
-        },
-        "description": "Returns a list for all events in a instance",
-        "isInternal": false,
-        "name": "list",
-        "parameters": {
-         "additionalProperties": false,
-         "properties": {
-          "id": {
-           "description": "id",
-           "format": "uuid",
-           "title": "Id",
-           "type": "string"
-          }
-         },
-         "required": [
-          "id"
-         ],
-         "type": "object"
-        },
-        "result": {
-         "example": {
-          "events": [
-           {
-            "event": "suspend",
-            "event_id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-            "start_time": "2023-01-24T18:01:01.000000"
-           },
-           {
-            "event": "pause",
-            "event_id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-            "start_time": "2023-01-24T18:01:01.000000"
-           }
-          ]
-         },
-         "properties": {
-          "events": {
-           "items": {
-            "example": {
-             "event": "suspend",
-             "event_id": "76e3b8c4-407f-422b-a1e9-343a40faf1cd",
-             "start_time": "2023-01-24T18:01:01.000000"
-            },
-            "properties": {
-             "event": {
-              "title": "Event",
-              "type": "string"
-             },
-             "event_id": {
-              "format": "uuid",
-              "title": "Event Id",
-              "type": "string"
-             },
-             "start_time": {
-              "title": "Start Time",
-              "type": "string"
-             }
-            },
-            "required": [
-             "event",
-             "event_id",
-             "start_time"
-            ],
-            "title": "InstanceEventResponse",
-            "type": "object"
-           },
-           "title": "Events",
-           "type": "array"
-          }
-         },
-         "required": [
-          "events"
-         ],
-         "title": "ListInstanceEventResponse",
-         "type": "object"
-        },
-        "version": "1.60.0"
-       }
-      ],
-      "description": "instances | events",
-      "isInternal": false,
-      "name": "events",
-      "version": "1.60.0"
+      "version": "0.1.0"
      },
      {
       "configs": {
@@ -18391,9 +17753,16 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "expand": {
+         "default": [],
+         "description": "You can get more detailed info about: ['image', 'type'] ",
+         "items": {
+          "type": "string"
+         },
+         "title": "Expand",
+         "type": "array"
+        },
         "id": {
-         "description": "id",
-         "format": "uuid",
          "title": "Id",
          "type": "string"
         }
@@ -18407,263 +17776,139 @@
        "example": {
         "availability_zone": "br-regiao-1a",
         "created_at": "2022-06-10T18:33:12Z",
-        "error": "some error description",
-        "id": "76e3b8c4-407f-422b-a1e9-343a40faf1cd",
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
         "image": {
-         "name": "ubuntu-1234"
-        },
-        "instance_id": "176f2b61-306e-4d6f-977d-b9d5bf916322",
-        "instance_type": {
-         "name": "abc.small"
+         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
         },
         "key_name": "keypair_name_here",
-        "memory": 4,
+        "machine_type": {
+         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        },
         "name": "instance name",
-        "network_interfaces": [
-         {
-          "addresses": [
-           {
-            "ip_address": "172.0.0.1",
-            "type": "fixed",
-            "version": 4
-           },
-           {
-            "ip_address": "159.0.0.1",
-            "type": "floating",
-            "version": 4
-           }
-          ],
-          "mac_address": "fa:12:12:12:12:12",
-          "network": {
-           "name": "vpc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-network"
+        "network": {
+         "ports": [
+          {
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
           }
-         }
-        ],
-        "ports": [
-         {
-          "id": "cd8792d1-0367-4c2d-bd76-3e11cbaa8e61"
-         }
-        ],
-        "power_state": 1,
-        "power_state_label": "active",
-        "root_storage": 10,
-        "security_groups": [
-         {
-          "id": "2d313622-c9cb-4454-b9bb-cdf6dfa74690",
-          "name": "port-name"
-         }
-        ],
-        "status": "ACTIVE",
+         ]
+        },
+        "state": "done",
+        "status": "completed",
         "updated_at": "2022-06-11T18:33:12Z",
-        "vcpus": 2,
-        "volumes": [
-         {
-          "id": "176f2b61-306e-4d6f-977d-b9d5bf916322"
-         }
-        ]
+        "user_data": "some_base_64_str"
        },
        "properties": {
         "availability_zone": {
+         "nullable": true,
          "title": "Availability Zone",
          "type": "string"
         },
         "created_at": {
+         "example": "2023-10-11T11:33:47Z",
+         "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
          "title": "Created At",
          "type": "string"
         },
-        "error": {
-         "title": "Error",
-         "type": "string"
-        },
         "id": {
-         "format": "uuid",
          "title": "Id",
          "type": "string"
         },
         "image": {
          "properties": {
-          "name": {
-           "title": "Name",
+          "id": {
+           "title": "Id",
            "type": "string"
           }
          },
          "required": [
-          "name"
+          "id"
          ],
-         "title": "ImageInstanceResponse",
-         "type": "object"
-        },
-        "instance_id": {
-         "format": "uuid",
-         "title": "Instance Id",
-         "type": "string"
-        },
-        "instance_type": {
-         "properties": {
-          "name": {
-           "title": "Name",
-           "type": "string"
-          }
-         },
-         "required": [
-          "name"
-         ],
-         "title": "InstanceTypeForInstanceResponse",
+         "title": "ImageInstanceV1Response",
          "type": "object"
         },
         "key_name": {
+         "nullable": true,
          "title": "Key Name",
          "type": "string"
         },
-        "memory": {
-         "title": "Memory",
-         "type": "integer"
+        "machine_type": {
+         "properties": {
+          "id": {
+           "title": "Id",
+           "type": "string"
+          }
+         },
+         "required": [
+          "id"
+         ],
+         "title": "InstanceTypeForInstanceV1Response",
+         "type": "object"
         },
         "name": {
+         "nullable": true,
          "title": "Name",
          "type": "string"
         },
-        "network_interfaces": {
-         "items": {
-          "properties": {
-           "addresses": {
-            "items": {
-             "properties": {
-              "ip_address": {
-               "title": "Ip Address",
-               "type": "string"
-              },
-              "type": {
-               "title": "Type",
-               "type": "string"
-              },
-              "version": {
-               "title": "Version",
-               "type": "integer"
-              }
-             },
-             "title": "NetworkAddress",
-             "type": "object"
-            },
-            "title": "Addresses",
-            "type": "array"
-           },
-           "mac_address": {
-            "title": "Mac Address",
-            "type": "string"
-           },
-           "network": {
+        "network": {
+         "nullable": true,
+         "properties": {
+          "ports": {
+           "items": {
             "properties": {
-             "name": {
-              "title": "Name",
+             "id": {
+              "title": "Id",
               "type": "string"
              }
             },
-            "title": "NetworkInfo",
+            "required": [
+             "id"
+            ],
+            "title": "PortID",
             "type": "object"
-           }
-          },
-          "required": [
-           "addresses"
-          ],
-          "title": "NetworkInterface",
-          "type": "object"
-         },
-         "title": "Network Interfaces",
-         "type": "array"
-        },
-        "ports": {
-         "items": {
-          "example": {
-           "id": "76e3b8c4-407f-422b-a1e9-343a40faf1cd"
-          },
-          "properties": {
-           "id": {
-            "title": "Id",
-            "type": "string"
-           }
-          },
-          "required": [
-           "id"
-          ],
-          "title": "IdResponse",
-          "type": "object"
-         },
-         "title": "Ports",
-         "type": "array"
-        },
-        "power_state": {
-         "title": "Power State",
-         "type": "integer"
-        },
-        "power_state_label": {
-         "title": "Power State Label",
-         "type": "string"
-        },
-        "root_storage": {
-         "title": "Root Storage",
-         "type": "integer"
-        },
-        "security_groups": {
-         "items": {
-          "properties": {
-           "id": {
-            "title": "Id",
-            "type": "string"
            },
-           "name": {
-            "title": "Name",
-            "type": "string"
-           }
-          },
-          "title": "SecurityGroup",
-          "type": "object"
+           "title": "Ports",
+           "type": "array"
+          }
          },
-         "title": "Security Groups",
-         "type": "array"
+         "required": [
+          "ports"
+         ],
+         "title": "Network",
+         "type": "object"
+        },
+        "state": {
+         "title": "State",
+         "type": "string"
         },
         "status": {
          "title": "Status",
          "type": "string"
         },
         "updated_at": {
+         "example": "2023-10-11T11:33:47Z",
+         "nullable": true,
+         "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
          "title": "Updated At",
          "type": "string"
         },
-        "vcpus": {
-         "title": "Vcpus",
-         "type": "integer"
-        },
-        "volumes": {
-         "items": {
-          "properties": {
-           "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-           }
-          },
-          "required": [
-           "id"
-          ],
-          "title": "InstanceVolumeResponse",
-          "type": "object"
-         },
-         "title": "Volumes",
-         "type": "array"
+        "user_data": {
+         "nullable": true,
+         "title": "User Data",
+         "type": "string"
         }
        },
        "required": [
         "id",
-        "instance_type",
+        "machine_type",
         "image",
         "status",
+        "state",
         "created_at"
        ],
-       "title": "InstanceResponse",
+       "title": "InstanceV1Response",
        "type": "object"
       },
-      "version": "1.60.0"
+      "version": "0.1.0"
      },
      {
       "configs": {
@@ -18701,6 +17946,45 @@
       "name": "list",
       "parameters": {
        "additionalProperties": false,
+       "properties": {
+        "_limit": {
+         "minimum": 1,
+         "title": " Limit",
+         "type": "integer"
+        },
+        "_offset": {
+         "minimum": 0,
+         "title": " Offset",
+         "type": "integer"
+        },
+        "_sort": {
+         "default": "created_at:desc",
+         "pattern": "(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
+         "title": " Sort",
+         "type": "string"
+        },
+        "expand": {
+         "default": [],
+         "description": "You can get more detailed info about: ['image', 'type'] ",
+         "items": {
+          "type": "string"
+         },
+         "title": "Expand",
+         "type": "array"
+        },
+        "project_type": {
+         "default": "default",
+         "description": "An enumeration.",
+         "enum": [
+          "dbaas",
+          "iamaas",
+          "k8saas",
+          "mngsvc",
+          "default"
+         ],
+         "type": "string"
+        }
+       },
        "type": "object"
       },
       "result": {
@@ -18709,77 +17993,26 @@
          {
           "availability_zone": "br-regiao-1a",
           "created_at": "2022-06-10T18:33:12Z",
-          "error": "some error description",
-          "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
           "image": {
-           "name": "ubuntu-1234"
-          },
-          "instance_id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-          "instance_type": {
-           "name": "abc.small"
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
           },
           "key_name": "keypair_name_here",
-          "memory": 4,
+          "machine_type": {
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          },
           "name": "instance name",
-          "network_interfaces": [
-           {
-            "addresses": [
-             {
-              "ip_address": "172.0.0.1",
-              "type": "fixed",
-              "version": 4
-             },
-             {
-              "ip_address": "159.0.0.1",
-              "type": "floating",
-              "version": 4
-             }
-            ],
-            "mac_address": "fa:12:12:12:12:12",
-            "network": {
-             "name": "vpc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-network"
+          "network": {
+           "ports": [
+            {
+             "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
             }
-           }
-          ],
-          "ports": [
-           {
-            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-           }
-          ],
-          "power_state": 1,
-          "power_state_label": "active",
-          "root_storage": 10,
-          "security_groups": [
-           {
-            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-            "name": "port-name"
-           }
-          ],
-          "status": "ACTIVE",
+           ]
+          },
+          "state": "running",
+          "status": "completed",
           "updated_at": "2022-06-11T18:33:12Z",
-          "vcpus": 2,
-          "volumes": [
-           {
-            "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba"
-           }
-          ]
-         },
-         {
-          "created_at": "2022-09-01 12:54:15.635186",
-          "id": "acf5fe8c-70d9-4d78-b58d-e06858a452ba",
-          "image": {
-           "name": "cloud-ubuntu-20.04 LTS"
-          },
-          "instance_type": {
-           "name": "cloud-bs1.xsmall"
-          },
-          "key_name": "some_keypair_name",
-          "name": "some name instance",
-          "network_interfaces": [],
-          "ports": [],
-          "security_groups": [],
-          "status": "pending",
-          "volumes": []
+          "user_data": "base64_data"
          }
         ]
        },
@@ -18789,260 +18022,136 @@
           "example": {
            "availability_zone": "br-regiao-1a",
            "created_at": "2022-06-10T18:33:12Z",
-           "error": "some error description",
-           "id": "76e3b8c4-407f-422b-a1e9-343a40faf1cd",
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
            "image": {
-            "name": "ubuntu-1234"
-           },
-           "instance_id": "176f2b61-306e-4d6f-977d-b9d5bf916322",
-           "instance_type": {
-            "name": "abc.small"
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
            },
            "key_name": "keypair_name_here",
-           "memory": 4,
+           "machine_type": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
            "name": "instance name",
-           "network_interfaces": [
-            {
-             "addresses": [
-              {
-               "ip_address": "172.0.0.1",
-               "type": "fixed",
-               "version": 4
-              },
-              {
-               "ip_address": "159.0.0.1",
-               "type": "floating",
-               "version": 4
-              }
-             ],
-             "mac_address": "fa:12:12:12:12:12",
-             "network": {
-              "name": "vpc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-network"
+           "network": {
+            "ports": [
+             {
+              "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
              }
-            }
-           ],
-           "ports": [
-            {
-             "id": "cd8792d1-0367-4c2d-bd76-3e11cbaa8e61"
-            }
-           ],
-           "power_state": 1,
-           "power_state_label": "active",
-           "root_storage": 10,
-           "security_groups": [
-            {
-             "id": "2d313622-c9cb-4454-b9bb-cdf6dfa74690",
-             "name": "port-name"
-            }
-           ],
-           "status": "ACTIVE",
+            ]
+           },
+           "state": "done",
+           "status": "completed",
            "updated_at": "2022-06-11T18:33:12Z",
-           "vcpus": 2,
-           "volumes": [
-            {
-             "id": "176f2b61-306e-4d6f-977d-b9d5bf916322"
-            }
-           ]
+           "user_data": "some_base_64_str"
           },
           "properties": {
            "availability_zone": {
+            "nullable": true,
             "title": "Availability Zone",
             "type": "string"
            },
            "created_at": {
+            "example": "2023-10-11T11:33:47Z",
+            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
             "title": "Created At",
             "type": "string"
            },
-           "error": {
-            "title": "Error",
-            "type": "string"
-           },
            "id": {
-            "format": "uuid",
             "title": "Id",
             "type": "string"
            },
            "image": {
             "properties": {
-             "name": {
-              "title": "Name",
+             "id": {
+              "title": "Id",
               "type": "string"
              }
             },
             "required": [
-             "name"
+             "id"
             ],
-            "title": "ImageInstanceResponse",
-            "type": "object"
-           },
-           "instance_id": {
-            "format": "uuid",
-            "title": "Instance Id",
-            "type": "string"
-           },
-           "instance_type": {
-            "properties": {
-             "name": {
-              "title": "Name",
-              "type": "string"
-             }
-            },
-            "required": [
-             "name"
-            ],
-            "title": "InstanceTypeForInstanceResponse",
+            "title": "ImageInstanceV1Response",
             "type": "object"
            },
            "key_name": {
+            "nullable": true,
             "title": "Key Name",
             "type": "string"
            },
-           "memory": {
-            "title": "Memory",
-            "type": "integer"
+           "machine_type": {
+            "properties": {
+             "id": {
+              "title": "Id",
+              "type": "string"
+             }
+            },
+            "required": [
+             "id"
+            ],
+            "title": "InstanceTypeForInstanceV1Response",
+            "type": "object"
            },
            "name": {
+            "nullable": true,
             "title": "Name",
             "type": "string"
            },
-           "network_interfaces": {
-            "items": {
-             "properties": {
-              "addresses": {
-               "items": {
-                "properties": {
-                 "ip_address": {
-                  "title": "Ip Address",
-                  "type": "string"
-                 },
-                 "type": {
-                  "title": "Type",
-                  "type": "string"
-                 },
-                 "version": {
-                  "title": "Version",
-                  "type": "integer"
-                 }
-                },
-                "title": "NetworkAddress",
-                "type": "object"
-               },
-               "title": "Addresses",
-               "type": "array"
-              },
-              "mac_address": {
-               "title": "Mac Address",
-               "type": "string"
-              },
-              "network": {
+           "network": {
+            "nullable": true,
+            "properties": {
+             "ports": {
+              "items": {
                "properties": {
-                "name": {
-                 "title": "Name",
+                "id": {
+                 "title": "Id",
                  "type": "string"
                 }
                },
-               "title": "NetworkInfo",
+               "required": [
+                "id"
+               ],
+               "title": "PortID",
                "type": "object"
-              }
-             },
-             "required": [
-              "addresses"
-             ],
-             "title": "NetworkInterface",
-             "type": "object"
-            },
-            "title": "Network Interfaces",
-            "type": "array"
-           },
-           "ports": {
-            "items": {
-             "example": {
-              "id": "76e3b8c4-407f-422b-a1e9-343a40faf1cd"
-             },
-             "properties": {
-              "id": {
-               "title": "Id",
-               "type": "string"
-              }
-             },
-             "required": [
-              "id"
-             ],
-             "title": "IdResponse",
-             "type": "object"
-            },
-            "title": "Ports",
-            "type": "array"
-           },
-           "power_state": {
-            "title": "Power State",
-            "type": "integer"
-           },
-           "power_state_label": {
-            "title": "Power State Label",
-            "type": "string"
-           },
-           "root_storage": {
-            "title": "Root Storage",
-            "type": "integer"
-           },
-           "security_groups": {
-            "items": {
-             "properties": {
-              "id": {
-               "title": "Id",
-               "type": "string"
               },
-              "name": {
-               "title": "Name",
-               "type": "string"
-              }
-             },
-             "title": "SecurityGroup",
-             "type": "object"
+              "title": "Ports",
+              "type": "array"
+             }
             },
-            "title": "Security Groups",
-            "type": "array"
+            "required": [
+             "ports"
+            ],
+            "title": "Network",
+            "type": "object"
+           },
+           "state": {
+            "title": "State",
+            "type": "string"
            },
            "status": {
             "title": "Status",
             "type": "string"
            },
            "updated_at": {
+            "example": "2023-10-11T11:33:47Z",
+            "nullable": true,
+            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
             "title": "Updated At",
             "type": "string"
            },
-           "vcpus": {
-            "title": "Vcpus",
-            "type": "integer"
-           },
-           "volumes": {
-            "items": {
-             "properties": {
-              "id": {
-               "format": "uuid",
-               "title": "Id",
-               "type": "string"
-              }
-             },
-             "required": [
-              "id"
-             ],
-             "title": "InstanceVolumeResponse",
-             "type": "object"
-            },
-            "title": "Volumes",
-            "type": "array"
+           "user_data": {
+            "nullable": true,
+            "title": "User Data",
+            "type": "string"
            }
           },
           "required": [
            "id",
-           "instance_type",
+           "machine_type",
            "image",
            "status",
+           "state",
            "created_at"
           ],
-          "title": "InstanceResponse",
+          "title": "InstanceV1Response",
           "type": "object"
          },
          "title": "Instances",
@@ -19052,10 +18161,10 @@
        "required": [
         "instances"
        ],
-       "title": "ListInstanceResponse",
+       "title": "ListInstanceV1Response",
        "type": "object"
       },
-      "version": "1.60.0"
+      "version": "0.1.0"
      },
      {
       "configs": {
@@ -19088,31 +18197,20 @@
        },
        "type": "object"
       },
-      "description": "Update a Virtual Machine instance",
+      "description": "Reboots a Virtual Machine instance with the id provided in the current tenant which is logged in.\n#### Notes\n- You can use the virtual-machine list command to retrieve all instances, so you can get the id\nof the instance that you want to reboot.\n\n#### Rules\n- The instance must be in the running state.",
       "isInternal": false,
-      "name": "update",
+      "name": "reboot",
       "parameters": {
        "additionalProperties": false,
        "properties": {
         "id": {
-         "description": "id",
          "format": "uuid",
          "title": "Id",
-         "type": "string"
-        },
-        "status": {
-         "description": "An enumeration.",
-         "enum": [
-          "shutoff",
-          "active"
-         ],
-         "title": "InstanceStatus",
          "type": "string"
         }
        },
        "required": [
-        "id",
-        "status"
+        "id"
        ],
        "type": "object"
       },
@@ -19120,13 +18218,330 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.60.0"
+      "version": "0.1.0"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Renames a Virtual Machine instance with the id provided in the current tenant which is logged in.\n\n#### Notes\n- You can use the virtual-machine list command to retrieve all instances, so you can get the id of\nthe instance that you want to rename.",
+      "isInternal": false,
+      "name": "rename",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "title": "Id",
+         "type": "string"
+        },
+        "name": {
+         "maxLength": 225,
+         "minLength": 1,
+         "title": "Name",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "name"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "0.1.0"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Changes a Virtual Machine instance machine type with the id provided in the current tenant\nwhich is logged in.\n\n#### Notes\n- You can use the virtual-machine list command to retrieve all instances, so you can get\nthe id of the instance that you want to change the machine type.\n\n#### Rules\n- The instance must be in the running or stopped state.\n- The new machine type must be compatible with the current machine type.\n- The new machine type must be available in the same region as the current machine type.\n- You must provide either the machine type id or the machine type name, if you provide both,\nthe machine type id will be used.",
+      "isInternal": false,
+      "name": "retype",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid4",
+         "title": "Id",
+         "type": "string"
+        },
+        "machine_type": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "ID",
+           "type": "object"
+          },
+          {
+           "example": {
+            "name": "some_resource_name"
+           },
+           "properties": {
+            "name": {
+             "minLength": 1,
+             "title": "Name",
+             "type": "string"
+            }
+           },
+           "required": [
+            "name"
+           ],
+           "title": "Name",
+           "type": "object"
+          }
+         ],
+         "title": "Machine Type",
+         "type": "object"
+        }
+       },
+       "required": [
+        "id",
+        "machine_type"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "0.1.0"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Starts a Virtual Machine instance with the id provided in the current tenant which is logged in.\n#### Notes\n- You can use the virtual-machine list command to retrieve all instances,\nso you can get the id of the instance that you want to start.\n\n#### Rules\n- The instance must be in the stopped or suspended states.",
+      "isInternal": false,
+      "name": "start",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "0.1.0"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Stops a Virtual Machine instance with the id provided in the current tenant which is logged in.\n#### Notes\n- You can use the virtual-machine list command to retrieve all instances, so you can get the id of\nthe instance that you want to stop.\n\n#### Rules\n- The instance must be in the running state.",
+      "isInternal": false,
+      "name": "stop",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "0.1.0"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Suspends a Virtual Machine instance with the id provided in the current tenant which is logged in.\n\n#### Notes\n- You can use the virtual-machine list command to retrieve all instances, so you can get the id of\nthe instance that you want to suspend.\n\n#### Rules\n- The instance must be in the running state.",
+      "isInternal": false,
+      "name": "suspend",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "0.1.0"
      }
     ],
-    "description": "instances",
+    "description": "Operations with instances, including create, delete, start, stop, reboot and other actions.",
     "isInternal": false,
     "name": "instances",
-    "version": "1.60.0"
+    "version": "0.1.0"
    },
    {
     "children": [
@@ -19161,49 +18576,207 @@
        },
        "type": "object"
       },
-      "description": "Create a keypair",
+      "description": "Retrieves a list of machine types allowed for the current tenant which is logged in.",
+      "isInternal": false,
+      "name": "list",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "instance_types": [
+         {
+          "disk": 10,
+          "gpu": 1,
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "name": "abc.small",
+          "ram": 2,
+          "status": "active",
+          "vcpus": 2
+         }
+        ]
+       },
+       "properties": {
+        "instance_types": {
+         "items": {
+          "example": {
+           "disk": 10,
+           "gpu": 1,
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "name": "abc.small",
+           "ram": 2,
+           "status": "active",
+           "vcpus": 2
+          },
+          "properties": {
+           "disk": {
+            "title": "Disk",
+            "type": "integer"
+           },
+           "gpu": {
+            "default": 0,
+            "title": "Gpu",
+            "type": "integer"
+           },
+           "id": {
+            "title": "Id",
+            "type": "string"
+           },
+           "name": {
+            "title": "Name",
+            "type": "string"
+           },
+           "ram": {
+            "title": "Ram",
+            "type": "integer"
+           },
+           "status": {
+            "title": "Status",
+            "type": "string"
+           },
+           "vcpus": {
+            "title": "Vcpus",
+            "type": "integer"
+           }
+          },
+          "required": [
+           "id",
+           "name",
+           "vcpus",
+           "ram",
+           "disk",
+           "status"
+          ],
+          "title": "InstanceTypesV1Response",
+          "type": "object"
+         },
+         "title": "Instance Types",
+         "type": "array"
+        }
+       },
+       "required": [
+        "instance_types"
+       ],
+       "title": "InstanceTypesV1ListResponse",
+       "type": "object"
+      },
+      "version": "0.1.0"
+     }
+    ],
+    "description": "Operations with machine types for instances.",
+    "isInternal": false,
+    "name": "machine-types",
+    "version": "0.1.0"
+   },
+   {
+    "children": [
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Create a snapshot of a Virtual Machine in the current tenant which is logged in. </br>\nA Snapshot is ready for restore when it's in available state.\n\n#### Notes\n- You can verify the state of snapshot using the snapshot get command,\n- To create a snapshot it's mandatory inform a valid and unique name.\n\n#### Rules\n- It's only possible to create a snapshot of a valid virtual machine.\n- It's not possible to create 2 snapshots with the same name.\n- You can inform ID or Name from a Virtual Machine if both informed the priority will be ID.",
       "isInternal": false,
       "name": "create",
       "parameters": {
        "additionalProperties": false,
        "properties": {
         "name": {
+         "minLength": 1,
          "title": "Name",
          "type": "string"
         },
-        "public_key": {
-         "title": "Public Key",
-         "type": "string"
+        "virtual_machine": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "ID",
+           "type": "object"
+          },
+          {
+           "example": {
+            "name": "some_resource_name"
+           },
+           "properties": {
+            "name": {
+             "minLength": 1,
+             "title": "Name",
+             "type": "string"
+            }
+           },
+           "required": [
+            "name"
+           ],
+           "title": "Name",
+           "type": "object"
+          }
+         ],
+         "title": "Virtual Machine",
+         "type": "object"
         }
        },
        "required": [
-        "name"
+        "name",
+        "virtual_machine"
        ],
        "type": "object"
       },
       "result": {
        "example": {
-        "name": "keypair_name_here",
-        "public_key": "some ssh public key here..."
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
        },
        "properties": {
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "public_key": {
-         "title": "Public Key",
+        "id": {
+         "title": "Id",
          "type": "string"
         }
        },
        "required": [
-        "name",
-        "public_key"
+        "id"
        ],
-       "title": "KeypairResponse",
+       "title": "CreateResponse",
        "type": "object"
       },
-      "version": "1.60.0"
+      "version": "0.1.0"
      },
      {
       "configs": {
@@ -19236,97 +18809,335 @@
        },
        "type": "object"
       },
-      "description": "Create a private and public key",
-      "isInternal": false,
-      "name": "create-keypair-name",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "name": {
-         "description": "keypair_name",
-         "title": "Keypair Name",
-         "type": "string"
-        }
-       },
-       "required": [
-        "name"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "name": "keypair_name_here",
-        "private_key": "some ssh private key here...",
-        "public_key": "some ssh public key here..."
-       },
-       "properties": {
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "private_key": {
-         "title": "Private Key",
-         "type": "string"
-        },
-        "public_key": {
-         "title": "Public Key",
-         "type": "string"
-        }
-       },
-       "required": [
-        "name",
-        "private_key",
-        "public_key"
-       ],
-       "title": "KeypairCreateResponse",
-       "type": "object"
-      },
-      "version": "1.60.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Delete a keypair",
+      "description": "Deletes an snapshot with the id provided in the current tenant\nwhich is logged in.\n\n#### Notes\n- You can use the Snapshots list command to retrieve all snapshots, so\n- you can get the id of the snapshot that you want to delete.",
       "isInternal": false,
       "name": "delete",
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "name": {
-         "description": "keypair_name",
-         "title": "Keypair Name",
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        },
+        "project_type": {
+         "default": "default",
+         "description": "An enumeration.",
+         "enum": [
+          "dbaas",
+          "iamaas",
+          "k8saas",
+          "mngsvc",
+          "default"
+         ],
          "type": "string"
         }
        },
        "required": [
+        "id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "0.1.0"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "List all snapshots in the current tenant which is logged in.\n\n#### Notes\n- You can use the **expand** argument to get more details from the inner objects\nlike image and machine types.",
+      "isInternal": false,
+      "name": "list",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "_limit": {
+         "minimum": 1,
+         "title": " Limit",
+         "type": "integer"
+        },
+        "_offset": {
+         "minimum": 0,
+         "title": " Offset",
+         "type": "integer"
+        },
+        "_sort": {
+         "default": "created_at:desc",
+         "pattern": "(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
+         "title": " Sort",
+         "type": "string"
+        },
+        "expand": {
+         "default": [],
+         "description": "You can get more detailed info about: ['image', 'type'] ",
+         "items": {
+          "type": "string"
+         },
+         "title": "Expand",
+         "type": "array"
+        },
+        "project_type": {
+         "default": "default",
+         "description": "An enumeration.",
+         "enum": [
+          "dbaas",
+          "iamaas",
+          "k8saas",
+          "mngsvc",
+          "default"
+         ],
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "snapshots": [
+         {
+          "created_at": "2022-06-10T18:33:12Z",
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "instance": {
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "image": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "machine_type": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           }
+          },
+          "name": "snapshot name",
+          "size": 1000,
+          "state": "available",
+          "status": "completed",
+          "updated_at": "2022-06-11T18:33:12Z"
+         }
+        ]
+       },
+       "properties": {
+        "snapshots": {
+         "items": {
+          "example": {
+           "created_at": "2022-06-10T18:33:12Z",
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "instance": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "image": {
+             "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            },
+            "machine_type": {
+             "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            }
+           },
+           "name": "snapshot name",
+           "size": 1000,
+           "state": "available",
+           "status": "completed",
+           "updated_at": "2022-06-11T18:33:12Z"
+          },
+          "properties": {
+           "created_at": {
+            "example": "2023-10-11T11:33:47Z",
+            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "title": "Created At",
+            "type": "string"
+           },
+           "id": {
+            "title": "Id",
+            "type": "string"
+           },
+           "instance": {
+            "example": {
+             "instance": {
+              "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+              "image": {
+               "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              },
+              "machine_type": {
+               "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              }
+             }
+            },
+            "properties": {
+             "id": {
+              "title": "Id",
+              "type": "string"
+             },
+             "image": {
+              "properties": {
+               "id": {
+                "title": "Id",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id"
+              ],
+              "title": "ImageInstanceV1Response",
+              "type": "object"
+             },
+             "machine_type": {
+              "properties": {
+               "id": {
+                "title": "Id",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id"
+              ],
+              "title": "InstanceTypeForInstanceV1Response",
+              "type": "object"
+             }
+            },
+            "required": [
+             "id",
+             "image",
+             "machine_type"
+            ],
+            "title": "InstanceResponseSnapshotV1",
+            "type": "object"
+           },
+           "name": {
+            "nullable": true,
+            "title": "Name",
+            "type": "string"
+           },
+           "size": {
+            "title": "Size",
+            "type": "integer"
+           },
+           "state": {
+            "title": "State",
+            "type": "string"
+           },
+           "status": {
+            "title": "Status",
+            "type": "string"
+           },
+           "updated_at": {
+            "example": "2023-10-11T11:33:47Z",
+            "nullable": true,
+            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "title": "Updated At",
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "status",
+           "state",
+           "created_at",
+           "size",
+           "instance"
+          ],
+          "title": "SnapshotResponseV1",
+          "type": "object"
+         },
+         "title": "Snapshots",
+         "type": "array"
+        }
+       },
+       "required": [
+        "snapshots"
+       ],
+       "title": "ListSnapshotResponseV1",
+       "type": "object"
+      },
+      "version": "0.1.0"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Renames a Snapshot with the id provided in the current tenant which is logged in.\n\n#### Notes\n- You can use the snapshots list command to retrieve all snapshots, so you can get the id of\nthe snapshot that you want to rename.",
+      "isInternal": false,
+      "name": "rename",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "title": "Id",
+         "type": "string"
+        },
+        "name": {
+         "maxLength": 225,
+         "minLength": 1,
+         "title": "Name",
+         "type": "string"
+        },
+        "project_type": {
+         "default": "default",
+         "description": "An enumeration.",
+         "enum": [
+          "dbaas",
+          "iamaas",
+          "k8saas",
+          "mngsvc",
+          "default"
+         ],
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
         "name"
        ],
        "type": "object"
@@ -19335,7 +19146,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.60.0"
+      "version": "0.1.0"
      },
      {
       "configs": {
@@ -19368,179 +19179,180 @@
        },
        "type": "object"
       },
-      "description": "Returns a list of keypairs from a provided tenant_id",
+      "description": "Restore a snapshot of a Virtual Machine with the current tenant which is logged in. </br>\nA Snapshot is ready for restore when it's in available state.\n\n#### Notes\n- You can verify the state of snapshot using the snapshot list command.\n- Use machine-types list to see all machine types available.\n\n#### Rules\n- To restore a snapshot  you have to inform the new virtual machine information.\n- You can choose a machine-type that has a disk equal or larger\nthan the original virtual machine type.",
       "isInternal": false,
-      "name": "list",
+      "name": "restore",
       "parameters": {
        "additionalProperties": false,
+       "properties": {
+        "availability_zone": {
+         "minLength": 1,
+         "title": "Availability Zone",
+         "type": "string"
+        },
+        "id": {
+         "title": "Id",
+         "type": "string"
+        },
+        "key_name": {
+         "title": "Key Name",
+         "type": "string"
+        },
+        "machine_type": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "ID",
+           "type": "object"
+          },
+          {
+           "example": {
+            "name": "some_resource_name"
+           },
+           "properties": {
+            "name": {
+             "minLength": 1,
+             "title": "Name",
+             "type": "string"
+            }
+           },
+           "required": [
+            "name"
+           ],
+           "title": "Name",
+           "type": "object"
+          }
+         ],
+         "title": "Machine Type",
+         "type": "object"
+        },
+        "name": {
+         "maxLength": 225,
+         "minLength": 1,
+         "title": "Name",
+         "type": "string"
+        },
+        "network": {
+         "default": {
+          "associate_public_ip": true,
+          "vpc": {
+           "name": "default"
+          }
+         },
+         "example": {
+          "associate_public_ip": true,
+          "vpc": {
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          }
+         },
+         "properties": {
+          "associate_public_ip": {
+           "default": true,
+           "title": "Associate Public Ip",
+           "type": "boolean"
+          },
+          "vpc": {
+           "anyOf": [
+            {
+             "example": {
+              "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+             },
+             "properties": {
+              "id": {
+               "minLength": 1,
+               "title": "Id",
+               "type": "string"
+              }
+             },
+             "required": [
+              "id"
+             ],
+             "title": "ID",
+             "type": "object"
+            },
+            {
+             "example": {
+              "name": "some_resource_name"
+             },
+             "properties": {
+              "name": {
+               "minLength": 1,
+               "title": "Name",
+               "type": "string"
+              }
+             },
+             "required": [
+              "name"
+             ],
+             "title": "Name",
+             "type": "object"
+            }
+           ],
+           "default": {
+            "name": "default"
+           },
+           "title": "Vpc",
+           "type": "object"
+          }
+         },
+         "title": "Network",
+         "type": "object"
+        },
+        "user_data": {
+         "maxLength": 65000,
+         "minLength": 1,
+         "title": "User Data",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "key_name",
+        "machine_type",
+        "name"
+       ],
        "type": "object"
       },
       "result": {
        "example": {
-        "keypairs": [
-         {
-          "name": "keypair_name_here",
-          "public_key": "some ssh public key here..."
-         }
-        ]
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
        },
        "properties": {
-        "keypairs": {
-         "items": {
-          "example": {
-           "name": "keypair_name_here",
-           "public_key": "some ssh public key here..."
-          },
-          "properties": {
-           "name": {
-            "title": "Name",
-            "type": "string"
-           },
-           "public_key": {
-            "title": "Public Key",
-            "type": "string"
-           }
-          },
-          "required": [
-           "name",
-           "public_key"
-          ],
-          "title": "KeypairResponse",
-          "type": "object"
-         },
-         "title": "Keypairs",
-         "type": "array"
+        "id": {
+         "title": "Id",
+         "type": "string"
         }
        },
        "required": [
-        "keypairs"
+        "id"
        ],
-       "title": "KeypairsListResponse",
+       "title": "CreateResponse",
        "type": "object"
       },
-      "version": "1.60.0"
+      "version": "0.1.0"
      }
     ],
-    "description": "keypairs",
+    "description": "Operations with snapshots for instances.",
     "isInternal": false,
-    "name": "keypairs",
-    "version": "1.60.0"
-   },
-   {
-    "children": [
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne-1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne-1",
-          "br-ne-2",
-          "br-se-1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Retrieve usage for specific quota_slug (vcpus, ram, disk & instances)",
-      "isInternal": false,
-      "name": "list",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "force-authentication": {
-         "description": "Force authentication by sending the header even if this API doesn't require it",
-         "type": "boolean"
-        },
-        "quota_slug": {
-         "description": "quota_slug",
-         "format": "string",
-         "title": "Quota Slug",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "results": [
-         {
-          "quota_slug": "vcpus",
-          "used": 0
-         },
-         {
-          "quota_slug": "disk",
-          "used": 0
-         },
-         {
-          "quota_slug": "ram",
-          "used": 0
-         },
-         {
-          "quota_slug": "instances",
-          "used": 0
-         }
-        ]
-       },
-       "properties": {
-        "results": {
-         "items": {
-          "properties": {
-           "quota_slug": {
-            "title": "quota_slug",
-            "type": "string"
-           },
-           "used": {
-            "title": "used",
-            "type": "integer"
-           }
-          },
-          "required": [
-           "quota_slug",
-           "used"
-          ],
-          "title": "ResourceUsage",
-          "type": "object"
-         },
-         "title": "Results",
-         "type": "array"
-        }
-       },
-       "required": [
-        "results"
-       ],
-       "title": "ListResourceUsage",
-       "type": "object"
-      },
-      "version": "1.60.0"
-     }
-    ],
-    "description": "usage",
-    "isInternal": true,
-    "name": "usage",
-    "version": "1.60.0"
+    "name": "snapshots",
+    "version": "0.1.0"
    }
   ],
-  "description": "APIs referentes ao produto de Virtual Machine",
+  "description": "Virtual Machine Api Product",
   "isInternal": false,
   "name": "virtual-machine",
-  "version": "1.60.0"
+  "version": "0.1.0"
  }
 ]

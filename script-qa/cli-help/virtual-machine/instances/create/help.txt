@@ -3,19 +3,24 @@ Create a Virtual Machine instance
 Usage:
   ./cli virtual-machine instances create [flags]
 
+Examples:
+  ./cli virtual-machine instances create --network='{"associate_public_ip":true,"vpc":{"id":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}}'
+
 Flags:
-      --allocate-fip                       Allocate Fip (default true)
-      --availability-zone string           Availability Zone
-      --cli.list-links enum[=table]        List all available links for this command (one of "json", "table" or "yaml")
-  -h, --help                               help for create
-      --image string                       Image
-      --key-name string                    Key Name
-      --name string                        Name
-      --network-interfaces array(object)   Network Interfaces
-                                           Use --network-interfaces=help for more details
-      --type string                        Type
-      --user-data string                   User Data
-  -v, --version                            version for create
+      --availability-zone string      Availability Zone (min character count: 1)
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for create
+      --image object                  Image
+                                      Use --image=help for more details
+      --key-name string               Key Name
+      --machine-type object           Machine Type
+                                      Use --machine-type=help for more details
+      --name string                   Name (between 1 and 225 characters)
+      --network object                Network (properties: associate_public_ip and vpc)
+                                      Use --network=help for more details (default {"associate_public_ip":true,"vpc":{"name":"default"}})
+      --project-type enum             An enumeration. (one of "dbaas", "default", "iamaas", "k8saas" or "mngsvc") (default "default")
+      --user-data string              User Data (between 1 and 65000 characters)
+  -v, --version                       version for create
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

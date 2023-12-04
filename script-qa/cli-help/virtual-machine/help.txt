@@ -1,14 +1,14 @@
-APIs referentes ao produto de Virtual Machine
+Virtual Machine Api Product
 
 Usage:
   ./cli virtual-machine [flags]
   ./cli virtual-machine [command]
 
 Commands:
-  images         images
-  instance-types instance types
-  instances      instances
-  keypairs       keypairs
+  images        Operations with images for instances.
+  instances     Operations with instances, including create, delete, start, stop, reboot and other actions.
+  machine-types Operations with machine types for instances.
+  snapshots     Operations with snapshots for instances.
 
 Flags:
   -h, --help      help for virtual-machine

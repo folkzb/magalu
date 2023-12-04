@@ -14,7 +14,7 @@ Product catalog:
   network         APIs referentes ao produto de Network
   object-storage  Operations for Object Storage API
   profile         Profile related commands
-  virtual-machine APIs referentes ao produto de Virtual Machine
+  virtual-machine Virtual Machine Api Product
 
 Other commands:
   completion      Generate the autocompletion script for the specified shell
