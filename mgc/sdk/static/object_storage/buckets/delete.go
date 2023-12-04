@@ -19,7 +19,7 @@ func deleteLogger() *zap.SugaredLogger {
 }
 
 type deleteParams struct {
-	BucketName string `json:"name" jsonschema:"description=Name of the bucket to be deleted" mgc:"positional"`
+	BucketName string `json:"bucket" jsonschema:"description=Name of the bucket to be deleted" mgc:"positional"`
 }
 
 var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {

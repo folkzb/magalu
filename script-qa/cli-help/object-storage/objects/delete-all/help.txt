@@ -1,13 +1,13 @@
 Delete all objects from a bucket
 
 Usage:
-  ./cli object-storage objects delete-all [name] [flags]
+  ./cli object-storage objects delete-all [bucket] [flags]
 
 Flags:
+      --bucket string    Name of the bucket to delete objects from
       --exclude string   Filename pattern to exclude
   -h, --help             help for delete-all
       --include string   Filename pattern to include (default "*")
-      --name string      Name of the bucket to delete objects from
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

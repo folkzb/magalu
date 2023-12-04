@@ -16625,13 +16625,13 @@
       "name": "delete",
       "parameters": {
        "properties": {
-        "name": {
+        "bucket": {
          "description": "Name of the bucket to be deleted",
          "type": "string"
         }
        },
        "required": [
-        "name"
+        "bucket"
        ],
        "type": "object"
       },
@@ -16821,6 +16821,10 @@
       "name": "delete-all",
       "parameters": {
        "properties": {
+        "bucket": {
+         "description": "Name of the bucket to delete objects from",
+         "type": "string"
+        },
         "exclude": {
          "description": "Filename pattern to exclude",
          "type": "string"
@@ -16828,10 +16832,6 @@
         "include": {
          "default": "*",
          "description": "Filename pattern to include",
-         "type": "string"
-        },
-        "name": {
-         "description": "Name of the bucket to delete objects from",
          "type": "string"
         }
        },

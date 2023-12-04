@@ -28,7 +28,7 @@ type DeleteObjectParams struct {
 }
 
 type DeleteAllObjectsParams struct {
-	BucketName   string           `json:"name,omitempty" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
+	BucketName   string           `json:"bucket,omitempty" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
 	FilterParams `json:",squash"` // nolint
 }
 
