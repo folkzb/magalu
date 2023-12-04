@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help      help for list
-      --id uuid   Id: id
+      --id uuid   Id
   -v, --version   version for list
 
 Global Flags:

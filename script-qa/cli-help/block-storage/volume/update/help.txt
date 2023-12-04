@@ -6,7 +6,7 @@ Usage:
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for update
-      --id uuid                       Volume Id: id
+      --id uuid                       Volume Id
       --name string                   Name
   -v, --version                       version for update
 

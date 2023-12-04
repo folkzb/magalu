@@ -4,10 +4,10 @@ Usage:
   ./cli dbaas instances backups get [id] [backup-id] [flags]
 
 Flags:
-      --backup-id uuid                Backup Id: Value referring to backup Id.
+      --backup-id uuid                Value referring to backup Id.
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for get
-      --id uuid                       Instance Id: Value referring to instance Id.
+      --id uuid                       Value referring to instance Id.
   -v, --version                       version for get
 
 Global Flags:

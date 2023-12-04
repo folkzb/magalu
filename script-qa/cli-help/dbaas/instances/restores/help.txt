@@ -6,7 +6,7 @@ Usage:
 Flags:
       --backup-id uuid   Backup Id
   -h, --help             help for restores
-      --id uuid          Instance Id: Value referring to instance Id.
+      --id uuid          Value referring to instance Id.
   -v, --version          version for restores
 
 Global Flags:

@@ -6,7 +6,7 @@ Usage:
 Flags:
       --event-id uuid   Event Id: event_id
   -h, --help            help for get
-      --id uuid         Id: id
+      --id uuid         Id
   -v, --version         version for get
 
 Global Flags:

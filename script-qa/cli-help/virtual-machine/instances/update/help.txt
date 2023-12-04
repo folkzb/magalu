@@ -6,7 +6,7 @@ Usage:
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for update
-      --id uuid                       Id: id
+      --id uuid                       Id
       --status enum                   InstanceStatus: An enumeration. (one of "active" or "shutoff")
   -v, --version                       version for update
 

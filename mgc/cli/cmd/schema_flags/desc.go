@@ -120,15 +120,31 @@ func (d SchemaFlagValueDesc) fixDescriptionFlagUsage(input string) string {
 	})
 }
 
-func (d SchemaFlagValueDesc) Description() (description string) {
-	description = d.Schema.Title
-
-	if d.Schema.Description != "" {
-		if description != "" {
-			description += ": "
-		}
-		description += d.Schema.Description
+func getSchemaDescription(s *mgcSchemaPkg.Schema) string {
+	if s.Description == "" {
+		return s.Title
 	}
+
+	if s.Title == "" {
+		return s.Description
+	}
+
+	normTitle := strings.ToLower(s.Title)
+	normDescription := strings.ToLower(s.Description)
+
+	if strings.Contains(normTitle, normDescription) {
+		return s.Title
+	}
+
+	if strings.Contains(normDescription, normTitle) {
+		return s.Description
+	}
+
+	return fmt.Sprintf("%s: %s", s.Title, s.Description)
+}
+
+func (d SchemaFlagValueDesc) Description() (description string) {
+	description = getSchemaDescription(d.Schema)
 
 	// spf13/pflag have UnquoteUsage() that messes up with back quotes, so remove them
 	description = strings.ReplaceAll(description, "`", "'")

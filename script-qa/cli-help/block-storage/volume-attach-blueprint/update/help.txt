@@ -4,7 +4,7 @@ Usage:
   ./cli block-storage volume-attach-blueprint update [flags]
 
 Flags:
-      --block-storage-id uuid     Volume Id: id
+      --block-storage-id uuid     Volume Id
   -h, --help                      help for update
       --virtual-machine-id uuid   Virtual Machine Id
 

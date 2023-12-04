@@ -4,7 +4,7 @@ Usage:
   ./cli dbaas datastores get [datastore-id] [flags]
 
 Flags:
-      --datastore-id uuid   Datastore Id: Value referring to datastore Id.
+      --datastore-id uuid   Value referring to datastore Id.
   -h, --help                help for get
   -v, --version             version for get
 

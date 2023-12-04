@@ -9,9 +9,9 @@ Usage:
   ./cli block-storage volume detach [id] [virtual-machine-id] [flags]
 
 Flags:
-      --force                     Force: force
+      --force                     Force
   -h, --help                      help for detach
-      --id uuid                   Volume Id: id
+      --id uuid                   Volume Id
   -v, --version                   version for detach
       --virtual-machine-id uuid   Virtual Machine Id: virtual_machine_id
 
