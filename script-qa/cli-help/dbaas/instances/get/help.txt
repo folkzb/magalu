@@ -4,11 +4,11 @@ Usage:
   ./cli dbaas instances get [id] [flags]
 
 Flags:
-      ---expand _expand=value1,value2   Instance extra attributes or relations to show with the main query. When available, more than one value can be informed using commas. e.g: _expand=value1,value2 (must be "replicas")
-      --cli.list-links enum[=table]     List all available links for this command (one of "json", "table" or "yaml")
-  -h, --help                            help for get
-      --id uuid                         Database Instance Id: Database Instance Unique Id.
-  -v, --version                         version for get
+      --cli.list-links enum[=table]            List all available links for this command (one of "json", "table" or "yaml")
+      --control.expand _expand=value1,value2   Instance extra attributes or relations to show with the main query. When available, more than one value can be informed using commas. e.g: _expand=value1,value2 (must be "replicas")
+  -h, --help                                   help for get
+      --id uuid                                Database Instance Id: Database Instance Unique Id.
+  -v, --version                                version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

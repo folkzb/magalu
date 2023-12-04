@@ -4,8 +4,8 @@ Usage:
   ./cli network port vpcs-ports list [vpc] [flags]
 
 Flags:
-      ---limit integer               Items Per Page (min: 1) (default 10)
-      ---offset integer              Page Number (min: 1) (default 1)
+      --control.limit integer        Items Per Page (min: 1) (default 10)
+      --control.offset integer       Page Number (min: 1) (default 1)
       --detailed                     Detailed (default true)
   -h, --help                         help for list
       --port-id-list array(string)   Port Id List (default [])

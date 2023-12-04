@@ -404,6 +404,11 @@ func (cf *cmdFlags) addExistingFlag(existingFlag *flag.Flag) {
 	cf.knownFlags[flag.NormalizedName(existingFlag.Name)] = existingFlag
 }
 
+const (
+	originalControlPrefix = "_"
+	targetControlPrefix   = "control."
+)
+
 func (cf *cmdFlags) addSchemaFlag(
 	container *mgcSdk.Schema,
 	propName string,
@@ -412,7 +417,12 @@ func (cf *cmdFlags) addSchemaFlag(
 	isRequired bool,
 	isConfig bool,
 ) (f *flag.Flag) {
-	flagName := normalizeName(propName)
+	baseFlagName, isControl := strings.CutPrefix(propName, originalControlPrefix)
+	if isControl {
+		baseFlagName = targetControlPrefix + baseFlagName
+	}
+
+	flagName := normalizeName(baseFlagName)
 	for cf.knownFlags[flagName] != nil {
 		flagName = conflictPrefix + flagName
 	}
