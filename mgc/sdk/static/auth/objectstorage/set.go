@@ -40,6 +40,6 @@ func newSet() core.Executor {
 	)
 
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
-		return "template=Keys saved successfully\nAccessKeyId={{.AccessKeyId}}\nSecretAccessKey={{.SecretAccessKey}}\n"
+		return "template=Keys saved successfully\nAccessKeyId={{.access_key_id}}\nSecretAccessKey={{.secret_access_key}}\n"
 	})
 }
