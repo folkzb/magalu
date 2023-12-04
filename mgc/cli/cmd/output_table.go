@@ -683,8 +683,16 @@ func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 	} else {
 		columns, err = columnsFromAny(val, "$")
 
-		if mapVal, ok := val.(map[string]any); ok && len(mapVal) > 1 && len(columns) > 1 {
-			buildVertically = true
+		if mapVal, ok := val.(map[string]any); ok {
+			if len(mapVal) > 1 && len(columns) > 1 {
+				buildVertically = true
+			} else if len(mapVal) == 1 {
+				for _, firstProp := range mapVal {
+					if arr, ok := firstProp.([]any); ok {
+						buildVertically = len(arr) == 1
+					}
+				}
+			}
 		}
 	}
 
