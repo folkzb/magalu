@@ -87,13 +87,13 @@ func addObjectConstraints(s *mgcSdk.Schema, dst *[]string) {
 	*dst = append(*dst, formatAlternatives("single property: %s", "properties: %s and %s", keys))
 }
 
-func addEnumConstraint(s *mgcSdk.Schema, dst *[]string) {
+func getEnumAsString(s *mgcSdk.Schema) (asStrings []string) {
 	length := len(s.Enum)
 	if length == 0 {
 		return
 	}
 
-	asStrings := make([]string, 0, length)
+	asStrings = make([]string, 0, length)
 	for _, e := range s.Enum {
 		data, err := json.Marshal(e)
 		var s string
@@ -107,6 +107,15 @@ func addEnumConstraint(s *mgcSdk.Schema, dst *[]string) {
 	}
 
 	slices.Sort(asStrings)
+
+	return
+}
+
+func addEnumConstraint(s *mgcSdk.Schema, dst *[]string) {
+	asStrings := getEnumAsString(s)
+	if len(asStrings) == 0 {
+		return
+	}
 
 	*dst = append(*dst, formatAlternatives("must be %s", "one of %s or %s", asStrings))
 }

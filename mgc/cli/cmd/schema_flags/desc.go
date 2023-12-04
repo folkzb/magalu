@@ -3,6 +3,8 @@ package schema_flags
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
 
 	flag "github.com/spf13/pflag"
 	"magalu.cloud/core"
@@ -86,6 +88,38 @@ func (d *SchemaFlagValueDesc) RawDefaultValue() string {
 	return string(data)
 }
 
+var flagDescriptionUsageRe = regexp.MustCompile("([^'\" ]+)=([^'\" ]+)")
+
+func (d SchemaFlagValueDesc) fixDescriptionFlagUsage(input string) string {
+	enumAsString := getEnumAsString(d.Schema)
+
+	prefixToMatch := d.PropName + "="
+	replacedPrefix := string("--" + d.FlagName + "=")
+
+	// replace any mentions propName=value to --flagName=value, so it makes sense
+	return flagDescriptionUsageRe.ReplaceAllStringFunc(input, func(s string) string {
+		if !strings.HasPrefix(s, prefixToMatch) {
+			return s
+		}
+
+		value := s[len(prefixToMatch):]
+
+		if len(enumAsString) > 0 {
+			data, _ := json.Marshal(value)
+			valueAsJson := string(data)
+			// some schemas come with a generic description, but enums restrict the fields to be used.
+			for _, restrictedValue := range enumAsString {
+				if value == restrictedValue || valueAsJson == restrictedValue {
+					return replacedPrefix + restrictedValue
+				}
+			}
+			return replacedPrefix + enumAsString[0]
+		}
+
+		return replacedPrefix + value
+	})
+}
+
 func (d SchemaFlagValueDesc) Description() (description string) {
 	description = d.Schema.Title
 
@@ -95,6 +129,11 @@ func (d SchemaFlagValueDesc) Description() (description string) {
 		}
 		description += d.Schema.Description
 	}
+
+	// spf13/pflag have UnquoteUsage() that messes up with back quotes, so remove them
+	description = strings.ReplaceAll(description, "`", "'")
+
+	description = d.fixDescriptionFlagUsage(description)
 
 	constraints := getDescriptionConstraints(d.Schema)
 	if constraints != "" {
