@@ -124,6 +124,8 @@ func (c *cmdLinks) check(chainedArgs [][]string) (err error, stop bool) {
 	if err == schema_flags.ErrWantHelp {
 		err = nil
 		stop = true
+	} else if err != nil {
+		err = fmt.Errorf("unknown link %q. Use \"%s ! help\" for more information", args[0], c.cmdPath)
 	}
 	logger().Debugw("checked executor link", "args", args, "error", err, "exec", c.exec, "links", c.exec.Links())
 
