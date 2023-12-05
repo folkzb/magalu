@@ -16,7 +16,7 @@ paths:
                     links:
                         read:
                             description: Read Virtual Machine instance
-                            operationId: list_instances_v1_v1_instances_get
+                            operationId: instance_details_v1_v1_instances__id__get
                             parameters:
                                 id: $response.body#/id
                         reboot:
