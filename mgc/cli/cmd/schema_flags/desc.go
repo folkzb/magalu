@@ -88,7 +88,7 @@ func (d *SchemaFlagValueDesc) RawDefaultValue() string {
 	return string(data)
 }
 
-var flagDescriptionUsageRe = regexp.MustCompile("([^'\" ]+)=([^'\" ]+)")
+var flagDescriptionUsageRe = regexp.MustCompile("([^'\"` ]+)=([^'\"` ]+)")
 
 func (d SchemaFlagValueDesc) fixDescriptionFlagUsage(input string) string {
 	enumAsString := getEnumAsString(d.Schema)
@@ -172,5 +172,15 @@ func (d SchemaFlagValueDesc) Usage() (usage string) {
 		usage += fmt.Sprintf("Use --%s=%s for more details", d.FlagName, ValueHelpIsRequired)
 	}
 
+	return
+}
+
+func (d SchemaFlagValueDesc) HumanReadableConstraints() (c *HumanReadableConstraints) {
+	c = NewHumanReadableConstraints(d.Schema)
+	if c == nil {
+		return
+	}
+
+	c.Description = d.fixDescriptionFlagUsage(c.Description)
 	return
 }

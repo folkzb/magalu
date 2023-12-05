@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode"
 
 	flag "github.com/spf13/pflag"
 
@@ -63,17 +64,17 @@ func showHelpForError(cmd *cobra.Command, args []string, err error) error {
 	return err
 }
 
-func textIndent(s, prefix string) string {
-	return prefix + strings.Join(strings.Split(s, "\n"), "\n"+prefix)
+func textIndent(s, firstPrefix, siblingPrefix string) string {
+	return firstPrefix + strings.Join(strings.Split(s, "\n"), "\n"+siblingPrefix)
 }
 
-func textReflow(s, prefix string, columns int) string {
+func textReflow(s, firstPrefix, siblingPrefix string, columns int) string {
 	if columns > 0 {
 		s = text.WrapText(s, columns)
 	}
 
-	if prefix != "" {
-		s = textIndent(s, prefix)
+	if siblingPrefix != "" {
+		s = textIndent(s, firstPrefix, siblingPrefix)
 	}
 
 	return s
@@ -207,6 +208,83 @@ func getFlagDescription(f *flag.Flag) (description string) {
 	return description
 }
 
+func endsWithPunctuation(text string) bool {
+	if text == "" {
+		return false
+	}
+	return unicode.IsPunct(rune(text[len(text)-1]))
+}
+
+func addPunctuation(text, punctuation string) string {
+	if endsWithPunctuation(text) {
+		return text
+	}
+	return text + punctuation
+}
+
+func forcePunctuation(text, punctuation string) string {
+	if endsWithPunctuation(text) {
+		return text[:len(text)-1] + punctuation
+	}
+	return text + punctuation
+}
+
+func getConstraintsFormatted(constraints *schema_flags.HumanReadableConstraints, indentPrefix string, isListItem bool) (text string) {
+	text = indentPrefix
+	childIdentPrefix := indentPrefix + "  "
+	if isListItem {
+		text += "- "
+		childIdentPrefix += "  " // must be same length as line above
+	}
+
+	if constraints.Description == "" {
+		if constraints.Message != "" {
+			text += addPunctuation(constraints.Message, ".")
+		}
+	} else {
+		text += forcePunctuation(textIndent(constraints.Description, "", indentPrefix+"  | "), "")
+		if constraints.Message != "" {
+			text += fmt.Sprintf(" (%s)", constraints.Message)
+		}
+		text += "."
+	}
+
+	if len(constraints.Children) == 0 {
+		text += "\n"
+		return
+	}
+
+	if strings.Contains(constraints.Description, "\n") {
+		text += "\n" + indentPrefix + "  "
+	} else if constraints.Description != "" || constraints.Message != "" {
+		text = addPunctuation(text, ".")
+	}
+
+	if constraints.ChildrenMessage != "" {
+		if endsWithPunctuation(text) {
+			text += " "
+		}
+		text += forcePunctuation(constraints.ChildrenMessage, ":")
+	}
+
+	if len(constraints.Children) == 1 {
+		child := constraints.Children[0]
+		if endsWithPunctuation(text) {
+			text += " "
+		}
+		text += strings.Trim(getConstraintsFormatted(child, childIdentPrefix, false), "\t\n\r ")
+		text += "\n"
+		return
+	}
+
+	text += "\n"
+	for _, c := range constraints.Children {
+		text += getConstraintsFormatted(c, childIdentPrefix, true)
+	}
+
+	return
+}
+
 func showFlagHelp(f *flag.Flag) {
 	const (
 		indentPrefix = "    "
@@ -216,7 +294,7 @@ func showFlagHelp(f *flag.Flag) {
 	var output string
 
 	reflow := func(s string) string {
-		return textReflow(s, indentPrefix, reflowColumns)
+		return textReflow(s, indentPrefix, indentPrefix, reflowColumns)
 	}
 
 	addSection := func(title string, rest ...string) {
@@ -242,17 +320,14 @@ func showFlagHelp(f *flag.Flag) {
 	addSection("Flag usage")
 	addSectionBodyRaw(getFlagHelpUsageLine(f))
 
-	if description := getFlagDescription(f); description != "" {
-		addSection("Description")
-		addSectionBodyText(description)
-	}
-
-	if f.DefValue != "" {
-		addSection("Default value", f.DefValue)
-	}
-
 	if fv, ok := f.Value.(schema_flags.SchemaFlagValue); ok {
 		desc := fv.Desc()
+
+		if constraints := desc.HumanReadableConstraints(); constraints != nil {
+			addSection("Description")
+			output += getConstraintsFormatted(constraints, indentPrefix, false)
+		}
+
 		cleanSchema := getCleanJSONSchema(desc.Schema)
 		if data, err := json.MarshalIndent(cleanSchema, indentPrefix, "  "); err == nil {
 			schema := strings.Trim(string(data), "\t\n\r ")
@@ -265,6 +340,15 @@ func showFlagHelp(f *flag.Flag) {
 		if example := getExampleFormattedValue(desc.Schema, desc.Container, desc.PropName); example != "" {
 			addSection("Example")
 			addSectionBodyRaw(fmt.Sprintf("--%s=%s", f.Name, example))
+		}
+	} else {
+		if description := getFlagDescription(f); description != "" {
+			addSection("Description")
+			addSectionBodyText(description)
+		}
+
+		if f.DefValue != "" {
+			addSection("Default value", f.DefValue)
 		}
 	}
 

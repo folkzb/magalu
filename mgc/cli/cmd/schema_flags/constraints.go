@@ -6,7 +6,10 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
 
+	"golang.org/x/exp/constraints"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -59,17 +62,30 @@ func addNumberConstraints(s *mgcSdk.Schema, dst *[]string) {
 	}
 }
 
-func addArrayConstraints(s *mgcSdk.Schema, dst *[]string) {
-	if s.MinItems != 0 && s.MaxItems != nil {
-		*dst = append(*dst, fmt.Sprintf("between %v and %v items", s.MinItems, int(*s.MaxItems)))
-	} else if s.MinItems != 0 {
-		*dst = append(*dst, fmt.Sprintf("at least %v items", s.MinItems))
-	} else if s.MaxItems != nil {
-		*dst = append(*dst, fmt.Sprintf("at most %v items", int(*s.MaxItems)))
+func getPlural[T constraints.Integer](v T, singular, plural string) string {
+	if v == 1 {
+		return singular
+	}
+	return plural
+}
+
+func addCountConstraints[T constraints.Integer](minimum T, maximum *T, singular, plural string, dst *[]string) {
+	if minimum != 0 && maximum != nil {
+		*dst = append(*dst, fmt.Sprintf("between %v and %v %s", minimum, *maximum, getPlural(*maximum, singular, plural)))
+	} else if minimum != 0 {
+		*dst = append(*dst, fmt.Sprintf("at least %v %s", minimum, getPlural(minimum, singular, plural)))
+	} else if maximum != nil {
+		*dst = append(*dst, fmt.Sprintf("at most %v %s", *maximum, getPlural(*maximum, singular, plural)))
 	}
 }
 
+func addArrayConstraints(s *mgcSdk.Schema, dst *[]string) {
+	addCountConstraints(s.MinItems, s.MaxItems, "item", "items", dst)
+}
+
 func addObjectConstraints(s *mgcSdk.Schema, dst *[]string) {
+	addCountConstraints(s.MinProps, s.MaxProps, "property", "properties", dst)
+
 	if s.AdditionalProperties.Has != nil && *s.AdditionalProperties.Has {
 		return
 	}
@@ -190,4 +206,269 @@ func shouldRecommendHelpValue(s *mgcSdk.Schema) bool {
 	default:
 		return true
 	}
+}
+
+type HumanReadableConstraints struct {
+	Description     string
+	Message         string
+	ChildrenMessage string
+	Children        []*HumanReadableConstraints
+}
+
+func NewHumanReadableConstraints(schema *mgcSchemaPkg.Schema) (c *HumanReadableConstraints) {
+	c = specificHumanReadableConstraints(schema)
+	if c == nil {
+		return
+	}
+	c.Description = getHumanReadableConstraintsDescription(schema)
+	addDefaultHumanReadableConstraint(schema, &c.Children)
+	addExampleHumanReadableConstraints(schema, &c.Children)
+	return
+}
+
+func specificHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	if len(schema.Enum) > 0 {
+		return newEnumHumanReadableConstraints(schema)
+	}
+
+	if len(schema.OneOf) > 0 {
+		return newXOfHumanReadableConstraints("Exactly one of the following must apply:", schema, schema.OneOf)
+	}
+	if len(schema.AnyOf) > 0 {
+		return newXOfHumanReadableConstraints("At least one of the following must apply:", schema, schema.AnyOf)
+	}
+
+	switch schema.Type {
+	case "boolean":
+		return newBooleanHumanReadableConstraints(schema)
+	case "string":
+		return newStringHumanReadableConstraints(schema)
+	case "integer", "number":
+		return newNumberHumanReadableConstraints(schema)
+	case "array":
+		return newArrayHumanReadableConstraints(schema)
+	case "object":
+		return newObjectHumanReadableConstraints(schema)
+	default:
+		if schema.Not != nil {
+			return newNotHumanReadableConstraints(schema)
+		}
+		return newAnyHumanReadableConstraints(schema)
+	}
+}
+
+func getHumanReadableConstraintsDescription(schema *mgcSchemaPkg.Schema) string {
+	description := strings.Trim(getSchemaDescription(schema), "\t\n\r ")
+	if description == "" {
+		return ""
+	}
+
+	if !unicode.IsPunct(rune(description[len(description)-1])) {
+		description += "."
+	}
+
+	return description
+}
+
+func addAnyValueHumanReadableConstraint(format string, value any, constraints *[]*HumanReadableConstraints) {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return
+	}
+
+	*constraints = append(*constraints, &HumanReadableConstraints{
+		Message: fmt.Sprintf(format, data),
+	})
+}
+
+func addDefaultHumanReadableConstraint(schema *mgcSchemaPkg.Schema, constraints *[]*HumanReadableConstraints) {
+	if schema.Default != nil && len(schema.Enum) == 0 {
+		addAnyValueHumanReadableConstraint("If no value is provided, then %s is used", schema.Default, constraints)
+	}
+}
+
+func addExampleHumanReadableConstraints(schema *mgcSchemaPkg.Schema, constraints *[]*HumanReadableConstraints) {
+	if schema.Example != nil && len(schema.Enum) == 0 {
+		addAnyValueHumanReadableConstraint("Example value: %s", schema.Example, constraints)
+	}
+}
+
+func newRefHumanReadableConstraints(ref string) *HumanReadableConstraints {
+	return &HumanReadableConstraints{Message: fmt.Sprintf("Previously described [%s]", ref)}
+}
+
+func newSchemaRefHumanReadableConstraints(schemaRef *mgcSchemaPkg.SchemaRef) *HumanReadableConstraints {
+	if schemaRef == nil {
+		return nil
+	}
+
+	if schemaRef.Ref != "" {
+		// avoid infinite loops on recursive types
+		return newRefHumanReadableConstraints(schemaRef.Ref)
+	}
+	return NewHumanReadableConstraints((*mgcSchemaPkg.Schema)(schemaRef.Value))
+}
+
+func newEnumHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	var defVal string
+	if schema.Default != nil {
+		data, err := json.Marshal(schema.Default)
+		if err == nil {
+			defVal = string(data)
+		}
+	}
+
+	children := make([]*HumanReadableConstraints, len(schema.Enum))
+	for i, s := range getEnumAsString(schema) {
+		if s == defVal {
+			s += " (default value)"
+		}
+		children[i] = &HumanReadableConstraints{Message: s}
+	}
+
+	return &HumanReadableConstraints{
+		ChildrenMessage: getPlural(len(children), "Must be exactly:", "One of the values:"),
+		Children:        children,
+	}
+}
+
+func newBooleanHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	return &HumanReadableConstraints{
+		Message: "Boolean value",
+	}
+}
+
+func getHumanConstraintsChildren(constraints []string) (childrenMessage string, children []*HumanReadableConstraints) {
+	if len(constraints) == 0 {
+		return
+	}
+
+	childrenMessage = "With the following constraints:"
+	children = make([]*HumanReadableConstraints, len(constraints))
+	for i, c := range constraints {
+		children[i] = &HumanReadableConstraints{Message: c}
+	}
+	return
+}
+
+func newStringHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	var constraints []string
+	addStringConstraints(schema, &constraints)
+	childrenMessage, children := getHumanConstraintsChildren(constraints)
+	return &HumanReadableConstraints{
+		Message:         "String value",
+		ChildrenMessage: childrenMessage,
+		Children:        children,
+	}
+}
+
+func newNumberHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	var constraints []string
+	addNumberConstraints(schema, &constraints)
+	childrenMessage, children := getHumanConstraintsChildren(constraints)
+
+	return &HumanReadableConstraints{
+		Message:         strings.ToUpper(string(schema.Type[0])) + schema.Type[1:] + " value",
+		ChildrenMessage: childrenMessage,
+		Children:        children,
+	}
+}
+
+func newArrayHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	var constraints []string
+	addArrayConstraints(schema, &constraints)
+	childrenMessage, children := getHumanConstraintsChildren(constraints)
+
+	if itemsConstraints := newSchemaRefHumanReadableConstraints(schema.Items); itemsConstraints != nil {
+		if childrenMessage == "" {
+			childrenMessage = "Array where each item is:"
+		}
+		children = append(children, itemsConstraints)
+	}
+
+	return &HumanReadableConstraints{
+		Message:         "Array value",
+		ChildrenMessage: childrenMessage,
+		Children:        children,
+	}
+}
+
+func newMapHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	var constraints []string
+	addCountConstraints(schema.MinProps, schema.MaxProps, "property", "properties", &constraints)
+	childrenMessage, children := getHumanConstraintsChildren(constraints)
+
+	if valueConstraints := newSchemaRefHumanReadableConstraints(schema.AdditionalProperties.Schema); valueConstraints != nil {
+		if childrenMessage == "" {
+			childrenMessage = "Mapping where each value is:"
+		}
+		children = append(children, valueConstraints)
+	}
+
+	return &HumanReadableConstraints{
+		Message:         "Mapping of string keys to values",
+		ChildrenMessage: childrenMessage,
+		Children:        children,
+	}
+}
+
+func newObjectHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	if schema.AdditionalProperties.Has != nil && *schema.AdditionalProperties.Has {
+		return newMapHumanReadableConstraints(schema)
+	}
+
+	var constraints []string
+	addCountConstraints(schema.MinProps, schema.MaxProps, "property", "properties", &constraints)
+	childrenMessage, children := getHumanConstraintsChildren(constraints)
+
+	if len(schema.Properties) > 0 {
+		properties := make([]*HumanReadableConstraints, 0, len(schema.Properties))
+		for k, schemaRef := range schema.Properties {
+			if p := newSchemaRefHumanReadableConstraints(schemaRef); p != nil {
+				var requiredMarker string
+				if slices.Contains(schema.Required, k) {
+					requiredMarker = "(required) "
+				}
+				p.Description = fmt.Sprintf("%q: %s%s", k, requiredMarker, p.Description)
+				properties = append(properties, p)
+			}
+		}
+		slices.SortFunc(properties, func(a, b *HumanReadableConstraints) int {
+			return strings.Compare(a.Message, b.Message)
+		})
+
+		children = append(children, &HumanReadableConstraints{
+			Message:  "Object with the following properties:",
+			Children: properties,
+		})
+	}
+
+	return &HumanReadableConstraints{
+		Message:         "Object value",
+		ChildrenMessage: childrenMessage,
+		Children:        children,
+	}
+}
+
+func newXOfHumanReadableConstraints(text string, schema *mgcSchemaPkg.Schema, schemaRefs mgcSchemaPkg.SchemaRefs) *HumanReadableConstraints {
+	children := make([]*HumanReadableConstraints, len(schemaRefs))
+	for i, schemaRef := range schemaRefs {
+		children[i] = newSchemaRefHumanReadableConstraints(schemaRef)
+	}
+
+	return &HumanReadableConstraints{
+		Message:  text,
+		Children: children,
+	}
+}
+
+func newNotHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	return &HumanReadableConstraints{
+		Message:  "Not",
+		Children: []*HumanReadableConstraints{newSchemaRefHumanReadableConstraints(schema.Not)},
+	}
+}
+
+func newAnyHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableConstraints {
+	return &HumanReadableConstraints{Message: "Any value"}
 }
