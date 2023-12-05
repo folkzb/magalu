@@ -22,7 +22,7 @@ func New[T any](logger *zap.SugaredLogger, schema *core.Schema, extensionPrefix 
 		return nil, schema, nil
 	}
 
-	needs, err := needsTransformation(schema, transformationKey)
+	needs, err := needsTransformation(logger, schema, transformationKey)
 	if err != nil {
 		return nil, schema, err
 	}

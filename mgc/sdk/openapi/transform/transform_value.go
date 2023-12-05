@@ -28,10 +28,9 @@ func doTransformsToValue(logger *zap.SugaredLogger, transformers []transformer, 
 // If the schema doesn't contain any transformation, then the value is unchanged
 func transformValue(logger *zap.SugaredLogger, schema *core.Schema, transformationKey string, value any) (any, error) {
 	t := &commonSchemaTransformer[any]{
-		tKey: transformationKey,
-		transform: func(transformers []transformer, value any) (any, error) {
-			return doTransformsToValue(logger, transformers, value)
-		},
+		logger:               logger,
+		tKey:                 transformationKey,
+		transform:            doTransformsToValue,
 		transformArray:       transformArrayValue,
 		transformObject:      transformObjectValue,
 		transformConstraints: transformConstraintsValue,
@@ -39,7 +38,7 @@ func transformValue(logger *zap.SugaredLogger, schema *core.Schema, transformati
 	return mgcSchemaPkg.Transform[any](t, schema, value)
 }
 
-func transformArrayValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, itemSchema *core.Schema, value any) (any, error) {
+func transformArrayValue(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[any], schema *core.Schema, itemSchema *core.Schema, value any) (any, error) {
 	valueSlice, ok := value.([]any)
 	if !ok {
 		if value == nil {
@@ -53,7 +52,9 @@ func transformArrayValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, i
 
 	cs := utils.NewCOWSliceFunc(valueSlice, utils.IsSameValueOrPointer)
 	for i, itemValue := range valueSlice {
+		logger.Debugw("transform array item...", "index", i, "itemValue", itemValue)
 		convertedValue, err := mgcSchemaPkg.Transform(t, itemSchema, itemValue)
+		logger.Debugw("transformed array item", "index", i, "itemValue", itemValue, "error", err)
 		if err != nil {
 			return value, err
 		}
@@ -64,7 +65,7 @@ func transformArrayValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, i
 	return valueSlice, nil
 }
 
-func transformObjectValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, value any) (any, error) {
+func transformObjectValue(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[any], schema *core.Schema, value any) (any, error) {
 	valueMap, ok := value.(map[string]any)
 	if !ok {
 		if value == nil {
@@ -85,7 +86,9 @@ func transformObjectValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, 
 				return cm, nil
 			}
 
+			logger.Debugw("transform object property...", "propName", propName, "propValue", propValue)
 			convertedFieldValue, err := mgcSchemaPkg.Transform(t, propSchema, propValue)
+			logger.Debugw("transformed object property", "propName", propName, "propValue", propValue, "error", err)
 			if err != nil {
 				return cm, err
 			}
@@ -101,7 +104,7 @@ func transformObjectValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, 
 	return valueMap, nil
 }
 
-func transformConstraintsValue(t mgcSchemaPkg.Transformer[any], kind mgcSchemaPkg.ConstraintKind, schemaRefs mgcSchemaPkg.SchemaRefs, value any) (any, error) {
+func transformConstraintsValue(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[any], kind mgcSchemaPkg.ConstraintKind, schemaRefs mgcSchemaPkg.SchemaRefs, value any) (any, error) {
 	// TODO: handle kind properly, see https://swagger.io/docs/specification/data-models/oneof-anyof-allof-not/
 	return mgcSchemaPkg.TransformSchemasArray(t, schemaRefs, value)
 }

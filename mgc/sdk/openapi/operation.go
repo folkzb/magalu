@@ -128,7 +128,7 @@ func (o *operation) ParametersSchema() *core.Schema {
 		o.addSecurityParameters(rootSchema)
 
 		var transformSchema *core.Schema
-		o.transformParameters, transformSchema, err = transform.New[map[string]any](o.logger, rootSchema, o.extensionPrefix)
+		o.transformParameters, transformSchema, err = transform.New[map[string]any](o.logger.Named("transformParameters"), rootSchema, o.extensionPrefix)
 		if err != nil {
 			o.logger.Warnw("error while loading parameters schema", "error", err, "rootSchema", rootSchema)
 		}
@@ -162,7 +162,7 @@ func (o *operation) ConfigsSchema() *core.Schema {
 		}
 
 		var transformSchema *core.Schema
-		o.transformConfigs, transformSchema, err = transform.New[map[string]any](o.logger, rootSchema, o.extensionPrefix)
+		o.transformConfigs, transformSchema, err = transform.New[map[string]any](o.logger.Named("transformConfigs"), rootSchema, o.extensionPrefix)
 		if err != nil {
 			o.logger.Warnw("error while loading configs schema", "error", err, "rootSchema", rootSchema)
 		}
@@ -227,7 +227,7 @@ func (o *operation) initResultSchema() {
 			o.logger.Warnw("error while simplifying result schema", "error", err, "resultSchema", o.resultSchema)
 		}
 
-		transformResult, transformedSchema, err := transform.New[any](o.logger, o.resultSchema, o.extensionPrefix)
+		transformResult, transformedSchema, err := transform.New[any](o.logger.Named("transformResult"), o.resultSchema, o.extensionPrefix)
 		if err == nil {
 			o.resultSchema = transformedSchema
 			o.transformResult = transformResult

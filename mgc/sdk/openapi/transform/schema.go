@@ -27,8 +27,9 @@ func doTransformsToSchema(logger *zap.SugaredLogger, transformers []transformer,
 
 func transformSchema(logger *zap.SugaredLogger, schema *core.Schema, transformationKey string, value *core.Schema) (*core.Schema, error) {
 	t := &commonSchemaTransformer[*mgcSchemaPkg.COWSchema]{
-		tKey: transformationKey,
-		transform: func(transformers []transformer, value *mgcSchemaPkg.COWSchema) (*mgcSchemaPkg.COWSchema, error) {
+		logger: logger,
+		tKey:   transformationKey,
+		transform: func(logger *zap.SugaredLogger, transformers []transformer, value *mgcSchemaPkg.COWSchema) (*mgcSchemaPkg.COWSchema, error) {
 			return doTransformsToSchema(logger, transformers, value, transformationKey)
 		},
 		transformArray:       transformArraySchema,
@@ -43,7 +44,7 @@ func transformSchema(logger *zap.SugaredLogger, schema *core.Schema, transformat
 	return cowSchema.Peek(), nil
 }
 
-func transformArraySchema(t mgcSchemaPkg.Transformer[*mgcSchemaPkg.COWSchema], schema *core.Schema, itemSchema *core.Schema, value *mgcSchemaPkg.COWSchema) (*mgcSchemaPkg.COWSchema, error) {
+func transformArraySchema(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[*mgcSchemaPkg.COWSchema], schema *core.Schema, itemSchema *core.Schema, value *mgcSchemaPkg.COWSchema) (*mgcSchemaPkg.COWSchema, error) {
 	itemsCow := value.ItemsCOW().ValueCOW()
 	_, err := mgcSchemaPkg.Transform(t, itemSchema, itemsCow)
 	if err != nil {
@@ -53,7 +54,7 @@ func transformArraySchema(t mgcSchemaPkg.Transformer[*mgcSchemaPkg.COWSchema], s
 	return value, nil
 }
 
-func transformObjectSchema(t mgcSchemaPkg.Transformer[*mgcSchemaPkg.COWSchema], schema *core.Schema, value *mgcSchemaPkg.COWSchema) (*mgcSchemaPkg.COWSchema, error) {
+func transformObjectSchema(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[*mgcSchemaPkg.COWSchema], schema *core.Schema, value *mgcSchemaPkg.COWSchema) (*mgcSchemaPkg.COWSchema, error) {
 	_, err := mgcSchemaPkg.TransformObjectProperties(
 		schema,
 		value.PropertiesCOW(),
@@ -77,7 +78,7 @@ func transformObjectSchema(t mgcSchemaPkg.Transformer[*mgcSchemaPkg.COWSchema], 
 	return value, nil
 }
 
-func transformConstraintsSchema(t mgcSchemaPkg.Transformer[*mgcSchemaPkg.COWSchema], kind mgcSchemaPkg.ConstraintKind, schemaRefs mgcSchemaPkg.SchemaRefs, value *mgcSchemaPkg.COWSchema) (result *mgcSchemaPkg.COWSchema, err error) {
+func transformConstraintsSchema(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[*mgcSchemaPkg.COWSchema], kind mgcSchemaPkg.ConstraintKind, schemaRefs mgcSchemaPkg.SchemaRefs, value *mgcSchemaPkg.COWSchema) (result *mgcSchemaPkg.COWSchema, err error) {
 	result = value
 
 	if kind == mgcSchemaPkg.ConstraintNot {

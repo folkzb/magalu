@@ -1,15 +1,19 @@
 package transform
 
 import (
+	"go.uber.org/zap"
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 )
 
 // Recursively checks whenever the given schema needs transformation
-func needsTransformation(schema *core.Schema, transformationKey string) (bool, error) {
+func needsTransformation(logger *zap.SugaredLogger, schema *core.Schema, transformationKey string) (bool, error) {
 	t := &commonSchemaTransformer[bool]{
-		tKey:                 transformationKey,
-		transform:            func(transformers []transformer, value bool) (bool, error) { return true, nil },
+		logger: logger,
+		tKey:   transformationKey,
+		transform: func(logger *zap.SugaredLogger, transformers []transformer, value bool) (bool, error) {
+			return true, nil
+		},
 		transformArray:       transformArrayNeedsTransformation,
 		transformObject:      transformObjectNeedsTransformation,
 		transformConstraints: transformConstraintsNeedsTransformation,
@@ -17,14 +21,14 @@ func needsTransformation(schema *core.Schema, transformationKey string) (bool, e
 	return mgcSchemaPkg.Transform[bool](t, schema, false)
 }
 
-func transformArrayNeedsTransformation(t mgcSchemaPkg.Transformer[bool], schema *core.Schema, itemSchema *core.Schema, value bool) (bool, error) {
+func transformArrayNeedsTransformation(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[bool], schema *core.Schema, itemSchema *core.Schema, value bool) (bool, error) {
 	if itemSchema == nil {
 		return value, nil
 	}
 	return mgcSchemaPkg.Transform(t, itemSchema, value)
 }
 
-func transformObjectNeedsTransformation(t mgcSchemaPkg.Transformer[bool], schema *core.Schema, value bool) (bool, error) {
+func transformObjectNeedsTransformation(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[bool], schema *core.Schema, value bool) (bool, error) {
 	return mgcSchemaPkg.TransformObjectProperties(schema, value, func(propName string, propSchema *core.Schema, value bool) (bool, error) {
 		value, err := mgcSchemaPkg.Transform(t, propSchema, value)
 		if err != nil {
@@ -37,7 +41,7 @@ func transformObjectNeedsTransformation(t mgcSchemaPkg.Transformer[bool], schema
 	})
 }
 
-func transformConstraintsNeedsTransformation(t mgcSchemaPkg.Transformer[bool], kind mgcSchemaPkg.ConstraintKind, schemaRefs mgcSchemaPkg.SchemaRefs, value bool) (bool, error) {
+func transformConstraintsNeedsTransformation(logger *zap.SugaredLogger, t mgcSchemaPkg.Transformer[bool], kind mgcSchemaPkg.ConstraintKind, schemaRefs mgcSchemaPkg.SchemaRefs, value bool) (bool, error) {
 	value, err := mgcSchemaPkg.TransformSchemasArray(t, schemaRefs, value)
 	if err != nil {
 		return value, err
