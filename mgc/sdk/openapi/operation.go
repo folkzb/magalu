@@ -545,16 +545,6 @@ func (o *operation) createHttpRequest(
 	return
 }
 
-func (o *operation) getValueFromResponseBody(value core.Value) (core.Value, error) {
-	if transform := o.getTransformResult(); transform != nil {
-		o.logger.Debugw("Starting result transforms", "result", value)
-		result, err := transform(value)
-		o.logger.Debugw("Finished result transforms")
-		return result, err
-	}
-	return value, nil
-}
-
 func (o *operation) getResponseSchema(resp *http.Response) *core.Schema {
 	responseSchemas := o.getResponseSchemas()
 	code := fmt.Sprint(resp.StatusCode)
@@ -599,6 +589,8 @@ func (o *operation) Execute(
 	parameters core.Parameters,
 	configs core.Configs,
 ) (result core.Result, err error) {
+	logger := o.logger.With("parameters", parameters, "configs", configs)
+	logger.Debug("execute")
 	// keep the original parameters, configs -- do not use the transformed versions!
 	// transformed versions will be new instances, so no worries changing the map pointer we reference here
 	source := core.ResultSource{
@@ -614,65 +606,97 @@ func (o *operation) Execute(
 
 	client := mgcHttpPkg.ClientFromContext(ctx)
 	if client == nil {
+		logger.Warn("could not get HTTP client from context")
 		return nil, fmt.Errorf("no HTTP client configured")
 	}
 
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
+		logger.Warn("could not get Auth from context")
 		return nil, fmt.Errorf("no Auth configured")
 	}
 
 	if err = parametersSchema.VisitJSON(parameters, openapi3.MultiErrors()); err != nil {
 		if isVisitJSONErrFatal(err) {
+			logger.Warnw("parameters are invalid", "error", err)
 			return nil, core.UsageError{Err: err}
 		} else {
-			o.logger.Warn(err)
+			logger.Warnw("parameters have non-critical errors", "error", err)
 		}
 	}
 	if o.transformParameters != nil {
-		o.logger.Debugw("Starting parameter transforms", "parameters", parameters)
+		logger.Debug("starting parameters transforms")
 		// Safe because transformParameters doesn't modify the input map
 		parameters, err = o.transformParameters(parameters)
 		if err != nil {
+			logger.Warnw("failed to transform parameters", "error", err)
 			return nil, err
 		}
-		o.logger.Debugw("Finished parameter transforms", "transformed parameters", parameters)
+		logger = logger.With("transformed parameters", parameters)
+		logger.Debug("finished parameters transforms")
 	}
 
 	if err = configsSchema.VisitJSON(configs, openapi3.MultiErrors()); err != nil {
 		if isVisitJSONErrFatal(err) {
+			logger.Warnw("configs are invalid", "error", err)
 			return nil, core.UsageError{Err: err}
 		} else {
-			o.logger.Warn(err)
+			logger.Warnw("configs have non-critical errors", "error", err)
 		}
 	}
 	if o.transformConfigs != nil {
-		o.logger.Debugw("Starting config transforms", "configs", configs)
+		logger.Debug("starting configs transforms")
 		// Safe because transformConfigs doesn't modify the input map
 		configs, err = o.transformConfigs(configs)
 		if err != nil {
+			logger.Warnw("failed to transform configs", "error", err)
 			return nil, err
 		}
-		o.logger.Debugw("Finished config transforms", "transformed configs", configs)
+		logger = logger.With("transformed configs", configs)
+		logger.Debug("finished configs transforms")
 	}
 
 	req, requestBody, err := o.createHttpRequest(ctx, auth, parameters, configs)
+	logger = logger.With("request", (*mgcHttpPkg.LogRequest)(req), "requestBody", requestBody)
 	if err != nil {
+		logger.Warnw("failed to create HTTP request", "error", err)
 		return nil, err
 	}
+	logger.Debug("created HTTP request, now execute it...")
 
 	resp, err := client.Do(req)
 	if err != nil {
+		logger.Warnw("failed to execute HTTP request", "error", err)
 		return nil, fmt.Errorf("HTTP request error: %w", err)
 	}
 
+	logger = logger.With("response", (*mgcHttpPkg.LogResponse)(resp))
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		logger.Debugw("failed to execute HTTP request", "error", err)
 		return nil, mgcHttpPkg.NewHttpErrorFromResponse(resp)
 	}
 
 	schema := o.getResponseSchema(resp)
-	result, err = mgcHttpPkg.NewHttpResult(source, schema, req, requestBody, resp, o.getValueFromResponseBody)
+	logger = logger.With("responseSchema", schema)
+	logger.Debug("executed HTTP request")
+	result, err = mgcHttpPkg.NewHttpResult(source, schema, req, requestBody, resp, func(result any) (core.Value, error) {
+		logger = logger.With("result", result)
+		if transform := o.getTransformResult(); transform != nil {
+			logger.Debug("starting result transforms")
+			// Safe because transform doesn't modify the input
+			result, err := transform(result)
+			if err != nil {
+				logger.Warnw("failed to transform result", "error", err)
+				return nil, err
+			}
+			logger = logger.With("transformed result", result)
+			logger.Debug("finished result transforms")
+			return result, err
+		}
+		return result, nil
+	})
 	if err != nil {
+		logger.Warnw("failed to build HTTP result", "error", err)
 		return nil, err
 	}
 	if o.outputFlag != "" {
@@ -680,6 +704,7 @@ func (o *operation) Execute(
 			result = core.NewResultWithOriginalSource(result.Source(), core.NewResultWithDefaultOutputOptions(resultWithValue, o.outputFlag))
 		}
 	}
+	logger.Debug("finished execution")
 	return
 }
 

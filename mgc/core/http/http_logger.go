@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -50,4 +51,29 @@ func (t *ClientLogger) logResponse(log *zap.SugaredLogger, req *http.Request, re
 	} else {
 		log.Debugw("response", "status", resp.Status)
 	}
+}
+
+type LogRequest http.Request
+
+func (r LogRequest) MarshalJSON() ([]byte, error) {
+	var url any
+	if r.URL != nil {
+		url = r.URL.String()
+	}
+	return json.Marshal(map[string]any{
+		"method":   r.Method,
+		"url":      url,
+		"protocol": r.Proto,
+		"headers":  LogHttpHeaders(r.Header),
+	})
+}
+
+type LogResponse http.Response
+
+func (r LogResponse) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"status":   r.Status,
+		"protocol": r.Proto,
+		"headers":  LogHttpHeaders(r.Header),
+	})
 }
