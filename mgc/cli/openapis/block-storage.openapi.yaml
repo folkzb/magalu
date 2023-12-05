@@ -1115,26 +1115,25 @@ tags:
     x-mgc-description: Block Storage Volume Resources
     x-mgc-name: volume
 servers:
--   url: https://api-block-storage{env}.{region}.jaxyendy.com
+-   url: https://{env}/{region}/volume
     variables:
         region:
             description: Region to reach the service
             default: br-ne-1
             enum:
             - br-ne-1
-            - br-ne-2
             - br-se-1
         env:
             description: Environment to use
-            default: ''
+            default: api2.magalu.cloud
             enum:
-            - ''
-            - .pre-prod
+            - api2.magalu.cloud
+            - api.pre-prod.jaxyendy.com
             x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod
-                    to: ''
+                    to: api2.magalu.cloud
                 -   from: pre-prod
-                    to: .pre-prod
+                    to: api.pre-prod.jaxyendy.com
 $id: https://block-storage.jaxyendy.com/openapi.json

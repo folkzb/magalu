@@ -12,8 +12,9 @@ OAPI_PATH=$ROOTDIR/$OAPIDIR
 CUSTOM_PATH=$ROOTDIR/$CUSTOM_DIR
 
 API_NAME=$1
-API_SPEC_FILE=$2
-SPEC_UID=$3
+API_ENDPOINT_NAME=$2
+API_SPEC_FILE=$3
+SPEC_UID=$4
 SPEC_FILE="$API_NAME.openapi.yaml"
 
 if ! test -f $CUSTOM_PATH/$SPEC_FILE; then
@@ -25,28 +26,27 @@ if ! test -f $CUSTOM_PATH/$SPEC_FILE; then
 # such as "x-mgc-name" or "x-mgc-description"
 
 servers:
--   url: https://api-$API_NAME{env}.{region}.jaxyendy.com
+-   url: https://{env}/{region}/$API_ENDPOINT_NAME
     variables:
         region:
             description: Region to reach the service
             default: br-ne-1
             enum:
             - br-ne-1
-            - br-ne-2
             - br-se-1
         env:
             description: Environment to use
             default: ''
             enum:
-            - ''
-            - .pre-prod
+            - api2.magalu.cloud
+            - api.pre-prod.jaxyendy.com
             x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod
-                    to: ''
+                    to: api2.magalu.cloud
                 -   from: pre-prod
-                    to: .pre-prod
+                    to: api.pre-prod.jaxyendy.com
 
 EOF
 fi

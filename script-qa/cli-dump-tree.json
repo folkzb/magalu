@@ -258,7 +258,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -322,7 +321,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -399,7 +397,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -454,7 +451,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -584,7 +580,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -670,7 +665,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -769,7 +763,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -951,7 +944,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -1033,7 +1025,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -1094,7 +1085,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -1283,7 +1273,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -1459,7 +1448,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -1660,7 +1648,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -1849,7 +1836,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -1924,7 +1910,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -1999,7 +1984,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -2074,7 +2058,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -2300,7 +2283,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -2376,7 +2358,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -2508,7 +2489,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -2791,7 +2771,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -2846,7 +2825,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -2994,7 +2972,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -3198,7 +3175,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -3287,7 +3263,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -3410,7 +3385,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -3528,7 +3502,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -3683,7 +3656,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -3757,7 +3729,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -3819,7 +3790,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -3974,7 +3944,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -4185,7 +4154,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -4316,7 +4284,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -4371,7 +4338,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -4760,7 +4726,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -5188,7 +5153,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -5591,7 +5555,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -5662,7 +5625,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -6044,7 +6006,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -6426,7 +6387,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -6841,7 +6801,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -6916,7 +6875,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -6971,7 +6929,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -7167,7 +7124,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -7386,7 +7342,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -7588,7 +7543,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -7784,7 +7738,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -8719,7 +8672,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -8952,7 +8904,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -9006,7 +8957,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -9702,7 +9652,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -9756,7 +9705,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -9915,7 +9863,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -10134,7 +10081,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -10215,7 +10161,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -10600,7 +10545,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -10660,7 +10604,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -10954,7 +10897,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -11255,7 +11197,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -11628,7 +11569,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -11973,7 +11913,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -12039,7 +11978,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -12094,7 +12032,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -12191,7 +12128,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -12244,7 +12180,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -12322,7 +12257,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -12377,7 +12311,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -12560,7 +12493,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -12756,7 +12688,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -12858,7 +12789,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13202,7 +13132,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13257,7 +13186,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13310,7 +13238,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13365,7 +13292,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13466,7 +13392,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13592,7 +13517,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13667,7 +13591,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13808,7 +13731,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -13919,7 +13841,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -13972,7 +13893,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -14116,7 +14036,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -14234,7 +14153,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -14415,7 +14333,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -14493,7 +14410,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -14549,7 +14465,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -14602,7 +14517,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -14665,7 +14579,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -14906,7 +14819,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -15064,7 +14976,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -15157,7 +15068,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -15332,7 +15242,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -15385,7 +15294,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -15540,7 +15448,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -15622,7 +15529,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -15716,7 +15622,6 @@
            "description": "Region to reach the service",
            "enum": [
             "br-ne-1",
-            "br-ne-2",
             "br-se-1"
            ],
            "type": "string"
@@ -15864,7 +15769,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -15932,7 +15836,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -15986,7 +15889,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -16039,7 +15941,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -16162,7 +16063,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -16305,7 +16205,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -17287,7 +17186,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -17427,7 +17325,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -17670,7 +17567,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -17741,7 +17637,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -17935,7 +17830,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18191,7 +18085,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18245,7 +18138,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18305,7 +18197,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18400,7 +18291,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18454,7 +18344,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18508,7 +18397,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18570,7 +18458,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18696,7 +18583,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18803,7 +18689,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -18869,7 +18754,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -19101,7 +18985,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"
@@ -19173,7 +19056,6 @@
          "description": "Region to reach the service",
          "enum": [
           "br-ne-1",
-          "br-ne-2",
           "br-se-1"
          ],
          "type": "string"

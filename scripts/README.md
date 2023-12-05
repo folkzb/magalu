@@ -101,13 +101,13 @@ If no customization file exists for the current spec, a new one will be created.
 Usage:
 
 ```shell
-./scripts/add_specs.sh $API_NAME $API_SPEC_FILE $SPEC_UID
+./scripts/add_specs.sh $API_NAME $API_ENDPOINT_NAME $API_SPEC_FILE $SPEC_UID
 ```
 
 Example:
 
 ```shell
-./scripts/add_specs.sh block-storage ./block-storage.openapi.json https://block-storage.jaxyendy.com/openapi.json
+./scripts/add_specs.sh block-storage volume ./block-storage.openapi.json https://block-storage.jaxyendy.com/openapi.json
 ```
 
 ### [sync_oapi.py](./sync_oapi.py)

@@ -5,28 +5,27 @@
 # such as "x-mgc-name" or "x-mgc-description"
 
 servers:
--   url: https://api-vpc{env}.{region}.jaxyendy.com
+-   url: https://{env}/{region}/network
     variables:
         region:
             description: Region to reach the service
             default: br-ne-1
             enum:
-                - br-ne-1
-                - br-ne-2
-                - br-se-1
+            - br-ne-1
+            - br-se-1
         env:
             description: Environment to use
-            default: ''
+            default: api2.magalu.cloud
             enum:
-            - ''
-            - .pre-prod
+            - api2.magalu.cloud
+            - api.pre-prod.jaxyendy.com
             x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod
-                    to: ''
+                    to: api2.magalu.cloud
                 -   from: pre-prod
-                    to: .pre-prod
+                    to: api.pre-prod.jaxyendy.com
 
 paths:
   /v0/vpcs/{vpc_id}/ports:

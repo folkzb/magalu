@@ -31,7 +31,7 @@ go build -tags "embed" -ldflags "-s -w" -o mgc
 Run [add_specs.sh](../../scripts/README.md#add_specssh):
 
 ```sh
-scripts/add_specs.sh <API_NAME> <API_URL> <CANONICAL_URL>
+scripts/add_specs.sh <API_NAME> <API_ENDPOINT_NAME> <API_URL> <CANONICAL_URL>
 ```
 It will start a process that uses the following scripts:
 
