@@ -317,20 +317,16 @@ func (cf *cmdFlags) addExtraFlag(f *flag.Flag) {
 // flags that can be positional will be loaded from `argValues`,
 // flags that were not set but could be set via configuration, will
 // be loaded from `config`.
-func (cf *cmdFlags) getValues(config *mgcSdk.Config, argValues []string) (
-	parameters core.Parameters,
-	configs core.Configs,
-	err error,
-) {
-	parameters = core.Parameters{}
-	configs = core.Configs{}
+func (cf *cmdFlags) getValues(config *mgcSdk.Config, argValues []string) (core.Parameters, core.Configs, error) {
+	parameters := core.Parameters{}
+	configs := core.Configs{}
 
 	var loadErrors utils.MultiError
 	var missingRequiredFlags requiredFlagsError
 
 	for _, f := range cf.schemaFlags {
 		var value any
-		value, err = schema_flags.GetFlagValue(f, config)
+		value, err := schema_flags.GetFlagValue(f, config)
 		logger().Debugw("parsed flag", "flag", f.Name, "desc", f.Value.(schema_flags.SchemaFlagValue).Desc(), "value", value, "error", err)
 		if err == schema_flags.ErrNoFlagValue {
 			continue
@@ -338,7 +334,7 @@ func (cf *cmdFlags) getValues(config *mgcSdk.Config, argValues []string) (
 			missingRequiredFlags = append(missingRequiredFlags, f)
 		} else if err == schema_flags.ErrWantHelp {
 			showFlagHelp(f)
-			return
+			return nil, nil, err
 		} else if err != nil {
 			loadErrors = append(loadErrors, &flagError{Flag: f, Err: err})
 		} else {
@@ -356,10 +352,10 @@ func (cf *cmdFlags) getValues(config *mgcSdk.Config, argValues []string) (
 	}
 
 	if len(loadErrors) > 0 {
-		err = core.UsageError{Err: loadErrors}
+		return nil, nil, core.UsageError{Err: loadErrors}
 	}
 
-	return
+	return parameters, configs, nil
 }
 
 func newCmdFlags(
