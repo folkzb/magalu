@@ -86,6 +86,23 @@ func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *m
 	}
 }
 
+func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	isComputed := r.create.ResultSchema().Properties[string(mgcName)] != nil
+
+	// All Delete parameters need to be optional, since they're not returned by the server when creating the resources,
+	// and thus would produce "inconsistent results" in Terraform. Since we calculate the 'Update' parameters first,
+	// all strictly necessary parameters for deletion (like the resource ID) will already be computed correctly (in the Update
+	// parameters)
+	return attributeModifiers{
+		isRequired:                 false,
+		isOptional:                 true,
+		isComputed:                 isComputed,
+		useStateForUnknown:         true,
+		requiresReplaceWhenChanged: false,
+		getChildModifiers:          getInputChildModifiers,
+	}
+}
+
 func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics {
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, r.name)
 	d := diag.Diagnostics{}
@@ -120,7 +137,7 @@ func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics 
 	err = addMgcSchemaAttributes(
 		input,
 		r.delete.ParametersSchema(),
-		r.getUpdateParamsModifiers,
+		r.getDeleteParamsModifiers,
 		ctx,
 	)
 	if err != nil {
