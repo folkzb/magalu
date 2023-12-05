@@ -547,7 +547,10 @@ func (o *operation) createHttpRequest(
 
 func (o *operation) getValueFromResponseBody(value core.Value) (core.Value, error) {
 	if transform := o.getTransformResult(); transform != nil {
-		return transform(value)
+		o.logger.Debugw("Starting result transforms", "result", value)
+		result, err := transform(value)
+		o.logger.Debugw("Finished result transforms")
+		return result, err
 	}
 	return value, nil
 }
