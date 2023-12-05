@@ -3,9 +3,13 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"os"
+	"strings"
 
 	"go.uber.org/zap"
+	mgcLoggerPkg "magalu.cloud/core/logger"
 )
 
 type ClientLogger struct {
@@ -18,15 +22,79 @@ func NewDefaultClientLogger(transport http.RoundTripper) *ClientLogger {
 	}
 }
 
+// 1 or "progressive" = log progressive;
+// 2 or "final" = accumulates it all and logs at the end.
+const logPayloadEnvVar = "MGC_SDK_LOG_HTTP_PAYLOAD"
+
+type payloadLoggerFn func(
+	parent io.Reader,
+	message string,
+	logger *zap.SugaredLogger,
+) io.ReadCloser
+
+var payloadLogger *payloadLoggerFn
+
+func getPayloadLogger() payloadLoggerFn {
+	if payloadLogger == nil {
+		payloadLogger = new(payloadLoggerFn)
+		switch value := strings.ToLower(os.Getenv(logPayloadEnvVar)); value {
+		case "", "0":
+			break
+
+		case "1", "progressive":
+			*payloadLogger = func(parent io.Reader, message string, logger *zap.SugaredLogger) io.ReadCloser {
+				return mgcLoggerPkg.NewProgressiveLoggerReader(parent, func(readData mgcLoggerPkg.LogReadData) {
+					logger.Debugw(message, "body", readData)
+				})
+			}
+
+		case "2", "final":
+			*payloadLogger = func(parent io.Reader, message string, logger *zap.SugaredLogger) io.ReadCloser {
+				return mgcLoggerPkg.NewFinalLoggerReader(parent, func(readData mgcLoggerPkg.LogReadData) {
+					logger.Debugw(message, "body", readData)
+				})
+			}
+
+		default:
+			logger().Warnw(logPayloadEnvVar+": unknown value", "value", value)
+		}
+	}
+	return *payloadLogger
+}
+
 func (t *ClientLogger) RoundTrip(req *http.Request) (*http.Response, error) {
 	log := logger().With("method", req.Method, "url", req.URL, "protocol", req.Proto)
 	t.logRequest(log, req)
+	if req.Body != nil {
+		if payloadLogger := getPayloadLogger(); payloadLogger != nil {
+			newReq := *req
+			newReq.Body = payloadLogger(req.Body, "read request body", log)
+			if req.GetBody != nil {
+				getBody := req.GetBody
+				newReq.GetBody = func() (io.ReadCloser, error) {
+					r, err := getBody()
+					if err != nil {
+						return r, err
+					}
+					return payloadLogger(r, "read (new) request body", log), nil
+				}
+			}
+			req = &newReq
+		}
+	}
 
 	transport := t.Transport
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
 	resp, err := transport.RoundTrip(req)
+	if resp.Body != nil {
+		if payloadLogger := getPayloadLogger(); payloadLogger != nil {
+			newResp := *resp
+			newResp.Body = payloadLogger(resp.Body, "read response body", log)
+			resp = &newResp
+		}
+	}
 
 	t.logResponse(log, req, resp, err)
 

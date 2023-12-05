@@ -244,7 +244,11 @@ configuration in ```MGC_LOGGING``` first.
 > HTTP requests and responses are logged using the `debug` level and the
 > `magalu.cloud/core/http` namespace. The sensitive bits such as
 > `Authorization` headers are redacted. If you want to see the sensitive
-> parts, export `MGC_SDK_LOG_SENSITIVE=1`.
+> parts, export `MGC_SDK_LOG_SENSITIVE=1`. To log the actual payloads
+> to be sent and received, one must explicitly use
+> `MGC_SDK_LOG_HTTP_PAYLOAD=progressive` (log as soon as data is received)
+> or
+> `MGC_SDK_LOG_HTTP_PAYLOAD=final` (accumulates all data and log at the end, when it's closed).
 
 ## Output formats
 
