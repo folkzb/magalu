@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -27,16 +28,40 @@ type tfStateHandler interface {
 	SplitAttributes() []splitMgcAttribute
 }
 
+func missingSchemaKeysInMap(m map[string]core.Value, s *mgcSchemaPkg.Schema, prefix string) (missing []string) {
+	for propName, propSchemaRef := range s.Properties {
+		var key string
+		if prefix == "" {
+			key = propName
+		} else {
+			key = prefix + "." + propName
+		}
+
+		prop, inMap := m[propName]
+		if !inMap && slices.Contains(s.Required, propName) {
+			missing = append(missing, key)
+			continue
+		}
+
+		propSchema := propSchemaRef.Value
+
+		if subMap, ok := prop.(map[string]any); ok && len(propSchema.Properties) > 0 {
+			missing = append(missing, missingSchemaKeysInMap(subMap, (*mgcSchemaPkg.Schema)(propSchema), key)...)
+		}
+	}
+	return
+}
+
 // Try to read attributes from both Input and Output to fill a map that matches the 'mgcSchema'. If any values are missing in the end, errors are diagnosed
 func readMgcMap(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	result := readMgcOutputMap(handler, mgcSchema, ctx, tfState, diag)
-	input := readMgcInputMap(handler, mgcSchema, ctx, tfState, diag)
-	maps.Copy(result, input)
+	result := readMgcInputMap(handler, mgcSchema, ctx, tfState, diag)
+	output := readMgcOutputMap(handler, mgcSchema, ctx, tfState, diag)
+	maps.Copy(result, output)
 
-	if err := mgcSchema.VisitJSON(result); err != nil {
+	if missingKeys := missingSchemaKeysInMap(result, mgcSchema, ""); len(missingKeys) > 0 {
 		diag.AddError(
 			"unable to read MgcMap from Input and Output Terraform attributes",
-			fmt.Sprintf("Reading Input and Output attributes into MgcMap didn't match requested schema. Error: %v", err),
+			fmt.Sprintf("Reading Input and Output attributes into MgcMap didn't match requested schema. Map: %#v, Schema: %#v, Missing Keys: %v", result, mgcSchema, missingKeys),
 		)
 	}
 
