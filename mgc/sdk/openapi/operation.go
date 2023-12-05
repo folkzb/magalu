@@ -197,7 +197,7 @@ func (o *operation) forEachSuccessResponse(cb cbForEachSuccessResponse) (finishe
 
 func (o *operation) initResultSchema() {
 	if o.resultSchema == nil {
-		rootSchema := mgcSchemaPkg.NewAnyOfSchema()
+		o.resultSchema = mgcSchemaPkg.NewAnyOfSchema()
 		o.responseSchemas = make(map[string]*core.Schema)
 
 		_, _ = o.forEachSuccessResponse(func(code string, response *openapi3.Response) (bool, error) {
@@ -207,29 +207,32 @@ func (o *operation) initResultSchema() {
 				return true, nil
 			}
 
-			rootSchema.AnyOf = append(rootSchema.AnyOf, openapi3.NewSchemaRef(content.Schema.Ref, content.Schema.Value))
+			o.resultSchema.AnyOf = append(o.resultSchema.AnyOf, openapi3.NewSchemaRef(content.Schema.Ref, content.Schema.Value))
 			o.responseSchemas[code] = (*core.Schema)(content.Schema.Value)
 			return true, nil
 		})
 
-		switch len(rootSchema.AnyOf) {
+		switch len(o.resultSchema.AnyOf) {
 		default:
 		case 0:
-			rootSchema = mgcSchemaPkg.NewNullSchema()
+			o.resultSchema = mgcSchemaPkg.NewNullSchema()
 		case 1:
-			rootSchema = (*core.Schema)(rootSchema.AnyOf[0].Value)
+			o.resultSchema = (*core.Schema)(o.resultSchema.AnyOf[0].Value)
 		}
 
-		var err error
-		var transformSchema *core.Schema
-		o.transformResult, transformSchema, err = transform.New[any](o.logger, rootSchema, o.extensionPrefix)
-		if err != nil {
-			o.logger.Warnw("error while initializing result schema", "error", err, "rootSchema", rootSchema)
-		}
-		if simplifiedResult, err := mgcSchemaPkg.SimplifySchema(transformSchema); err == nil {
-			o.resultSchema = simplifiedResult
+		simplifiedResultSchema, err := mgcSchemaPkg.SimplifySchema(o.resultSchema)
+		if err == nil {
+			o.resultSchema = simplifiedResultSchema
 		} else {
-			o.logger.Warnw("error while simplifying result schema", "error", err, "transformSchema", transformSchema)
+			o.logger.Warnw("error while simplifying result schema", "error", err, "resultSchema", o.resultSchema)
+		}
+
+		transformResult, transformedSchema, err := transform.New[any](o.logger, o.resultSchema, o.extensionPrefix)
+		if err == nil {
+			o.resultSchema = transformedSchema
+			o.transformResult = transformResult
+		} else {
+			o.logger.Warnw("error while transforming result schema", "error", err, "resultSchema", o.resultSchema)
 		}
 	}
 }
