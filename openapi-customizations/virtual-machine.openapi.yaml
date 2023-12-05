@@ -45,7 +45,7 @@ paths:
                             parameters:
                                 id: $response.body#/id
                         retype:
-                            description: Rename a Virtual Machine instance
+                            description: Retype a Virtual Machine instance
                             operationId: retype_instance_v1_instances__id__retype_post
                             parameters:
                                 id: $response.body#/id
@@ -90,7 +90,7 @@ paths:
                             parameters:
                                 id: $request.path.id
                         retype:
-                            description: Rename a Virtual Machine instance
+                            description: Retype a Virtual Machine instance
                             operationId: retype_instance_v1_instances__id__retype_post
                             parameters:
                                 id: $request.path.id
@@ -101,6 +101,246 @@ paths:
                                 id: $request.path.id
         delete:
             x-mgc-description: Delete a Virtual Machine instance
+    /v1/instances/{id}/reboot:
+        post:
+            responses:
+                '204':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
+                            parameters:
+                                id: $response.body#/id
+                        start:
+                            description: Start a Virtual Machine instance
+                            operationId: start_instance_v1_instances__id__start_post
+                            parameters:
+                                id: $request.path.id
+                        stop:
+                            description: Stop a Virtual Machine instance
+                            operationId: stop_instance_v1_instances__id__stop_post
+                            parameters:
+                                id: $request.path.id
+                        suspend:
+                            description: Suspend a Virtual Machine instance
+                            operationId: suspend_instance_v1_instances__id__suspend_post
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            description: Rename a Virtual Machine instance
+                            operationId: update_instance_name_v1_instances__id__rename_patch
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            description: Retype a Virtual Machine instance
+                            operationId: retype_instance_v1_instances__id__retype_post
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+    /v1/instances/{id}/start:
+        post:
+            responses:
+                '204':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
+                            parameters:
+                                id: $response.body#/id
+                        reboot:
+                            description: Reboot a Virtual Machine instance
+                            operationId: reboot_instance_v1_instances__id__reboot_post
+                            parameters:
+                                id: $request.path.id
+                        stop:
+                            description: Stop a Virtual Machine instance
+                            operationId: stop_instance_v1_instances__id__stop_post
+                            parameters:
+                                id: $request.path.id
+                        suspend:
+                            description: Suspend a Virtual Machine instance
+                            operationId: suspend_instance_v1_instances__id__suspend_post
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            description: Rename a Virtual Machine instance
+                            operationId: update_instance_name_v1_instances__id__rename_patch
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            description: Retype a Virtual Machine instance
+                            operationId: retype_instance_v1_instances__id__retype_post
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+    /v1/instances/{id}/stop:
+        post:
+            responses:
+                '204':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
+                            parameters:
+                                id: $response.body#/id
+                        reboot:
+                            description: Reboot a Virtual Machine instance
+                            operationId: reboot_instance_v1_instances__id__reboot_post
+                            parameters:
+                                id: $request.path.id
+                        start:
+                            description: Start a Virtual Machine instance
+                            operationId: start_instance_v1_instances__id__start_post
+                            parameters:
+                                id: $request.path.id
+                        suspend:
+                            description: Suspend a Virtual Machine instance
+                            operationId: suspend_instance_v1_instances__id__suspend_post
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            description: Rename a Virtual Machine instance
+                            operationId: update_instance_name_v1_instances__id__rename_patch
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            description: Retype a Virtual Machine instance
+                            operationId: retype_instance_v1_instances__id__retype_post
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+    /v1/instances/{id}/suspend:
+        post:
+            responses:
+                '204':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
+                            parameters:
+                                id: $response.body#/id
+                        reboot:
+                            description: Reboot a Virtual Machine instance
+                            operationId: reboot_instance_v1_instances__id__reboot_post
+                            parameters:
+                                id: $request.path.id
+                        start:
+                            description: Start a Virtual Machine instance
+                            operationId: start_instance_v1_instances__id__start_post
+                            parameters:
+                                id: $request.path.id
+                        stop:
+                            description: Stop a Virtual Machine instance
+                            operationId: stop_instance_v1_instances__id__stop_post
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            description: Rename a Virtual Machine instance
+                            operationId: update_instance_name_v1_instances__id__rename_patch
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            description: Retype a Virtual Machine instance
+                            operationId: retype_instance_v1_instances__id__retype_post
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+    /v1/instances/{id}/rename:
+        patch:
+            responses:
+                '204':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
+                            parameters:
+                                id: $response.body#/id
+                        reboot:
+                            description: Reboot a Virtual Machine instance
+                            operationId: reboot_instance_v1_instances__id__reboot_post
+                            parameters:
+                                id: $request.path.id
+                        start:
+                            description: Start a Virtual Machine instance
+                            operationId: start_instance_v1_instances__id__start_post
+                            parameters:
+                                id: $request.path.id
+                        stop:
+                            description: Stop a Virtual Machine instance
+                            operationId: stop_instance_v1_instances__id__stop_post
+                            parameters:
+                                id: $request.path.id
+                        suspend:
+                            description: Suspend a Virtual Machine instance
+                            operationId: suspend_instance_v1_instances__id__suspend_post
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            description: Retype a Virtual Machine instance
+                            operationId: retype_instance_v1_instances__id__retype_post
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+    /v1/instances/{id}/retype:
+        post:
+            responses:
+                '204':
+                    links:
+                        read:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
+                            parameters:
+                                id: $response.body#/id
+                        reboot:
+                            description: Reboot a Virtual Machine instance
+                            operationId: reboot_instance_v1_instances__id__reboot_post
+                            parameters:
+                                id: $request.path.id
+                        start:
+                            description: Start a Virtual Machine instance
+                            operationId: start_instance_v1_instances__id__start_post
+                            parameters:
+                                id: $request.path.id
+                        stop:
+                            description: Stop a Virtual Machine instance
+                            operationId: stop_instance_v1_instances__id__stop_post
+                            parameters:
+                                id: $request.path.id
+                        suspend:
+                            description: Suspend a Virtual Machine instance
+                            operationId: suspend_instance_v1_instances__id__suspend_post
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            description: Rename a Virtual Machine instance
+                            operationId: update_instance_name_v1_instances__id__rename_patch
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            description: Delete Virtual Machine instance
+                            operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
     /v1/snapshots:
         post:
             responses:

@@ -16,11 +16,12 @@ Usage:
   ./cli virtual-machine instances retype [id] [flags]
 
 Flags:
-  -h, --help                  help for retype
-      --id uuid4              Id
-      --machine-type object   Machine Type
-                              Use --machine-type=help for more details
-  -v, --version               version for retype
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for retype
+      --id uuid4                      Id
+      --machine-type object           Machine Type
+                                      Use --machine-type=help for more details
+  -v, --version                       version for retype
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

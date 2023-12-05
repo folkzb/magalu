@@ -8,10 +8,11 @@ Usage:
   ./cli virtual-machine instances rename [id] [flags]
 
 Flags:
-  -h, --help          help for rename
-      --id string     Id
-      --name string   Name (between 1 and 225 characters)
-  -v, --version       version for rename
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for rename
+      --id string                     Id
+      --name string                   Name (between 1 and 225 characters)
+  -v, --version                       version for rename
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
