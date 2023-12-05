@@ -42,6 +42,12 @@ func transformValue(logger *zap.SugaredLogger, schema *core.Schema, transformati
 func transformArrayValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, itemSchema *core.Schema, value any) (any, error) {
 	valueSlice, ok := value.([]any)
 	if !ok {
+		if value == nil {
+			if schema.Nullable {
+				return value, nil
+			}
+			return value, fmt.Errorf("received null for non-nullable schema: %#v", schema)
+		}
 		return value, fmt.Errorf("expected []any, got %T %#v", value, value)
 	}
 
@@ -61,6 +67,12 @@ func transformArrayValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, i
 func transformObjectValue(t mgcSchemaPkg.Transformer[any], schema *core.Schema, value any) (any, error) {
 	valueMap, ok := value.(map[string]any)
 	if !ok {
+		if value == nil {
+			if schema.Nullable {
+				return value, nil
+			}
+			return value, fmt.Errorf("received null for non-nullable schema: %#v", schema)
+		}
 		return value, fmt.Errorf("expected map[string]any, got %T %#v", value, value)
 	}
 	cm, err := mgcSchemaPkg.TransformObjectProperties(
