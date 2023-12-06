@@ -13,22 +13,40 @@ import (
 	mgcSdk "magalu.cloud/sdk"
 )
 
-type schemaConstraintFiller func(s *mgcSdk.Schema, dst *[]string)
-
-// Don't use in-memory map because of initialization cycle due to array filler recursion
-func getSchemaConstraintFiller(t string) (schemaConstraintFiller, bool) {
-	switch t {
-	case "string":
-		return addStringConstraints, true
-	case "integer", "number":
-		return addNumberConstraints, true
-	case "array":
-		return addArrayConstraints, true
-	case "object":
-		return addObjectConstraints, true
+func addXOfSchemaConstraints(message string, refs mgcSchemaPkg.SchemaRefs, dst *[]string) {
+	constraints := make([]string, 0, len(refs))
+	for _, ref := range refs {
+		if ref == nil || ref.Value == nil {
+			continue
+		}
+		if desc := getDescriptionConstraints((*mgcSchemaPkg.Schema)(ref.Value)); desc != "" {
+			constraints = append(constraints, desc)
+		}
 	}
 
-	return nil, false
+	*dst = append(*dst, message+": "+formatAlternatives("%s", "%s or %s", constraints))
+}
+
+func addSchemaConstraints(s *mgcSchemaPkg.Schema, dst *[]string) {
+	if len(s.OneOf) > 0 {
+		addXOfSchemaConstraints("exactly one of", s.OneOf, dst)
+		return
+	}
+	if len(s.AnyOf) > 0 {
+		addXOfSchemaConstraints("at least one of", s.AnyOf, dst)
+		return
+	}
+
+	switch s.Type {
+	case "string":
+		addStringConstraints(s, dst)
+	case "integer", "number":
+		addNumberConstraints(s, dst)
+	case "array":
+		addArrayConstraints(s, dst)
+	case "object":
+		addObjectConstraints(s, dst)
+	}
 }
 
 func addStringConstraints(s *mgcSdk.Schema, dst *[]string) {
@@ -154,12 +172,11 @@ func formatAlternatives(oneFmt string, multipleFmt string, asStrings []string) s
 
 func getDescriptionConstraints(s *mgcSdk.Schema) string {
 	constraints := []string{}
-
-	if filler, ok := getSchemaConstraintFiller(s.Type); ok {
-		filler(s, &constraints)
+	addEnumConstraint(s, &constraints)
+	if len(constraints) == 0 {
+		addSchemaConstraints(s, &constraints)
 	}
 
-	addEnumConstraint(s, &constraints)
 	return formatAlternatives("%s", "%s and %s", constraints)
 }
 

@@ -19,7 +19,7 @@ Flags:
   -h, --help                          help for create
       --name string                   Name (min character count: 1)
   -v, --version                       version for create
-      --virtual-machine object        Virtual Machine
+      --virtual-machine object        Virtual Machine (at least one of: single property: id or single property: name)
                                       Use --virtual-machine=help for more details
 
 Global Flags:

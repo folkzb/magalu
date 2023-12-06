@@ -10,10 +10,10 @@ Flags:
       --availability-zone string      Availability Zone (min character count: 1)
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for create
-      --image object                  Image
+      --image object                  Image (at least one of: single property: id or single property: name)
                                       Use --image=help for more details
       --key-name string               Key Name
-      --machine-type object           Machine Type
+      --machine-type object           Machine Type (at least one of: single property: id or single property: name)
                                       Use --machine-type=help for more details
       --name string                   Name (between 1 and 225 characters)
       --network object                Network (properties: associate_public_ip and vpc)

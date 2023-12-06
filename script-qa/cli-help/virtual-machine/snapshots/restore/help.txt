@@ -21,7 +21,7 @@ Flags:
   -h, --help                       help for restore
       --id string                  Id
       --key-name string            Key Name
-      --machine-type object        Machine Type
+      --machine-type object        Machine Type (at least one of: single property: id or single property: name)
                                    Use --machine-type=help for more details
       --name string                Name (between 1 and 225 characters)
       --network object             Network (properties: associate_public_ip and vpc)
