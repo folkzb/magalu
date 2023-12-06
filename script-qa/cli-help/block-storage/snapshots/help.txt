@@ -18,3 +18,4 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
 
 Use "./cli block-storage snapshots [command] --help" for more information about a command.
+

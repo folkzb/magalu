@@ -11,6 +11,7 @@ require (
 
 require (
 	github.com/erikgeiser/promptkit v0.9.0
+	github.com/fatih/color v1.13.0
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/invopop/yaml v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.4.8
@@ -42,6 +43,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect

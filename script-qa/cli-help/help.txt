@@ -27,3 +27,4 @@ Flags:
   -v, --version                version for ./cli
 
 Use "./cli [command] --help" for more information about a command.
+

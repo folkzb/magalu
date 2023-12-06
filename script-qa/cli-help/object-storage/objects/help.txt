@@ -19,3 +19,4 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
 
 Use "./cli object-storage objects [command] --help" for more information about a command.
+

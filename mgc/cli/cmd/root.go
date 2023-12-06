@@ -47,6 +47,7 @@ can generate a command line on-demand for Rest manipulation`,
 	})
 	rootCmd.SetHelpCommandGroupID("other")
 	rootCmd.SetCompletionCommandGroupID("other")
+	configureOutputColor(rootCmd, nil)
 	addOutputFlag(rootCmd)
 	addLogFilterFlag(rootCmd, getLogFilterConfig(sdk))
 	addTimeoutFlag(rootCmd)
