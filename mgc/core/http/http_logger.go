@@ -88,7 +88,7 @@ func (t *ClientLogger) RoundTrip(req *http.Request) (*http.Response, error) {
 		transport = http.DefaultTransport
 	}
 	resp, err := transport.RoundTrip(req)
-	if resp.Body != nil {
+	if resp != nil && resp.Body != nil {
 		if payloadLogger := getPayloadLogger(); payloadLogger != nil {
 			newResp := *resp
 			newResp.Body = payloadLogger(resp.Body, "read response body", log)
