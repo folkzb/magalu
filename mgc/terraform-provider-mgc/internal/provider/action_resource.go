@@ -39,6 +39,10 @@ func (r *MgcActionResource) Name() string {
 	return r.name
 }
 
+func (r *MgcActionResource) Description() string {
+	return r.name
+}
+
 func (r *MgcActionResource) getReadParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	return attributeModifiers{
 		isRequired:                 true,
@@ -63,102 +67,28 @@ func (r *MgcActionResource) getDeleteParamsModifiers(ctx context.Context, mgcSch
 	}
 }
 
-func (r *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics {
-	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, actionResourceNameField, r.name)
-	d := diag.Diagnostics{}
-	if len(r.inputAttrInfoMap) != 0 {
-		return d
+func (r *MgcActionResource) InputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap {
+	if r.inputAttrInfoMap == nil {
+		r.inputAttrInfoMap = generateResAttrInfoMap(ctx, r.name,
+			[]resAttrInfoGenMetadata{
+				{r.create.AdditionalParametersSchema(), r.getReadParamsModifiers},
+				{r.readOwner.ParametersSchema(), r.getReadParamsModifiers},
+				{r.delete.AdditionalParametersSchema(), r.getDeleteParamsModifiers},
+			}, d,
+		)
 	}
-	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading input attributes")
-
-	r.inputAttrInfoMap = resAttrInfoMap{}
-
-	err := addMgcSchemaAttributes(
-		r.inputAttrInfoMap,
-		r.create.AdditionalParametersSchema(),
-		r.getReadParamsModifiers,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF input attributes", err.Error())
-		return d
-	}
-
-	err = addMgcSchemaAttributes(
-		r.inputAttrInfoMap,
-		r.readOwner.ParametersSchema(),
-		r.getReadParamsModifiers,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF input attributes", err.Error())
-		return d
-	}
-
-	err = addMgcSchemaAttributes(
-		r.inputAttrInfoMap,
-		r.read.AdditionalParametersSchema(),
-		r.getReadParamsModifiers,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF input attributes", err.Error())
-		return d
-	}
-
-	err = addMgcSchemaAttributes(
-		r.inputAttrInfoMap,
-		r.delete.AdditionalParametersSchema(),
-		r.getDeleteParamsModifiers,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF input attributes", err.Error())
-		return d
-	}
-
-	return d
-}
-
-func (r *MgcActionResource) ReadOutputAttributes(ctx context.Context) diag.Diagnostics {
-	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, actionResourceNameField, r.name)
-	d := diag.Diagnostics{}
-	if len(r.outputAttrInfoMap) != 0 {
-		return d
-	}
-	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading output attributes")
-
-	r.outputAttrInfoMap = resAttrInfoMap{}
-	err := addMgcSchemaAttributes(
-		r.outputAttrInfoMap,
-		r.create.ResultSchema(),
-		getResultModifiers,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF output attributes", err.Error())
-		return d
-	}
-
-	err = addMgcSchemaAttributes(
-		r.outputAttrInfoMap,
-		r.read.ResultSchema(),
-		getResultModifiers,
-		ctx,
-	)
-	if err != nil {
-		d.AddError("could not create TF output attributes", err.Error())
-		return d
-	}
-
-	return d
-}
-
-func (r *MgcActionResource) InputAttributes() resAttrInfoMap {
 	return r.inputAttrInfoMap
 }
 
-func (r *MgcActionResource) OutputAttributes() resAttrInfoMap {
+func (r *MgcActionResource) OutputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap {
+	if r.outputAttrInfoMap == nil {
+		r.outputAttrInfoMap = generateResAttrInfoMap(ctx, r.name,
+			[]resAttrInfoGenMetadata{
+				{r.create.ResultSchema(), getResultModifiers},
+				{r.read.ResultSchema(), getResultModifiers},
+			}, d,
+		)
+	}
 	return r.outputAttrInfoMap
 }
 
@@ -198,27 +128,11 @@ func (r *MgcActionResource) Metadata(ctx context.Context, req resource.MetadataR
 }
 
 func (r *MgcActionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "schema")
-	ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
-	tflog.Debug(ctx, "generating schema")
-
 	if r.tfschema == nil {
-		tfs, d := generateTFSchema(r, ctx)
-		resp.Diagnostics.Append(d...)
-		if d.HasError() {
-			return
-		}
-
-		tfs.MarkdownDescription = r.name
+		ctx = tflog.SetField(ctx, actionResourceNameField, r.name)
+		tfs := generateTFSchema(r, ctx, &resp.Diagnostics)
 		r.tfschema = &tfs
 	}
-
-	attributes := []string{}
-	for attrName := range (*r.tfschema).Attributes {
-		attributes = append(attributes, attrName)
-	}
-
-	tflog.Debug(ctx, "generated tf schema", map[string]any{"attributes": attributes})
 	resp.Schema = *r.tfschema
 }
 

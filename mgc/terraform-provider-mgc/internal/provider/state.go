@@ -23,8 +23,8 @@ type tfStateHandler interface {
 	TFSchema() *schema.Schema
 	ReadResultSchema() *mgcSdk.Schema
 
-	InputAttributes() resAttrInfoMap
-	OutputAttributes() resAttrInfoMap
+	InputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap
+	OutputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap
 	SplitAttributes() []splitResAttribute
 }
 
@@ -71,23 +71,23 @@ func readMgcMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schem
 // If the Input Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
 func readMgcInputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
 	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
-	return loader.readMgcMap(mgcSchema, handler.InputAttributes(), tfState)
+	return loader.readMgcMap(mgcSchema, handler.InputAttrInfoMap(ctx, diag), tfState)
 }
 
 // If the Output Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
 func readMgcOutputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
 	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
-	return loader.readMgcMap(mgcSchema, handler.OutputAttributes(), tfState)
+	return loader.readMgcMap(mgcSchema, handler.OutputAttrInfoMap(ctx, diag), tfState)
 }
 
 func applyMgcInputMapToTFState(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
 	applier := newTFStateApplier(ctx, diag, handler.TFSchema())
-	applier.applyMgcMap(mgcMap, handler.InputAttributes(), ctx, tfState, path.Empty())
+	applier.applyMgcMap(mgcMap, handler.InputAttrInfoMap(ctx, diag), ctx, tfState, path.Empty())
 }
 
 func applyMgcOutputMapToTFState(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
 	applier := newTFStateApplier(ctx, diag, handler.TFSchema())
-	applier.applyMgcMap(mgcMap, handler.OutputAttributes(), ctx, tfState, path.Empty())
+	applier.applyMgcMap(mgcMap, handler.OutputAttrInfoMap(ctx, diag), ctx, tfState, path.Empty())
 }
 
 func verifyCurrentDesiredMismatch(handler tfStateHandler, inputMgcMap map[string]any, outputMgcMap map[string]any, diag *diag.Diagnostics) {

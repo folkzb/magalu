@@ -45,6 +45,11 @@ type resAttrInfo struct {
 
 type resAttrInfoMap map[mgcName]*resAttrInfo
 
+type resAttrInfoGenMetadata struct {
+	schema    *mgcSdk.Schema
+	modifiers func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers
+}
+
 type splitResAttribute struct {
 	current *resAttrInfo
 	desired *resAttrInfo
@@ -52,13 +57,10 @@ type splitResAttribute struct {
 
 type tfSchemaHandler interface {
 	Name() string
+	Description() string
 
-	ReadInputAttributes(context.Context) diag.Diagnostics
-	ReadOutputAttributes(context.Context) diag.Diagnostics
-
-	InputAttributes() resAttrInfoMap
-	OutputAttributes() resAttrInfoMap
-
+	InputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap
+	OutputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap
 	AppendSplitAttribute(splitResAttribute)
 }
 
@@ -137,39 +139,67 @@ func getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName m
 	}
 }
 
-func generateTFSchema(handler tfSchemaHandler, ctx context.Context) (tfSchema schema.Schema, d diag.Diagnostics) {
+func generateResAttrInfoMap(ctx context.Context, resName string, metadatas []resAttrInfoGenMetadata, d *diag.Diagnostics) resAttrInfoMap {
+	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, resName)
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading input attributes")
+
+	attrInfoMap := resAttrInfoMap{}
+	for _, metadata := range metadatas {
+		err := addMgcSchemaAttributes(attrInfoMap, metadata.schema, metadata.modifiers, ctx)
+		if err != nil {
+			d.AddError("could not create TF input attributes", err.Error())
+			return nil
+		}
+	}
+
+	return attrInfoMap
+}
+
+func generateTFSchema(handler tfSchemaHandler, ctx context.Context, d *diag.Diagnostics) (tfSchema schema.Schema) {
+	tflog.Debug(ctx, "generating schema")
+
 	ctx = tflog.NewSubsystem(ctx, schemaGenSubsystem)
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, handler.Name())
-	var tfsa map[tfName]schema.Attribute
-	tfsa, d = generateTFAttributes(handler, ctx)
+
+	tfAttributes := generateTFAttributes(ctx, handler, d)
 	if d.HasError() {
 		return
 	}
 
 	tfSchema = schema.Schema{Attributes: map[string]schema.Attribute{}}
-	for tfName, tfAttr := range tfsa {
+	tfSchema.MarkdownDescription = handler.Description()
+	for tfName, tfAttr := range tfAttributes {
 		tfSchema.Attributes[string(tfName)] = tfAttr
 	}
-	return
+
+	tfAttributeNames := []tfName{}
+	for attrName := range tfAttributes {
+		tfAttributeNames = append(tfAttributeNames, attrName)
+	}
+
+	tflog.Debug(ctx, "generated tf schema", map[string]any{"attributes": tfAttributeNames})
+
+	return tfSchema
 }
 
-func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfAttributes map[tfName]schema.Attribute, d diag.Diagnostics) {
+func generateTFAttributes(ctx context.Context, handler tfSchemaHandler, d *diag.Diagnostics) map[tfName]schema.Attribute {
 	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "reading input attributes")
-	d.Append(handler.ReadInputAttributes(ctx)...)
+
+	inputAttrInfoMap := handler.InputAttrInfoMap(ctx, d)
 	if d.HasError() {
-		return
-	}
-	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "reading output attributes")
-	d.Append(handler.ReadOutputAttributes(ctx)...)
-	if d.HasError() {
-		return
+		return nil
 	}
 
-	tfAttributes = map[tfName]schema.Attribute{}
+	outputAttrInfoMap := handler.OutputAttrInfoMap(ctx, d)
+	if d.HasError() {
+		return nil
+	}
+
+	tfAttributes := map[tfName]schema.Attribute{}
 	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "generating attributes using input")
-	for name, iattr := range handler.InputAttributes() {
+	for name, iattr := range inputAttrInfoMap {
 		// Split attributes that differ between input/output
-		if oattr := handler.OutputAttributes()[name]; oattr != nil {
+		if oattr := outputAttrInfoMap[name]; oattr != nil {
 			if err := mgcSchemaPkg.CompareJsonSchemas(oattr.mgcSchema, iattr.mgcSchema); err != nil {
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()
@@ -188,7 +218,7 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfAttri
 	}
 
 	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "generating attributes using output")
-	for _, oattr := range handler.OutputAttributes() {
+	for _, oattr := range outputAttrInfoMap {
 		// If they don't differ and it's already created skip
 		if _, ok := tfAttributes[oattr.tfName]; ok {
 			continue
@@ -197,7 +227,7 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfAttri
 		tfAttributes[oattr.tfName] = oattr.tfSchema
 	}
 
-	return
+	return tfAttributes
 }
 
 func mgcSchemaToTFAttribute(mgcSchema *mgcSdk.Schema, m attributeModifiers, ctx context.Context) (schema.Attribute, resAttrInfoMap, error) {
