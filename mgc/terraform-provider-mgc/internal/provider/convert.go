@@ -69,71 +69,13 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 
 	switch mgcSchema.Type {
 	case "string":
-		var state string
-		err := tfValue.As(&state)
-		if err != nil {
-			c.diag.AddError(
-				"Unable to convert value to string",
-				fmt.Sprintf("[convert] unable to convert %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
-			)
-			return nil, true
-		}
-		tflog.Debug(c.ctx, "[convert] finished conversion to string", map[string]any{"resulting value": state})
-		return state, true
+		return c.toMgcSchemaString(atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "number":
-		var state big.Float
-		err := tfValue.As(&state)
-		if err != nil {
-			c.diag.AddError(
-				"Unable to convert value to number",
-				fmt.Sprintf("[convert] unable to convert %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
-			)
-			return nil, true
-		}
-
-		result, accuracy := state.Float64()
-		if accuracy != big.Exact {
-			c.diag.AddError(
-				"Unable to convert value to float",
-				fmt.Sprintf("[convert] %q with value %+v lost accuracy in conversion to %+v", atinfo.mgcName, state, result),
-			)
-			return nil, true
-		}
-		tflog.Debug(c.ctx, "[convert] finished conversion to number", map[string]any{"resulting value": result})
-		return result, true
+		return c.toMgcSchemaNumber(atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "integer":
-		var state big.Float
-		err := tfValue.As(&state)
-		if err != nil {
-			c.diag.AddError(
-				"Unable to convert value to integer",
-				fmt.Sprintf("[convert] unable to convert %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
-			)
-			return nil, true
-		}
-
-		result, accuracy := state.Int64()
-		if accuracy != big.Exact {
-			c.diag.AddError(
-				"Unable to convert value to integer",
-				fmt.Sprintf("[convert] %q with value %+v lost accuracy in conversion to %+v", atinfo.mgcName, state, result),
-			)
-			return nil, true
-		}
-		tflog.Debug(c.ctx, "[convert] finished conversion to integer", map[string]any{"resulting value": result})
-		return result, true
+		return c.toMgcSchemaInt(atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "boolean":
-		var state bool
-		err := tfValue.As(&state)
-		if err != nil {
-			c.diag.AddError(
-				"Unable to convert value to boolean",
-				fmt.Sprintf("[convert] unable to convert %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
-			)
-			return nil, true
-		}
-		tflog.Debug(c.ctx, "[convert] finished conversion to bool", map[string]any{"resulting value": state})
-		return state, true
+		return c.toMgcSchemaBool(atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "array":
 		return c.toMgcSchemaArray(atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "object":
@@ -144,6 +86,108 @@ func (c *tfStateConverter) toMgcSchemaValue(atinfo *attribute, tfValue tftypes.V
 	}
 }
 
+func (c *tfStateConverter) toMgcSchemaString(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool) {
+	mgcSchema := atinfo.mgcSchema
+	tflog.Debug(
+		c.ctx,
+		"[convert] will convert as string",
+		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue, "mgcSchema": mgcSchema},
+	)
+
+	var state string
+	err := tfValue.As(&state)
+	if err != nil {
+		c.diag.AddError(
+			"Unable to convert value to string",
+			fmt.Sprintf("[convert] unable to convert %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
+		)
+		return nil, true
+	}
+	tflog.Debug(c.ctx, "[convert] finished conversion to string", map[string]any{"tfName": atinfo.tfName, "resulting value": state})
+	return state, true
+}
+
+func (c *tfStateConverter) toMgcSchemaNumber(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool) {
+	mgcSchema := atinfo.mgcSchema
+	tflog.Debug(
+		c.ctx,
+		"[convert] will convert as number",
+		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue, "mgcSchema": mgcSchema},
+	)
+
+	var state big.Float
+	err := tfValue.As(&state)
+	if err != nil {
+		c.diag.AddError(
+			"Unable to convert value to number",
+			fmt.Sprintf("[convert] unable to convert %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
+		)
+		return nil, true
+	}
+
+	result, accuracy := state.Float64()
+	if accuracy != big.Exact {
+		c.diag.AddError(
+			"Unable to convert value to float",
+			fmt.Sprintf("[convert] %q with value %+v lost accuracy in conversion to %+v", atinfo.mgcName, state, result),
+		)
+		return nil, true
+	}
+	tflog.Debug(c.ctx, "[convert] finished conversion to number", map[string]any{"tfName": atinfo.tfName, "resulting value": result})
+	return result, true
+}
+
+func (c *tfStateConverter) toMgcSchemaInt(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool) {
+	mgcSchema := atinfo.mgcSchema
+	tflog.Debug(
+		c.ctx,
+		"[convert] will convert as int",
+		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue, "mgcSchema": mgcSchema},
+	)
+
+	var state big.Float
+	err := tfValue.As(&state)
+	if err != nil {
+		c.diag.AddError(
+			"Unable to convert value to integer",
+			fmt.Sprintf("[convert] unable to convert %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
+		)
+		return nil, true
+	}
+
+	result, accuracy := state.Int64()
+	if accuracy != big.Exact {
+		c.diag.AddError(
+			"Unable to convert value to integer",
+			fmt.Sprintf("[convert] %q with value %+v lost accuracy in conversion to %+v", atinfo.mgcName, state, result),
+		)
+		return nil, true
+	}
+	tflog.Debug(c.ctx, "[convert] finished conversion to integer", map[string]any{"tfName": atinfo.tfName, "resulting value": result})
+	return result, true
+}
+
+func (c *tfStateConverter) toMgcSchemaBool(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool) {
+	mgcSchema := atinfo.mgcSchema
+	tflog.Debug(
+		c.ctx,
+		"[convert] will convert as bool",
+		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue, "mgcSchema": mgcSchema},
+	)
+
+	var state bool
+	err := tfValue.As(&state)
+	if err != nil {
+		c.diag.AddError(
+			"Unable to convert value to boolean",
+			fmt.Sprintf("[convert] unable to convert %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
+		)
+		return nil, false
+	}
+	tflog.Debug(c.ctx, "[convert] finished conversion to bool", map[string]any{"tfName": atinfo.tfName, "resulting value": state})
+	return state, true
+}
+
 func (c *tfStateConverter) toMgcSchemaArray(atinfo *attribute, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any, isKnown bool) {
 	tflog.Debug(
 		c.ctx,
@@ -151,6 +195,7 @@ func (c *tfStateConverter) toMgcSchemaArray(atinfo *attribute, tfValue tftypes.V
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
 	)
 	mgcSchema := atinfo.mgcSchema
+
 	var tfArray []tftypes.Value
 	err := tfValue.As(&tfArray)
 	if err != nil {
@@ -179,7 +224,7 @@ func (c *tfStateConverter) toMgcSchemaArray(atinfo *attribute, tfValue tftypes.V
 		}
 		mgcArray[i] = mgcItem
 	}
-	tflog.Debug(c.ctx, "[convert] finished conversion to array", map[string]any{"resulting value": mgcArray})
+	tflog.Debug(c.ctx, "[convert] finished conversion to array", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcArray})
 	return
 }
 
@@ -239,7 +284,7 @@ func (c *tfStateConverter) toMgcSchemaMap(atinfo *attribute, tfValue tftypes.Val
 
 		mgcMap[string(mgcName)] = mgcItem
 	}
-	tflog.Debug(c.ctx, "[convert] finished conversion to map", map[string]any{"resulting value": mgcMap})
+	tflog.Debug(c.ctx, "[convert] finished conversion to map", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcMap})
 	return
 }
 
