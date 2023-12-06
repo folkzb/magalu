@@ -200,202 +200,233 @@ func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, ctx context.C
 
 	switch mgcSchema.Type {
 	case "string":
-		// I wanted to use an interface to define the modifiers regardless of the attr type
-		// but couldn't find the interface, it seems everything is redefined for each type
-		// https://github.com/hashicorp/terraform-plugin-framework/blob/main/internal/fwschema/fwxschema/attribute_plan_modification.go
-		mod := []planmodifier.String{}
-		if m.useStateForUnknown {
-			mod = append(mod, stringplanmodifier.UseStateForUnknown())
-		}
-		if m.requiresReplaceWhenChanged {
-			mod = append(mod, stringplanmodifier.RequiresReplace())
-		}
-
-		var d defaults.String
-		if v, ok := mgcSchema.Default.(string); ok && m.isComputed {
-			d = stringdefault.StaticString(v)
-		}
-
-		return schema.StringAttribute{
-			Description:   description,
-			Required:      m.isRequired,
-			Optional:      m.isOptional,
-			Computed:      m.isComputed,
-			PlanModifiers: mod,
-			Default:       d,
-		}, nil, nil
+		return mgcStringToTfSchema(ctx, description, mgcSchema, m)
 	case "number":
-		mod := []planmodifier.Number{}
-		if m.useStateForUnknown {
-			mod = append(mod, numberplanmodifier.UseStateForUnknown())
-		}
-		if m.requiresReplaceWhenChanged {
-			mod = append(mod, numberplanmodifier.RequiresReplace())
-		}
-
-		var d defaults.Number
-		if v, ok := mgcSchema.Default.(float64); ok && m.isComputed {
-			d = numberdefault.StaticBigFloat(big.NewFloat(v))
-		}
-
-		return schema.NumberAttribute{
-			Description:   description,
-			Required:      m.isRequired,
-			Optional:      m.isOptional,
-			Computed:      m.isComputed,
-			PlanModifiers: mod,
-			Default:       d,
-		}, nil, nil
+		return mgcNumberToTfSchema(ctx, description, mgcSchema, m)
 	case "integer":
-		mod := []planmodifier.Int64{}
-		if m.useStateForUnknown {
-			mod = append(mod, int64planmodifier.UseStateForUnknown())
-		}
-		if m.requiresReplaceWhenChanged {
-			mod = append(mod, int64planmodifier.RequiresReplace())
-		}
-
-		var d defaults.Int64
-		if v, ok := mgcSchema.Default.(int64); ok && m.isComputed {
-			d = int64default.StaticInt64(v)
-		}
-
-		return schema.Int64Attribute{
-			Description:   description,
-			Required:      m.isRequired,
-			Optional:      m.isOptional,
-			Computed:      m.isComputed,
-			PlanModifiers: mod,
-			Default:       d,
-		}, nil, nil
+		return mgcIntToTfSchema(ctx, description, mgcSchema, m)
 	case "boolean":
-		mod := []planmodifier.Bool{}
-		if m.useStateForUnknown {
-			mod = append(mod, boolplanmodifier.UseStateForUnknown())
-		}
-		if m.requiresReplaceWhenChanged {
-			mod = append(mod, boolplanmodifier.RequiresReplace())
-		}
-
-		var d defaults.Bool
-		if v, ok := mgcSchema.Default.(bool); ok && m.isComputed {
-			d = booldefault.StaticBool(v)
-		}
-
-		return schema.BoolAttribute{
-			Description:   description,
-			Required:      m.isRequired,
-			Optional:      m.isOptional,
-			Computed:      m.isComputed,
-			PlanModifiers: mod,
-			Default:       d,
-		}, nil, nil
+		return mgcBoolToTfSchema(ctx, description, mgcSchema, m)
 	case "array":
-		mgcItemSchema := (*core.Schema)(mgcSchema.Items.Value)
-		elemAttr, elemAttrs, err := mgcToTFSchema(mgcItemSchema, m.getChildModifiers(ctx, mgcItemSchema, "0"), ctx)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		childAttrs := mgcAttributes{"0": &attribute{
-			tfName:     "0",
-			mgcName:    "0",
-			mgcSchema:  mgcItemSchema,
-			tfSchema:   elemAttr,
-			attributes: elemAttrs,
-		}}
-
-		mod := []planmodifier.List{}
-		if m.requiresReplaceWhenChanged {
-			mod = append(mod, listplanmodifier.RequiresReplace())
-		}
-		if m.useStateForUnknown {
-			mod = append(mod, listplanmodifier.UseStateForUnknown())
-		}
-
-		var d defaults.List
-		if v, ok := mgcSchema.Default.([]any); ok && m.isComputed {
-			lst, err := tfAttrListValueFromMgcSchema(ctx, mgcSchema, *childAttrs["0"], v)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			if l, ok := lst.(types.List); ok {
-				d = listdefault.StaticValue(l)
-			}
-		}
-
-		// TODO: How will we handle List of Lists? Does it need to be handled at all? Does the
-		// 'else' branch already cover that correctly?
-		if objAttr, ok := elemAttr.(schema.SingleNestedAttribute); ok {
-			// This type assertion will/should NEVER fail, according to TF code
-			nestedObj, ok := objAttr.GetNestedObject().(schema.NestedAttributeObject)
-			if !ok {
-				return nil, nil, fmt.Errorf("failed TF GetNestedObject")
-			}
-			return schema.ListNestedAttribute{
-				NestedObject:  nestedObj,
-				Description:   description,
-				Required:      m.isRequired,
-				Optional:      m.isOptional,
-				Computed:      m.isComputed,
-				PlanModifiers: mod,
-				Default:       d,
-			}, childAttrs, nil
-		} else {
-			return schema.ListAttribute{
-				ElementType:   elemAttr.GetType(),
-				Description:   description,
-				Required:      m.isRequired,
-				Optional:      m.isOptional,
-				Computed:      m.isComputed,
-				PlanModifiers: mod,
-				Default:       d,
-			}, childAttrs, nil
-		}
+		return mgcArrayToTfSchema(ctx, description, mgcSchema, m)
 	case "object":
-		mgcAttributes := mgcAttributes{}
-		err := addMgcSchemaAttributes(mgcAttributes, mgcSchema, m.getChildModifiers, ctx)
-		if err != nil {
-			return nil, nil, err
-		}
-		tfAttributes := map[string]schema.Attribute{}
-		for _, attr := range mgcAttributes {
-			tfAttributes[string(attr.tfName)] = attr.tfSchema
-		}
-
-		mod := []planmodifier.Object{}
-		if m.requiresReplaceWhenChanged {
-			mod = append(mod, objectplanmodifier.RequiresReplace())
-		}
-		if m.useStateForUnknown {
-			mod = append(mod, objectplanmodifier.UseStateForUnknown())
-		}
-
-		var d defaults.Object
-		if v, ok := mgcSchema.Default.(map[string]any); ok && m.isComputed {
-			obj, err := tfAttrObjectValueFromMgcSchema(ctx, mgcSchema, mgcAttributes, v)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			if o, ok := obj.(types.Object); ok {
-				d = objectdefault.StaticValue(o)
-			}
-		}
-
-		return schema.SingleNestedAttribute{
-			Attributes:    tfAttributes,
-			Description:   description,
-			Required:      m.isRequired,
-			Optional:      m.isOptional,
-			Computed:      m.isComputed,
-			PlanModifiers: mod,
-			Default:       d,
-		}, mgcAttributes, nil
+		return mgcObjectToTfSchema(ctx, description, mgcSchema, m)
 	default:
 		return nil, nil, fmt.Errorf("type %q not supported", mgcSchema.Type)
 	}
+}
+
+func mgcStringToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.StringAttribute, mgcAttributes, error) {
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as string", map[string]any{"mgcSchema": mgcSchema})
+	// I wanted to use an interface to define the modifiers regardless of the attr type
+	// but couldn't find the interface, it seems everything is redefined for each type
+	// https://github.com/hashicorp/terraform-plugin-framework/blob/main/internal/fwschema/fwxschema/attribute_plan_modification.go
+	mod := []planmodifier.String{}
+	if m.useStateForUnknown {
+		mod = append(mod, stringplanmodifier.UseStateForUnknown())
+	}
+	if m.requiresReplaceWhenChanged {
+		mod = append(mod, stringplanmodifier.RequiresReplace())
+	}
+
+	var d defaults.String
+	if v, ok := mgcSchema.Default.(string); ok && m.isComputed {
+		d = stringdefault.StaticString(v)
+	}
+
+	return schema.StringAttribute{
+		Description:   description,
+		Required:      m.isRequired,
+		Optional:      m.isOptional,
+		Computed:      m.isComputed,
+		PlanModifiers: mod,
+		Default:       d,
+	}, nil, nil
+}
+
+func mgcNumberToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.NumberAttribute, mgcAttributes, error) {
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as number", map[string]any{"mgcSchema": mgcSchema})
+	mod := []planmodifier.Number{}
+	if m.useStateForUnknown {
+		mod = append(mod, numberplanmodifier.UseStateForUnknown())
+	}
+	if m.requiresReplaceWhenChanged {
+		mod = append(mod, numberplanmodifier.RequiresReplace())
+	}
+
+	var d defaults.Number
+	if v, ok := mgcSchema.Default.(float64); ok && m.isComputed {
+		d = numberdefault.StaticBigFloat(big.NewFloat(v))
+	}
+
+	return schema.NumberAttribute{
+		Description:   description,
+		Required:      m.isRequired,
+		Optional:      m.isOptional,
+		Computed:      m.isComputed,
+		PlanModifiers: mod,
+		Default:       d,
+	}, nil, nil
+}
+
+func mgcIntToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Int64Attribute, mgcAttributes, error) {
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as int", map[string]any{"mgcSchema": mgcSchema})
+	mod := []planmodifier.Int64{}
+	if m.useStateForUnknown {
+		mod = append(mod, int64planmodifier.UseStateForUnknown())
+	}
+	if m.requiresReplaceWhenChanged {
+		mod = append(mod, int64planmodifier.RequiresReplace())
+	}
+
+	var d defaults.Int64
+	if v, ok := mgcSchema.Default.(int64); ok && m.isComputed {
+		d = int64default.StaticInt64(v)
+	}
+
+	return schema.Int64Attribute{
+		Description:   description,
+		Required:      m.isRequired,
+		Optional:      m.isOptional,
+		Computed:      m.isComputed,
+		PlanModifiers: mod,
+		Default:       d,
+	}, nil, nil
+}
+
+func mgcBoolToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.BoolAttribute, mgcAttributes, error) {
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as bool", map[string]any{"mgcSchema": mgcSchema})
+	mod := []planmodifier.Bool{}
+	if m.useStateForUnknown {
+		mod = append(mod, boolplanmodifier.UseStateForUnknown())
+	}
+	if m.requiresReplaceWhenChanged {
+		mod = append(mod, boolplanmodifier.RequiresReplace())
+	}
+
+	var d defaults.Bool
+	if v, ok := mgcSchema.Default.(bool); ok && m.isComputed {
+		d = booldefault.StaticBool(v)
+	}
+
+	return schema.BoolAttribute{
+		Description:   description,
+		Required:      m.isRequired,
+		Optional:      m.isOptional,
+		Computed:      m.isComputed,
+		PlanModifiers: mod,
+		Default:       d,
+	}, nil, nil
+}
+
+func mgcArrayToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, mgcAttributes, error) {
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as array", map[string]any{"mgcSchema": mgcSchema})
+	mgcItemSchema := (*core.Schema)(mgcSchema.Items.Value)
+	elemAttr, elemAttrs, err := mgcToTFSchema(mgcItemSchema, m.getChildModifiers(ctx, mgcItemSchema, "0"), ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	childAttrs := mgcAttributes{}
+	childAttrs["0"] = &attribute{
+		tfName:     "0",
+		mgcName:    "0",
+		mgcSchema:  mgcItemSchema,
+		tfSchema:   elemAttr,
+		attributes: elemAttrs,
+	}
+
+	mod := []planmodifier.List{}
+	if m.requiresReplaceWhenChanged {
+		mod = append(mod, listplanmodifier.RequiresReplace())
+	}
+	if m.useStateForUnknown {
+		mod = append(mod, listplanmodifier.UseStateForUnknown())
+	}
+
+	var d defaults.List
+	if v, ok := mgcSchema.Default.([]any); ok && m.isComputed {
+		lst, err := tfAttrListValueFromMgcSchema(ctx, mgcSchema, *childAttrs["0"], v)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if l, ok := lst.(types.List); ok {
+			d = listdefault.StaticValue(l)
+		}
+	}
+
+	// TODO: How will we handle List of Lists? Does it need to be handled at all? Does the
+	// 'else' branch already cover that correctly?
+	if objAttr, ok := elemAttr.(schema.SingleNestedAttribute); ok {
+		// This type assertion will/should NEVER fail, according to TF code
+		nestedObj, ok := objAttr.GetNestedObject().(schema.NestedAttributeObject)
+		if !ok {
+			return nil, nil, fmt.Errorf("failed TF GetNestedObject")
+		}
+		return schema.ListNestedAttribute{
+			NestedObject:  nestedObj,
+			Description:   description,
+			Required:      m.isRequired,
+			Optional:      m.isOptional,
+			Computed:      m.isComputed,
+			PlanModifiers: mod,
+			Default:       d,
+		}, childAttrs, nil
+	} else {
+		return schema.ListAttribute{
+			ElementType:   elemAttr.GetType(),
+			Description:   description,
+			Required:      m.isRequired,
+			Optional:      m.isOptional,
+			Computed:      m.isComputed,
+			PlanModifiers: mod,
+			Default:       d,
+		}, childAttrs, nil
+	}
+}
+
+func mgcObjectToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, mgcAttributes, error) {
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as object", map[string]any{"mgcSchema": mgcSchema})
+	childAttrs := mgcAttributes{}
+	err := addMgcSchemaAttributes(childAttrs, mgcSchema, m.getChildModifiers, ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	tfAttributes := map[string]schema.Attribute{}
+	for _, attr := range childAttrs {
+		tfAttributes[string(attr.tfName)] = attr.tfSchema
+	}
+
+	mod := []planmodifier.Object{}
+	if m.requiresReplaceWhenChanged {
+		mod = append(mod, objectplanmodifier.RequiresReplace())
+	}
+	if m.useStateForUnknown {
+		mod = append(mod, objectplanmodifier.UseStateForUnknown())
+	}
+
+	var d defaults.Object
+	if v, ok := mgcSchema.Default.(map[string]any); ok && m.isComputed {
+		obj, err := tfAttrObjectValueFromMgcSchema(ctx, mgcSchema, childAttrs, v)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if o, ok := obj.(types.Object); ok {
+			d = objectdefault.StaticValue(o)
+		}
+	}
+
+	return schema.SingleNestedAttribute{
+		Attributes:    tfAttributes,
+		Description:   description,
+		Required:      m.isRequired,
+		Optional:      m.isOptional,
+		Computed:      m.isComputed,
+		PlanModifiers: mod,
+		Default:       d,
+	}, childAttrs, nil
 }
 
 func tfAttrListValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, listAttr attribute, v []any) (attr.Value, error) {
