@@ -81,13 +81,13 @@ func readMgcOutputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk
 }
 
 func applyMgcInputMapToTFState(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
-	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
-	loader.applyMgcMap(mgcMap, handler.InputAttributes(), ctx, tfState, path.Empty())
+	applier := newTFStateApplier(ctx, diag, handler.TFSchema())
+	applier.applyMgcMap(mgcMap, handler.InputAttributes(), ctx, tfState, path.Empty())
 }
 
 func applyMgcOutputMapToTFState(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
-	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
-	loader.applyMgcMap(mgcMap, handler.OutputAttributes(), ctx, tfState, path.Empty())
+	applier := newTFStateApplier(ctx, diag, handler.TFSchema())
+	applier.applyMgcMap(mgcMap, handler.OutputAttributes(), ctx, tfState, path.Empty())
 }
 
 func verifyCurrentDesiredMismatch(handler tfStateHandler, inputMgcMap map[string]any, outputMgcMap map[string]any, diag *diag.Diagnostics) {
