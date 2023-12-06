@@ -340,16 +340,6 @@ func parseObjectValue(propSchema *core.Schema, s string) (value any, end int, er
 	return
 }
 
-func getSchemaFromAlternatives(refs ...*mgcSchemaPkg.SchemaRef) *core.Schema {
-	for _, ref := range refs {
-		if ref != nil && ref.Value != nil {
-			return (*mgcSchemaPkg.Schema)(ref.Value)
-		}
-	}
-
-	return nil
-}
-
 func parseObjectCSV(schema *core.Schema, rawValue string) (value map[string]any, err error) {
 	for {
 		end := skipCSVDelimitersOrWhiteSpaces(rawValue)
@@ -365,13 +355,13 @@ func parseObjectCSV(schema *core.Schema, rawValue string) (value map[string]any,
 		}
 		rawValue = rawValue[end:]
 
-		propSchema := getSchemaFromAlternatives(
-			schema.Properties[propName],
-			schema.AdditionalProperties.Schema,
-		)
-
 		var propValue any
-		propValue, end, err = parseObjectValue(propSchema, rawValue)
+		for _, os := range mgcSchemaPkg.CollectObjectPropertySchemas(schema, propName) {
+			propValue, end, err = parseObjectValue(os.PropSchema, rawValue)
+			if err == nil {
+				break
+			}
+		}
 		if err != nil {
 			return
 		}
