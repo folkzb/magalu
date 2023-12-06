@@ -12,11 +12,12 @@ var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
 			Description: "Object operations for Object Storage API",
 		},
 		[]core.Descriptor{
-			getDelete(),    // object-storage objects delete
-			getDeleteAll(), // object-storage objects delete-all
-			getDownload(),  // object-storage objects download
-			getList(),      // object-storage objects list
-			getUpload(),    // object-storage objects upload
+			getDelete(),      // object-storage objects delete
+			getDeleteAll(),   // object-storage objects delete-all
+			getDownload(),    // object-storage objects download
+			getDownloadAll(), // object-storage objects download-all
+			getList(),        // object-storage objects list
+			getUpload(),      // object-storage objects upload
 		},
 	)
 })

@@ -16817,6 +16817,86 @@
       "name": "download",
       "parameters": {
        "properties": {
+        "dst": {
+         "description": "Name of the file to be saved",
+         "example": "file1.txt",
+         "type": "string",
+         "x-contentMediaType": "application/octet-stream"
+        },
+        "src": {
+         "description": "Path of the object to be downloaded",
+         "example": "s3://bucket1/file1",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "required": [
+        "src"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "anyOf": [
+        {
+         "nullable": true,
+         "type": "null"
+        },
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "array"
+        },
+        {
+         "additionalProperties": true,
+         "type": "object"
+        }
+       ],
+       "nullable": true
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "properties": {
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-ne-2",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        },
+        "workers": {
+         "default": 5,
+         "description": "Number of routines that spawn to do parallel operations within object_storage",
+         "minimum": 1,
+         "type": "integer"
+        }
+       },
+       "type": "object"
+      },
+      "description": "download all objects from a bucket",
+      "isInternal": false,
+      "name": "download-all",
+      "parameters": {
+       "properties": {
         "continuation-token": {
          "description": "Token of result page to continue from",
          "type": "string"
@@ -16826,6 +16906,15 @@
          "example": "file1.txt",
          "type": "string",
          "x-contentMediaType": "application/octet-stream"
+        },
+        "exclude": {
+         "description": "Filename pattern to exclude",
+         "type": "string"
+        },
+        "include": {
+         "default": "*",
+         "description": "Filename pattern to include",
+         "type": "string"
         },
         "max-items": {
          "default": 1000,

@@ -5,11 +5,12 @@ Usage:
   ./cli object-storage objects [command]
 
 Commands:
-  delete      Delete an object from a bucket
-  delete-all  Delete all objects from a bucket
-  download    download an object from a bucket
-  list        List all objects from a bucket
-  upload      Upload a file to a bucket
+  delete       Delete an object from a bucket
+  delete-all   Delete all objects from a bucket
+  download     download an object from a bucket
+  download-all download all objects from a bucket
+  list         List all objects from a bucket
+  upload       Upload a file to a bucket
 
 Flags:
   -h, --help   help for objects
