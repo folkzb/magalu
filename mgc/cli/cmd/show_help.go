@@ -277,6 +277,8 @@ func getConstraintsFormatted(constraints *schema_flags.HumanReadableConstraints,
 		return
 	}
 
+	text = forcePunctuation(text, ":")
+
 	text += "\n"
 	for _, c := range constraints.Children {
 		text += getConstraintsFormatted(c, childIdentPrefix, true)

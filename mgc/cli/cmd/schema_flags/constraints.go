@@ -232,10 +232,10 @@ func specificHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadabl
 	}
 
 	if len(schema.OneOf) > 0 {
-		return newXOfHumanReadableConstraints("Exactly one of the following must apply:", schema, schema.OneOf)
+		return newXOfHumanReadableConstraints("Exactly one of the following must apply", schema, schema.OneOf)
 	}
 	if len(schema.AnyOf) > 0 {
-		return newXOfHumanReadableConstraints("At least one of the following must apply:", schema, schema.AnyOf)
+		return newXOfHumanReadableConstraints("At least one of the following must apply", schema, schema.AnyOf)
 	}
 
 	switch schema.Type {
@@ -327,7 +327,7 @@ func newEnumHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadable
 	}
 
 	return &HumanReadableConstraints{
-		ChildrenMessage: getPlural(len(children), "Must be exactly:", "One of the values:"),
+		ChildrenMessage: getPlural(len(children), "Must be exactly", "One of the values"),
 		Children:        children,
 	}
 }
@@ -343,7 +343,7 @@ func getHumanConstraintsChildren(constraints []string) (childrenMessage string, 
 		return
 	}
 
-	childrenMessage = "With the following constraints:"
+	childrenMessage = "With the following constraints"
 	children = make([]*HumanReadableConstraints, len(constraints))
 	for i, c := range constraints {
 		children[i] = &HumanReadableConstraints{Message: c}
@@ -381,7 +381,7 @@ func newArrayHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadabl
 
 	if itemsConstraints := newSchemaRefHumanReadableConstraints(schema.Items); itemsConstraints != nil {
 		if childrenMessage == "" {
-			childrenMessage = "Array where each item is:"
+			childrenMessage = "Array where each item is"
 		}
 		children = append(children, itemsConstraints)
 	}
@@ -400,7 +400,7 @@ func newMapHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadableC
 
 	if valueConstraints := newSchemaRefHumanReadableConstraints(schema.AdditionalProperties.Schema); valueConstraints != nil {
 		if childrenMessage == "" {
-			childrenMessage = "Mapping where each value is:"
+			childrenMessage = "Mapping where each value is"
 		}
 		children = append(children, valueConstraints)
 	}
@@ -438,7 +438,7 @@ func newObjectHumanReadableConstraints(schema *mgcSchemaPkg.Schema) *HumanReadab
 		})
 
 		children = append(children, &HumanReadableConstraints{
-			Message:  "Object with the following properties:",
+			Message:  "Object with the following properties",
 			Children: properties,
 		})
 	}
