@@ -35,15 +35,20 @@ import (
 type mgcName string
 type tfName string
 
-type attribute struct {
-	tfName     tfName
-	mgcName    mgcName
-	mgcSchema  *mgcSdk.Schema
-	tfSchema   schema.Attribute
-	attributes mgcAttributes
+type resAttrInfo struct {
+	tfName          tfName
+	mgcName         mgcName
+	mgcSchema       *mgcSdk.Schema
+	tfSchema        schema.Attribute
+	childAttributes resAttrInfoMap
 }
 
-type mgcAttributes map[mgcName]*attribute
+type resAttrInfoMap map[mgcName]*resAttrInfo
+
+type splitResAttribute struct {
+	current *resAttrInfo
+	desired *resAttrInfo
+}
 
 type tfSchemaHandler interface {
 	Name() string
@@ -51,10 +56,10 @@ type tfSchemaHandler interface {
 	ReadInputAttributes(context.Context) diag.Diagnostics
 	ReadOutputAttributes(context.Context) diag.Diagnostics
 
-	InputAttributes() mgcAttributes
-	OutputAttributes() mgcAttributes
+	InputAttributes() resAttrInfoMap
+	OutputAttributes() resAttrInfoMap
 
-	AppendSplitAttribute(splitMgcAttribute)
+	AppendSplitAttribute(splitResAttribute)
 }
 
 type attributeModifiers struct {
@@ -67,7 +72,7 @@ type attributeModifiers struct {
 }
 
 func addMgcSchemaAttributes(
-	attributes mgcAttributes,
+	dst resAttrInfoMap,
 	mgcSchema *mgcSdk.Schema,
 	getModifiers func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers,
 	ctx context.Context,
@@ -76,7 +81,7 @@ func addMgcSchemaAttributes(
 		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("adding attribute %q", k))
 		mgcName := mgcName(k)
 		mgcPropSchema := (*mgcSdk.Schema)(ref.Value)
-		if ca, ok := attributes[mgcName]; ok {
+		if ca, ok := dst[mgcName]; ok {
 			if err := mgcSchemaPkg.CompareJsonSchemas(ca.mgcSchema, mgcPropSchema); err != nil {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
 				tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring DIFFERENT attribute %q:\nOLD=%+v\nNEW=%+v\nERROR=%s\n", k, ca.mgcSchema, mgcPropSchema, err.Error()))
@@ -87,21 +92,21 @@ func addMgcSchemaAttributes(
 			}
 		}
 
-		tfSchema, childAttributes, err := mgcToTFSchema(mgcPropSchema, getModifiers(ctx, mgcSchema, mgcName), ctx)
+		tfSchema, childAttributes, err := mgcSchemaToTFAttribute(mgcPropSchema, getModifiers(ctx, mgcSchema, mgcName), ctx)
 		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q generated tfSchema %#v", k, tfSchema))
 		if err != nil {
 			tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q schema: %+v; error: %s", k, mgcPropSchema, err))
 			return fmt.Errorf("attribute %q, error=%s", k, err)
 		}
 
-		attr := &attribute{
-			tfName:     tfNameFromMgc(mgcName),
-			mgcName:    mgcName,
-			mgcSchema:  mgcPropSchema,
-			tfSchema:   tfSchema,
-			attributes: childAttributes,
+		attr := &resAttrInfo{
+			tfName:          mgcName.asTFName(),
+			mgcName:         mgcName,
+			mgcSchema:       mgcPropSchema,
+			tfSchema:        tfSchema,
+			childAttributes: childAttributes,
 		}
-		attributes[mgcName] = attr
+		dst[mgcName] = attr
 		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q: %+v", k, attr))
 	}
 
@@ -148,7 +153,7 @@ func generateTFSchema(handler tfSchemaHandler, ctx context.Context) (tfSchema sc
 	return
 }
 
-func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map[tfName]schema.Attribute, d diag.Diagnostics) {
+func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfAttributes map[tfName]schema.Attribute, d diag.Diagnostics) {
 	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "reading input attributes")
 	d.Append(handler.ReadInputAttributes(ctx)...)
 	if d.HasError() {
@@ -160,7 +165,7 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map
 		return
 	}
 
-	tfa = map[tfName]schema.Attribute{}
+	tfAttributes = map[tfName]schema.Attribute{}
 	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "generating attributes using input")
 	for name, iattr := range handler.InputAttributes() {
 		// Split attributes that differ between input/output
@@ -172,51 +177,51 @@ func generateTFAttributes(handler tfSchemaHandler, ctx context.Context) (tfa map
 				iattr.tfName = iattr.tfName.asDesired()
 				oattr.tfName = oattr.tfName.asCurrent()
 
-				handler.AppendSplitAttribute(splitMgcAttribute{
+				handler.AppendSplitAttribute(splitResAttribute{
 					current: oattr,
 					desired: iattr,
 				})
 			}
 		}
 
-		tfa[iattr.tfName] = iattr.tfSchema
+		tfAttributes[iattr.tfName] = iattr.tfSchema
 	}
 
 	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "generating attributes using output")
 	for _, oattr := range handler.OutputAttributes() {
 		// If they don't differ and it's already created skip
-		if _, ok := tfa[oattr.tfName]; ok {
+		if _, ok := tfAttributes[oattr.tfName]; ok {
 			continue
 		}
 
-		tfa[oattr.tfName] = oattr.tfSchema
+		tfAttributes[oattr.tfName] = oattr.tfSchema
 	}
 
 	return
 }
 
-func mgcToTFSchema(mgcSchema *mgcSdk.Schema, m attributeModifiers, ctx context.Context) (schema.Attribute, mgcAttributes, error) {
+func mgcSchemaToTFAttribute(mgcSchema *mgcSdk.Schema, m attributeModifiers, ctx context.Context) (schema.Attribute, resAttrInfoMap, error) {
 	description := mgcSchema.Description
 
 	switch mgcSchema.Type {
 	case "string":
-		return mgcStringToTfSchema(ctx, description, mgcSchema, m)
+		return mgcStringSchemaToTFAttribute(ctx, description, mgcSchema, m)
 	case "number":
-		return mgcNumberToTfSchema(ctx, description, mgcSchema, m)
+		return mgcNumberSchemaToTFAttribute(ctx, description, mgcSchema, m)
 	case "integer":
-		return mgcIntToTfSchema(ctx, description, mgcSchema, m)
+		return mgcIntSchemaToTFAttribute(ctx, description, mgcSchema, m)
 	case "boolean":
-		return mgcBoolToTfSchema(ctx, description, mgcSchema, m)
+		return mgcBoolSchemaToTFAttribute(ctx, description, mgcSchema, m)
 	case "array":
-		return mgcArrayToTfSchema(ctx, description, mgcSchema, m)
+		return mgcArraySchemaToTFAttribute(ctx, description, mgcSchema, m)
 	case "object":
-		return mgcObjectToTfSchema(ctx, description, mgcSchema, m)
+		return mgcObjectSchemaToTFAttribute(ctx, description, mgcSchema, m)
 	default:
 		return nil, nil, fmt.Errorf("type %q not supported", mgcSchema.Type)
 	}
 }
 
-func mgcStringToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.StringAttribute, mgcAttributes, error) {
+func mgcStringSchemaToTFAttribute(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.StringAttribute, resAttrInfoMap, error) {
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as string", map[string]any{"mgcSchema": mgcSchema})
 	// I wanted to use an interface to define the modifiers regardless of the attr type
 	// but couldn't find the interface, it seems everything is redefined for each type
@@ -244,7 +249,7 @@ func mgcStringToTfSchema(ctx context.Context, description string, mgcSchema *mgc
 	}, nil, nil
 }
 
-func mgcNumberToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.NumberAttribute, mgcAttributes, error) {
+func mgcNumberSchemaToTFAttribute(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.NumberAttribute, resAttrInfoMap, error) {
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as number", map[string]any{"mgcSchema": mgcSchema})
 	mod := []planmodifier.Number{}
 	if m.useStateForUnknown {
@@ -269,7 +274,7 @@ func mgcNumberToTfSchema(ctx context.Context, description string, mgcSchema *mgc
 	}, nil, nil
 }
 
-func mgcIntToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Int64Attribute, mgcAttributes, error) {
+func mgcIntSchemaToTFAttribute(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Int64Attribute, resAttrInfoMap, error) {
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as int", map[string]any{"mgcSchema": mgcSchema})
 	mod := []planmodifier.Int64{}
 	if m.useStateForUnknown {
@@ -294,7 +299,7 @@ func mgcIntToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk
 	}, nil, nil
 }
 
-func mgcBoolToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.BoolAttribute, mgcAttributes, error) {
+func mgcBoolSchemaToTFAttribute(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.BoolAttribute, resAttrInfoMap, error) {
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as bool", map[string]any{"mgcSchema": mgcSchema})
 	mod := []planmodifier.Bool{}
 	if m.useStateForUnknown {
@@ -319,21 +324,21 @@ func mgcBoolToTfSchema(ctx context.Context, description string, mgcSchema *mgcSd
 	}, nil, nil
 }
 
-func mgcArrayToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, mgcAttributes, error) {
+func mgcArraySchemaToTFAttribute(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, resAttrInfoMap, error) {
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as array", map[string]any{"mgcSchema": mgcSchema})
 	mgcItemSchema := (*core.Schema)(mgcSchema.Items.Value)
-	elemAttr, elemAttrs, err := mgcToTFSchema(mgcItemSchema, m.getChildModifiers(ctx, mgcItemSchema, "0"), ctx)
+	elemAttr, elemAttrs, err := mgcSchemaToTFAttribute(mgcItemSchema, m.getChildModifiers(ctx, mgcItemSchema, "0"), ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	childAttrs := mgcAttributes{}
-	childAttrs["0"] = &attribute{
-		tfName:     "0",
-		mgcName:    "0",
-		mgcSchema:  mgcItemSchema,
-		tfSchema:   elemAttr,
-		attributes: elemAttrs,
+	childAttrs := resAttrInfoMap{}
+	childAttrs["0"] = &resAttrInfo{
+		tfName:          "0",
+		mgcName:         "0",
+		mgcSchema:       mgcItemSchema,
+		tfSchema:        elemAttr,
+		childAttributes: elemAttrs,
 	}
 
 	mod := []planmodifier.List{}
@@ -386,9 +391,9 @@ func mgcArrayToTfSchema(ctx context.Context, description string, mgcSchema *mgcS
 	}
 }
 
-func mgcObjectToTfSchema(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, mgcAttributes, error) {
+func mgcObjectSchemaToTFAttribute(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, resAttrInfoMap, error) {
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as object", map[string]any{"mgcSchema": mgcSchema})
-	childAttrs := mgcAttributes{}
+	childAttrs := resAttrInfoMap{}
 	err := addMgcSchemaAttributes(childAttrs, mgcSchema, m.getChildModifiers, ctx)
 	if err != nil {
 		return nil, nil, err
@@ -429,12 +434,12 @@ func mgcObjectToTfSchema(ctx context.Context, description string, mgcSchema *mgc
 	}, childAttrs, nil
 }
 
-func tfAttrListValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, listAttr attribute, v []any) (attr.Value, error) {
+func tfAttrListValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, listAttr resAttrInfo, v []any) (attr.Value, error) {
 	attrSchema := (*core.Schema)(s.Items.Value)
 	attrType := listAttr.tfSchema.GetType()
 	attrValues := []attr.Value{}
 	for i := range v {
-		v, ok, err := attrValueFromMgcSchema(ctx, attrSchema, listAttr, v[i])
+		v, ok, err := tfAttrValueFromMgcSchema(ctx, attrSchema, listAttr, v[i])
 		if err != nil {
 			return nil, err
 		}
@@ -453,13 +458,13 @@ func tfAttrListValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, listAtt
 	return lst, nil
 }
 
-func tfAttrObjectValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, mapAttr map[mgcName]*attribute, v map[string]any) (attr.Value, error) {
+func tfAttrObjectValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, mapAttr map[mgcName]*resAttrInfo, v map[string]any) (attr.Value, error) {
 	attrTypes := map[string]attr.Type{}
 	attrValues := map[string]attr.Value{}
 	for k := range v {
 		attrSchema := (*core.Schema)(s.Properties[k].Value)
 
-		val, ok, err := attrValueFromMgcSchema(ctx, attrSchema, *mapAttr[mgcName(k)], v[k])
+		val, ok, err := tfAttrValueFromMgcSchema(ctx, attrSchema, *mapAttr[mgcName(k)], v[k])
 		if err != nil {
 			return nil, err
 		}
@@ -478,7 +483,7 @@ func tfAttrObjectValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, mapAt
 	return obj, nil
 }
 
-func attrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType attribute, v any) (attr.Value, bool, error) {
+func tfAttrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType resAttrInfo, v any) (attr.Value, bool, error) {
 	if v == nil {
 		return nil, false, nil
 	}
@@ -521,7 +526,7 @@ func attrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType attr
 			return nil, false, fmt.Errorf("unable to create attr.Value of type object")
 		}
 
-		attrValue, err := tfAttrObjectValueFromMgcSchema(ctx, s, attrType.attributes, mapVal)
+		attrValue, err := tfAttrObjectValueFromMgcSchema(ctx, s, attrType.childAttributes, mapVal)
 		if err != nil {
 			return nil, false, err
 		}
@@ -531,7 +536,7 @@ func attrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType attr
 	}
 }
 
-func tfNameFromMgc(n mgcName) tfName {
+func (n mgcName) asTFName() tfName {
 	return tfName(strcase.SnakeCase(string(n)))
 }
 

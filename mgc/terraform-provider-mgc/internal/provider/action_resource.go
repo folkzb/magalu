@@ -20,17 +20,17 @@ var _ resource.ResourceWithImportState = &MgcActionResource{}
 
 // MgcResource defines the resource implementation.
 type MgcActionResource struct {
-	sdk        *mgcSdk.Sdk
-	name       string
-	readOwner  mgcSdk.Executor
-	create     mgcSdk.Linker
-	read       mgcSdk.Linker
-	update     mgcSdk.Linker // TODO: Will action resources need/have updates?
-	delete     mgcSdk.Linker
-	inputAttr  mgcAttributes
-	outputAttr mgcAttributes
-	splitAttr  []splitMgcAttribute
-	tfschema   *schema.Schema
+	sdk               *mgcSdk.Sdk
+	name              string
+	readOwner         mgcSdk.Executor
+	create            mgcSdk.Linker
+	read              mgcSdk.Linker
+	update            mgcSdk.Linker // TODO: Will action resources need/have updates?
+	delete            mgcSdk.Linker
+	inputAttrInfoMap  resAttrInfoMap
+	outputAttrInfoMap resAttrInfoMap
+	splitAttributes   []splitResAttribute
+	tfschema          *schema.Schema
 }
 
 // BEGIN: tfSchemaHandler implementation
@@ -66,15 +66,15 @@ func (r *MgcActionResource) getDeleteParamsModifiers(ctx context.Context, mgcSch
 func (r *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics {
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, actionResourceNameField, r.name)
 	d := diag.Diagnostics{}
-	if len(r.inputAttr) != 0 {
+	if len(r.inputAttrInfoMap) != 0 {
 		return d
 	}
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading input attributes")
 
-	r.inputAttr = mgcAttributes{}
+	r.inputAttrInfoMap = resAttrInfoMap{}
 
 	err := addMgcSchemaAttributes(
-		r.inputAttr,
+		r.inputAttrInfoMap,
 		r.create.AdditionalParametersSchema(),
 		r.getReadParamsModifiers,
 		ctx,
@@ -85,7 +85,7 @@ func (r *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagno
 	}
 
 	err = addMgcSchemaAttributes(
-		r.inputAttr,
+		r.inputAttrInfoMap,
 		r.readOwner.ParametersSchema(),
 		r.getReadParamsModifiers,
 		ctx,
@@ -96,7 +96,7 @@ func (r *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagno
 	}
 
 	err = addMgcSchemaAttributes(
-		r.inputAttr,
+		r.inputAttrInfoMap,
 		r.read.AdditionalParametersSchema(),
 		r.getReadParamsModifiers,
 		ctx,
@@ -107,7 +107,7 @@ func (r *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagno
 	}
 
 	err = addMgcSchemaAttributes(
-		r.inputAttr,
+		r.inputAttrInfoMap,
 		r.delete.AdditionalParametersSchema(),
 		r.getDeleteParamsModifiers,
 		ctx,
@@ -123,14 +123,14 @@ func (r *MgcActionResource) ReadInputAttributes(ctx context.Context) diag.Diagno
 func (r *MgcActionResource) ReadOutputAttributes(ctx context.Context) diag.Diagnostics {
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, actionResourceNameField, r.name)
 	d := diag.Diagnostics{}
-	if len(r.outputAttr) != 0 {
+	if len(r.outputAttrInfoMap) != 0 {
 		return d
 	}
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading output attributes")
 
-	r.outputAttr = mgcAttributes{}
+	r.outputAttrInfoMap = resAttrInfoMap{}
 	err := addMgcSchemaAttributes(
-		r.outputAttr,
+		r.outputAttrInfoMap,
 		r.create.ResultSchema(),
 		getResultModifiers,
 		ctx,
@@ -141,7 +141,7 @@ func (r *MgcActionResource) ReadOutputAttributes(ctx context.Context) diag.Diagn
 	}
 
 	err = addMgcSchemaAttributes(
-		r.outputAttr,
+		r.outputAttrInfoMap,
 		r.read.ResultSchema(),
 		getResultModifiers,
 		ctx,
@@ -154,19 +154,19 @@ func (r *MgcActionResource) ReadOutputAttributes(ctx context.Context) diag.Diagn
 	return d
 }
 
-func (r *MgcActionResource) InputAttributes() mgcAttributes {
-	return r.inputAttr
+func (r *MgcActionResource) InputAttributes() resAttrInfoMap {
+	return r.inputAttrInfoMap
 }
 
-func (r *MgcActionResource) OutputAttributes() mgcAttributes {
-	return r.outputAttr
+func (r *MgcActionResource) OutputAttributes() resAttrInfoMap {
+	return r.outputAttrInfoMap
 }
 
-func (r *MgcActionResource) AppendSplitAttribute(split splitMgcAttribute) {
-	if r.splitAttr == nil {
-		r.splitAttr = []splitMgcAttribute{}
+func (r *MgcActionResource) AppendSplitAttribute(split splitResAttribute) {
+	if r.splitAttributes == nil {
+		r.splitAttributes = []splitResAttribute{}
 	}
-	r.splitAttr = append(r.splitAttr, split)
+	r.splitAttributes = append(r.splitAttributes, split)
 }
 
 var _ tfSchemaHandler = (*MgcActionResource)(nil)
@@ -179,8 +179,8 @@ func (r *MgcActionResource) TFSchema() *schema.Schema {
 	return r.tfschema
 }
 
-func (r *MgcActionResource) SplitAttributes() []splitMgcAttribute {
-	return r.splitAttr
+func (r *MgcActionResource) SplitAttributes() []splitResAttribute {
+	return r.splitAttributes
 }
 
 func (r *MgcActionResource) ReadResultSchema() *mgcSdk.Schema {
@@ -224,7 +224,7 @@ func (r *MgcActionResource) Schema(ctx context.Context, req resource.SchemaReque
 
 func (r *MgcActionResource) performOwnerRead(ctx context.Context, tfState tfsdk.State, d *diag.Diagnostics) core.ResultWithValue {
 	configs := getConfigs(r.readOwner.ConfigsSchema())
-	params := readMgcMap(r, r.readOwner.ParametersSchema(), ctx, tfState, d)
+	params := readMgcMapSchemaFromTFState(r, r.readOwner.ParametersSchema(), ctx, tfState, d)
 	if d.HasError() {
 		return nil
 	}
@@ -241,7 +241,7 @@ func (r *MgcActionResource) performLinkOperation(ctx context.Context, link core.
 	}
 
 	configs := getConfigs(link.AdditionalConfigsSchema())
-	params := readMgcMap(r, link.AdditionalParametersSchema(), ctx, inState, diag)
+	params := readMgcMapSchemaFromTFState(r, link.AdditionalParametersSchema(), ctx, inState, diag)
 	if diag.HasError() {
 		return
 	}

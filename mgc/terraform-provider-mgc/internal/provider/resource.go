@@ -20,25 +20,20 @@ import (
 var _ resource.Resource = &MgcResource{}
 var _ resource.ResourceWithImportState = &MgcResource{}
 
-type splitMgcAttribute struct {
-	current *attribute
-	desired *attribute
-}
-
 // MgcResource defines the resource implementation.
 type MgcResource struct {
-	sdk         *mgcSdk.Sdk
-	name        string
-	description string
-	group       mgcSdk.Grouper // TODO: is this needed?
-	create      mgcSdk.Executor
-	read        mgcSdk.Executor
-	update      mgcSdk.Executor
-	delete      mgcSdk.Executor
-	inputAttr   mgcAttributes
-	outputAttr  mgcAttributes
-	splitAttr   []splitMgcAttribute
-	tfschema    *schema.Schema
+	sdk               *mgcSdk.Sdk
+	name              string
+	description       string
+	group             mgcSdk.Grouper // TODO: is this needed?
+	create            mgcSdk.Executor
+	read              mgcSdk.Executor
+	update            mgcSdk.Executor
+	delete            mgcSdk.Executor
+	inputAttrInfoMap  resAttrInfoMap
+	outputAttrInfoMap resAttrInfoMap
+	splitAttributes   []splitResAttribute
+	tfschema          *schema.Schema
 }
 
 // BEGIN: tfSchemaHandler implementation
@@ -106,12 +101,12 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *m
 func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics {
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, r.name)
 	d := diag.Diagnostics{}
-	if len(r.inputAttr) != 0 {
+	if len(r.inputAttrInfoMap) != 0 {
 		return d
 	}
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading input attributes")
 
-	input := mgcAttributes{}
+	input := resAttrInfoMap{}
 	err := addMgcSchemaAttributes(
 		input,
 		r.create.ParametersSchema(),
@@ -145,19 +140,19 @@ func (r *MgcResource) ReadInputAttributes(ctx context.Context) diag.Diagnostics 
 		return d
 	}
 
-	r.inputAttr = input
+	r.inputAttrInfoMap = input
 	return d
 }
 
 func (r *MgcResource) ReadOutputAttributes(ctx context.Context) diag.Diagnostics {
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, r.name)
 	d := diag.Diagnostics{}
-	if len(r.outputAttr) != 0 {
+	if len(r.outputAttrInfoMap) != 0 {
 		return d
 	}
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading output attributes")
 
-	output := mgcAttributes{}
+	output := resAttrInfoMap{}
 	err := addMgcSchemaAttributes(
 		output,
 		r.create.ResultSchema(),
@@ -179,23 +174,23 @@ func (r *MgcResource) ReadOutputAttributes(ctx context.Context) diag.Diagnostics
 		return d
 	}
 
-	r.outputAttr = output
+	r.outputAttrInfoMap = output
 	return d
 }
 
-func (r *MgcResource) InputAttributes() mgcAttributes {
-	return r.inputAttr
+func (r *MgcResource) InputAttributes() resAttrInfoMap {
+	return r.inputAttrInfoMap
 }
 
-func (r *MgcResource) OutputAttributes() mgcAttributes {
-	return r.outputAttr
+func (r *MgcResource) OutputAttributes() resAttrInfoMap {
+	return r.outputAttrInfoMap
 }
 
-func (r *MgcResource) AppendSplitAttribute(split splitMgcAttribute) {
-	if r.splitAttr == nil {
-		r.splitAttr = []splitMgcAttribute{}
+func (r *MgcResource) AppendSplitAttribute(split splitResAttribute) {
+	if r.splitAttributes == nil {
+		r.splitAttributes = []splitResAttribute{}
 	}
-	r.splitAttr = append(r.splitAttr, split)
+	r.splitAttributes = append(r.splitAttributes, split)
 }
 
 var _ tfSchemaHandler = (*MgcResource)(nil)
@@ -204,8 +199,8 @@ var _ tfSchemaHandler = (*MgcResource)(nil)
 
 // BEGIN: tfStateHandler implementation
 
-func (r *MgcResource) SplitAttributes() []splitMgcAttribute {
-	return r.splitAttr
+func (r *MgcResource) SplitAttributes() []splitResAttribute {
+	return r.splitAttributes
 }
 
 func (r *MgcResource) TFSchema() *schema.Schema {
@@ -249,7 +244,7 @@ func (r *MgcResource) performOperation(ctx context.Context, exec core.Executor, 
 	ctx = r.sdk.WrapContext(ctx)
 
 	configs := getConfigs(exec.ConfigsSchema())
-	params := readMgcMap(r, exec.ParametersSchema(), ctx, inState, diag)
+	params := readMgcMapSchemaFromTFState(r, exec.ParametersSchema(), ctx, inState, diag)
 	if diag.HasError() {
 		return
 	}

@@ -23,9 +23,9 @@ type tfStateHandler interface {
 	TFSchema() *schema.Schema
 	ReadResultSchema() *mgcSdk.Schema
 
-	InputAttributes() mgcAttributes
-	OutputAttributes() mgcAttributes
-	SplitAttributes() []splitMgcAttribute
+	InputAttributes() resAttrInfoMap
+	OutputAttributes() resAttrInfoMap
+	SplitAttributes() []splitResAttribute
 }
 
 func missingSchemaKeysInMap(m map[string]core.Value, s *mgcSchemaPkg.Schema, prefix string) (missing []string) {
@@ -53,9 +53,9 @@ func missingSchemaKeysInMap(m map[string]core.Value, s *mgcSchemaPkg.Schema, pre
 }
 
 // Try to read attributes from both Input and Output to fill a map that matches the 'mgcSchema'. If any values are missing in the end, errors are diagnosed
-func readMgcMap(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	result := readMgcInputMap(handler, mgcSchema, ctx, tfState, diag)
-	output := readMgcOutputMap(handler, mgcSchema, ctx, tfState, diag)
+func readMgcMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
+	result := readMgcInputMapSchemaFromTFState(handler, mgcSchema, ctx, tfState, diag)
+	output := readMgcOutputMapSchemaFromTFState(handler, mgcSchema, ctx, tfState, diag)
 	maps.Copy(result, output)
 
 	if missingKeys := missingSchemaKeysInMap(result, mgcSchema, ""); len(missingKeys) > 0 {
@@ -69,25 +69,25 @@ func readMgcMap(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Co
 }
 
 // If the Input Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
-func readMgcInputMap(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	conv := newTFStateConverter(ctx, diag, handler.TFSchema())
-	return conv.readMgcMap(mgcSchema, handler.InputAttributes(), tfState)
+func readMgcInputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
+	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
+	return loader.readMgcMap(mgcSchema, handler.InputAttributes(), tfState)
 }
 
 // If the Output Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
-func readMgcOutputMap(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	conv := newTFStateConverter(ctx, diag, handler.TFSchema())
-	return conv.readMgcMap(mgcSchema, handler.OutputAttributes(), tfState)
+func readMgcOutputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
+	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
+	return loader.readMgcMap(mgcSchema, handler.OutputAttributes(), tfState)
 }
 
-func applyMgcInputMap(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
-	conv := newTFStateConverter(ctx, diag, handler.TFSchema())
-	conv.applyMgcMap(mgcMap, handler.InputAttributes(), ctx, tfState, path.Empty())
+func applyMgcInputMapToTFState(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
+	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
+	loader.applyMgcMap(mgcMap, handler.InputAttributes(), ctx, tfState, path.Empty())
 }
 
-func applyMgcOutputMap(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
-	conv := newTFStateConverter(ctx, diag, handler.TFSchema())
-	conv.applyMgcMap(mgcMap, handler.OutputAttributes(), ctx, tfState, path.Empty())
+func applyMgcOutputMapToTFState(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
+	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
+	loader.applyMgcMap(mgcMap, handler.OutputAttributes(), ctx, tfState, path.Empty())
 }
 
 func verifyCurrentDesiredMismatch(handler tfStateHandler, inputMgcMap map[string]any, outputMgcMap map[string]any, diag *diag.Diagnostics) {
@@ -118,7 +118,7 @@ func verifyCurrentDesiredMismatch(handler tfStateHandler, inputMgcMap map[string
 }
 
 // Does not return error, check for 'diag.HasError' to see if operation was successful
-func castToMap(result core.ResultWithValue, diag *diag.Diagnostics) map[string]any {
+func resultAsMap(result core.ResultWithValue, diag *diag.Diagnostics) map[string]any {
 	if result == nil {
 		return map[string]any{}
 	}
@@ -180,14 +180,14 @@ func applyStateAfter(
 	tflog.Debug(ctx, fmt.Sprintf("[resource] applying state after for %q", handler.Name()))
 
 	// First, apply the values that the user passed as Parameters to the state (assuming success)
-	applyMgcInputMap(handler, result.Source().Parameters, ctx, tfState, diag)
+	applyMgcInputMapToTFState(handler, result.Source().Parameters, ctx, tfState, diag)
 
-	resultMap := castToMap(result, diag)
+	resultMap := resultAsMap(result, diag)
 	if diag.HasError() {
 		return
 	}
 	// Then, apply the result values of the request that was performed
-	applyMgcOutputMap(handler, resultMap, ctx, tfState, diag)
+	applyMgcOutputMapToTFState(handler, resultMap, ctx, tfState, diag)
 	verifyCurrentDesiredMismatch(handler, result.Source().Parameters, resultMap, diag)
 
 	// Then, try to retrieve the Read executor for the Resource via links ('read' parameter may have been nil)
@@ -202,7 +202,7 @@ func applyStateAfter(
 	}
 
 	paramsSchema := read.ParametersSchema()
-	params := readMgcMap(handler, paramsSchema, ctx, *tfState, diag)
+	params := readMgcMapSchemaFromTFState(handler, paramsSchema, ctx, *tfState, diag)
 	if err := paramsSchema.VisitJSON(params); err != nil {
 		diag.AddError(
 			"applying state after failed",
@@ -216,11 +216,11 @@ func applyStateAfter(
 		return
 	}
 
-	readResultMap := castToMap(readResult, diag)
+	readResultMap := resultAsMap(readResult, diag)
 	if diag.HasError() {
 		return
 	}
 
-	applyMgcOutputMap(handler, readResultMap, ctx, tfState, diag)
+	applyMgcOutputMapToTFState(handler, readResultMap, ctx, tfState, diag)
 	verifyCurrentDesiredMismatch(handler, result.Source().Parameters, readResultMap, diag)
 }

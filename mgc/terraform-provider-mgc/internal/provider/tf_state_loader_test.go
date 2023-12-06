@@ -234,13 +234,13 @@ var results = []any{
 	},
 }
 
-var attrInfo = mgcAttributes{
+var attrInfo = resAttrInfoMap{
 	"value": {
 		tfName: "value",
 		mgcSchema: mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{
 			"value_nested": mgcSchemaPkg.NewStringSchema(),
 		}, []string{}),
-		attributes: mgcAttributes{
+		childAttributes: resAttrInfoMap{
 			"value_nested": {
 				tfName:    "value_nested",
 				mgcSchema: mgcSchemaPkg.NewStringSchema(),
@@ -248,13 +248,13 @@ var attrInfo = mgcAttributes{
 		},
 	},
 }
-var attrInfoList = mgcAttributes{
+var attrInfoList = resAttrInfoMap{
 	"0": {
 		tfName: "0",
 		mgcSchema: mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{
 			"value": mgcSchemaPkg.NewStringSchema(),
 		}, []string{"value"}),
-		attributes: mgcAttributes{
+		childAttributes: resAttrInfoMap{
 			"value": {
 				tfName:    "value",
 				mgcSchema: mgcSchemaPkg.NewStringSchema(),
@@ -262,13 +262,13 @@ var attrInfoList = mgcAttributes{
 		},
 	},
 }
-var attrInfoTFNameObjectNested = mgcAttributes{
+var attrInfoTFNameObjectNested = resAttrInfoMap{
 	"value": {
 		tfName: "value",
 		mgcSchema: mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{
 			"value_nested": mgcSchemaPkg.NewStringSchema(),
 		}, []string{}),
-		attributes: mgcAttributes{
+		childAttributes: resAttrInfoMap{
 			"value_nested": {
 				tfName:    "tf_value_nested",
 				mgcSchema: mgcSchemaPkg.NewStringSchema(),
@@ -276,13 +276,13 @@ var attrInfoTFNameObjectNested = mgcAttributes{
 		},
 	},
 }
-var attrInfoTFNameObjectInList = mgcAttributes{
+var attrInfoTFNameObjectInList = resAttrInfoMap{
 	"0": {
 		tfName: "0",
 		mgcSchema: mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{
 			"value": mgcSchemaPkg.NewStringSchema(),
 		}, []string{}),
-		attributes: mgcAttributes{
+		childAttributes: resAttrInfoMap{
 			"value": {
 				tfName:    "tf_value",
 				mgcSchema: mgcSchemaPkg.NewStringSchema(),
@@ -291,21 +291,21 @@ var attrInfoTFNameObjectInList = mgcAttributes{
 	},
 }
 
-func tstCreateAttribute(mgcName mgcName, tfName tfName, mgcSchema *mgcSchemaPkg.Schema, isRequired bool, isOptional bool, isComputed bool, useStateForUnknown bool, requiresReplaceWhenChanged bool) *attribute {
-	tfSchema, childAttrs, err := mgcToTFSchema(mgcSchema, attributeModifiers{isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged, getInputChildModifiers}, context.Background())
+func tstCreateAttribute(mgcName mgcName, tfName tfName, mgcSchema *mgcSchemaPkg.Schema, isRequired bool, isOptional bool, isComputed bool, useStateForUnknown bool, requiresReplaceWhenChanged bool) *resAttrInfo {
+	tfSchema, childAttrs, err := mgcSchemaToTFAttribute(mgcSchema, attributeModifiers{isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged, getInputChildModifiers}, context.Background())
 	if err != nil {
 		panic("Could not create test TF Schema")
 	}
-	return &attribute{
-		mgcName:    mgcName,
-		tfName:     tfName,
-		mgcSchema:  mgcSchema,
-		tfSchema:   tfSchema,
-		attributes: childAttrs,
+	return &resAttrInfo{
+		mgcName:         mgcName,
+		tfName:          tfName,
+		mgcSchema:       mgcSchema,
+		tfSchema:        tfSchema,
+		childAttributes: childAttrs,
 	}
 }
 
-var attrInfoTFInstanceCreate = mgcAttributes{
+var attrInfoTFInstanceCreate = resAttrInfoMap{
 	"allocate_fip":      tstCreateAttribute("allocate_fip", "allocate_fip", mgcSchemaPkg.NewBooleanSchema(), false, true, false, false, false),
 	"availability_zone": tstCreateAttribute("availability_zone", "availability_zone", mgcSchemaPkg.NewStringSchema(), true, false, false, false, false),
 	"created_at":        tstCreateAttribute("created_at", "created_at", mgcSchemaPkg.NewStringSchema(), true, false, false, false, false),
@@ -326,7 +326,7 @@ var attrInfoTFInstanceCreate = mgcAttributes{
 	"vcpus":             tstCreateAttribute("vcpus", "vcpus", mgcSchemaPkg.NewNumberSchema(), true, false, false, false, false),
 }
 
-var attrInfos = []mgcAttributes{
+var attrInfos = []resAttrInfoMap{
 	{},
 	{},
 	{},
@@ -342,18 +342,18 @@ var attrInfos = []mgcAttributes{
 }
 
 func TestToMgcSchemaValue(t *testing.T) {
-	conv := tfStateConverter{
+	conv := tfStateLoader{
 		ctx:  context.Background(),
 		diag: &diag.Diagnostics{},
 	}
 
 	for i := 0; i < len(states); i++ {
-		atinfo := attribute{
-			tfName:     "schema",
-			mgcSchema:  schemas[i],
-			attributes: attrInfos[i],
+		atinfo := resAttrInfo{
+			tfName:          "schema",
+			mgcSchema:       schemas[i],
+			childAttributes: attrInfos[i],
 		}
-		result, _ := conv.toMgcSchemaValue(&atinfo, states[i], true, true)
+		result, _ := conv.loadMgcSchemaValue(&atinfo, states[i], true, true)
 		if !reflect.DeepEqual(result, results[i]) {
 			t.Fatalf("result %d differs from expected: %T -> %T:\nRECEIVED: %+v\nEXPECTED: %+v\nDIAG: %+v\n", i, result, results[i], result, results[i], conv.diag)
 		}
