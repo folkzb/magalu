@@ -111,6 +111,10 @@ Loop:
 		switch latestTok {
 		case "/":
 			jpStr := latestTok + getRemainder(o.s)
+			if o.data == nil {
+				return nil, false, fmt.Errorf("could not resolve link runtime expression %q: body is nil", jpStr)
+			}
+
 			jpHandler, err := jsonpointer.New(jpStr)
 			if err != nil {
 				return nil, false, fmt.Errorf("malformed json pointer on link runtime expression: %s", jpStr)
