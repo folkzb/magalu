@@ -1,7 +1,21 @@
 # Running the CLI
 
-First download or build the `mgc` cli. For more details on the build process
+First download or build the `mgc` CLI. For more details on the build process
 see [DEVELOPMENT.md](./DEVELOPMENT.md)
+
+## Autocomplete
+
+The following autocompletion scripts are provided, please copy these files to your system (`/usr`, `/usr/local` or some user-local folder):
+
+- Fish: `share/fish/vendor_completions.d/mgc`
+- Bash: `share/bash-completion/completions/mgc`
+- Zsh: `share/zsh/site-functions/mgc`
+
+> **NOTE:**
+> Make sure that the `mgc` CLI is reachable via your `PATH` environment variable. It
+> should be called as `mgc` instead of `./mgc` when using it.
+
+You can then autocomplete commands by using tab completion.
 
 ## Flag usage guidelines
 
