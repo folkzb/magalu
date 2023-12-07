@@ -38,7 +38,7 @@ func newListLinkFlag() (f *flag.Flag) {
 	return
 }
 
-func listLinks(f *flag.Flag, links core.Links) (err error, used bool) {
+func listLinks(f *flag.Flag, links core.Links) (err error) {
 	if f == nil {
 		return
 	}
@@ -47,8 +47,6 @@ func listLinks(f *flag.Flag, links core.Links) (err error, used bool) {
 	if output == "" {
 		return
 	}
-
-	used = true
 
 	type LinkerListEntry struct {
 		Name        string `json:"name"`
@@ -68,7 +66,11 @@ func listLinks(f *flag.Flag, links core.Links) (err error, used bool) {
 	}
 
 	err = handleSimpleResultValue(simplified, output)
-	return
+	if err != nil {
+		return
+	}
+
+	return schema_flags.ErrWantHelp
 }
 
 type cmdLinks struct {
@@ -78,21 +80,29 @@ type cmdLinks struct {
 
 	flag *flag.Flag
 
-	cmdFlags map[string]*cmdFlags
-	root     *cobra.Command
+	root *cobra.Command // set by initCommands()
+
+	chainedArgs [][]string
+
+	// these are set when resolve() calls root.Execute():
+	resolvedCmd       *cobra.Command
+	resolvedLink      core.Linker
+	resolvedLinkFlags *cmdFlags
+
+	next *cmdLinks
 }
 
-func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string) (c *cmdLinks) {
+func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string, chainedArgs [][]string) (c *cmdLinks) {
 	if len(links) == 0 {
 		return nil
 	}
 
 	c = &cmdLinks{
-		sdk:      sdk,
-		links:    links,
-		cmdPath:  cmdPath,
-		flag:     newListLinkFlag(),
-		cmdFlags: map[string]*cmdFlags{},
+		sdk:         sdk,
+		links:       links,
+		cmdPath:     cmdPath,
+		flag:        newListLinkFlag(),
+		chainedArgs: chainedArgs,
 	}
 	c.initCommands()
 	logger().Debugw("newCmdLinks", "links", links, "cmdPath", cmdPath)
@@ -100,117 +110,91 @@ func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string) (c *cmdLinks
 	return
 }
 
-func (c *cmdLinks) check(chainedArgs [][]string) (err error, stop bool) {
+func (c *cmdLinks) resolve() (err error) {
 	if c == nil {
+		logger().Debugw("no more links")
 		return
 	}
 
-	if err, stop = listLinks(c.flag, c.links); err != nil || stop {
+	if err = listLinks(c.flag, c.links); err != nil {
+		logger().Debugw("link list requested", "chainedArgs", c.chainedArgs)
 		return
 	}
 
-	if len(chainedArgs) == 0 {
+	if len(c.chainedArgs) == 0 {
+		logger().Debug("no more links requested")
 		return
 	}
 
-	args := chainedArgs[0]
+	args := c.chainedArgs[0]
 	if len(args) == 0 {
+		logger().Debug("no link command")
 		return
 	}
 
 	c.root.SetArgs(args)
-	err = c.root.Execute() // safe: only help is an actual command, whatever else is just an empty placeholder
+	err = c.root.Execute() // will set resolved, cmdFlags and nextLinks
 	if err == schema_flags.ErrWantHelp {
-		err = nil
-		stop = true
+		return
+	} else if c.resolvedCmd == nil {
+		return schema_flags.ErrWantHelp // <link> -h/--help
 	} else if err != nil {
 		err = fmt.Errorf("unknown link %q. Use \"%s ! help\" for more information", args[0], c.cmdPath)
-	}
-	logger().Debugw("checked executor link", "args", args, "error", err, "links", c.links)
-
-	return
-}
-
-func (c *cmdLinks) findCommandLink(linkCmd *cobra.Command) (link core.Linker, err error) {
-	link = c.links[linkCmd.Name()]
-	if link != nil {
 		return
 	}
+	logger().Debugw("resolved executor link", "args", args, "error", err, "links", c.links, "hasNext", c.next != nil, "chainedArgs", c.chainedArgs)
 
-	for _, alias := range linkCmd.Aliases {
-		if link = c.links[alias]; link != nil {
-			return
-		}
-	}
-
-	err = fmt.Errorf("link not found: %q, aliases: %v", linkCmd.Name(), linkCmd.Aliases)
-	return
+	return c.next.resolve()
 }
 
-func (c *cmdLinks) handle(chainedArgs [][]string, originalResult core.Result, parentOutputFlag string) (err error) {
+func (c *cmdLinks) handle(originalResult core.Result, parentOutputFlag string) (err error) {
 	if c == nil {
 		return
 	}
 
-	if len(chainedArgs) == 0 {
+	if len(c.chainedArgs) == 0 {
 		return
 	}
 
-	args := chainedArgs[0]
+	args := c.chainedArgs[0]
 	if len(args) == 0 {
 		return
 	}
 
-	linkCmd, _, err := c.root.Find(args)
-	if err != nil {
-		logger().Debugw("link not found", "args", args, "error", err, "links", c.links)
-		return
-	}
-
-	link, err := c.findCommandLink(linkCmd)
-	if err != nil {
-		logger().Debugw("link not found", "args", args, "error", err, "links", c.links, "linkCmd", linkCmd)
-		return
-	}
-
-	flags := c.cmdFlags[link.Name()] // safe: see addLinkCommand()
-
-	sdk := c.sdk
+	link := c.resolvedLink
+	logger().Debugw("handling link", "link", link.Name(), "originalResult", originalResult.Source())
 
 	ctx := originalResult.Source().Context
 	exec, err := link.CreateExecutor(originalResult)
 	if err != nil {
-		logger().Debugw("could not create link executor", "originalResult", originalResult, "error", err, "link", link)
+		logger().Debugw("could not create link executor", "originalResult", originalResult, "error", err, "link", link.Name())
 		return
 	}
 
-	nextLinks := newCmdLinks(sdk, exec.Links(), fmt.Sprintf("%s ! %s", c.cmdPath, linkCmd.CommandPath()))
-
-	linkCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		followingLinkArgs := chainedArgs[1:]
-		if err, stop := nextLinks.check(followingLinkArgs); err != nil || stop {
-			return err
-		}
-
-		config := sdk.Config()
-		additionalParameters, additionalConfigs, err := flags.getValues(config, args)
-		if err != nil {
-			return err
-		}
-
-		printLinkExecutionTable(link.Name(), link.Description(), additionalParameters, additionalConfigs)
-		result, err := handleExecutor(ctx, sdk, cmd, exec, additionalParameters, additionalConfigs)
-		if err != nil {
-			return err
-		}
-
-		return nextLinks.handle(followingLinkArgs, result, getOutputFlag(cmd))
+	setOutputFlag(c.root, parentOutputFlag)
+	err = c.root.ParseFlags(args)
+	if err != nil {
+		logger().Debugw("could not parse link flags", "args", args, "error", err, "link", link.Name())
+		return
 	}
 
-	setOutputFlag(c.root, parentOutputFlag)
-	c.root.SetArgs(args)
-	err = c.root.Execute()
-	logger().Debugw("handled executor link", "exec", exec, "args", args, "error", err)
+	sdk := c.sdk
+
+	config := sdk.Config()
+	additionalParameters, additionalConfigs, err := c.resolvedLinkFlags.getValues(config, args)
+	if err != nil {
+		return
+	}
+
+	printLinkExecutionTable(link.Name(), link.Description(), additionalParameters, additionalConfigs)
+	result, err := handleExecutor(ctx, sdk, c.resolvedCmd, exec, additionalParameters, additionalConfigs)
+	if err != nil {
+		logger().Debugw("handled handleExecutor link", "exec", exec, "args", args, "error", err)
+		return
+	}
+
+	err = c.next.handle(result, getOutputFlag(c.resolvedCmd))
+	logger().Debugw("handled next link", "exec", exec, "args", args, "error", err)
 	return err
 }
 
@@ -229,11 +213,17 @@ func (c *cmdLinks) addLinkCommand(link core.Linker) {
 		Aliases: aliases,
 		Short:   link.Description(),
 		GroupID: "links",
-		Run:     func(cmd *cobra.Command, args []string) {}, // place holder
+		Run: func(cmd *cobra.Command, args []string) {
+			c.resolvedCmd = cmd
+			c.resolvedLink = link
+			c.resolvedLinkFlags = linkFlags
+			c.next = newCmdLinks(c.sdk, link.Links(), fmt.Sprintf("%s ! %s", c.cmdPath, linkName), c.chainedArgs[1:])
+
+			logger().Debugw("resolved link", "link", link.Name(), "cmd", cmd.CommandPath(), "hasNext", c.next != nil)
+		},
 	}
 
 	linkFlags.addFlags(linkCmd)
-	c.cmdFlags[link.Name()] = linkFlags
 	c.root.AddCommand(linkCmd)
 }
 
