@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -127,13 +126,13 @@ func collectGroupResources(
 	sdk *mgcSdk.Sdk,
 	group mgcSdk.Grouper,
 	path []string,
-) (resources []func() resource.Resource, err error) {
+) ([]func() resource.Resource, error) {
 	// TODO: We should check if the version is correct in the Configuration call or Resource
 	debugMap := map[string]any{"path": path}
 	tflog.Debug(ctx, "Collecting resources", debugMap)
-	resources = make([]func() resource.Resource, 0)
+	var resources []func() resource.Resource
 	var create, read, update, delete, list mgcSdk.Executor
-	_, err = group.VisitChildren(func(child mgcSdk.Descriptor) (run bool, err error) {
+	_, err := group.VisitChildren(func(child mgcSdk.Descriptor) (run bool, err error) {
 		if group.IsInternal() {
 			return true, nil
 		}
@@ -169,52 +168,21 @@ func collectGroupResources(
 			return false, fmt.Errorf("Unsupported descriptor child type %T", child)
 		}
 	})
-	if err != nil {
+	if err != nil || create == nil {
 		return resources, err
 	}
 
-	if create != nil {
-		name := strings.Join(path, "_")
-		tflog.Debug(ctx, fmt.Sprintf("Found resource %q", name), debugMap)
+	resourceName := strings.Join(path, "_")
+	tflog.Debug(ctx, fmt.Sprintf("found resource %q", resourceName), debugMap)
 
-		if delete == nil {
-			tflog.Warn(ctx, fmt.Sprintf("Resource %q misses delete", name))
-			return resources, nil
-		}
-
-		if read == nil {
-			tflog.Warn(ctx, fmt.Sprintf("Resource %q misses read", name))
-			if list == nil {
-				return resources, nil
-			}
-
-			readFromList, err := createReadFromList(list, create.ResultSchema(), delete.ParametersSchema())
-			if err != nil {
-				tflog.Warn(ctx, fmt.Sprintf("Unable to generate 'read' operation from 'list' for %q", name), map[string]any{"error": err})
-				return resources, nil
-			}
-			tflog.Debug(ctx, fmt.Sprintf("Generated 'read' operation based on 'list' for %q", name))
-			read = readFromList
-		}
-
-		if update == nil {
-			update = core.NoOpExecutor()
-		}
-
-		res := &MgcResource{
-			sdk:         sdk,
-			name:        name,
-			description: group.Description(),
-			group:       group,
-			create:      create,
-			read:        read,
-			update:      update,
-			delete:      delete,
-		}
-
-		tflog.Debug(ctx, fmt.Sprintf("Export resource %q", name), debugMap)
-		resources = append(resources, func() resource.Resource { return res })
+	res, err := newMgcResource(ctx, sdk, resourceName, group.Description(), create, read, update, delete, list)
+	if err != nil {
+		tflog.Warn(ctx, err.Error(), debugMap)
+		return resources, nil
 	}
+
+	tflog.Debug(ctx, fmt.Sprintf("export resource %q", resourceName), debugMap)
+	resources = append(resources, func() resource.Resource { return res })
 
 	if read != nil {
 		actionResources := collectActionResources(ctx, sdk, read, path)
@@ -226,7 +194,7 @@ func collectGroupResources(
 
 func collectActionResources(ctx context.Context, sdk *mgcSdk.Sdk, owner mgcSdk.Executor, path []string) []func() resource.Resource {
 	debugMap := map[string]any{"path": path}
-	tflog.Debug(ctx, "Collecting action resource", debugMap)
+	tflog.Debug(ctx, "collecting action resources", debugMap)
 	type actionLinks struct {
 		create mgcSdk.Linker
 		read   mgcSdk.Linker
@@ -257,21 +225,21 @@ func collectActionResources(ctx context.Context, sdk *mgcSdk.Sdk, owner mgcSdk.E
 
 	result := []func() resource.Resource{}
 	for actionName, links := range actions {
-		if links.read != nil && links.create != nil && links.delete != nil {
-			linkPath := append(path, actionName)
-			name := strings.Join(linkPath, "_")
-			actionResource := &MgcActionResource{
-				sdk:       sdk,
-				name:      name,
-				readOwner: owner,
-				create:    links.create,
-				read:      links.read,
-				update:    links.update,
-				delete:    links.delete,
-			}
-			tflog.Debug(ctx, fmt.Sprintf("Export action resource %q", actionName), debugMap)
-			result = append(result, func() resource.Resource { return actionResource })
+		if links.create == nil {
+			continue
 		}
+
+		linkPath := append(path, actionName)
+		resName := strings.Join(linkPath, "_")
+
+		res, err := newMgcActionResource(sdk, resName, owner, links.create, links.read, links.update, links.delete)
+		if err != nil {
+			tflog.Warn(ctx, err.Error(), debugMap)
+			continue
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("export action resource %q", actionName), debugMap)
+		result = append(result, func() resource.Resource { return res })
 	}
 
 	return result

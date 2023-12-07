@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"slices"
 
@@ -25,7 +26,6 @@ type MgcResource struct {
 	sdk               *mgcSdk.Sdk
 	name              string
 	description       string
-	group             mgcSdk.Grouper // TODO: is this needed?
 	create            mgcSdk.Executor
 	read              mgcSdk.Executor
 	update            mgcSdk.Executor
@@ -34,6 +34,46 @@ type MgcResource struct {
 	outputAttrInfoMap resAttrInfoMap
 	splitAttributes   []splitResAttribute
 	tfschema          *schema.Schema
+}
+
+func newMgcResource(
+	ctx context.Context,
+	sdk *mgcSdk.Sdk,
+	name, description string,
+	create, read, update, delete, list mgcSdk.Executor,
+) (*MgcResource, error) {
+	if create == nil {
+		return nil, fmt.Errorf("resource %q misses create", name)
+	}
+	if delete == nil {
+		return nil, fmt.Errorf("resource %q misses delete", name)
+	}
+	if read == nil {
+		if list == nil {
+			return nil, fmt.Errorf("resource %q misses read", name)
+		}
+
+		readFromList, err := createReadFromList(list, create.ResultSchema(), delete.ParametersSchema())
+		if err != nil {
+			tflog.Warn(ctx, fmt.Sprintf("unable to generate 'read' operation from 'list' for %q", name), map[string]any{"error": err})
+			return nil, fmt.Errorf("resource %q misses read", name)
+		}
+
+		read = readFromList
+		tflog.Debug(ctx, fmt.Sprintf("generated 'read' operation based on 'list' for %q", name))
+	}
+	if update == nil {
+		update = core.NoOpExecutor()
+	}
+	return &MgcResource{
+		sdk:         sdk,
+		name:        name,
+		description: description,
+		create:      create,
+		read:        read,
+		update:      update,
+		delete:      delete,
+	}, nil
 }
 
 // BEGIN: tfSchemaHandler implementation

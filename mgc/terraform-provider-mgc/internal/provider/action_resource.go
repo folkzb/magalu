@@ -33,6 +33,35 @@ type MgcActionResource struct {
 	tfschema          *schema.Schema
 }
 
+func newMgcActionResource(
+	sdk *mgcSdk.Sdk,
+	name string,
+	readOwner mgcSdk.Executor,
+	create, read, update, delete mgcSdk.Linker,
+) (*MgcActionResource, error) {
+	if create == nil {
+		return nil, fmt.Errorf("action resource %q misses create", name)
+	}
+	if read == nil {
+		return nil, fmt.Errorf("action resource %q misses read", name)
+	}
+	if update == nil {
+		return nil, fmt.Errorf("action resource %q misses update", name)
+	}
+	if delete == nil {
+		return nil, fmt.Errorf("action resource %q misses delete", name)
+	}
+	return &MgcActionResource{
+		sdk:       sdk,
+		name:      name,
+		readOwner: readOwner,
+		create:    create,
+		read:      read,
+		update:    update,
+		delete:    delete,
+	}, nil
+}
+
 // BEGIN: tfSchemaHandler implementation
 
 func (r *MgcActionResource) Name() string {
