@@ -9,6 +9,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
+	"magalu.cloud/core/utils"
 )
 
 type SchemaFlagValueDesc struct {
@@ -182,5 +183,34 @@ func (d SchemaFlagValueDesc) HumanReadableConstraints() (c *HumanReadableConstra
 	}
 
 	c.Description = d.fixDescriptionFlagUsage(c.Description)
+	return
+}
+
+func (d SchemaFlagValueDesc) ChildrenFlags() (children []SchemaFlagValueDesc) {
+	properties := utils.SortedMapIterator(mgcSchemaPkg.CollectAllObjectPropertySchemas(d.Schema))
+	if len(properties) == 0 {
+		return
+	}
+
+	children = make([]SchemaFlagValueDesc, 0, len(properties))
+	for _, pair := range properties {
+		for i, ps := range pair.Value {
+			var flagName flag.NormalizedName
+			if len(pair.Value) > 1 {
+				flagName = flag.NormalizedName(fmt.Sprintf(".%s.%d.", ps.Field, i))
+			}
+
+			children = append(children, SchemaFlagValueDesc{
+				Container: ps.Container,
+				Schema:    ps.PropSchema,
+				PropName:  ps.PropName,
+				FlagName:  flagName, // actually it's the infix to resolve conflicts
+
+				IsRequired: false,
+				IsConfig:   d.IsConfig,
+			})
+		}
+	}
+
 	return
 }

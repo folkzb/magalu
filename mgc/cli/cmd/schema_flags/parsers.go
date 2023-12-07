@@ -187,6 +187,9 @@ func parseString(s string, isDelimiter func(rune) bool) (value string, end int, 
 	if len(remaining) > 1 && (remaining[0] == '"' || remaining[0] == '\'') {
 		value, end, err = parseQuotedStringItem(remaining)
 		end += start
+		if err == nil && end < len(s) && isDelimiter(rune(s[end])) {
+			end++
+		}
 		return
 	}
 
@@ -211,6 +214,15 @@ func parseString(s string, isDelimiter func(rune) bool) (value string, end int, 
 
 func parseStringItem(s string) (value any, end int, err error) {
 	return parseString(s, isCSVDelimiter)
+}
+
+func parseObjectItem(schema *core.Schema, s string) (value any, end int, err error) {
+	value, end, err = parseObjectItemCSV(schema, s, nil)
+	if err == nil {
+		return
+	}
+
+	return parseAnyItem(s)
 }
 
 func parseAnyItem(s string) (value any, end int, err error) {
@@ -260,6 +272,10 @@ func getItemTypeParser(schema *core.Schema) (itemParser func(s string) (any, int
 		return parseBooleanItem
 	case "string":
 		return parseStringItem
+	case "object":
+		return func(s string) (any, int, error) {
+			return parseObjectItem(schema, s)
+		}
 	default:
 		return parseAnyItem
 	}
@@ -340,37 +356,175 @@ func parseObjectValue(propSchema *core.Schema, s string) (value any, end int, er
 	return
 }
 
-func parseObjectCSV(schema *core.Schema, rawValue string) (value map[string]any, err error) {
-	for {
-		end := skipCSVDelimitersOrWhiteSpaces(rawValue)
-		if end >= len(rawValue) {
+const objectKeyPathDelimiter = '.'
+
+func isObjectKeyPathDelimiter(r rune) bool {
+	return r == objectKeyPathDelimiter
+}
+
+func parseObjectPropertyValue(schema *core.Schema, propName string, s string) (propValue any, end int, err error) {
+	for _, os := range mgcSchemaPkg.CollectObjectPropertySchemas(schema, propName) {
+		propValue, end, err = parseObjectValue(os.PropSchema, s)
+		if err == nil {
 			return
 		}
-		rawValue = rawValue[end:]
+	}
+	return nil, 0, fmt.Errorf("could not find property %q", propName)
+}
 
-		var propName string
-		propName, end, err = parseObjectKey(rawValue)
-		if err != nil {
+func parseObjectValueFromNextKeyPath(schema *core.Schema, propName, keyPath, s string) (nextPropName string, propValue any, end int, err error) {
+	for _, os := range mgcSchemaPkg.CollectObjectPropertySchemas(schema, propName) {
+		nextPropName, propValue, end, err = parseObjectValueFromPath(os.PropSchema, keyPath, s)
+		if err == nil {
 			return
 		}
-		rawValue = rawValue[end:]
+	}
+	return "", nil, 0, fmt.Errorf("could not find property %q", propName)
+}
 
-		var propValue any
-		for _, os := range mgcSchemaPkg.CollectObjectPropertySchemas(schema, propName) {
-			propValue, end, err = parseObjectValue(os.PropSchema, rawValue)
-			if err == nil {
-				break
+func parseObjectValueFromPath(schema *core.Schema, keyPath string, s string) (propName string, propValue any, end int, err error) {
+	propName, nextKey, err := parseString(keyPath, isObjectKeyPathDelimiter)
+	if err != nil {
+		return
+	}
+	nextKey += skipWhiteSpaces(keyPath[nextKey:])
+	keyPath = keyPath[nextKey:]
+
+	if propName == string(objectKeyPathDelimiter) {
+		return parseObjectValueFromPath(schema, keyPath, s)
+	}
+
+	if keyPath == "" {
+		propValue, end, err = parseObjectPropertyValue(schema, propName, s)
+		return
+	}
+
+	childName, childValue, end, err := parseObjectValueFromNextKeyPath(schema, propName, keyPath, s)
+	if err != nil {
+		return
+	}
+	propValue = map[string]any{childName: childValue}
+
+	return
+}
+
+// if both 'a' and 'b' are maps, merge their items recursively.
+// if only one of them is a map, then fail.
+//
+// other kind of types, 'a' is returned
+func mergeValue(a, b any) (r any, err error) {
+	r = a
+	mA, ok := a.(map[string]any)
+	if !ok {
+		if _, ok := b.(map[string]any); ok {
+			err = fmt.Errorf("cannot merge types %T and %T (a: %#v, b: %#v)", a, b, a, b)
+			return
+		}
+		return
+	}
+
+	mB, ok := b.(map[string]any)
+	if !ok {
+		err = fmt.Errorf("cannot merge types %T and %T (a: %#v, b: %#v)", a, b, a, b)
+		return
+	}
+
+	m := make(map[string]any, len(mA)+len(mB))
+	for k, v := range mA {
+		m[k] = v
+	}
+	for k, v := range mB {
+		if existing, hasExisting := m[k]; hasExisting {
+			v, err = mergeValue(v, existing)
+			if err != nil {
+				return
 			}
 		}
+		m[k] = v
+	}
+	r = m
+
+	return
+}
+
+func parseObjectItemCSV(schema *core.Schema, rawValue string, v map[string]any) (value map[string]any, end int, err error) {
+	value = v
+	start := skipCSVDelimitersOrWhiteSpaces(rawValue)
+	end += start
+	if start >= len(rawValue) {
+		return
+	}
+	rawValue = rawValue[start:]
+	if rawValue[0] == '{' {
+		parsedValue, start, err := parseAnyItem(rawValue)
+		end += start
+		if err != nil {
+			return v, end, err
+		}
+		m, ok := parsedValue.(map[string]any)
+		if !ok {
+			err = fmt.Errorf("expected JSON object at %q", rawValue)
+			return v, end, err
+		}
+		mergedValue, err := mergeValue(m, v)
+		if err != nil {
+			return v, end, err
+		}
+		return mergedValue.(map[string]any), end, nil
+	}
+
+	var propName string
+	propName, start, err = parseObjectKey(rawValue)
+	end += start
+	if err != nil {
+		return
+	}
+	rawValue = rawValue[start:]
+	if rawValue == "" {
+		err = fmt.Errorf("missing property %q value", propName)
+		return
+	}
+
+	propValue, start, err := parseObjectPropertyValue(schema, propName, rawValue)
+	if err == nil {
+		end += start
+	} else {
+		if !strings.ContainsFunc(propName, isObjectKeyPathDelimiter) {
+			return
+		}
+		propName, propValue, start, err = parseObjectValueFromPath(schema, propName, rawValue)
 		if err != nil {
 			return
 		}
-		rawValue = rawValue[end:]
+		end += start
+	}
 
-		if value == nil {
-			value = map[string]any{}
+	if existing, hasExisting := value[propName]; hasExisting {
+		propValue, err = mergeValue(propValue, existing)
+		if err != nil {
+			return
 		}
-		value[propName] = propValue
+	}
+
+	if value == nil {
+		value = map[string]any{}
+	}
+	value[propName] = propValue
+	return
+}
+
+func parseObjectCSV(schema *core.Schema, rawValue string) (value map[string]any, err error) {
+	for {
+		var end int
+		value, end, err = parseObjectItemCSV(schema, rawValue, value)
+		if err != nil {
+			return
+		}
+
+		rawValue = rawValue[end:]
+		if rawValue == "" {
+			return
+		}
 	}
 }
 

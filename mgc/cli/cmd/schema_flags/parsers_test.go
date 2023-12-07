@@ -2,6 +2,7 @@ package schema_flags
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -31,7 +32,7 @@ func checkArray(t *testing.T, expected, got []any) {
 		vGot := got[i]
 		if !reflect.DeepEqual(vExpected, vGot) {
 			// print type as it's usually the case, int x int64 x float64...
-			t.Errorf("expected index %d value %#v (%T), got %#v (%T)", i, vExpected, vExpected, vGot, vGot)
+			t.Errorf("expected index %d:\nexpected: %#v (%T)\ngot.....: %#v (%T)", i, vExpected, vExpected, vGot, vGot)
 		}
 	}
 }
@@ -361,18 +362,24 @@ func Test_parseArrayFlagValue(t *testing.T) {
 	checkArray(t, expected, got)
 }
 
-func checkObject(t *testing.T, expected, got map[string]any) {
+func checkObject(t *testing.T, message string, expected, got map[string]any) {
 	if len(expected) != len(got) {
-		t.Errorf("expected object length %d, got %d. [%#v, %#v]", len(expected), len(got), expected, got)
+		t.Errorf("%s expected object length %d, got %d.\nexpected: %#v\ngot.....: %#v", message, len(expected), len(got), expected, got)
 		return
 	}
 
 	for k, vExpected := range expected {
 		if vGot, ok := got[k]; !ok {
-			t.Errorf("expected key %q value %#v (%T), got nothing", k, vExpected, vExpected)
+			t.Errorf("%s expected key %q value %#v (%T), got nothing", message, k, vExpected, vExpected)
 		} else if !reflect.DeepEqual(vExpected, vGot) {
+			if mExpected, expectedMap := vExpected.(map[string]any); expectedMap {
+				if mGot, gotMap := vGot.(map[string]any); gotMap {
+					checkObject(t, fmt.Sprintf("%s/%s", message, k), mExpected, mGot)
+					continue
+				}
+			}
 			// print type as it's usually the case, int x int64 x float64...
-			t.Errorf("expected key %q value %#v (%T), got %#v (%T)", k, vExpected, vExpected, vGot, vGot)
+			t.Errorf("%s expected key %q value %#v (%T), got %#v (%T)", message, k, vExpected, vExpected, vGot, vGot)
 		}
 	}
 }
@@ -384,6 +391,14 @@ func Test_parseObjectFlagValueSingle(t *testing.T) {
 		"number": mgcSchemaPkg.NewNumberSchema(),
 		"str":    mgcSchemaPkg.NewStringSchema(),
 		"any":    mgcSchemaPkg.NewAnySchema(),
+		"obj": mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{
+			"root": mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{
+				"child": mgcSchemaPkg.NewObjectSchema(map[string]*mgcSchemaPkg.Schema{
+					"int": mgcSchemaPkg.NewIntegerSchema(),
+					"str": mgcSchemaPkg.NewStringSchema(),
+				}, nil),
+			}, nil),
+		}, nil),
 	}, nil)
 
 	type testCase struct {
@@ -452,6 +467,128 @@ func Test_parseObjectFlagValueSingle(t *testing.T) {
 				"any":    []any{true, false},
 			},
 		},
+		{
+			name:     "single nested object with int children",
+			rawValue: `obj=root=child=int=123`,
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": map[string]any{
+						"child": map[string]any{
+							"int": 123,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "single nested object with string children",
+			rawValue: "obj=root=child=str=hello world",
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": map[string]any{
+						"child": map[string]any{
+							"str": "hello world",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "single nested object with quoted strings",
+			rawValue: `"obj"="root"="child"="str"="hello world"`,
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": map[string]any{
+						"child": map[string]any{
+							"str": "hello world",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "single nested object with spaces",
+			rawValue: `  obj = "root" = child = str  = "hello world"  `,
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": map[string]any{
+						"child": map[string]any{
+							"str": "hello world",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "multiple nested object with spaces",
+			rawValue: `  obj = "root" = child = str  = "hello world";  obj=root=child=int=123  `,
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": map[string]any{
+						"child": map[string]any{
+							"int": 123,
+							"str": "hello world",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "multiple nested object with json",
+			rawValue: `  obj=root=child=int=123; obj = "root" = child = {"str": "hello world"}  `,
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": map[string]any{
+						"child": map[string]any{
+							"int": 123,
+							"str": "hello world",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "wrong object key value",
+			rawValue: `  obj = root = 42  `,
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": 42.0, // if we fail to find a matching property, we just parse it as json and keep going
+				},
+			},
+		},
+		{
+			name:     "non-existing object key",
+			rawValue: `  obj = bug = other = 1  `,
+			expected: map[string]any{
+				"obj": "bug = other = 1", // same for unknown properties, parse as json and keep going
+			},
+		},
+		{
+			name:     "single path object with int children",
+			rawValue: "obj=root.child.int=123",
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": map[string]any{
+						"child": map[string]any{
+							"int": 123,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "single quoted path object with int children",
+			rawValue: `"obj"."root"."child"."int"=123`, // obj.root or obj=root should be the same
+			expected: map[string]any{
+				"obj": map[string]any{
+					"root": map[string]any{
+						"child": map[string]any{
+							"int": 123,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -462,7 +599,7 @@ func Test_parseObjectFlagValueSingle(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := parseObjectFlagValueSingle(schema, tc.rawValue)
 			checkError(t, tc.err, err)
-			checkObject(t, tc.expected, got)
+			checkObject(t, "", tc.expected, got)
 		})
 	}
 }
@@ -495,7 +632,7 @@ func Test_parseObjectFlagValue(t *testing.T) {
 	}
 
 	checkError(t, nil, err)
-	checkObject(t, expected, got)
+	checkObject(t, "", expected, got)
 }
 
 func Test_help(t *testing.T) {

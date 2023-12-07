@@ -3,15 +3,24 @@ Atualiza nodes de um node pool
 Usage:
   ./cli mke nodepool update [cluster-id] [id] [flags]
 
+Examples:
+  ./cli mke nodepool update --auto-scale.enabled=true --auto-scale.max-replicas=5 --auto-scale.min-replicas=2
+
 Flags:
-      --auto-scale object             Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes (properties: enabled, max_replicas and min_replicas)
-                                      Use --auto-scale=help for more details
-      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
-      --cluster-id uuid               Identificador no padrão uuid para identificar o cluster
-  -h, --help                          help for update
-      --id uuid                       Identificador no padrão uuid para identificar o nodepool
-      --replicas integer              Quantidade de réplicas dos nós do nodepool
-  -v, --version                       version for update
+      --auto-scale object                 Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes (properties: enabled, max_replicas and min_replicas)
+                                          Use --auto-scale=help for more details
+      --auto-scale.enabled boolean        Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes: Ativa/Desativa o escalonamento automático
+                                          This is the same as '--auto-scale=enabled:boolean'.
+      --auto-scale.max-replicas integer   Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes: Quantidade máxima de réplicas, caso a função de autoscaling esteja habilitada (min: 1)
+                                          This is the same as '--auto-scale=max_replicas:integer'. (default 1)
+      --auto-scale.min-replicas integer   Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes: Quantidade mínima  de réplicas, caso a função de autoscaling esteja habilitada. (min: 1)
+                                          This is the same as '--auto-scale=min_replicas:integer'. (default 1)
+      --cli.list-links enum[=table]       List all available links for this command (one of "json", "table" or "yaml")
+      --cluster-id uuid                   Identificador no padrão uuid para identificar o cluster
+  -h, --help                              help for update
+      --id uuid                           Identificador no padrão uuid para identificar o nodepool
+      --replicas integer                  Quantidade de réplicas dos nós do nodepool
+  -v, --version                           version for update
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

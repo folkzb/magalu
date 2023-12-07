@@ -24,18 +24,22 @@ type cmdFlags struct {
 	schemaFlags    []*flag.Flag // only schema_flags.SchemaFlagValue elements
 	positionalArgs []*flag.Flag // subset schemaFlags that can be positional, in order
 	extraFlags     []*flag.Flag
+	childFlags     []*flag.Flag
 
 	knownFlags map[flag.NormalizedName]*flag.Flag // all known flags, both existing and schemaFlags
 }
 
+const childFlagSeparator = '.'
+
 // Public Methods:
 
 func (cf *cmdFlags) example(cmdPath string) string {
-	var examples []string
+	type flagExample struct{ name, example string }
+	var examples []flagExample
 
 	for _, f := range cf.knownFlags {
 		if e := getFlagFormattedExample(f); e != "" {
-			examples = append(examples, e)
+			examples = append(examples, flagExample{f.Name, e})
 		}
 	}
 
@@ -43,8 +47,27 @@ func (cf *cmdFlags) example(cmdPath string) string {
 		return ""
 	}
 
-	slices.Sort(examples)
-	return fmt.Sprintf("  %s %s", cmdPath, strings.Join(examples, " "))
+	slices.SortFunc(examples, func(a, b flagExample) int {
+		return strings.Compare(a.example, b.example)
+	})
+
+	// build the usage string without duplicates when --flag.prop= is used alongside --flag, otherwise we get duplicates
+	// prefer the --flag.prop version
+	var flagUsageExample string
+	var lastFlag string
+	for _, e := range examples {
+		// sort above uses --flag=x which comes after --flag.prop=y
+		if strings.HasPrefix(lastFlag, e.name) && len(e.name) < len(lastFlag) && lastFlag[len(e.name)] == childFlagSeparator {
+			continue
+		}
+		lastFlag = e.name
+		if flagUsageExample != "" {
+			flagUsageExample += " "
+		}
+		flagUsageExample += e.example
+	}
+
+	return fmt.Sprintf("  %s %s", cmdPath, flagUsageExample)
 }
 
 func (cf *cmdFlags) positionalArgsArrayToExpand() int {
@@ -300,6 +323,19 @@ func (cf *cmdFlags) addFlags(cmd *cobra.Command) {
 		_ = cmd.RegisterFlagCompletionFunc(f.Name, cf.newCompleteFlagFunc(f))
 	}
 
+	for _, f := range cf.childFlags {
+		var flags *flag.FlagSet
+		desc := f.Value.(schema_flags.SchemaFlagValue).Desc()
+		if desc.IsConfig {
+			flags = configFlags
+		} else {
+			flags = parametersFlags
+		}
+		logger().Debugw("adding child flag", "flag", f.Name, "desc", desc)
+		flags.AddFlag(f)
+		_ = cmd.RegisterFlagCompletionFunc(f.Name, cf.newCompleteFlagFunc(f))
+	}
+
 	for _, f := range cf.extraFlags {
 		logger().Debugw("adding extra flag", "flag", f.Name, "value", f.Value)
 		parametersFlags.AddFlag(f)
@@ -323,6 +359,13 @@ func (cf *cmdFlags) getValues(config *mgcSdk.Config, argValues []string) (core.P
 
 	var loadErrors utils.MultiError
 	var missingRequiredFlags requiredFlagsError
+
+	for _, f := range cf.childFlags {
+		if f.Value.String() == schema_flags.ValueHelpIsRequired {
+			showFlagHelp(f)
+			return nil, nil, schema_flags.ErrWantHelp
+		}
+	}
 
 	for _, f := range cf.schemaFlags {
 		var value any
@@ -433,7 +476,79 @@ func (cf *cmdFlags) addSchemaFlag(
 	cf.knownFlags[flagName] = f
 	cf.schemaFlags = append(cf.schemaFlags, f)
 
+	cf.addFlagChildren(f, normalizeName)
 	return
+}
+
+func (cf *cmdFlags) addFlagChildren(
+	parent *flag.Flag,
+	normalizeName func(name string) flag.NormalizedName,
+) {
+	fv, ok := parent.Value.(schema_flags.SchemaFlagValue)
+	if !ok {
+		return
+	}
+	for _, childDesc := range fv.Desc().ChildrenFlags() {
+		cf.addChildSchemaFlag(parent, childDesc, normalizeName)
+	}
+}
+
+func (cf *cmdFlags) addChildSchemaFlag(
+	parent *flag.Flag,
+	desc schema_flags.SchemaFlagValueDesc,
+	normalizeName func(name string) flag.NormalizedName,
+) {
+	fv := parent.Value.(schema_flags.SchemaFlagValue)
+	parentDesc := fv.Desc()
+
+	desc.FlagName = parentDesc.FlagName + flag.NormalizedName(childFlagSeparator) + desc.FlagName + normalizeName(desc.PropName)
+
+	parentShortDescription := parentDesc.Schema.Title
+	if parentShortDescription == "" {
+		parentShortDescription = parentDesc.Schema.Description
+	}
+	if i := strings.IndexFunc(parentShortDescription, func(r rune) bool { return r == ',' || r == '.' || r == ':' || r == '(' }); i > 0 {
+		parentShortDescription = strings.Trim(parentShortDescription[:i], "\t\n\r ")
+	}
+	if parentShortDescription == "" {
+		parentShortDescription = fmt.Sprintf("%s's %s property", parent.Name, desc.PropName)
+	}
+
+	proxy := schema_flags.ProxyFlagSpec{
+		Usage: func() string {
+			return fmt.Sprintf(
+				"%s: %s\nThis is the same as '--%s=%s:%s'.",
+				parentShortDescription,
+				desc.Usage(),
+				parent.Name,
+				desc.PropName,
+				desc.FlagType(),
+			)
+		},
+		Set: func(rawValue string) error {
+			return parent.Value.Set(fmt.Sprintf(`%q=%s`, desc.PropName, rawValue))
+		},
+
+		Parse: func(rawValue string) (value any, err error) {
+			container, err := fv.Parse()
+			if err != nil || container == nil {
+				return
+			}
+			m, ok := container.(map[string]any)
+			if !ok {
+				err = fmt.Errorf("expected object flag to return map[string]any, got %T", container)
+				return
+			}
+			value = m[desc.PropName]
+			return
+		},
+	}
+
+	f := schema_flags.NewProxyFlag(desc, proxy)
+	cf.knownFlags[flag.NormalizedName(f.Name)] = f
+	cf.childFlags = append(cf.childFlags, f)
+
+	cf.addFlagChildren(f, normalizeName)
 }
 
 func (cf *cmdFlags) addParametersFlags(

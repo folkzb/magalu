@@ -65,6 +65,14 @@ func NewSchemaFlag(
 	}))
 }
 
+// Proxy set/parse calls to the given functions
+func NewProxyFlag(
+	desc SchemaFlagValueDesc,
+	proxy ProxyFlagSpec,
+) *flag.Flag {
+	return newFlag(newSchemaFlagValueProxy(desc, proxy))
+}
+
 var (
 	ErrNoFlagValue  = errors.New("no value")
 	ErrRequiredFlag = errors.New("is required")

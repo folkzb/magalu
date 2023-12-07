@@ -14,6 +14,9 @@ A Snapshot is ready for restore when it's in available state.
 Usage:
   ./cli virtual-machine snapshots create [flags]
 
+Examples:
+  ./cli virtual-machine snapshots create --virtual-machine.id="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" --virtual-machine.name="some_resource_name"
+
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for create
@@ -21,6 +24,10 @@ Flags:
   -v, --version                       version for create
       --virtual-machine object        Virtual Machine (at least one of: single property: id or single property: name)
                                       Use --virtual-machine=help for more details
+      --virtual-machine.id string     Virtual Machine: Id (min character count: 1)
+                                      This is the same as '--virtual-machine=id:string'.
+      --virtual-machine.name string   Virtual Machine: Name (min character count: 1)
+                                      This is the same as '--virtual-machine=name:string'.
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

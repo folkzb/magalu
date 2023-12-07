@@ -4,48 +4,54 @@ Usage:
   ./cli mke nodepool create [cluster-id] [flags]
 
 Examples:
-  ./cli mke nodepool create --flavor="cloud-k8s.gp1.small" --name="nodepool-exemplo" --replicas=3 --tags='["tag-value1"]'
+  ./cli mke nodepool create --auto-scale.enabled=true --auto-scale.max-replicas=5 --auto-scale.min-replicas=2 --flavor="cloud-k8s.gp1.small" --name="nodepool-exemplo" --replicas=3 --tags='["tag-value1"]'
 
 Flags:
-      --auto-scale object             Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes (properties: enabled, max_replicas and min_replicas)
-                                      Use --auto-scale=help for more details
-      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
-      --cluster-id uuid               Identificador no padrão uuid para identificar o cluster
-      --flavor enum                   Definição da capacidade de CPU, memória RAM e armazenamento dos nodes
-                                      <table>
-                                        <tr>
-                                          <td>Flavor</td>
-                                          <td>vCPUs</td>
-                                          <td>RAM(Gb)</td>
-                                          <td>Root Disk(GB)</td>
-                                        </tr>
-                                        <tr>
-                                          <td>cloud-k8s.gp1.small</td>
-                                          <td>2</td>
-                                          <td>4</td>
-                                          <td>20</td>
-                                        </tr>
-                                        <tr>
-                                          <td>cloud-k8s.gp1.large</td>
-                                          <td>8</td>
-                                          <td>16</td>
-                                          <td>100</td>
-                                        </tr>
-                                      </table>
-                                       (one of "cloud-k8s.gp1.large" or "cloud-k8s.gp1.small")
-  -h, --help                          help for create
-      --name string                   Nome do node pool. O nome destina-se principalmente à idempotência, e deve ser exclusivo em um namespace. 0 nome não pode ser alterado.
-                                      O nome deve seguir as seguintes regras:
-                                        - deve conter no máximo 63 caracteres
-                                        - deve conter apenas caracteres alfanuméricos minúsculos ou '-'
-                                        - deve começar com um caractere alfabético
-                                        - deve terminar com um caractere alfanumérico
-                                      
-      --replicas integer              Número de réplicas dos nós do nodepool (default 1)
-      --tags array(string)            Lista de tags aplicadas ao nodepool
-      --taints array(object)          Propriedade de associação de um conjunto se nós
-                                      Use --taints=help for more details
-  -v, --version                       version for create
+      --auto-scale object                 Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes (properties: enabled, max_replicas and min_replicas)
+                                          Use --auto-scale=help for more details
+      --auto-scale.enabled boolean        Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes: Ativa/Desativa o escalonamento automático
+                                          This is the same as '--auto-scale=enabled:boolean'.
+      --auto-scale.max-replicas integer   Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes: Quantidade máxima de réplicas, caso a função de autoscaling esteja habilitada (min: 1)
+                                          This is the same as '--auto-scale=max_replicas:integer'. (default 1)
+      --auto-scale.min-replicas integer   Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes: Quantidade mínima  de réplicas, caso a função de autoscaling esteja habilitada. (min: 1)
+                                          This is the same as '--auto-scale=min_replicas:integer'. (default 1)
+      --cli.list-links enum[=table]       List all available links for this command (one of "json", "table" or "yaml")
+      --cluster-id uuid                   Identificador no padrão uuid para identificar o cluster
+      --flavor enum                       Definição da capacidade de CPU, memória RAM e armazenamento dos nodes
+                                          <table>
+                                            <tr>
+                                              <td>Flavor</td>
+                                              <td>vCPUs</td>
+                                              <td>RAM(Gb)</td>
+                                              <td>Root Disk(GB)</td>
+                                            </tr>
+                                            <tr>
+                                              <td>cloud-k8s.gp1.small</td>
+                                              <td>2</td>
+                                              <td>4</td>
+                                              <td>20</td>
+                                            </tr>
+                                            <tr>
+                                              <td>cloud-k8s.gp1.large</td>
+                                              <td>8</td>
+                                              <td>16</td>
+                                              <td>100</td>
+                                            </tr>
+                                          </table>
+                                           (one of "cloud-k8s.gp1.large" or "cloud-k8s.gp1.small")
+  -h, --help                              help for create
+      --name string                       Nome do node pool. O nome destina-se principalmente à idempotência, e deve ser exclusivo em um namespace. 0 nome não pode ser alterado.
+                                          O nome deve seguir as seguintes regras:
+                                            - deve conter no máximo 63 caracteres
+                                            - deve conter apenas caracteres alfanuméricos minúsculos ou '-'
+                                            - deve começar com um caractere alfabético
+                                            - deve terminar com um caractere alfanumérico
+                                          
+      --replicas integer                  Número de réplicas dos nós do nodepool (default 1)
+      --tags array(string)                Lista de tags aplicadas ao nodepool
+      --taints array(object)              Propriedade de associação de um conjunto se nós
+                                          Use --taints=help for more details
+  -v, --version                           version for create
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
