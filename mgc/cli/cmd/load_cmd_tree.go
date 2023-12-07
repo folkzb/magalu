@@ -23,8 +23,33 @@ func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descript
 	}
 }
 
+func findChildByNameOrAliases(cmdGrouper core.Grouper, childName string) (child core.Descriptor, err error) {
+	notFound, _ := cmdGrouper.VisitChildren(func(desc core.Descriptor) (run bool, err error) {
+		name, aliases := getCommandNameAndAliases(desc.Name())
+		if name == childName {
+			child = desc
+			return false, nil
+		}
+		for _, name := range aliases {
+			if name == childName {
+				child = desc
+				return false, nil
+			}
+		}
+
+		return true, nil
+	})
+
+	if notFound {
+		err = fmt.Errorf("no command with name %q", childName)
+		return
+	}
+
+	return
+}
+
 func loadGrouperChild(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Grouper, childName string) (*cobra.Command, core.Descriptor, error) {
-	child, err := cmdGrouper.GetChildByName(childName)
+	child, err := findChildByNameOrAliases(cmdGrouper, childName)
 	if err != nil {
 		return nil, nil, err
 	}
