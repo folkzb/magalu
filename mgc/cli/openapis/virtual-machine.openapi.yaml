@@ -419,7 +419,7 @@ paths:
                             description: Read Virtual Machine instance
                             operationId: instance_details_v1_v1_instances__id__get
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
                         start:
                             description: Start a Virtual Machine instance
                             operationId: start_instance_v1_instances__id__start_post
@@ -498,7 +498,7 @@ paths:
                             description: Read Virtual Machine instance
                             operationId: instance_details_v1_v1_instances__id__get
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -596,7 +596,7 @@ paths:
                             description: Read Virtual Machine instance
                             operationId: instance_details_v1_v1_instances__id__get
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -673,7 +673,7 @@ paths:
                             description: Read Virtual Machine instance
                             operationId: instance_details_v1_v1_instances__id__get
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -751,7 +751,7 @@ paths:
                             description: Read Virtual Machine instance
                             operationId: instance_details_v1_v1_instances__id__get
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -830,7 +830,7 @@ paths:
                             description: Read Virtual Machine instance
                             operationId: instance_details_v1_v1_instances__id__get
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
