@@ -360,6 +360,10 @@ func (l *openapiLinker) Target() core.Executor {
 	return l.target
 }
 
+func (l *openapiLinker) Links() core.Links {
+	return l.target.Links()
+}
+
 var _ core.Linker = (*openapiLinker)(nil)
 
 // END: Linker

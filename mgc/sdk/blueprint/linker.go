@@ -82,6 +82,10 @@ func (l *linker) ResultSchema() *schemaPkg.Schema {
 	return l.spec.executor.ResultSchema()
 }
 
+func (l *linker) Links() core.Links {
+	return l.spec.executor.Links()
+}
+
 func (l *linker) CreateExecutor(originalResult core.Result) (target core.Executor, err error) {
 	target = l.spec.executor
 

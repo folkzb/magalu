@@ -24,6 +24,7 @@ type Linker interface {
 	// The returned executor will have ParametersSchema() matching AdditionalParametersSchema()
 	// and ConfigsSchema() matching AdditionalConfigsSchema()
 	CreateExecutor(originalResult Result) (exec Executor, err error)
+	Links() Links
 }
 
 type Links map[string]Linker
@@ -101,6 +102,10 @@ func (l *simpleLink) AdditionalConfigsSchema() *Schema {
 
 func (l *simpleLink) ResultSchema() *Schema {
 	return l.target.ResultSchema()
+}
+
+func (l *simpleLink) Links() Links {
+	return l.target.Links()
 }
 
 func injectValues(dst map[string]any, schema *Schema, sources ...map[string]any) {
