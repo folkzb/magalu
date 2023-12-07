@@ -73,7 +73,7 @@ func listLinks(f *flag.Flag, links core.Links) (err error, used bool) {
 
 type cmdLinks struct {
 	sdk     *mgcSdk.Sdk
-	exec    core.Executor
+	links   core.Links
 	cmdPath string
 
 	flag *flag.Flag
@@ -82,21 +82,20 @@ type cmdLinks struct {
 	root     *cobra.Command
 }
 
-func newCmdLinks(sdk *mgcSdk.Sdk, exec core.Executor, cmdPath string) (c *cmdLinks) {
-	if len(exec.Links()) == 0 {
-		logger().Debugw("executor has no links", "exec", exec, "cmdPath", cmdPath)
+func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string) (c *cmdLinks) {
+	if len(links) == 0 {
 		return nil
 	}
 
 	c = &cmdLinks{
 		sdk:      sdk,
-		exec:     exec,
+		links:    links,
 		cmdPath:  cmdPath,
 		flag:     newListLinkFlag(),
 		cmdFlags: map[string]*cmdFlags{},
 	}
 	c.initCommands()
-	logger().Debugw("executor with links", "exec", exec, "cmdPath", cmdPath)
+	logger().Debugw("newCmdLinks", "links", links, "cmdPath", cmdPath)
 
 	return
 }
@@ -106,7 +105,7 @@ func (c *cmdLinks) check(chainedArgs [][]string) (err error, stop bool) {
 		return
 	}
 
-	if err, stop = listLinks(c.flag, c.exec.Links()); err != nil || stop {
+	if err, stop = listLinks(c.flag, c.links); err != nil || stop {
 		return
 	}
 
@@ -127,20 +126,19 @@ func (c *cmdLinks) check(chainedArgs [][]string) (err error, stop bool) {
 	} else if err != nil {
 		err = fmt.Errorf("unknown link %q. Use \"%s ! help\" for more information", args[0], c.cmdPath)
 	}
-	logger().Debugw("checked executor link", "args", args, "error", err, "exec", c.exec, "links", c.exec.Links())
+	logger().Debugw("checked executor link", "args", args, "error", err, "links", c.links)
 
 	return
 }
 
 func (c *cmdLinks) findCommandLink(linkCmd *cobra.Command) (link core.Linker, err error) {
-	links := c.exec.Links()
-	link = links[linkCmd.Name()]
+	link = c.links[linkCmd.Name()]
 	if link != nil {
 		return
 	}
 
 	for _, alias := range linkCmd.Aliases {
-		if link = links[alias]; link != nil {
+		if link = c.links[alias]; link != nil {
 			return
 		}
 	}
@@ -165,13 +163,13 @@ func (c *cmdLinks) handle(chainedArgs [][]string, originalResult core.Result, pa
 
 	linkCmd, _, err := c.root.Find(args)
 	if err != nil {
-		logger().Debugw("link not found", "args", args, "error", err, "exec", c.exec, "links", c.exec.Links())
+		logger().Debugw("link not found", "args", args, "error", err, "links", c.links)
 		return
 	}
 
 	link, err := c.findCommandLink(linkCmd)
 	if err != nil {
-		logger().Debugw("link not found", "args", args, "error", err, "exec", c.exec, "links", c.exec.Links(), "linkCmd", linkCmd)
+		logger().Debugw("link not found", "args", args, "error", err, "links", c.links, "linkCmd", linkCmd)
 		return
 	}
 
@@ -186,7 +184,7 @@ func (c *cmdLinks) handle(chainedArgs [][]string, originalResult core.Result, pa
 		return
 	}
 
-	nextLinks := newCmdLinks(sdk, exec, fmt.Sprintf("%s ! %s", c.cmdPath, linkCmd.CommandPath()))
+	nextLinks := newCmdLinks(sdk, exec.Links(), fmt.Sprintf("%s ! %s", c.cmdPath, linkCmd.CommandPath()))
 
 	linkCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		followingLinkArgs := chainedArgs[1:]
@@ -287,7 +285,7 @@ Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
 Use "%[1]s ! <link> --help" for more information about a command.{{end}}
 `, c.cmdPath))
 
-	for _, link := range c.exec.Links() {
+	for _, link := range c.links {
 		c.addLinkCommand(link)
 	}
 
