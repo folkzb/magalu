@@ -227,7 +227,7 @@ func (c *tfStateLoader) loadMgcSchemaArray(atinfo *resAttrInfo, tfValue tftypes.
 
 // If 'atinfo' doesn't have a property present in 'atinfo.mgcSchema', it will be ignored. This means that the resulting MgcMap may be incomplete and it is up
 // to the caller to ensure that all properties of 'atinfo.mgcSchema' were fulfilled in the resulting mgcMap
-func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcMap map[string]any, isKnown bool) {
+func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (any, bool) {
 	tflog.Debug(
 		c.ctx,
 		"[loader] will load as map",
@@ -243,8 +243,12 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 		return nil, false
 	}
 
-	mgcMap = map[string]any{}
-	isKnown = true
+	mgcMap := map[string]any{}
+	isKnown := true
+
+	var xOfKey string
+	var xOfPromotedValues []string
+
 	for propName := range atinfo.mgcSchema.Properties {
 		propMgcName := mgcName(propName)
 
@@ -259,7 +263,7 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 			tflog.Debug(
 				c.ctx,
 				"[loader] ignoring non-existent value",
-				map[string]any{"propMgcName": propMgcName, "value": tfValue},
+				map[string]any{"mgcName": propMgcName, "value": tfValue},
 			)
 			continue
 		}
@@ -274,6 +278,25 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 				return mgcMap, false
 			}
 			continue
+		}
+
+		if propXOfKey, ok := propAttr.mgcSchema.Extensions[xOfPromotionKey].(string); ok {
+			tflog.Debug(
+				c.ctx,
+				fmt.Sprintf("[loader] found xOf promotion key: %q", propXOfKey),
+				map[string]any{"propMgcName": propMgcName},
+			)
+			// TODO: Treat every xOf as "OneOf" for now, so fail if attributes from different xOf children were specified
+			if xOfKey == "" {
+				xOfKey = propXOfKey
+				xOfPromotedValues = append(xOfPromotedValues, propName)
+			} else if xOfKey != propXOfKey {
+				c.diag.AddError(
+					"mutually exclusive attributes specified",
+					fmt.Sprintf("attribute %q cannot be specified if attribute(s) %v have already been specified and vice-versa", propName, xOfPromotedValues),
+				)
+				return mgcMap, false
+			}
 		}
 
 		propMgcItem, isItemKnown := c.loadMgcSchemaValue(propAttr, propTFItem, ignoreUnknown, filterUnset)
@@ -298,10 +321,24 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 			continue
 		}
 
-		mgcMap[string(propMgcName)] = propMgcItem
+		if isSchemaXOfAlternative(propAttr.mgcSchema) {
+			tflog.Debug(
+				c.ctx,
+				"[loader] returning value from map as map itself, since it was a promoted xOf schema",
+				map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": propMgcItem},
+			)
+			return propMgcItem, isKnown
+		} else {
+			tflog.Debug(
+				c.ctx,
+				"[loader] loaded map prop",
+				map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": propMgcItem},
+			)
+			mgcMap[string(propMgcName)] = propMgcItem
+		}
 	}
 	tflog.Debug(c.ctx, "[loader] finished loading map", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcMap})
-	return
+	return mgcMap, isKnown
 }
 
 // Read values from tfValue into a map suitable to MGC
@@ -314,5 +351,9 @@ func (c *tfStateLoader) readMgcMap(mgcSchema *mgcSdk.Schema, attributes resAttrI
 	}
 
 	m, _ := c.loadMgcSchemaMap(attr, tfState.Raw, true, true)
-	return m
+	if c.diag.HasError() {
+		return nil
+	}
+
+	return m.(map[string]any)
 }

@@ -79,37 +79,54 @@ func addMgcSchemaAttributes(
 	getModifiers func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers,
 	ctx context.Context,
 ) error {
-	for k, ref := range mgcSchema.Properties {
-		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("adding attribute %q", k))
-		mgcName := mgcName(k)
-		mgcPropSchema := (*mgcSdk.Schema)(ref.Value)
+	mgcSchemaTransformed, err := getXOfObjectSchemaTransformed(mgcSchema)
+	if err != nil {
+		return err
+	}
+
+	for propName, propSchemaRef := range mgcSchemaTransformed.Properties {
+		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("adding attribute %q", propName))
+		mgcName := mgcName(propName)
+		propSchema := (*mgcSchemaPkg.Schema)(propSchemaRef.Value)
+
 		if ca, ok := dst[mgcName]; ok {
-			if err := mgcSchemaPkg.CompareJsonSchemas(ca.mgcSchema, mgcPropSchema); err != nil {
+			if err := mgcSchemaPkg.CompareJsonSchemas(ca.mgcSchema, propSchema); err != nil {
 				// Ignore update value in favor of create value (This is probably a bug with the API)
-				tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring DIFFERENT attribute %q:\nOLD=%+v\nNEW=%+v\nERROR=%s\n", k, ca.mgcSchema, mgcPropSchema, err.Error()))
+				tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring DIFFERENT attribute %q:\nOLD=%+v\nNEW=%+v\nERROR=%s\n", propName, ca.mgcSchema, propSchema, err.Error()))
 				continue
 			} else {
-				tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring already computed attribute %q ", k))
+				tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("ignoring already computed attribute %q ", propName))
 				continue
 			}
 		}
 
-		tfSchema, childAttributes, err := mgcSchemaToTFAttribute(mgcPropSchema, getModifiers(ctx, mgcSchema, mgcName), ctx)
-		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q generated tfSchema %#v", k, tfSchema))
+		modifiers := getModifiers(ctx, mgcSchema, mgcName)
+		if hasSchemaBeenPromoted(propSchema) {
+			if modifiers.isRequired {
+				modifiers.isRequired = false
+			}
+			if !modifiers.isComputed {
+				modifiers.isOptional = true
+			}
+			tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("computing %q as oneOf, %+v", propName, propSchema))
+		}
+
+		tfSchema, childAttributes, err := mgcSchemaToTFAttribute(propSchema, getModifiers(ctx, mgcSchema, mgcName), ctx)
+		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q generated tfSchema %#v", propName, tfSchema))
 		if err != nil {
-			tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q schema: %+v; error: %s", k, mgcPropSchema, err))
-			return fmt.Errorf("attribute %q, error=%s", k, err)
+			tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q schema: %+v; error: %s", propName, propSchema, err))
+			return fmt.Errorf("attribute %q, error=%s", propName, err)
 		}
 
 		attr := &resAttrInfo{
 			tfName:          mgcName.asTFName(),
 			mgcName:         mgcName,
-			mgcSchema:       mgcPropSchema,
+			mgcSchema:       propSchema,
 			tfSchema:        tfSchema,
 			childAttributes: childAttributes,
 		}
 		dst[mgcName] = attr
-		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q: %+v", k, attr))
+		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q: %+v", propName, attr))
 	}
 
 	return nil
