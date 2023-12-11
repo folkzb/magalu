@@ -571,7 +571,7 @@ func (n mgcName) asTFName() tfName {
 }
 
 func (n tfName) asDesired() tfName {
-	return "desired_" + n
+	return n
 }
 
 func (n tfName) asCurrent() tfName {

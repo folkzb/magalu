@@ -167,7 +167,7 @@ var testCases = []testCase{
 		expectedInput: resAttrInfoMap{
 			"count": {
 				mgcName:   "count",
-				tfName:    "count", // will be renamed to 'desired_count' for final
+				tfName:    "count",
 				mgcSchema: (*mgcSchemaPkg.Schema)(create.ParametersSchema().Properties["count"].Value),
 				tfSchema: schema.NumberAttribute{
 					Description:   "count description",
@@ -392,7 +392,7 @@ var testCases = []testCase{
 				Computed:      true,
 				PlanModifiers: []planmodifier.Int64{},
 			},
-			"desired_count": schema.NumberAttribute{
+			"count": schema.NumberAttribute{
 				Optional:      true,
 				Computed:      false,
 				Description:   "count description",
