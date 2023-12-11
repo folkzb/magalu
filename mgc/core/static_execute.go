@@ -30,13 +30,15 @@ func ReflectExecutorSpecSchemas[ParamsT any, ConfigsT any, ResultT any](baseSpec
 		return
 	}
 
-	spec.PositionalArgs = getPositionals[ParamsT]()
+	spec.PositionalArgs = getPositionals(reflect.TypeOf(new(ParamsT)))
 
 	return spec, nil
 }
 
-func getPositionals[T any]() []string {
-	t := reflect.TypeOf(new(T)).Elem()
+func getPositionals(t reflect.Type) []string {
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
 
 	if t.Kind() != reflect.Struct {
 		return nil
@@ -46,6 +48,12 @@ func getPositionals[T any]() []string {
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
+
+		if field.Anonymous {
+			positionals = append(positionals, getPositionals(field.Type)...)
+			continue
+		}
+
 		if !GetMgcTagBool(field.Tag, "positional") {
 			continue
 		}
