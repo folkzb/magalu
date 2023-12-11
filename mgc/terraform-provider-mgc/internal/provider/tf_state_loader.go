@@ -189,7 +189,7 @@ func (c *tfStateLoader) loadMgcSchemaBool(atinfo *resAttrInfo, tfValue tftypes.V
 func (c *tfStateLoader) loadMgcSchemaArray(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any, isKnown bool) {
 	tflog.Debug(
 		c.ctx,
-		"[loader] starting loading from TF state value to mgc array",
+		"[loader] will load as array",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
 	)
 	mgcSchema := atinfo.mgcSchema
@@ -230,56 +230,75 @@ func (c *tfStateLoader) loadMgcSchemaArray(atinfo *resAttrInfo, tfValue tftypes.
 func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcMap map[string]any, isKnown bool) {
 	tflog.Debug(
 		c.ctx,
-		"[loader] starting loading TF state value to mgc map",
+		"[loader] will load as map",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
 	)
-	mgcSchema := atinfo.mgcSchema
 	var tfMap map[string]tftypes.Value
 	err := tfValue.As(&tfMap)
 	if err != nil {
 		c.diag.AddError(
 			"Unable to load value to map",
-			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
+			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, atinfo.mgcSchema, err.Error()),
 		)
 		return nil, false
 	}
 
 	mgcMap = map[string]any{}
 	isKnown = true
-	for attr := range mgcSchema.Properties {
-		mgcName := mgcName(attr)
-		itemAttr, ok := atinfo.childAttributes[mgcName]
+	for propName := range atinfo.mgcSchema.Properties {
+		propMgcName := mgcName(propName)
+
+		tflog.Debug(
+			c.ctx,
+			"[loader] will try to load map property",
+			map[string]any{"propMgcName": propMgcName},
+		)
+
+		propAttr, ok := atinfo.childAttributes[propMgcName]
 		if !ok {
-			// Ignore non existing values
+			tflog.Debug(
+				c.ctx,
+				"[loader] ignoring non-existent value",
+				map[string]any{"propMgcName": propMgcName, "value": tfValue},
+			)
 			continue
 		}
 
-		tfName := itemAttr.tfName
-		tfItem, ok := tfMap[string(tfName)]
+		propTFItem, ok := tfMap[string(propAttr.tfName)]
 		if !ok {
-			title := "Schema attribute missing from state value"
-			msg := fmt.Sprintf("[loader] schema attribute %q with info `%+v` missing from state %+v", mgcName, atinfo, tfMap)
-			if itemAttr.tfSchema.IsRequired() {
-				c.diag.AddError(title, msg)
-				return
+			if propAttr.tfSchema.IsRequired() {
+				c.diag.AddError(
+					"Schema attribute missing from state value",
+					fmt.Sprintf("[loader] schema attribute %q with info `%+v` missing from state %+v", propMgcName, atinfo, tfMap),
+				)
+				return mgcMap, false
 			}
-			tflog.Debug(c.ctx, msg)
 			continue
 		}
 
-		mgcItem, isItemKnown := c.loadMgcSchemaValue(itemAttr, tfItem, ignoreUnknown, filterUnset)
+		propMgcItem, isItemKnown := c.loadMgcSchemaValue(propAttr, propTFItem, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
 			return nil, false
 		}
 
 		if !isItemKnown && ignoreUnknown {
+			tflog.Debug(
+				c.ctx,
+				"[loader] ignoring prop, unknown",
+				map[string]any{"propMgcName": propMgcName, "propTFName": propAttr.tfName, "value": propMgcItem},
+			)
 			continue
 		}
-		if mgcItem == nil && filterUnset {
+		if propMgcItem == nil && filterUnset {
+			tflog.Debug(
+				c.ctx,
+				"[loader] ignoring prop, value is nil and 'filterUnset' is set to true",
+				map[string]any{"propMgcName": propMgcName, "propTFName": propAttr.tfName},
+			)
 			continue
 		}
 
-		mgcMap[string(mgcName)] = mgcItem
+		mgcMap[string(propMgcName)] = propMgcItem
 	}
 	tflog.Debug(c.ctx, "[loader] finished loading map", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcMap})
 	return
