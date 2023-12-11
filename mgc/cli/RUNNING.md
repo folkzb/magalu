@@ -5,7 +5,7 @@ see [DEVELOPMENT.md](./DEVELOPMENT.md)
 
 ## Flag usage guidelines
 
-Running `./mgc` will provide a list of available `--cli.` flags, such as `--cli.log`,
+Running `./mgc --cli.show-cli-globals` will provide the complete set of `--cli.` flags, such as `--cli.log`,
 `--cli.output` and more. These are global flags that can be used to specify certain
 behaviors for each command, such as producing logs in the case of `--cli.log`. Further
 instructions will be provided beside each flag. Due to how groups and executors are
