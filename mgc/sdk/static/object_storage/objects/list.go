@@ -9,6 +9,11 @@ import (
 	"magalu.cloud/sdk/static/object_storage/common"
 )
 
+type listParams struct {
+	common.ListObjectsParams `json:",squash" mgc:"positional"` // nolint
+	common.FilterParams      `json:",squash"` // nolint
+}
+
 type listResponse struct {
 	Contents       []*common.BucketContent `xml:"Contents"`
 	CommonPrefixes []*common.Prefix        `xml:"CommonPrefixes"`
@@ -24,11 +29,11 @@ var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 })
 
-func List(ctx context.Context, params common.ListObjectsParams, cfg common.Config) (result listResponse, err error) {
+func List(ctx context.Context, params listParams, cfg common.Config) (result listResponse, err error) {
 	ctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
 
-	objects := common.ListGenerator(ctx, params, cfg)
+	objects := common.ListGenerator(ctx, params.ListObjectsParams, cfg)
 
 	if params.Include != "" {
 		includeFilter := pipeline.FilterRuleIncludeOnly[pipeline.WalkDirEntry]{
