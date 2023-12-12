@@ -8,11 +8,11 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/pipeline"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 )
 
 var deleteObjectsLogger *zap.SugaredLogger
@@ -25,11 +25,11 @@ func deleteLogger() *zap.SugaredLogger {
 }
 
 type DeleteObjectParams struct {
-	Destination string `json:"dst,omitempty" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file1" mgc:"positional"`
+	Destination mgcSchemaPkg.URI `json:"dst,omitempty" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file1" mgc:"positional"`
 }
 
 type DeleteAllObjectsParams struct {
-	BucketName   string           `json:"bucket,omitempty" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
+	BucketName   BucketName       `json:"bucket,omitempty" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
 	BatchSize    int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to delete,default=1000,minimum=1,maximum=1000" example:"1000"`
 	FilterParams `json:",squash"` // nolint
 }
@@ -103,7 +103,7 @@ func newDeleteBatchRequest(ctx context.Context, cfg Config, bucketName string, o
 
 // Deleting an object does not yield result except there is an error. So this processor will *Skip*
 // success results and *Output* errors
-func createObjectDeletionProcessor(cfg Config, bucketName string) pipeline.Processor[[]pipeline.WalkDirEntry, deleteObjectsError] {
+func createObjectDeletionProcessor(cfg Config, bucketName BucketName) pipeline.Processor[[]pipeline.WalkDirEntry, deleteObjectsError] {
 	return func(ctx context.Context, dirEntries []pipeline.WalkDirEntry) (deleteObjectsError, pipeline.ProcessStatus) {
 		var objIdentifiers []objectIdentifier
 
@@ -120,7 +120,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName string) pipeline.Proce
 			objIdentifiers = append(objIdentifiers, objectIdentifier{Key: obj.Key})
 		}
 
-		req, err := newDeleteBatchRequest(ctx, cfg, bucketName, objIdentifiers)
+		req, err := newDeleteBatchRequest(ctx, cfg, bucketName.String(), objIdentifiers)
 		if err != nil {
 			return deleteObjectsError{err: err}, pipeline.ProcessAbort
 		}
@@ -128,7 +128,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName string) pipeline.Proce
 		_, _, err = SendRequest[any](ctx, req)
 
 		if err != nil {
-			return deleteObjectsError{uri: bucketName, err: err}, pipeline.ProcessOutput
+			return deleteObjectsError{uri: bucketName.String(), err: err}, pipeline.ProcessOutput
 		} else {
 			deleteLogger().Infow("Deleted objects", "uri", URIPrefix+bucketName)
 			return deleteObjectsError{}, pipeline.ProcessSkip
@@ -138,7 +138,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName string) pipeline.Proce
 
 func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Config) (deleteObjectsErrors, error) {
 	listParams := ListObjectsParams{
-		Destination: params.BucketName,
+		Destination: params.BucketName.AsURI(),
 		Recursive:   true,
 		PaginationParams: PaginationParams{
 			MaxItems: math.MaxInt64,
@@ -176,8 +176,9 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 }
 
 func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (result core.Value, err error) {
-	bucketURI, _ := strings.CutPrefix(params.Destination, URIPrefix)
-	req, err := newDeleteRequest(ctx, cfg, bucketURI)
+	// TODO: change API to use BucketName, URI and FilePath
+	bucketPath := params.Destination.Path()
+	req, err := newDeleteRequest(ctx, cfg, bucketPath)
 	if err != nil {
 		return nil, err
 	}

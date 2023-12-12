@@ -10,4 +10,4 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
-      --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
+      --workers integer        Number of routines that spawn to do parallel operations within object_storage (min: 1) (default 5)

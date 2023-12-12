@@ -13,6 +13,7 @@ import (
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
 )
@@ -57,9 +58,9 @@ func NewDownloadObjectsError() downloadObjectsError {
 }
 
 type downloadObjectParams struct {
-	Source                  string           `json:"src" jsonschema:"description=Path of the object to be downloaded" example:"s3://bucket1/file1" mgc:"positional"`
-	Destination             string           `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved" example:"file1.txt" mgc:"positional"`
-	common.PaginationParams `json:",squash"` // nolint
+	Source                  mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of the object to be downloaded,example=s3://bucket1/file1" mgc:"positional"`
+	Destination             mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved,example=file1.txt" mgc:"positional"`
+	common.PaginationParams `json:",squash"`      // nolint
 }
 
 var getDownload = utils.NewLazyLoader[core.Executor](func() core.Executor {
@@ -76,19 +77,19 @@ var getDownload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func newDownloadRequest(ctx context.Context, cfg common.Config, pathURIs ...string) (*http.Request, error) {
+func newDownloadRequest(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI) (*http.Request, error) {
 	host := common.BuildHost(cfg)
-	url, err := url.JoinPath(host, pathURIs...)
+	url, err := url.JoinPath(host, src.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
 	return http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 }
 
-func writeToFile(reader io.ReadCloser, outFile string) (err error) {
+func writeToFile(reader io.ReadCloser, outFile mgcSchemaPkg.FilePath) (err error) {
 	defer reader.Close()
 
-	writer, err := os.OpenFile(outFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	writer, err := os.OpenFile(outFile.String(), os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,7 @@ func writeToFile(reader io.ReadCloser, outFile string) (err error) {
 	return nil
 }
 
-func downloadSingleFile(ctx context.Context, cfg common.Config, src, dst string) error {
+func downloadSingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath) error {
 	req, err := newDownloadRequest(ctx, cfg, src)
 	if err != nil {
 		return err
@@ -112,7 +113,7 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src, dst string)
 		return err
 	}
 
-	dir, _ := path.Split(dst)
+	dir := path.Dir(dst.String())
 	if len(dir) != 0 {
 		if err := os.MkdirAll(dir, utils.DIR_PERMISSION); err != nil {
 			return err
@@ -126,8 +127,8 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src, dst string)
 	return nil
 }
 
-func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst string, paginationParams common.PaginationParams) error {
-	bucketRoot := strings.Split(src, "/")[0]
+func downloadMultipleFiles(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath, paginationParams common.PaginationParams) error {
+	bucketRoot := strings.SplitN(src.Path(), "/", 2)[0]
 	listParams := common.ListObjectsParams{
 		Destination:      src,
 		Recursive:        true,
@@ -150,7 +151,8 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst stri
 
 		objURI := path.Join(bucketRoot, obj.Key)
 		downloadLogger().Infow("Downloading object", "uri", objURI)
-		req, err := newDownloadRequest(ctx, cfg, objURI)
+		// TODO: change API to use BucketName, URI and FilePath
+		req, err := newDownloadRequest(ctx, cfg, mgcSchemaPkg.URI(objURI))
 		if err != nil {
 			objError.Add(objURI, err)
 			continue
@@ -163,12 +165,12 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst stri
 		}
 
 		dir, _ := path.Split(obj.Key)
-		if err := os.MkdirAll(path.Join(dst, dir), utils.DIR_PERMISSION); err != nil {
+		if err := os.MkdirAll(path.Join(dst.String(), dir), utils.DIR_PERMISSION); err != nil {
 			objError.Add(objURI, err)
 			continue
 		}
 
-		if err := writeToFile(closer, path.Join(dst, obj.Key)); err != nil {
+		if err := writeToFile(closer, dst.Join(obj.Key)); err != nil {
 			objError.Add(objURI, err)
 			continue
 		}
@@ -181,17 +183,17 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst stri
 	return nil
 }
 
-func newHeadObjectRequest(ctx context.Context, cfg common.Config, pathURIs ...string) (*http.Request, error) {
+func newHeadObjectRequest(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI) (*http.Request, error) {
 	host := common.BuildHost(cfg)
-	url, err := url.JoinPath(host, pathURIs...)
+	url, err := url.JoinPath(host, src.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
 	return http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
 }
 
-func isObjectPath(ctx context.Context, cfg common.Config, pathURIs ...string) bool {
-	req, err := newHeadObjectRequest(ctx, cfg, pathURIs...)
+func isObjectPath(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI) bool {
+	req, err := newHeadObjectRequest(ctx, cfg, src)
 	if err != nil {
 		return false
 	}
@@ -204,26 +206,27 @@ func isObjectPath(ctx context.Context, cfg common.Config, pathURIs ...string) bo
 	return result != nil
 }
 
-func isDirPath(fpath string) bool {
-	return path.Ext(fpath) == ""
+func isDirPath(fpath mgcSchemaPkg.FilePath) bool {
+	return path.Ext(fpath.String()) == ""
 }
 
 func download(ctx context.Context, p downloadObjectParams, cfg common.Config) (result core.Value, err error) {
 	dst := p.Destination
 	if dst == "" {
-		dst, err = os.Getwd()
+		var d string
+		d, err = os.Getwd()
 		if err != nil {
 			return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 		}
-		_, fname := path.Split(p.Source)
-		dst = path.Join(dst, fname)
+		fname := path.Base(p.Source.Path())
+		dst = mgcSchemaPkg.FilePath(path.Join(d, fname))
 	}
-	src, _ := strings.CutPrefix(p.Source, common.URIPrefix)
+	src := p.Source
 	if isObjectPath(ctx, cfg, src) {
 		// User specified a directory, append the file name to it
 		if isDirPath(dst) {
-			_, fname := path.Split(src)
-			dst = path.Join(dst, fname)
+			fname := path.Base(src.Path())
+			dst = dst.Join(fname)
 		}
 		err = downloadSingleFile(ctx, cfg, src, dst)
 	} else {
@@ -238,5 +241,6 @@ func download(ctx context.Context, p downloadObjectParams, cfg common.Config) (r
 		return nil, err
 	}
 
-	return downloadObjectParams{Source: p.Source, Destination: dst}, nil
+	// TODO: change API to use BucketName, URI and FilePath
+	return downloadObjectParams{Source: p.Source, Destination: mgcSchemaPkg.FilePath(dst)}, nil
 }

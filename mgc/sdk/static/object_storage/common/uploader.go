@@ -13,13 +13,14 @@ import (
 	"path/filepath"
 
 	"magalu.cloud/core"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 )
 
 type uploader interface {
 	Upload(context.Context) error
 }
 
-func NewUploader(cfg Config, src, dst string) (uploader, error) {
+func NewUploader(cfg Config, src mgcSchemaPkg.FilePath, dst mgcSchemaPkg.URI) (uploader, error) {
 	reader, fileInfo, err := readContent(src)
 	if err != nil {
 		return nil, fmt.Errorf("error reading object: %w", err)
@@ -49,16 +50,17 @@ func NewUploader(cfg Config, src, dst string) (uploader, error) {
 	}
 }
 
-func newUploadRequest(ctx context.Context, cfg Config, dst string, reader io.Reader) (*http.Request, error) {
+func newUploadRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI, reader io.Reader) (*http.Request, error) {
 	host := BuildHost(cfg)
-	url, err := url.JoinPath(host, dst)
+	url, err := url.JoinPath(host, dst.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
 	return http.NewRequestWithContext(ctx, http.MethodPut, url, reader)
 }
 
-func readContent(path string) (*os.File, fs.FileInfo, error) {
+func readContent(p mgcSchemaPkg.FilePath) (*os.File, fs.FileInfo, error) {
+	path := p.String()
 	file, err := os.Stat(path)
 	if err != nil {
 		return nil, nil, core.UsageError{Err: err}

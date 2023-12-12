@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --batch-size integer   Limit of items per batch to delete (range: 1 - 1000) (default 1000)
-      --bucket string        Name of the bucket to delete objects from
+      --bucket string        Name of the bucket to delete objects from (between 3 and 63 characters)
       --exclude string       Filename pattern to exclude
   -h, --help                 help for delete-all
       --include string       Filename pattern to include (default "*")
@@ -14,4 +14,4 @@ Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
       --region enum            Region to reach the service (one of "br-ne-1", "br-ne-2" or "br-se-1") (default "br-ne-1")
       --server-url uri         Manually specify the server to use
-      --workers integer        Number of routines that spawn to do parallel operations within object_storage (default 5)
+      --workers integer        Number of routines that spawn to do parallel operations within object_storage (min: 1) (default 5)

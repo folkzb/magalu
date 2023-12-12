@@ -19,7 +19,7 @@ func deleteLogger() *zap.SugaredLogger {
 }
 
 type deleteParams struct {
-	BucketName string `json:"bucket" jsonschema:"description=Name of the bucket to be deleted" mgc:"positional"`
+	BucketName common.BucketName `json:"bucket" jsonschema:"description=Name of the bucket to be deleted" mgc:"positional"`
 }
 
 var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
@@ -58,7 +58,7 @@ func delete(ctx context.Context, params deleteParams, cfg common.Config) (core.V
 		return nil, objErr
 	}
 
-	result, err := common.Delete(ctx, common.DeleteObjectParams{Destination: params.BucketName}, cfg)
+	result, err := common.Delete(ctx, common.DeleteObjectParams{Destination: params.BucketName.AsURI()}, cfg)
 	if err != nil {
 		return nil, err
 	}

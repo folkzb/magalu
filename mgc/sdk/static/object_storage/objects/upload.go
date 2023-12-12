@@ -3,16 +3,16 @@ package objects
 import (
 	"context"
 	"path"
-	"strings"
 
 	"magalu.cloud/core"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
 )
 
 type uploadParams struct {
-	Destination string `json:"dst" jsonschema:"description=Full destination path in the bucket with s3 prefix, i.e: s3://<bucket-name>" mgc:"positional"`
-	Source      string `json:"src" jsonschema:"description=Source file path to be uploaded" mgc:"positional"`
+	Destination mgcSchemaPkg.URI      `json:"dst" jsonschema:"description=Full destination path in the bucket with s3 prefix,example=s3://bucket1" mgc:"positional"`
+	Source      mgcSchemaPkg.FilePath `json:"src" jsonschema:"description=Source file path to be uploaded" mgc:"positional"`
 }
 
 type uploadTemplateResult struct {
@@ -34,19 +34,12 @@ var getUpload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func formatURI(uri string) string {
-	if !strings.Contains(uri, common.URIPrefix) {
-		return common.URIPrefix + uri
-	}
-	return uri
-}
-
 func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploadTemplateResult, error) {
-	dst, _ := strings.CutPrefix(params.Destination, common.URIPrefix)
-	_, fileName := path.Split(params.Source)
-	if isDirPath(dst) {
+	dst := params.Destination
+	fileName := path.Base(params.Source.String())
+	if isDirPath(dst.AsFilePath()) {
 		// If it isn't a file path, don't rename, just append source with bucket URI
-		dst = path.Join(dst, fileName)
+		dst = dst.JoinPath(fileName)
 	}
 
 	uploader, err := common.NewUploader(cfg, params.Source, dst)
@@ -59,8 +52,7 @@ func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploa
 	}
 
 	return &uploadTemplateResult{
-		// path.Join will remove URI double slash prefix on s3://
-		URI:  formatURI(dst),
+		URI:  dst.String(),
 		File: fileName,
 	}, nil
 }

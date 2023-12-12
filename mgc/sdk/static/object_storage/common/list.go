@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/pipeline"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
 
@@ -21,7 +22,7 @@ var listObjectsLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
 })
 
 type ListObjectsParams struct {
-	Destination      string           `json:"dst" jsonschema:"description=Path of the bucket to list objects from" example:"s3://bucket1/" mgc:"positional"`
+	Destination      mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the bucket to list objects from,example=s3://bucket1/" mgc:"positional"`
 	PaginationParams `json:",squash"` // nolint
 	Recursive        bool             `json:"recursive,omitempty" jsonschema:"description=List folders and subfolders,default=false"`
 }
@@ -32,7 +33,7 @@ type FilterParams struct {
 }
 
 type PaginationParams struct {
-	MaxItems          int    `json:"max-items,omitempty" jsonschema:"description=Limit of items to be listed,default=1000,minimum=1" example:"1000"`
+	MaxItems          int    `json:"max-items,omitempty" jsonschema:"description=Limit of items to be listed,default=1000,minimum=1,example=1000"`
 	ContinuationToken string `json:"continuation-token,omitempty" jsonschema:"description=Token of result page to continue from"`
 }
 
@@ -206,7 +207,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 
 		page := params.PaginationParams
 		var requestedItems int
-		bucket, _ := strings.CutPrefix(params.Destination, URIPrefix)
+		bucket := params.Destination.Path()
 	MainLoop:
 		for {
 			requestedItems = 0
@@ -222,14 +223,14 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 				select {
 				case <-ctx.Done():
 					logger.Debugw("context.Done()", "err", err)
-				case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent](params.Destination, nil, err):
+				case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent](params.Destination.String(), nil, err):
 				}
 				return
 			}
 
 			for _, prefix := range result.CommonPrefixes {
 				dirEntry := pipeline.NewSimpleWalkDirEntry(
-					path.Join(params.Destination, prefix.Path),
+					path.Join(params.Destination.String(), prefix.Path),
 					prefix,
 					nil,
 				)
@@ -249,7 +250,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 
 			for _, content := range result.Contents {
 				dirEntry := pipeline.NewSimpleWalkDirEntry(
-					path.Join(params.Destination, content.Key),
+					path.Join(params.Destination.String(), content.Key),
 					content,
 					nil,
 				)

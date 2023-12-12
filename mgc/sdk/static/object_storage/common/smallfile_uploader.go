@@ -6,11 +6,12 @@ import (
 	"io/fs"
 
 	"magalu.cloud/core/progress_report"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 )
 
 type smallFileUploader struct {
 	cfg      Config
-	dst      string
+	dst      mgcSchemaPkg.URI
 	mimeType string
 	reader   io.Reader
 	fileInfo fs.FileInfo

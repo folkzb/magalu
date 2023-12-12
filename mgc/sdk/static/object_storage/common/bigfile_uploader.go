@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core/pipeline"
 	"magalu.cloud/core/progress_report"
+	mgcSchemaPkg "magalu.cloud/core/schema"
 )
 
 type progressReport struct {
@@ -61,7 +62,7 @@ type completionRequest struct {
 
 type bigFileUploader struct {
 	cfg        Config
-	dst        string
+	dst        mgcSchemaPkg.URI
 	mimeType   string
 	reader     io.ReaderAt
 	fileInfo   fs.FileInfo
