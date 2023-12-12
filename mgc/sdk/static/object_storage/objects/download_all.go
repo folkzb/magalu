@@ -10,6 +10,7 @@ import (
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
+	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/pipeline"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
@@ -104,8 +105,14 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 			continue
 		}
 
-		closer, _, err := common.SendRequest[io.ReadCloser](ctx, req)
-		if err != nil || closer == nil {
+		resp, err := common.SendRequest(ctx, req)
+		if err != nil {
+			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
+			continue
+		}
+
+		closer, err := mgcHttpPkg.UnwrapResponse[io.ReadCloser](resp)
+		if err != nil {
 			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}

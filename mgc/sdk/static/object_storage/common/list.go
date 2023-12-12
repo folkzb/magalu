@@ -12,6 +12,7 @@ import (
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
+	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/pipeline"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
@@ -214,8 +215,14 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 
 			req, err := newListRequest(ctx, cfg, bucket, page, params.Recursive)
 			var result listObjectsRequestResponse
+			var resp *http.Response
+
 			if err == nil {
-				result, _, err = SendRequest[listObjectsRequestResponse](ctx, req)
+				resp, err = SendRequest(ctx, req)
+			}
+
+			if err == nil {
+				result, err = mgcHttpPkg.UnwrapResponse[listObjectsRequestResponse](resp)
 			}
 
 			if err != nil {

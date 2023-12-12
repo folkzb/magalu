@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
 	mgcHttpPkg "magalu.cloud/core/http"
 )
@@ -29,7 +28,7 @@ func BuildHost(cfg Config) string {
 	return strings.ReplaceAll(templateUrl, "{{region}}", cfg.Region)
 }
 
-func SendRequest[T core.Value](ctx context.Context, req *http.Request) (result T, res *http.Response, err error) {
+func SendRequest(ctx context.Context, req *http.Request) (res *http.Response, err error) {
 	httpClient := mgcHttpPkg.ClientFromContext(ctx)
 	if httpClient == nil {
 		err = fmt.Errorf("couldn't get http client from context")
@@ -57,6 +56,9 @@ func SendRequest[T core.Value](ctx context.Context, req *http.Request) (result T
 		return
 	}
 
-	result, err = mgcHttpPkg.UnwrapResponse[T](res)
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return nil, fmt.Errorf("HTTP Request failed with status code: %d", res.StatusCode)
+	}
+
 	return
 }

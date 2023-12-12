@@ -11,6 +11,7 @@ import (
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
+	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/pipeline"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
@@ -103,7 +104,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName BucketName) pipeline.P
 			return &ObjectError{Err: err}, pipeline.ProcessAbort
 		}
 
-		_, _, err = SendRequest[any](ctx, req)
+		_, err = SendRequest(ctx, req)
 
 		if err != nil {
 			return &ObjectError{Url: mgcSchemaPkg.URI(bucketName), Err: err}, pipeline.ProcessOutput
@@ -164,6 +165,11 @@ func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err err
 		return
 	}
 
-	_, _, err = SendRequest[core.Value](ctx, req)
+	resp, err := SendRequest(ctx, req)
+	if err != nil {
+		return
+	}
+
+	_, err = mgcHttpPkg.UnwrapResponse[core.Value](resp)
 	return
 }

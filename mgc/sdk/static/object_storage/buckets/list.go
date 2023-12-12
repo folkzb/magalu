@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"magalu.cloud/core"
+	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
 )
@@ -45,6 +46,10 @@ func list(ctx context.Context, _ struct{}, cfg common.Config) (result ListRespon
 		return
 	}
 
-	result, _, err = common.SendRequest[ListResponse](ctx, req)
-	return
+	resp, err := common.SendRequest(ctx, req)
+	if err != nil {
+		return
+	}
+
+	return mgcHttpPkg.UnwrapResponse[ListResponse](resp)
 }

@@ -8,6 +8,7 @@ import (
 	"path"
 
 	"magalu.cloud/core"
+	mgcHttpPkg "magalu.cloud/core/http"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
@@ -33,7 +34,12 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg
 		return err
 	}
 
-	closer, _, err := common.SendRequest[io.ReadCloser](ctx, req)
+	resp, err := common.SendRequest(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	closer, err := mgcHttpPkg.UnwrapResponse[io.ReadCloser](resp)
 	if err != nil {
 		return err
 	}

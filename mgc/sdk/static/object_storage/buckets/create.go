@@ -54,7 +54,7 @@ func create(ctx context.Context, params createParams, cfg common.Config) (core.V
 		return nil, err
 	}
 
-	_, _, err = common.SendRequest[core.Value](ctx, req)
+	_, err = common.SendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}

@@ -13,6 +13,7 @@ import (
 	"sort"
 
 	"go.uber.org/zap"
+	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/pipeline"
 	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
@@ -94,11 +95,17 @@ func (u *bigFileUploader) getUploadId(ctx context.Context) (string, error) {
 			return "", err
 		}
 
-		response, _, err := SendRequest[preparationResponse](ctx, req)
+		resp, err := SendRequest(ctx, req)
 		if err != nil {
 			return "", err
 		}
-		u.uploadId = response.UploadId
+
+		pr, err := mgcHttpPkg.UnwrapResponse[preparationResponse](resp)
+		if err != nil {
+			return "", err
+		}
+
+		u.uploadId = pr.UploadId
 	}
 	return u.uploadId, nil
 }
@@ -157,7 +164,7 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 		delete(excludedHeaders, "Content-MD5")
 	}()
 
-	_, _, err = SendRequest[any](ctx, req)
+	_, err = SendRequest(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -184,7 +191,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 		}
 
 		bigfileUploaderLogger().Debugw("Sending part", "part", partNumber, "total", totalParts)
-		_, res, err := SendRequest[any](ctx, req)
+		res, err := SendRequest(ctx, req)
 		if err != nil {
 			cancel(err)
 			return part, pipeline.ProcessAbort
