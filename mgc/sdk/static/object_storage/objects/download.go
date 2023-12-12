@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"strings"
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
@@ -25,36 +24,6 @@ func downloadLogger() *zap.SugaredLogger {
 		downloadObjectsLogger = logger().Named("download")
 	}
 	return downloadObjectsLogger
-}
-
-type downloadObjectsError struct {
-	errorMap map[string]error
-}
-
-func (o downloadObjectsError) Error() string {
-	var errorMsg string
-	for file, err := range o.errorMap {
-		errorMsg += fmt.Sprintf("%s - %s, ", file, err)
-	}
-	// Remove trailing `, `
-	if len(errorMsg) != 0 {
-		errorMsg = errorMsg[:len(errorMsg)-2]
-	}
-	return fmt.Sprintf("failed to download some objects from bucket: %s", errorMsg)
-}
-
-func (o downloadObjectsError) Add(uri string, err error) {
-	o.errorMap[uri] = err
-}
-
-func (o downloadObjectsError) HasError() bool {
-	return len(o.errorMap) != 0
-}
-
-func NewDownloadObjectsError() downloadObjectsError {
-	return downloadObjectsError{
-		errorMap: make(map[string]error),
-	}
 }
 
 type downloadObjectParams struct {
@@ -128,7 +97,6 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg
 }
 
 func downloadMultipleFiles(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath, paginationParams common.PaginationParams) error {
-	bucketRoot := strings.SplitN(src.Path(), "/", 2)[0]
 	listParams := common.ListObjectsParams{
 		Destination:      src,
 		Recursive:        true,
@@ -136,48 +104,52 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, src mgcSchema
 	}
 	dirEntries := common.ListGenerator(ctx, listParams, cfg)
 
-	objError := NewDownloadObjectsError()
+	bucketName := common.NewBucketNameFromURI(src)
+	rootURI := bucketName.AsURI()
+	var errors utils.MultiError
 	for dirEntry := range dirEntries {
+		objURI := rootURI.JoinPath(dirEntry.Path())
+
 		if err := dirEntry.Err(); err != nil {
-			objError.Add(dirEntry.Path(), err)
+			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}
 
 		obj, ok := dirEntry.DirEntry().(*common.BucketContent)
 		if !ok {
-			objError.Add(dirEntry.Path(), fmt.Errorf("expected object, got directory"))
+			errors = append(errors, &common.ObjectError{Url: objURI, Err: fmt.Errorf("expected object, got directory")})
 			continue
 		}
 
-		objURI := path.Join(bucketRoot, obj.Key)
 		downloadLogger().Infow("Downloading object", "uri", objURI)
 		// TODO: change API to use BucketName, URI and FilePath
 		req, err := newDownloadRequest(ctx, cfg, mgcSchemaPkg.URI(objURI))
 		if err != nil {
-			objError.Add(objURI, err)
+
+			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}
 
 		closer, _, err := common.SendRequest[io.ReadCloser](ctx, req)
 		if err != nil || closer == nil {
-			objError.Add(objURI, err)
+			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}
 
-		dir, _ := path.Split(obj.Key)
+		dir := path.Dir(obj.Key)
 		if err := os.MkdirAll(path.Join(dst.String(), dir), utils.DIR_PERMISSION); err != nil {
-			objError.Add(objURI, err)
+			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}
 
 		if err := writeToFile(closer, dst.Join(obj.Key)); err != nil {
-			objError.Add(objURI, err)
+			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}
 	}
 
-	if objError.HasError() {
-		return objError
+	if len(errors) > 0 {
+		return errors
 	}
 
 	return nil

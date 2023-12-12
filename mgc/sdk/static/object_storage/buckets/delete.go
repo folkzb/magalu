@@ -43,26 +43,22 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func delete(ctx context.Context, params deleteParams, cfg common.Config) (core.Value, error) {
+func delete(ctx context.Context, params deleteParams, cfg common.Config) (result core.Value, err error) {
 	logger := deleteLogger().Named("delete").With(
 		"params", params,
 		"cfg", cfg,
 	)
 
-	objErr, err := common.DeleteAllObjects(ctx, common.DeleteAllObjectsParams{BucketName: params.BucketName, BatchSize: common.MaxBatchSize}, cfg)
+	err = common.DeleteAllObjects(ctx, common.DeleteAllObjectsParams{BucketName: params.BucketName, BatchSize: common.MaxBatchSize}, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	if objErr.HasError() {
-		return nil, objErr
-	}
-
-	result, err := common.Delete(ctx, common.DeleteObjectParams{Destination: params.BucketName.AsURI()}, cfg)
+	err = common.Delete(ctx, common.DeleteObjectParams{Destination: params.BucketName.AsURI()}, cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Info("Deleted bucket")
-	return result, nil
+	return
 }

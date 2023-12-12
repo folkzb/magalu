@@ -26,6 +26,6 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func delete(ctx context.Context, params common.DeleteObjectParams, cfg common.Config) (result core.Value, err error) {
-	result, err = common.Delete(ctx, params, cfg)
+	err = common.Delete(ctx, params, cfg)
 	return
 }
