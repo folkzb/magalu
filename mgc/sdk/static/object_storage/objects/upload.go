@@ -3,6 +3,7 @@ package objects
 import (
 	"context"
 	"path"
+	"strings"
 
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
@@ -37,7 +38,7 @@ var getUpload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploadTemplateResult, error) {
 	dst := params.Destination
 	fileName := path.Base(params.Source.String())
-	if isDirPath(dst.AsFilePath()) {
+	if strings.HasSuffix(dst.Path(), "/") {
 		// If it isn't a file path, don't rename, just append source with bucket URI
 		dst = dst.JoinPath(fileName)
 	}

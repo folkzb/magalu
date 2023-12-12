@@ -190,14 +190,14 @@ func download(ctx context.Context, p downloadObjectParams, cfg common.Config) (r
 		if err != nil {
 			return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 		}
-		fname := path.Base(p.Source.Path())
+		_, fname := path.Split(p.Source.Path())
 		dst = mgcSchemaPkg.FilePath(path.Join(d, fname))
 	}
 	src := p.Source
 	if isObjectPath(ctx, cfg, src) {
 		// User specified a directory, append the file name to it
 		if isDirPath(dst) {
-			fname := path.Base(src.Path())
+			_, fname := path.Split(src.Path())
 			dst = dst.Join(fname)
 		}
 		err = downloadSingleFile(ctx, cfg, src, dst)
