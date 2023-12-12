@@ -128,13 +128,26 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src, dst string)
 
 func downloadMultipleFiles(ctx context.Context, cfg common.Config, src, dst string, paginationParams common.PaginationParams) error {
 	bucketRoot := strings.Split(src, "/")[0]
-	objs, err := List(ctx, common.ListObjectsParams{Destination: src, Recursive: true, PaginationParams: paginationParams}, cfg)
-	if err != nil {
-		return err
+	listParams := common.ListObjectsParams{
+		Destination:      src,
+		Recursive:        true,
+		PaginationParams: paginationParams,
 	}
+	dirEntries := common.ListGenerator(ctx, listParams, cfg)
 
 	objError := NewDownloadObjectsError()
-	for _, obj := range objs.Contents {
+	for dirEntry := range dirEntries {
+		if err := dirEntry.Err(); err != nil {
+			objError.Add(dirEntry.Path(), err)
+			continue
+		}
+
+		obj, ok := dirEntry.DirEntry().(*common.BucketContent)
+		if !ok {
+			objError.Add(dirEntry.Path(), fmt.Errorf("expected object, got directory"))
+			continue
+		}
+
 		objURI := path.Join(bucketRoot, obj.Key)
 		downloadLogger().Infow("Downloading object", "uri", objURI)
 		req, err := newDownloadRequest(ctx, cfg, objURI)
