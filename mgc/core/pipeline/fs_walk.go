@@ -39,20 +39,12 @@ func NewSimpleWalkDirEntry[T fs.DirEntry](path string, dirEntry T, err error) *S
 }
 
 // Do not process any entry that name stars with "."
-func WalkDirFilterHidden(path string, d fs.DirEntry, err error) error {
+func WalkDirFilterHiddenDirs(path string, d fs.DirEntry, err error) error {
 	if d == nil {
 		return nil
 	}
-	if name := d.Name(); strings.HasPrefix(name, ".") {
+	if name := d.Name(); strings.HasPrefix(name, ".") && d.IsDir() {
 		return fs.SkipDir
-	}
-	return nil
-}
-
-// Do not process any directory/folder that name stars with "."
-func WalkDirFilterHiddenFolders(path string, d fs.DirEntry, err error) error {
-	if d != nil && d.IsDir() {
-		return WalkDirFilterHidden(path, d, err)
 	}
 	return nil
 }
