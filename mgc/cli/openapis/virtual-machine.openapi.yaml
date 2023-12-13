@@ -320,7 +320,7 @@ paths:
             x-mgc-description: Get a Virtual Machine instance details
             x-mgc-wait-termination:
                 maxRetries: 30
-                interval: 1s
+                interval: 5s
                 jsonPathQuery: $.result.status == "completed"
         delete:
             tags:
