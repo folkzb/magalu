@@ -8,7 +8,6 @@ import (
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
-	"magalu.cloud/sdk/static/object_storage/buckets"
 	"magalu.cloud/sdk/static/object_storage/common"
 )
 
@@ -23,15 +22,15 @@ type ListObjectVersionsResponse struct {
 
 // https://docs.aws.amazon.com/AmazonS3/latest/API/API_ObjectVersion.html
 type ObjectVersion struct {
-	XMLName      xml.Name      `xml:"Version"`
-	VersionID    string        `xml:"VersionId"`
-	IsLatest     bool          `xml:"IsLatest"`
-	Key          string        `xml:"Key"`
-	LastModified string        `xml:"LastModified"`
-	ETag         string        `xml:"ETag"`
-	Size         int64         `xml:"Size"`
-	Owner        buckets.Owner `xml:"Owner"`
-	StorageClass string        `xml:"StorageClass"`
+	XMLName      xml.Name     `xml:"Version"`
+	VersionID    string       `xml:"VersionId"`
+	IsLatest     bool         `xml:"IsLatest"`
+	Key          string       `xml:"Key"`
+	LastModified string       `xml:"LastModified"`
+	ETag         string       `xml:"ETag"`
+	Size         int64        `xml:"Size"`
+	Owner        common.Owner `xml:"Owner"`
+	StorageClass string       `xml:"StorageClass"`
 }
 
 var getVersions = utils.NewLazyLoader(func() core.Executor {

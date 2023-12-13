@@ -108,7 +108,6 @@ func newIdentifiableHttpError(resp *http.Response, req *http.Request) *mgcHttpPk
 		Slug:    slug,
 	}
 
-	return mgcHttpPkg.NewIdentifiableHttpError(httpError,
-		req, resp)
+	return mgcHttpPkg.NewIdentifiableHttpError(httpError, req, resp)
 
 }

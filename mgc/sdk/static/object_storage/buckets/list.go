@@ -14,15 +14,9 @@ type BucketResponse struct {
 	Name         string `xml:"Name"`
 }
 
-// Container for the owner's display name and ID.
-type Owner struct {
-	DisplayName *string `xml:"DisplayName"`
-	ID          *string `type:"ID"`
-}
-
 type ListResponse struct {
 	Buckets []*BucketResponse `xml:"Buckets>Bucket"`
-	Owner   *Owner            `xml:"Owner"`
+	Owner   *common.Owner     `xml:"Owner"`
 }
 
 func newListRequest(ctx context.Context, cfg common.Config) (*http.Request, error) {

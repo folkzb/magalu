@@ -5,6 +5,7 @@ Usage:
   ./cli object-storage buckets [command]
 
 Commands:
+  acl         ACL-related commands
   create      Create a new Bucket
   delete      Delete an existing Bucket
   list        List all existing Buckets

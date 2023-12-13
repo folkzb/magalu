@@ -19727,6 +19727,143 @@
    {
     "children": [
      {
+      "children": [
+       {
+        "configs": {
+         "properties": {
+          "chunkSize": {
+           "default": 5,
+           "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+           "maximum": 5120,
+           "minimum": 5,
+           "type": "integer"
+          },
+          "env": {
+           "default": "prod",
+           "description": "Environment to use",
+           "enum": [
+            "prod",
+            "pre-prod"
+           ],
+           "type": "string"
+          },
+          "region": {
+           "default": "br-ne1",
+           "description": "Region to reach the service",
+           "enum": [
+            "br-ne1",
+            "br-se1",
+            "br-mgl1"
+           ],
+           "type": "string"
+          },
+          "serverUrl": {
+           "description": "Manually specify the server to use",
+           "format": "uri",
+           "type": "string"
+          },
+          "workers": {
+           "default": 5,
+           "description": "Number of routines that spawn to do parallel operations within object_storage",
+           "minimum": 1,
+           "type": "integer"
+          }
+         },
+         "type": "object"
+        },
+        "description": "Get the ACL for the specified bucket",
+        "isInternal": false,
+        "name": "get",
+        "parameters": {
+         "properties": {
+          "bucket": {
+           "description": "Specifies the bucket whose ACL is being requested",
+           "maxLength": 63,
+           "minLength": 3,
+           "type": "string"
+          }
+         },
+         "required": [
+          "bucket"
+         ],
+         "type": "object"
+        },
+        "result": {
+         "properties": {
+          "AccessControlList": {
+           "properties": {
+            "Grant": {
+             "properties": {
+              "Grantee": {
+               "properties": {
+                "DisplayName": {
+                 "type": "string"
+                },
+                "EmailAddress": {
+                 "type": "string"
+                },
+                "ID": {
+                 "type": "string"
+                },
+                "URI": {
+                 "type": "string"
+                }
+               },
+               "required": [
+                "DisplayName",
+                "EmailAddress",
+                "ID",
+                "URI"
+               ],
+               "type": "object"
+              },
+              "Permission": {
+               "type": "string"
+              }
+             },
+             "required": [
+              "Grantee",
+              "Permission"
+             ],
+             "type": "object"
+            }
+           },
+           "required": [
+            "Grant"
+           ],
+           "type": "object"
+          },
+          "Owner": {
+           "properties": {
+            "DisplayName": {
+             "type": "string"
+            },
+            "ID": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "DisplayName",
+            "ID"
+           ],
+           "type": "object"
+          }
+         },
+         "required": [
+          "Owner",
+          "AccessControlList"
+         ],
+         "type": "object"
+        },
+        "version": ""
+       }
+      ],
+      "description": "ACL-related commands",
+      "isInternal": false,
+      "name": "acl",
+      "version": ""
+     },
+     {
       "configs": {
        "properties": {
         "chunkSize": {
