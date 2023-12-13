@@ -164,7 +164,7 @@ paths:
                                 $ref: '#/components/schemas/VolumeCreateResponse'
                     links:
                         delete:
-                            operationId: delete_snapshot_v0_snapshots__snapshot_id__delete
+                            operationRef: '#/paths/~1v0~1snapshots~1{snapshot_id}/delete'
                             description: Delete snapshot
                             parameters:
                                 snapshot_id: $response.body#/id
@@ -290,17 +290,17 @@ paths:
                                 $ref: '#/components/schemas/VolumeCreateResponse'
                     links:
                         read:
-                            operationId: volume_details_v0_volumes__id__get
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
                             description: Read Block Storage volume
                             parameters:
                                 id: $response.body#/id
                         update:
-                            operationId: update_volume_v0_volumes__id__patch
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/patch'
                             description: Update Block Storage volume
                             parameters:
                                 id: $response.body#/id
                         delete:
-                            operationId: delete_volume_v0_volumes__id__delete
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/delete'
                             description: Delete Block Storage volume
                             parameters:
                                 id: $response.body#/id
@@ -339,29 +339,29 @@ paths:
                                 $ref: '#/components/schemas/VolumeResponse'
                     links:
                         update:
-                            operationId: update_volume_v0_volumes__id__patch
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/patch'
                             description: Update Block Storage volume
                             parameters:
                                 id: $request.path.id
                         delete:
-                            operationId: delete_volume_v0_volumes__id__delete
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/delete'
                             description: Delete Block Storage volume
                             parameters:
                                 id: $request.path.id
                         create/attach-to-vm:
                             description: Attach this BS Volume to a VM instance
-                            operationId: attach_volume_v0_volumes__id__attach__virtual_machine_id__post
+                            operationRef: '#/paths/~1v0~1volumes~1{id}~1attach~1{virtual_machine_id}/post'
                             parameters:
                                 id: $request.path.id
                         delete/attach-to-vm:
                             description: Detach this BS Volume to a VM instance
-                            operationId: detach_volume_v0_volumes__id__detach__virtual_machine_id__post
+                            operationRef: '#/paths/~1v0~1volumes~1{id}~1detach~1{virtual_machine_id}/post'
                             parameters:
                                 id: $request.path.id
                         read/attach-to-vm:
                             description: Check if this BS Volume is attached to a
                                 VM instance
-                            operationId: volume_details_v0_volumes__id__get
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
                             parameters:
                                 id: $request.path.id
                             x-mgc-extra-parameters:
@@ -451,12 +451,12 @@ paths:
                                 $ref: '#/components/schemas/VolumeResponse'
                     links:
                         read:
-                            operationId: volume_details_v0_volumes__id__get
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
                             description: Read Block Storage volume
                             parameters:
                                 id: $request.path.id
                         delete:
-                            operationId: delete_volume_v0_volumes__id__delete
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/delete'
                             description: Delete Block Storage volume
                             parameters:
                                 id: $request.path.id
@@ -505,13 +505,13 @@ paths:
                     links:
                         delete:
                             description: Detach from a Virtual Machine instance
-                            operationId: detach_volume_v0_volumes__id__detach__virtual_machine_id__post
+                            operationRef: '#/paths/~1v0~1volumes~1{id}~1detach~1{virtual_machine_id}/post'
                             parameters:
                                 id: $request.path.id
                         read:
                             description: Check if block storage is attached to Virtual
                                 Machine instance
-                            operationId: volume_details_v0_volumes__id__get
+                            operationRef: '#/paths/~1v0~1volumes/get'
                             parameters:
                                 id: $request.path.id
                             x-mgc-wait-termination:
