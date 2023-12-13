@@ -4,10 +4,11 @@ Usage:
   ./cli network public-ip public-ips attach [public-ip-id] [port-id] [flags]
 
 Flags:
-  -h, --help                  help for attach
-      --port-id string        Port Id (required)
-      --public-ip-id string   Public Ip Id (required)
-  -v, --version               version for attach
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for attach
+      --port-id string                Port Id (required)
+      --public-ip-id string           Public Ip Id (required)
+  -v, --version                       version for attach
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

@@ -318,6 +318,24 @@ paths:
         - name: port_id
           schema:
             type: string
+      responses:
+        '200':
+          links:
+            read: # Connection Resource
+              description: Check if this Public IP is attached to this Port
+              operationRef: '#/paths/~1v0~1ports~1{port_id}/get'
+              parameters:
+                port_id: $request.path.port_id
+              x-mgc-wait-termination:
+                maxRetries: 2
+                interval: 5s
+                jsonPathQuery: $.result.public_ip[?(@.public_ip_id == $.owner.parameters.public_ip_id)]
+            delete:
+                description: Detach this BS Volume to a VM instance
+                operationRef: '#/paths/~1v0~1public_ips~1{public_ip_id}~1detach~1{port_id}/post'
+                parameters:
+                  public_ip_id: $request.path.public_ip_id
+                  port_id: $request.path.port_id
       security:
         - OAuth2:
             - network.write
