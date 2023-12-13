@@ -14,12 +14,14 @@ provider "mgc" {
 
 resource "mgc_virtual-machine_instances" "myvm" {
   name = "my-tf-vm"
-  type = "cloud-bs1.xsmall"
-  image = "cloud-ubuntu-22.04 LTS"
+  machine_type = {
+    name = "cloud-bs1.xsmall"
+  }
+  image = {
+    name = "cloud-ubuntu-22.04 LTS"
+  }
   key_name = "luizalabs-key"
   availability_zone = "br-ne-1c"
-  status = "active"
-  allocate_fip = false
 }
 
 resource "mgc_block-storage_volume" "myvmvolume" {
@@ -29,7 +31,7 @@ resource "mgc_block-storage_volume" "myvmvolume" {
     volume_type = "cloud_nvme"
 }
 
-resource "mgc_block-storage_volume_attach-to-vm" "myvmvolumeattachment" {
+resource "mgc_block-storage_volume-attachment" "myvmvolumeattachment" {
     id = mgc_block-storage_volume.myvmvolume.id
     virtual_machine_id = mgc_virtual-machine_instances.myvm.id
 }
