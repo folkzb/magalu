@@ -280,25 +280,6 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 			continue
 		}
 
-		if propXOfKey, ok := propAttr.mgcSchema.Extensions[xOfPromotionKey].(string); ok {
-			tflog.Debug(
-				c.ctx,
-				fmt.Sprintf("[loader] found xOf promotion key: %q", propXOfKey),
-				map[string]any{"propMgcName": propMgcName},
-			)
-			// TODO: Treat every xOf as "OneOf" for now, so fail if attributes from different xOf children were specified
-			if xOfKey == "" {
-				xOfKey = propXOfKey
-				xOfPromotedValues = append(xOfPromotedValues, propName)
-			} else if xOfKey != propXOfKey {
-				c.diag.AddError(
-					"mutually exclusive attributes specified",
-					fmt.Sprintf("attribute %q cannot be specified if attribute(s) %v have already been specified and vice-versa", propName, xOfPromotedValues),
-				)
-				return mgcMap, false
-			}
-		}
-
 		propMgcItem, isItemKnown := c.loadMgcSchemaValue(propAttr, propTFItem, ignoreUnknown, filterUnset)
 		if c.diag.HasError() {
 			return nil, false
@@ -319,6 +300,25 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 				map[string]any{"propMgcName": propMgcName, "propTFName": propAttr.tfName},
 			)
 			continue
+		}
+
+		if propXOfKey, ok := propAttr.mgcSchema.Extensions[xOfPromotionKey].(string); ok {
+			tflog.Debug(
+				c.ctx,
+				fmt.Sprintf("[loader] found xOf promotion key: %q", propXOfKey),
+				map[string]any{"propMgcName": propMgcName},
+			)
+			// TODO: Treat every xOf as "OneOf" for now, so fail if attributes from different xOf children were specified
+			if xOfKey == "" {
+				xOfKey = propXOfKey
+				xOfPromotedValues = append(xOfPromotedValues, propName)
+			} else if xOfKey != propXOfKey {
+				c.diag.AddError(
+					"mutually exclusive attributes specified",
+					fmt.Sprintf("attribute %q cannot be specified if attribute(s) %v have already been specified and vice-versa", propName, xOfPromotedValues),
+				)
+				return mgcMap, false
+			}
 		}
 
 		if isSchemaXOfAlternative(propAttr.mgcSchema) {
