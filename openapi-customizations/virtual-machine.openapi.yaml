@@ -74,7 +74,17 @@ paths:
                             operationId: start_instance_v1_instances__id__start_post
                             parameters:
                                 id: $request.path.id
+                        update/state/running:
+                            description: Start a Virtual Machine instance
+                            operationId: start_instance_v1_instances__id__start_post
+                            parameters:
+                                id: $request.path.id
                         stop:
+                            description: Stop a Virtual Machine instance
+                            operationId: stop_instance_v1_instances__id__stop_post
+                            parameters:
+                                id: $request.path.id
+                        update/state/stopped:
                             description: Stop a Virtual Machine instance
                             operationId: stop_instance_v1_instances__id__stop_post
                             parameters:
@@ -84,7 +94,17 @@ paths:
                             operationId: suspend_instance_v1_instances__id__suspend_post
                             parameters:
                                 id: $request.path.id
+                        update/state/suspended:
+                            description: Suspend a Virtual Machine instance
+                            operationId: suspend_instance_v1_instances__id__suspend_post
+                            parameters:
+                                id: $request.path.id
                         rename:
+                            description: Rename a Virtual Machine instance
+                            operationId: update_instance_name_v1_instances__id__rename_patch
+                            parameters:
+                                id: $request.path.id
+                        update/name:
                             description: Rename a Virtual Machine instance
                             operationId: update_instance_name_v1_instances__id__rename_patch
                             parameters:
