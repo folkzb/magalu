@@ -6,6 +6,7 @@ Usage:
 
 Commands:
   get         Get the ACL for the specified bucket
+  set         set permission information for the specified bucket
 
 Flags:
   -h, --help   help for acl
