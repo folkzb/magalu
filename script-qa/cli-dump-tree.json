@@ -20823,6 +20823,244 @@
          "type": "object"
         },
         "version": ""
+       },
+       {
+        "configs": {
+         "properties": {
+          "chunkSize": {
+           "default": 5,
+           "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+           "maximum": 5120,
+           "minimum": 5,
+           "type": "integer"
+          },
+          "env": {
+           "default": "prod",
+           "description": "Environment to use",
+           "enum": [
+            "prod",
+            "pre-prod"
+           ],
+           "type": "string"
+          },
+          "region": {
+           "default": "br-ne1",
+           "description": "Region to reach the service",
+           "enum": [
+            "br-ne1",
+            "br-se1",
+            "br-mgl1"
+           ],
+           "type": "string"
+          },
+          "serverUrl": {
+           "description": "Manually specify the server to use",
+           "format": "uri",
+           "type": "string"
+          },
+          "workers": {
+           "default": 5,
+           "description": "Number of routines that spawn to do parallel operations within object_storage",
+           "minimum": 1,
+           "type": "integer"
+          }
+         },
+         "type": "object"
+        },
+        "description": "Set ACL information for the specified object",
+        "isInternal": false,
+        "name": "set",
+        "parameters": {
+         "properties": {
+          "authenticated_read": {
+           "description": "Owner gets FULL_CONTROL. Authenticated users have READ rights",
+           "type": "boolean"
+          },
+          "aws_exec_read": {
+           "type": "boolean"
+          },
+          "bucket_owner_full_control": {
+           "type": "boolean"
+          },
+          "bucket_owner_read": {
+           "type": "boolean"
+          },
+          "dst": {
+           "description": "The full object URL to set the ACL information",
+           "format": "uri",
+           "type": "string"
+          },
+          "grant_full_control": {
+           "description": "Grantees get FULL_CONTROL",
+           "items": {
+            "properties": {
+             "id": {
+              "description": "Either a Tenant ID or a User Project ID",
+              "example": "a4900b57-7dbb-4906-b7e8-efed938e325c",
+              "type": "string"
+             }
+            },
+            "required": [
+             "id"
+            ],
+            "type": "object"
+           },
+           "type": "array"
+          },
+          "grant_read": {
+           "description": "Allows grantees to list the objects in the bucket",
+           "items": {
+            "properties": {
+             "id": {
+              "description": "Either a Tenant ID or a User Project ID",
+              "example": "a4900b57-7dbb-4906-b7e8-efed938e325c",
+              "type": "string"
+             }
+            },
+            "required": [
+             "id"
+            ],
+            "type": "object"
+           },
+           "type": "array"
+          },
+          "grant_read_acp": {
+           "description": "Allows grantees to read the bucket ACL",
+           "items": {
+            "properties": {
+             "id": {
+              "description": "Either a Tenant ID or a User Project ID",
+              "example": "a4900b57-7dbb-4906-b7e8-efed938e325c",
+              "type": "string"
+             }
+            },
+            "required": [
+             "id"
+            ],
+            "type": "object"
+           },
+           "type": "array"
+          },
+          "grant_write": {
+           "description": "Allows grantees to create objects in the bucket",
+           "items": {
+            "properties": {
+             "id": {
+              "description": "Either a Tenant ID or a User Project ID",
+              "example": "a4900b57-7dbb-4906-b7e8-efed938e325c",
+              "type": "string"
+             }
+            },
+            "required": [
+             "id"
+            ],
+            "type": "object"
+           },
+           "type": "array"
+          },
+          "grant_write_acp": {
+           "description": "Allows grantees to write the ACL for the applicable bucket",
+           "items": {
+            "properties": {
+             "id": {
+              "description": "Either a Tenant ID or a User Project ID",
+              "example": "a4900b57-7dbb-4906-b7e8-efed938e325c",
+              "type": "string"
+             }
+            },
+            "required": [
+             "id"
+            ],
+            "type": "object"
+           },
+           "type": "array"
+          },
+          "private": {
+           "description": "Owner gets FULL_CONTROL. No one else has access rights",
+           "type": "boolean"
+          },
+          "public_read": {
+           "description": "Owner gets FULL_CONTROL. Everyone else has READ rights",
+           "type": "boolean"
+          },
+          "public_read_write": {
+           "description": "Owner gets FULL_CONTROL. Everyone else has READ and WRITE rights",
+           "type": "boolean"
+          }
+         },
+         "required": [
+          "dst"
+         ],
+         "type": "object"
+        },
+        "result": {
+         "properties": {
+          "AccessControlList": {
+           "properties": {
+            "Grant": {
+             "properties": {
+              "Grantee": {
+               "properties": {
+                "DisplayName": {
+                 "type": "string"
+                },
+                "EmailAddress": {
+                 "type": "string"
+                },
+                "ID": {
+                 "type": "string"
+                },
+                "URI": {
+                 "type": "string"
+                }
+               },
+               "required": [
+                "DisplayName",
+                "EmailAddress",
+                "ID",
+                "URI"
+               ],
+               "type": "object"
+              },
+              "Permission": {
+               "type": "string"
+              }
+             },
+             "required": [
+              "Grantee",
+              "Permission"
+             ],
+             "type": "object"
+            }
+           },
+           "required": [
+            "Grant"
+           ],
+           "type": "object"
+          },
+          "Owner": {
+           "properties": {
+            "DisplayName": {
+             "type": "string"
+            },
+            "ID": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "DisplayName",
+            "ID"
+           ],
+           "type": "object"
+          }
+         },
+         "required": [
+          "Owner",
+          "AccessControlList"
+         ],
+         "type": "object"
+        },
+        "version": ""
        }
       ],
       "description": "ACL related operations",

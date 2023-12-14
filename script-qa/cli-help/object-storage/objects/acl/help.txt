@@ -6,6 +6,7 @@ Usage:
 
 Commands:
   get         Get ACL information for the specified object
+  set         Set ACL information for the specified object
 
 Flags:
   -h, --help   help for acl
