@@ -3,6 +3,7 @@ package objects
 import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
+	"magalu.cloud/sdk/static/object_storage/objects/acl"
 )
 
 var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
@@ -13,6 +14,7 @@ var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
 		},
 		func() []core.Descriptor {
 			return []core.Descriptor{
+				acl.GetGroup(),   // object-storage objects acl
 				getCopy(),        // object-storage objects copy
 				getCopyAll(),     // object-storage objects copy-all
 				getDelete(),      // object-storage objects delete
