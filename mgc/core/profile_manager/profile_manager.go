@@ -42,13 +42,10 @@ func New() *ProfileManager {
 	return &ProfileManager{dir, afero.NewOsFs()}
 }
 
-func NewInMemoryProfileManager() *ProfileManager {
-	dir, err := buildMGCPath()
-	if err != nil {
-		dir = "."
-	}
-
-	return &ProfileManager{dir, afero.NewMemMapFs()}
+func NewInMemoryProfileManager() (*ProfileManager, afero.Fs) {
+	fs := afero.NewMemMapFs()
+	pf := &ProfileManager{"/", fs}
+	return pf, fs
 }
 
 func (m *ProfileManager) buildPath(name string) string {

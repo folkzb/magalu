@@ -16,14 +16,15 @@ type test struct {
 }
 
 func setupWithoutFile() *Config {
-	c := New(profile_manager.NewInMemoryProfileManager())
+	pf, _ := profile_manager.NewInMemoryProfileManager()
+	c := New(pf)
 	c.init()
 
 	return c
 }
 
 func setupWithFile(testFileData []byte) (*Config, error) {
-	m := profile_manager.NewInMemoryProfileManager()
+	m, _ := profile_manager.NewInMemoryProfileManager()
 	if err := m.Current().Write(CONFIG_FILE, testFileData); err != nil {
 		return nil, err
 	}
