@@ -17086,8 +17086,8 @@
       "parameters": {
        "properties": {
         "dst": {
-         "description": "Full destination path in the bucket with s3 prefix",
-         "example": "s3://bucket1",
+         "description": "Full destination path in the bucket with desired filename",
+         "example": "bucket1/file.txt",
          "format": "uri",
          "type": "string"
         },
@@ -17098,8 +17098,8 @@
         }
        },
        "required": [
-        "dst",
-        "src"
+        "src",
+        "dst"
        ],
        "type": "object"
       },

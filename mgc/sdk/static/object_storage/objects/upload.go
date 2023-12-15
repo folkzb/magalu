@@ -12,8 +12,8 @@ import (
 )
 
 type uploadParams struct {
-	Destination mgcSchemaPkg.URI      `json:"dst" jsonschema:"description=Full destination path in the bucket with s3 prefix,example=s3://bucket1" mgc:"positional"`
 	Source      mgcSchemaPkg.FilePath `json:"src" jsonschema:"description=Source file path to be uploaded" mgc:"positional"`
+	Destination mgcSchemaPkg.URI      `json:"dst" jsonschema:"description=Full destination path in the bucket with desired filename,example=bucket1/file.txt" mgc:"positional"`
 }
 
 type uploadTemplateResult struct {
