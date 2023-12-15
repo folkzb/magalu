@@ -17085,9 +17085,15 @@
       "name": "upload",
       "parameters": {
        "properties": {
+        "bucket": {
+         "description": "Name of the bucket to upload to",
+         "maxLength": 63,
+         "minLength": 3,
+         "type": "string"
+        },
         "dst": {
          "description": "Full destination path in the bucket with desired filename",
-         "example": "bucket1/file.txt",
+         "example": "dir/file.txt",
          "format": "uri",
          "type": "string"
         },
@@ -17099,7 +17105,7 @@
        },
        "required": [
         "src",
-        "dst"
+        "bucket"
        ],
        "type": "object"
       },

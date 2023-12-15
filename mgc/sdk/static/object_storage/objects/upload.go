@@ -13,7 +13,8 @@ import (
 
 type uploadParams struct {
 	Source      mgcSchemaPkg.FilePath `json:"src" jsonschema:"description=Source file path to be uploaded" mgc:"positional"`
-	Destination mgcSchemaPkg.URI      `json:"dst" jsonschema:"description=Full destination path in the bucket with desired filename,example=bucket1/file.txt" mgc:"positional"`
+	BucketName  common.BucketName     `json:"bucket" jsonschema:"description=Name of the bucket to upload to" mgc:"positional"`
+	Destination mgcSchemaPkg.URI      `json:"dst,omitempty" jsonschema:"description=Full destination path in the bucket with desired filename,example=dir/file.txt" mgc:"positional"`
 }
 
 type uploadTemplateResult struct {
@@ -36,9 +37,10 @@ var getUpload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploadTemplateResult, error) {
-	dst := params.Destination
+	dst := params.BucketName.AsURI()
+	dst = dst.JoinPath(params.Destination.String())
 	fileName := path.Base(params.Source.String())
-	if strings.HasSuffix(dst.Path(), "/") {
+	if params.Destination.String() == "" || strings.HasSuffix(params.Destination.String(), "/") {
 		// If it isn't a file path, don't rename, just append source with bucket URI
 		dst = dst.JoinPath(fileName)
 	}
