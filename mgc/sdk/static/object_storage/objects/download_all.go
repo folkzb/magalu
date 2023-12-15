@@ -3,14 +3,12 @@ package objects
 import (
 	"context"
 	"fmt"
-	"io"
 	"math"
 	"os"
 	"path"
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
-	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/pipeline"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
@@ -111,19 +109,13 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 			continue
 		}
 
-		closer, err := mgcHttpPkg.UnwrapResponse[io.ReadCloser](resp)
-		if err != nil {
-			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
-			continue
-		}
-
 		dir := path.Dir(entry.Path())
 		if err := os.MkdirAll(path.Join(dst.String(), dir), utils.DIR_PERMISSION); err != nil {
 			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}
 
-		if err := common.WriteToFile(closer, dst.Join(entry.Path())); err != nil {
+		if err := common.WriteToFile(resp.Body, dst.Join(entry.Path())); err != nil {
 			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}

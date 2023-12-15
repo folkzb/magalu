@@ -3,12 +3,10 @@ package objects
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path"
 
 	"magalu.cloud/core"
-	mgcHttpPkg "magalu.cloud/core/http"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
@@ -39,11 +37,6 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg
 		return err
 	}
 
-	closer, err := mgcHttpPkg.UnwrapResponse[io.ReadCloser](resp)
-	if err != nil {
-		return err
-	}
-
 	dir := path.Dir(dst.String())
 	if len(dir) != 0 {
 		if err := os.MkdirAll(dir, utils.DIR_PERMISSION); err != nil {
@@ -51,7 +44,7 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg
 		}
 	}
 
-	if err := common.WriteToFile(closer, dst); err != nil {
+	if err := common.WriteToFile(resp.Body, dst); err != nil {
 		return err
 	}
 
