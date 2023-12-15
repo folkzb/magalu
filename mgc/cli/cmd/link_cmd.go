@@ -171,8 +171,9 @@ func (c *cmdLinks) handle(originalResult core.Result, parentOutputFlag string) (
 		return
 	}
 
-	setOutputFlag(c.root, parentOutputFlag)
-	err = c.root.ParseFlags(args)
+	cmd := c.resolvedCmd
+	setOutputFlag(cmd, parentOutputFlag)
+	err = cmd.ParseFlags(args[1:])
 	if err != nil {
 		logger().Debugw("could not parse link flags", "args", args, "error", err, "link", link.Name())
 		return
