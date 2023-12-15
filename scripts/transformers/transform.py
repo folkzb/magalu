@@ -12,7 +12,7 @@ from spec_remove_path import RemovePathTransformer
 from spec_remove_component import RemoveComponentTransformer
 from spec_add_security import AddSecurityTransformer
 from spec_add_parameters_type import AddParameterTypes
-
+from spec_check_links import FixLinksTransformer
 from validate_openapi_specs import validate_oapi
 
 
@@ -84,6 +84,7 @@ if __name__ == "__main__":
         RemoveParamTransformer("x-tenant-id"),
         AddSecurityTransformer(args.product_name),
         AddParameterTypes(),
+        FixLinksTransformer(),
     ]
     for t in transformers:
         product_spec = t.transform(product_spec)
