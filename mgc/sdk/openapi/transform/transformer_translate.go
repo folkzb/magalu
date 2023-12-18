@@ -43,12 +43,10 @@ func (t *transformerTranslate) TransformValue(value any) (any, error) {
 		if reflect.DeepEqual(item.From, value) {
 			return item.To, nil
 		}
-		fmt.Printf(">>>   NOT EQUAL: %#v != %#v\n", value, item.From)
 	}
 	if t.spec.AllowMissing {
 		return value, nil
 	}
-	fmt.Printf(">>> TRANSLATIONS: %#v -> %#v\n", value, t.spec.Translations)
 	return value, fmt.Errorf("translation not found: %+v", value)
 }
 
