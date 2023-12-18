@@ -83,7 +83,7 @@ func newDeleteBatchRequest(ctx context.Context, cfg Config, bucketName string, o
 
 // Deleting an object does not yield result except there is an error. So this processor will *Skip*
 // success results and *Output* errors
-func createObjectDeletionProcessor(cfg Config, bucketName BucketName) pipeline.Processor[[]pipeline.WalkDirEntry, error] {
+func createObjectDeletionProcessor(cfg Config, bucketName BucketName, reportChan chan<- deleteProgressReport) pipeline.Processor[[]pipeline.WalkDirEntry, error] {
 	return func(ctx context.Context, dirEntries []pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
 		var objIdentifiers []objectIdentifier
 
@@ -107,13 +107,22 @@ func createObjectDeletionProcessor(cfg Config, bucketName BucketName) pipeline.P
 
 		_, err = SendRequest(ctx, req)
 
+		defer func() {
+			reportChan <- deleteProgressReport{uint64(len(dirEntries)), err}
+		}()
+
 		if err != nil {
 			return &ObjectError{Url: mgcSchemaPkg.URI(bucketName), Err: err}, pipeline.ProcessOutput
-		} else {
-			deleteLogger().Infow("Deleted objects", "uri", URIPrefix+bucketName)
-			return nil, pipeline.ProcessOutput
 		}
+
+		deleteLogger().Infow("Deleted objects", "uri", URIPrefix+bucketName)
+		return nil, pipeline.ProcessOutput
 	}
+}
+
+type deleteProgressReport struct {
+	files uint64
+	err   error
 }
 
 func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Config) error {
@@ -146,8 +155,14 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 		return core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", minBatchSize, MaxBatchSize, params.BatchSize)}
 	}
 
+	reportProgress := progress_report.FromContext(ctx)
+	reportChan := make(chan deleteProgressReport)
+	defer close(reportChan)
+
+	go reportDeleteProgress(reportProgress, reportChan, params)
+
 	objsBatch := pipeline.Batch(ctx, objs, params.BatchSize)
-	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objsBatch, createObjectDeletionProcessor(cfg, params.BucketName), nil)
+	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objsBatch, createObjectDeletionProcessor(cfg, params.BucketName, reportChan), nil)
 	nonNilErrorsChan := pipeline.Filter(ctx, deleteObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
 	// This cannot error, there is no cancel call in processor
@@ -157,6 +172,35 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 	}
 
 	return nil
+}
+
+func reportDeleteProgress(reportProgress progress_report.ReportProgress, reportChan <-chan deleteProgressReport, p DeleteAllObjectsParams) {
+	name := p.BucketName.String()
+	total := uint64(0)
+	progress := uint64(0)
+
+	// total here must be reported as one, otherwise the progress-bar shows
+	// an animation we do not wish the user to see
+	reportProgress(name, progress, 1, progress_report.UnitsNone, nil)
+
+	var errors utils.MultiError
+	for report := range reportChan {
+		progress += report.files
+		total += report.files
+
+		if report.err != nil {
+			errors = append(errors, report.err)
+		}
+
+		reportProgress(name, progress, total, progress_report.UnitsNone, nil)
+	}
+
+	if len(errors) > 0 {
+		reportProgress(name, progress, total, progress_report.UnitsNone, errors)
+		return
+	}
+
+	reportProgress(name, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 }
 
 func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err error) {
