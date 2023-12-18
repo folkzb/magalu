@@ -141,7 +141,15 @@ To get a token, one can run
 ```
 
 A browser will open, redirecting the user to id.magalu.com. After completing authentication,
-the token will be saved to `$HOME/.config/mgc/<CURRENT_PROFILE>/auth.yaml` and reused by the CLI in further actions:
+the token will be saved to `$HOME/.config/mgc/<CURRENT_PROFILE>/auth.yaml` and reused by the CLI in further actions.
+
+> **NOTE:**
+> Upon logging in, your primary Tenant will be automatically selected. If you have multiple Tenants linked to your account, you can choose and switch between them as needed:
+
+> ```shell
+> ./mgc auth tenant list # to list all avaiable tenants for current login
+> ./mgc auth tenant select <id> # to set active Tenant to be used for all subsequencial requests
+> ```
 
 To ensure it is working, perform a CLI command that requires authentication:
 

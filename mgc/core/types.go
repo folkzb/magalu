@@ -196,6 +196,7 @@ func NewExecuteResultOutputOptions(
 		if !ok {
 			return nil, fmt.Errorf("result is not core.ResultWithValue: %T %+v", originalResult, originalResult)
 		}
-		return NewResultWithDefaultOutputOptions(result, getOutputOptions(executor, originalResult)), nil
+
+		return NewResultWithDefaultOutputOptions(result, getOutputOptions(executor, result)), nil
 	})
 }

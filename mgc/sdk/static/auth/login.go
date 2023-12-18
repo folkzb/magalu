@@ -54,7 +54,7 @@ func loginLogger() *zap.SugaredLogger {
 }
 
 func newLogin() core.Executor {
-	return core.NewStaticExecute(
+	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:    "login",
 			Summary: "Authenticate with Magalu Cloud",
@@ -81,7 +81,7 @@ about a successful login, use the '--show' flag when logging in`,
 
 			loginLogger().Infow("opening browser", "codeUrl", codeUrl)
 			if err := browser.OpenURL(codeUrl.String()); err != nil {
-				loginLogger().Warnw("could not open browser, please open it manually", "error", err)
+				return nil, fmt.Errorf("could not open browser, please open it manually. %w", err)
 			}
 
 			loginLogger().Infow("waiting authentication result", "redirectUri", auth.RedirectUri())
@@ -101,15 +101,29 @@ about a successful login, use the '--show' flag when logging in`,
 				return nil, fmt.Errorf("error when trying to select default tenant: %w", err)
 			}
 
-			fmt.Fprintf(os.Stderr, "Successfully logged in.\n")
 			loginLogger().Infow("sucessfully logged in")
+
+			output = &loginResult{AccessToken: "", SelectedTenant: defaultTenant}
+
 			if parameters.Show {
-				output = &loginResult{AccessToken: tenantResult.AccessToken, SelectedTenant: defaultTenant}
+				output.AccessToken = tenantResult.AccessToken
 			}
 
 			return output, nil
 		},
 	)
+
+	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
+		appName := os.Args[0]
+		return fmt.Sprintf(`template=Successfully logged in.{{if .access_token}}
+
+Access-token: {{.access_token}}{{end}}
+
+Selected Tenant ID: {{.selected_tenant.uuid}}
+
+Run '%s auth tenant list' to list all available Tenants for current login.
+`, appName)
+	})
 }
 
 func startCallbackServer(ctx context.Context, auth *auth.Auth) (resultChan chan *authResult, cancel func(), err error) {
