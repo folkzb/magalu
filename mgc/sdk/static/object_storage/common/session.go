@@ -42,7 +42,7 @@ func SendRequest(ctx context.Context, req *http.Request) (res *http.Response, er
 
 	accesskeyId, accessSecretKey := auth.FromContext(ctx).AccessKeyPair()
 	if accesskeyId == "" || accessSecretKey == "" {
-		err = fmt.Errorf("access key not set, see how to set it with \"auth set -h\"")
+		err = fmt.Errorf("access key not set, see how to set it with \"auth object-storage set -h\"")
 		return
 	}
 
