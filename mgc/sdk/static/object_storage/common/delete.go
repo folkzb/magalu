@@ -13,6 +13,7 @@ import (
 	"magalu.cloud/core"
 	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/pipeline"
+	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
@@ -165,11 +166,26 @@ func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err err
 		return
 	}
 
+	reportProgress := progress_report.FromContext(ctx)
+	reportMsg := "Deleting object from bucket: " + params.Destination.String()
+	progress := uint64(0)
+	total := uint64(1)
+
+	reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
+
 	resp, err := SendRequest(ctx, req)
 	if err != nil {
+		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, err)
 		return
 	}
 
 	_, err = mgcHttpPkg.UnwrapResponse[core.Value](resp)
-	return
+	if err != nil {
+		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, err)
+		return
+	}
+
+	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
+
+	return nil
 }
