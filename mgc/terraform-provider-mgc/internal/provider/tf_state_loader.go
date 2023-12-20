@@ -6,7 +6,6 @@ import (
 	"math/big"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -14,16 +13,14 @@ import (
 )
 
 type tfStateLoader struct {
-	ctx      context.Context
-	diag     *diag.Diagnostics
-	tfSchema *schema.Schema
+	ctx  context.Context
+	diag *diag.Diagnostics
 }
 
-func newTFStateLoader(ctx context.Context, diag *diag.Diagnostics, tfSchema *schema.Schema) tfStateLoader {
+func newTFStateLoader(ctx context.Context, diag *diag.Diagnostics) tfStateLoader {
 	return tfStateLoader{
-		ctx:      ctx,
-		diag:     diag,
-		tfSchema: tfSchema,
+		ctx:  ctx,
+		diag: diag,
 	}
 }
 

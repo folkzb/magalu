@@ -70,13 +70,13 @@ func readMgcMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schem
 
 // If the Input Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
 func readMgcInputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
+	loader := newTFStateLoader(ctx, diag)
 	return loader.readMgcMap(mgcSchema, handler.InputAttrInfoMap(ctx, diag), tfState)
 }
 
 // If the Output Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
 func readMgcOutputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	loader := newTFStateLoader(ctx, diag, handler.TFSchema())
+	loader := newTFStateLoader(ctx, diag)
 	return loader.readMgcMap(mgcSchema, handler.OutputAttrInfoMap(ctx, diag), tfState)
 }
 
