@@ -31,7 +31,7 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 		delete,
 	)
 
-	msg := "This command will delete bucket {{.parameters.name}}, and its result is NOT reversible."
+	msg := "This command will delete bucket {{.parameters.bucket}}, and its result is NOT reversible."
 
 	cExecutor := core.NewConfirmableExecutor(
 		executor,
@@ -39,7 +39,7 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 
 	return core.NewExecuteResultOutputOptions(cExecutor, func(exec core.Executor, result core.Result) string {
-		return "template=Deleted bucket {{.name}}\n"
+		return "template=Deleted bucket {{.bucket}}\n"
 	})
 })
 
