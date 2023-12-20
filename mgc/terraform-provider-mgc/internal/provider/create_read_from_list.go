@@ -62,28 +62,34 @@ func isSubSchema(parent, sub *core.Schema) bool {
 func findResourceSchemaFromList(
 	listResultSchema *mgcSchemaPkg.Schema,
 	createResultSchema *core.Schema,
-) (resourceSchema *core.Schema, resourceName string, err error) {
+) (resourceSchema *core.Schema, resourceJsonPath string, err error) {
 	if listResultSchema == nil {
 		err = fmt.Errorf("list result schema is nil")
 		return
 	}
 
-	// Assume list result is an object with the array as a sub-property
-	for propName, propRef := range listResultSchema.Properties {
-		prop := propRef.Value
+	// If list result is an array, return the Items type
+	if listResultSchema.Items != nil {
+		resourceSchema = (*mgcSchemaPkg.Schema)(listResultSchema.Items.Value)
+		resourceJsonPath = ""
+	} else {
+		// Assume list result is an object with the array as a sub-property
+		for propName, propRef := range listResultSchema.Properties {
+			prop := propRef.Value
 
-		if prop.Items == nil {
-			continue
+			if prop.Items == nil {
+				continue
+			}
+			propItems := (*core.Schema)(prop.Items.Value)
+
+			if !isSubSchema(propItems, createResultSchema) {
+				continue
+			}
+
+			resourceSchema = propItems
+			resourceJsonPath = "." + propName
+			break
 		}
-		propItems := (*core.Schema)(prop.Items.Value)
-
-		if !isSubSchema(propItems, createResultSchema) {
-			continue
-		}
-
-		resourceSchema = propItems
-		resourceName = propName
-		break
 	}
 
 	if resourceSchema == nil {
@@ -114,7 +120,7 @@ func createReadFromList(listExec core.Executor, createResultSchema, deleteParams
 		return nil, fmt.Errorf("list operation cannot be paginated")
 	}
 
-	resourceSchema, resourceName, err := findResourceSchemaFromList(listExec.ResultSchema(), createResultSchema)
+	resourceSchema, resourceJsonPath, err := findResourceSchemaFromList(listExec.ResultSchema(), createResultSchema)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +179,7 @@ func createReadFromList(listExec core.Executor, createResultSchema, deleteParams
 			}
 
 			resource, err := mgcUtilsPkg.GetJsonPath(
-				fmt.Sprintf("$.list_result.%s[?(%s)]", resourceName, strings.Join(listFilters, " && ")),
+				fmt.Sprintf("$.list_result%s[?(%s)]", resourceJsonPath, strings.Join(listFilters, " && ")),
 				map[string]core.Value{
 					"list_result":     listResultWithValue.Value(),
 					"list_parameters": listParams,
