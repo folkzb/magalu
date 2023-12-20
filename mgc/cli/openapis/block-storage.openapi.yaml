@@ -348,33 +348,6 @@ paths:
                             description: Delete Block Storage volume
                             parameters:
                                 id: $request.path.id
-                        create/attach-to-vm:
-                            description: Attach this BS Volume to a VM instance
-                            operationRef: '#/paths/~1v0~1volumes~1{id}~1attach~1{virtual_machine_id}/post'
-                            parameters:
-                                id: $request.path.id
-                        delete/attach-to-vm:
-                            description: Detach this BS Volume to a VM instance
-                            operationRef: '#/paths/~1v0~1volumes~1{id}~1detach~1{virtual_machine_id}/post'
-                            parameters:
-                                id: $request.path.id
-                        read/attach-to-vm:
-                            description: Check if this BS Volume is attached to a
-                                VM instance
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
-                            parameters:
-                                id: $request.path.id
-                            x-mgc-extra-parameters:
-                            -   name: virtual_machine_id
-                                required: true
-                                schema:
-                                    type: string
-                                    format: uuid
-                            x-mgc-wait-termination:
-                                maxRetries: 2
-                                interval: 5s
-                                jsonPathQuery: $.result.attachments[?(@.virtual_machine_id
-                                    == $.parameters.virtual_machine_id)]
                 '422':
                     description: Validation Error
                     content:

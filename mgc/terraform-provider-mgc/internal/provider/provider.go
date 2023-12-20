@@ -203,65 +203,7 @@ func collectGroupResources(
 		tflog.Debug(ctx, fmt.Sprintf("export connection resource %q", resourceName), debugMap)
 	}
 
-	if read != nil {
-		actionResources := collectActionResources(ctx, sdk, read, path)
-		resources = append(resources, actionResources...)
-	}
-
 	return resources, err
-}
-
-func collectActionResources(ctx context.Context, sdk *mgcSdk.Sdk, owner mgcSdk.Executor, path []string) []func() resource.Resource {
-	debugMap := map[string]any{"path": path}
-	tflog.Debug(ctx, "collecting action resources", debugMap)
-	type actionLinks struct {
-		create mgcSdk.Linker
-		read   mgcSdk.Linker
-		update mgcSdk.Linker
-		delete mgcSdk.Linker
-	}
-
-	actions := map[string]*actionLinks{}
-
-	for linkName, link := range owner.Links() {
-		if action, actionName, found := strings.Cut(linkName, "/"); found {
-			if _, ok := actions[actionName]; !ok {
-				actions[actionName] = &actionLinks{}
-			}
-
-			switch action {
-			case "create":
-				actions[actionName].create = link
-			case "read":
-				actions[actionName].read = link
-			case "update":
-				actions[actionName].update = link
-			case "delete":
-				actions[actionName].delete = link
-			}
-		}
-	}
-
-	result := []func() resource.Resource{}
-	for actionName, links := range actions {
-		if links.create == nil {
-			continue
-		}
-
-		linkPath := append(path, actionName)
-		resName := strings.Join(linkPath, "_")
-
-		res, err := newMgcActionResource(sdk, resName, owner, links.create, links.read, links.update, links.delete)
-		if err != nil {
-			tflog.Warn(ctx, err.Error(), debugMap)
-			continue
-		}
-
-		tflog.Debug(ctx, fmt.Sprintf("export action resource %q", actionName), debugMap)
-		result = append(result, func() resource.Resource { return res })
-	}
-
-	return result
 }
 
 func (p *MgcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
