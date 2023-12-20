@@ -211,62 +211,89 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 	resp.Schema = *r.tfschema
 }
 
-func (r *MgcResource) performOperation(ctx context.Context, exec core.Executor, inState tfsdk.State, outState *tfsdk.State, diag *diag.Diagnostics) {
-	ctx = r.sdk.WrapContext(ctx)
-
+func (r *MgcResource) performOperation(
+	ctx context.Context,
+	exec core.Executor,
+	inState tfsdk.State,
+	d *diag.Diagnostics,
+) core.ResultWithValue {
 	configs := getConfigs(ctx, exec.ConfigsSchema())
-	params := readMgcMapSchemaFromTFState(r, exec.ParametersSchema(), ctx, inState, diag)
-	if diag.HasError() {
-		return
+	params := readMgcMapSchemaFromTFState(r, exec.ParametersSchema(), ctx, inState, d)
+	if d.HasError() {
+		return nil
 	}
 
-	result := execute(r.name, ctx, exec, params, configs, diag)
-	if diag.HasError() {
-		return
-	}
-
-	if outState != nil {
-		applyStateAfter(r, result, r.read, ctx, outState, diag)
-	}
+	return execute(r.name, ctx, exec, params, configs, d)
 }
 
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "create")
 	ctx = tflog.SetField(ctx, resourceNameField, r.name)
-	r.performOperation(ctx, r.create, tfsdk.State(req.Plan), &resp.State, &resp.Diagnostics)
+	ctx = r.sdk.WrapContext(ctx)
+
+	createResult := r.performOperation(ctx, r.create, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	applyStateAfter(r, createResult, r.read, ctx, &resp.State, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "resource created")
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "read")
 	ctx = tflog.SetField(ctx, resourceNameField, r.name)
-	r.performOperation(ctx, r.read, req.State, &resp.State, &resp.Diagnostics)
+	ctx = r.sdk.WrapContext(ctx)
+
+	readResult := r.performOperation(ctx, r.read, req.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	applyStateAfter(r, readResult, r.read, ctx, &resp.State, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "resource read")
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "update")
 	ctx = tflog.SetField(ctx, resourceNameField, r.name)
-	r.performOperation(ctx, r.update, tfsdk.State(req.Plan), &resp.State, &resp.Diagnostics)
+	ctx = r.sdk.WrapContext(ctx)
+
+	updateResult := r.performOperation(ctx, r.update, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	applyStateAfter(r, updateResult, r.read, ctx, &resp.State, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "resource updated")
 }
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "delete")
 	ctx = tflog.SetField(ctx, resourceNameField, r.name)
-	r.performOperation(ctx, r.delete, req.State, nil, &resp.Diagnostics)
+	ctx = r.sdk.WrapContext(ctx)
+
+	r.performOperation(ctx, r.delete, req.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	tflog.Info(ctx, "resource deleted")
 }
 
