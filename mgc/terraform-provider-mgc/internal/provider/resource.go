@@ -11,9 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
+	"magalu.cloud/core/utils"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -34,6 +36,7 @@ type MgcResource struct {
 	outputAttrInfoMap resAttrInfoMap
 	splitAttributes   []splitResAttribute
 	tfschema          *schema.Schema
+	propertySetters   map[mgcName]propertySetter
 }
 
 func newMgcResource(
@@ -65,15 +68,46 @@ func newMgcResource(
 	if update == nil {
 		update = core.NoOpExecutor()
 	}
+
+	propertySetterContainer, err := collectPropertySetterContainers(read.Links())
+	if err != nil {
+		return nil, err
+	}
+
+	var propertySetters map[mgcName]propertySetter
+	for key, container := range propertySetterContainer {
+		if propertySetters == nil {
+			propertySetters = make(map[mgcName]propertySetter, len(propertySetterContainer))
+		}
+
+		switch container.argCount {
+		case 0:
+			propertySetters[key] = newDefaultPropertySetter(container.entries[0].target)
+		case 1:
+			propertySetters[key] = newEnumPropertySetter(container.entries)
+		case 2:
+			propertySetters[key] = newStrTransitionPropertySetter(container.entries)
+		default:
+			// TODO: Handle more action types?
+			continue
+		}
+	}
+
 	return &MgcResource{
-		sdk:         sdk,
-		name:        name,
-		description: description,
-		create:      create,
-		read:        read,
-		update:      update,
-		delete:      delete,
+		sdk:             sdk,
+		name:            name,
+		description:     description,
+		create:          create,
+		read:            read,
+		update:          update,
+		delete:          delete,
+		propertySetters: propertySetters,
 	}, nil
+}
+
+func (r *MgcResource) doesPropHaveSetter(name mgcName) bool {
+	_, ok := r.propertySetters[name]
+	return ok
 }
 
 // BEGIN: tfSchemaHandler implementation
@@ -105,7 +139,7 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 		isOptional:                 !isRequired,
 		isComputed:                 isComputed,
 		useStateForUnknown:         false,
-		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil,
+		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil && !r.doesPropHaveSetter(mgcName),
 		getChildModifiers:          getInputChildModifiers,
 	}
 }
@@ -142,6 +176,17 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *m
 	}
 }
 
+func (r *MgcResource) getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	return attributeModifiers{
+		isRequired:                 false,
+		isOptional:                 r.doesPropHaveSetter(mgcName),
+		isComputed:                 true,
+		useStateForUnknown:         false,
+		requiresReplaceWhenChanged: false,
+		getChildModifiers:          getResultModifiers,
+	}
+}
+
 func (r *MgcResource) AppendSplitAttribute(split splitResAttribute) {
 	if r.splitAttributes == nil {
 		r.splitAttributes = []splitResAttribute{}
@@ -172,8 +217,8 @@ func (r *MgcResource) OutputAttrInfoMap(ctx context.Context, d *diag.Diagnostics
 	if r.outputAttrInfoMap == nil {
 		r.outputAttrInfoMap = generateResAttrInfoMap(ctx, r.name,
 			[]resAttrInfoGenMetadata{
-				{r.create.ResultSchema(), getResultModifiers},
-				{r.read.ResultSchema(), getResultModifiers},
+				{r.create.ResultSchema(), r.getResultModifiers},
+				{r.read.ResultSchema(), r.getResultModifiers},
 			}, d,
 		)
 	}
@@ -226,6 +271,155 @@ func (r *MgcResource) performOperation(
 	return execute(r.name, ctx, exec, params, configs, d)
 }
 
+func (r *MgcResource) findAttrWithTFName(ctx context.Context, name tfName, d *diag.Diagnostics) (*resAttrInfo, bool) {
+	for _, inputAttr := range r.InputAttrInfoMap(ctx, d) {
+		if inputAttr.tfName == name {
+			return inputAttr, true
+		}
+	}
+	for _, outputAttr := range r.OutputAttrInfoMap(ctx, d) {
+		if outputAttr.tfName == name {
+			return outputAttr, true
+		}
+	}
+	return nil, false
+}
+
+func (r *MgcResource) callPostOpPropertySetters(
+	ctx context.Context,
+	inState tfsdk.State,
+	outState *tfsdk.State,
+	readResult core.ResultWithValue,
+	readResultMap map[string]any,
+	d *diag.Diagnostics,
+) {
+	var curStateAsMap map[string]tftypes.Value
+	err := inState.Raw.As(&curStateAsMap)
+	if err != nil {
+		tflog.Warn(
+			ctx,
+			fmt.Sprintf("[resource] unable to get current state as map: %v. Won't look for property setters", err),
+			map[string]any{"resource": r.Name()},
+		)
+		return
+	}
+
+	tflog.Debug(
+		ctx,
+		"[resource] will look for property setters to perform",
+		map[string]any{"resource": r.Name()},
+	)
+	for stateValKey, stateVal := range curStateAsMap {
+		tflog.Debug(
+			ctx,
+			fmt.Sprintf("[resource] looking for property setter for %q", stateValKey),
+			map[string]any{"resource": r.Name()},
+		)
+
+		var currentVal any
+		for k, v := range readResultMap {
+			if mgcName(k).asTFName() == tfName(stateValKey) {
+				currentVal = v
+				break
+			}
+		}
+		if currentVal == nil {
+			tflog.Debug(
+				ctx,
+				"[resource] unable to find matching key in read result",
+				map[string]any{"resource": r.Name(), "read result": readResultMap},
+			)
+			continue
+		}
+
+		attr, ok := r.findAttrWithTFName(ctx, tfName(stateValKey), d)
+		if !ok || d.HasError() {
+			tflog.Debug(
+				ctx,
+				"[resource] unable to find attribute corresponding to TF prop key",
+				map[string]any{"resource": r.Name(), "propTFName": stateValKey, "inputAttributes": r.InputAttrInfoMap(ctx, d), "outputAttr": r.OutputAttrInfoMap(ctx, d)},
+			)
+			continue
+		}
+
+		convDiag := diag.Diagnostics{}
+		conv := newTFStateLoader(ctx, &convDiag)
+		targetVal, ok := conv.loadMgcSchemaValue(attr, stateVal, false, false)
+		if convDiag.HasError() || !ok {
+			tflog.Debug(
+				ctx,
+				"[resource] unable to convert TF value to MGC value to update prop, ignoring set",
+				map[string]any{"resource": r.Name(), "propTFName": attr.tfName, "tfValue": stateVal},
+			)
+			continue
+		}
+
+		if utils.IsSameValueOrPointer(currentVal, targetVal) {
+			tflog.Debug(
+				ctx,
+				"[resource] no need, current state matches desired state",
+				map[string]any{"resource": r.Name()},
+			)
+			continue
+		}
+
+		setter, ok := r.propertySetters[attr.mgcName]
+		if !ok {
+			tflog.Warn(
+				ctx,
+				"[resource] unable to find property setter to update prop, will result in error",
+				map[string]any{"resource": r.Name(), "propTFName": attr.tfName, "propMGCName": attr.mgcName},
+			)
+			continue
+		}
+
+		r.callPropertySetter(ctx, inState, outState, attr.tfName, setter, currentVal, targetVal, readResult, d)
+		if d.HasError() {
+			return
+		}
+	}
+}
+
+func (r *MgcResource) callPropertySetter(
+	ctx context.Context,
+	inState tfsdk.State,
+	outState *tfsdk.State,
+	propTFName tfName,
+	setter propertySetter,
+	currentVal, targetVal core.Value,
+	readResult core.ResultWithValue,
+	d *diag.Diagnostics,
+) {
+	tflog.Debug(
+		ctx,
+		fmt.Sprintf("[resource] will update param %q with property setter", propTFName),
+		map[string]any{"resource": r.Name()},
+	)
+	target, err := setter.getTarget(currentVal, targetVal)
+	if err != nil {
+		d.AddError(
+			"property setter fail",
+			fmt.Sprintf("unable to call property setter to update parameter %q: %v", propTFName, err),
+		)
+		return
+	}
+
+	setterExec, err := target.CreateExecutor(readResult)
+	if err != nil {
+		d.AddError(
+			"property setter fail",
+			fmt.Sprintf("unable to call property setter to update parameter %q: %v", propTFName, err),
+		)
+		return
+	}
+
+	propSetResult := r.performOperation(ctx, setterExec, inState, d)
+	if d.HasError() {
+		return
+	}
+	applyStateAfter(r, propSetResult, r.read, ctx, outState, d)
+}
+
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "create")
 	ctx = tflog.SetField(ctx, resourceNameField, r.name)
@@ -236,7 +430,12 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	applyStateAfter(r, createResult, r.read, ctx, &resp.State, &resp.Diagnostics)
+	readResult, readResultMap := applyStateAfter(r, createResult, r.read, ctx, &resp.State, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	r.callPostOpPropertySetters(ctx, tfsdk.State(req.Plan), &resp.State, readResult, readResultMap, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -272,11 +471,12 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	applyStateAfter(r, updateResult, r.read, ctx, &resp.State, &resp.Diagnostics)
+	readResult, readResultMap := applyStateAfter(r, updateResult, r.read, ctx, &resp.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	r.callPostOpPropertySetters(ctx, tfsdk.State(req.Plan), &resp.State, readResult, readResultMap, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
