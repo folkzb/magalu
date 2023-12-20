@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/jedib0t/go-pretty/v6/progress"
 	"magalu.cloud/core/progress_report"
@@ -26,10 +27,12 @@ type ProgressBar struct {
 	trackers sync.Map
 }
 
+var updateFrequency = progress.DefaultUpdateFrequency
+
 func New() *ProgressBar {
 	writer := progress.NewWriter()
 	writer.SetAutoStop(true)
-	writer.SetUpdateFrequency(progress.DefaultUpdateFrequency)
+	writer.SetUpdateFrequency(updateFrequency)
 	writer.SetMessageWidth(30)
 	writer.SetTrackerPosition(progress.PositionRight)
 	writer.SetTrackerLength(progress.DefaultLengthTracker)
@@ -37,6 +40,13 @@ func New() *ProgressBar {
 	return &ProgressBar{
 		Writer: writer,
 	}
+}
+
+// TODO: sometimes the progress bar does not render the final update.
+// Investigate why p.Stop() misses this last render
+func (pb *ProgressBar) Finalize() {
+	pb.Stop()
+	time.Sleep(updateFrequency)
 }
 
 func (pb *ProgressBar) ReportProgress(msg string, done, total uint64, units progress_report.Units, reportErr error) {

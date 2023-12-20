@@ -96,13 +96,14 @@ can generate a command line on-demand for Rest manipulation`,
 
 	if !getHideProgressFlag(rootCmd) {
 		pb = progress_bar.New()
-		defer pb.Stop()
+		defer pb.Finalize()
 	}
 
 	err = rootCmd.Execute()
 	if err == nil && loadErr != nil {
 		err = loadErr
 	}
+
 	err = showHelpForError(rootCmd, mainArgs, err) // since we SilenceUsage and SilenceErrors
 	return err
 }
