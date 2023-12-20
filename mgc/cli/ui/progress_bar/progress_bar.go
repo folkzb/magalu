@@ -45,8 +45,10 @@ func New() *ProgressBar {
 // TODO: sometimes the progress bar does not render the final update.
 // Investigate why p.Stop() misses this last render
 func (pb *ProgressBar) Finalize() {
+	if pb.Length() > 0 {
+		time.Sleep(updateFrequency)
+	}
 	pb.Stop()
-	time.Sleep(updateFrequency)
 }
 
 func (pb *ProgressBar) ReportProgress(msg string, done, total uint64, units progress_report.Units, reportErr error) {
