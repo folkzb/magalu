@@ -176,8 +176,14 @@ func (cf *cmdFlags) positionalArgsFunction(cmd *cobra.Command, args []string) (e
 		return cf.positionalArgsArrays(toExpand, args)
 	}
 
-	if len(args) > len(cf.positionalArgs) {
-		return fmt.Errorf("accepts at most %d arg(s), received %d", len(cf.positionalArgs), len(args))
+	numArgs := len(args)
+	numPositionalArgs := len(cf.positionalArgs)
+
+	if numArgs > numPositionalArgs {
+		if numPositionalArgs == 0 {
+			return fmt.Errorf("this command does not accept positional arguments, %d given: %s", numArgs, strings.Join(args, ", "))
+		}
+		return fmt.Errorf("this command receives at most %d positional arguments, %d given", numPositionalArgs, numArgs)
 	}
 
 	return applyPositionalArgs(cf.positionalArgs[:len(args)], args)

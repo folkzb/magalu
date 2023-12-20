@@ -283,7 +283,7 @@ func Test_cmdFlags_positionalArray(t *testing.T) {
 			array:          nil,
 			use:            "testing [files] [array]",
 			completions:    cobra.AppendActiveHelp(nil, "This command does not take any more arguments"),
-			err:            fmt.Errorf("accepts at most 2 arg(s), received 3"),
+			err:            fmt.Errorf("this command receives at most 2 positional arguments, 3 given"),
 		},
 	}
 	for _, tc := range tests {
