@@ -5,8 +5,8 @@ Usage:
 
 Flags:
   -h, --help                        help for create
-      --id string                   Block storage volume ID to be attached
-      --virtual-machine-id string   ID of the virtual machine instance to attach the volume
+      --id string                   Block storage volume ID to be attached (required)
+      --virtual-machine-id string   ID of the virtual machine instance to attach the volume (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

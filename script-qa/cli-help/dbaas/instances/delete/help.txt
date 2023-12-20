@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help      help for delete
-      --id uuid   Database Instance Id: Database Instance Unique Id.
+      --id uuid   Database Instance Id: Database Instance Unique Id. (required)
   -v, --version   version for delete
 
 Global Flags:

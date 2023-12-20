@@ -5,9 +5,9 @@ Usage:
 
 Flags:
   -h, --help             help for set
-      --key string       Name of the desired config
+      --key string       Name of the desired config (required)
       --value anyValue   New flag value
-                         Use --value=help for more details
+                         Use --value=help for more details (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

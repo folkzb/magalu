@@ -5,8 +5,8 @@ Usage:
 
 Flags:
   -h, --help                       help for detach
-      --id string                  Port Id
-      --security-group-id string   Security Group Id
+      --id string                  Port Id (required)
+      --security-group-id string   Security Group Id (required)
   -v, --version                    version for detach
 
 Global Flags:

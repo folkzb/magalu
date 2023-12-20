@@ -18,6 +18,7 @@ type ColorScheme struct {
 	flagsDesc      *color.Color
 	aliases        *color.Color
 	example        *color.Color
+	isRequired     *color.Color
 }
 
 var defaultColorScheme = &ColorScheme{
@@ -27,6 +28,7 @@ var defaultColorScheme = &ColorScheme{
 	flags:         color.New(color.FgHiWhite, color.Bold),
 	flagsDataType: color.New(color.FgHiBlack, color.Italic),
 	example:       color.New(color.Italic),
+	isRequired:    color.New(color.FgHiRed),
 }
 
 var (
@@ -35,6 +37,7 @@ var (
 	flagDescRe        = regexp.MustCompile(`(\s{3,})\w.*`)
 	flagDataTypeRe    = regexp.MustCompile(`(\s\w.*\s{3,})`)
 	flagStyleRe       = regexp.MustCompile(`(?i)(\.(InheritedFlags|LocalFlags)\.FlagUsages)`)
+	flagIsRequiredRe  = regexp.MustCompile("(required)")
 )
 
 func styleHeaders(template string, config *ColorScheme) string {
@@ -71,7 +74,7 @@ func styleCmdDesc(template string, config *ColorScheme) string {
 }
 
 func styleFlags(template string, config *ColorScheme) string {
-	var flagColor, flagDescColor, flagDataTypeColor func(a ...any) string
+	var flagColor, flagDescColor, flagDataTypeColor, flagIsRequiredColor func(a ...any) string
 	if config.flags != nil {
 		flagColor = config.flags.SprintFunc()
 	}
@@ -80,6 +83,9 @@ func styleFlags(template string, config *ColorScheme) string {
 	}
 	if config.flagsDataType != nil {
 		flagDataTypeColor = config.flagsDataType.SprintFunc()
+	}
+	if config.isRequired != nil {
+		flagIsRequiredColor = config.isRequired.SprintFunc()
 	}
 
 	if flagColor != nil || flagDescColor != nil || flagDataTypeColor != nil {
@@ -105,6 +111,14 @@ func styleFlags(template string, config *ColorScheme) string {
 			return s
 		}
 
+		fmtFlagRequired := func(s string) string {
+			for _, desc := range flagIsRequiredRe.FindAllString(s, -1) {
+				trimmedDesc := strings.TrimSpace(desc)
+				s = strings.Replace(s, trimmedDesc, flagIsRequiredColor(trimmedDesc), -1)
+			}
+			return s
+		}
+
 		flagStyleFunc := func(s string) string {
 			lines := strings.Split(s, "\n")
 			for i, line := range lines {
@@ -122,10 +136,16 @@ func styleFlags(template string, config *ColorScheme) string {
 					if flagDataTypeColor != nil {
 						line = fmtFlagDataType(line)
 					}
+					if flagIsRequiredColor != nil {
+						line = fmtFlagRequired(line)
+					}
 					lines[i] = line
 				} else {
 					if flagDescColor != nil {
 						line = fmtFlagDesc(line)
+					}
+					if flagIsRequiredColor != nil {
+						line = fmtFlagRequired(line)
 					}
 					lines[i] = line
 				}

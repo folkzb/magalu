@@ -16,9 +16,9 @@ Flags:
       --auto-scale.min-replicas integer   Objeto que define propriedades para atualização de recursos da carga de trabalho do cluster kubernetes: Quantidade mínima  de réplicas, caso a função de autoscaling esteja habilitada. (min: 1)
                                           This is the same as '--auto-scale=min_replicas:integer'. (default 1)
       --cli.list-links enum[=table]       List all available links for this command (one of "json", "table" or "yaml")
-      --cluster-id uuid                   Identificador no padrão uuid para identificar o cluster
+      --cluster-id uuid                   Identificador no padrão uuid para identificar o cluster (required)
   -h, --help                              help for update
-      --id uuid                           Identificador no padrão uuid para identificar o nodepool
+      --id uuid                           Identificador no padrão uuid para identificar o nodepool (required)
       --replicas integer                  Quantidade de réplicas dos nós do nodepool
   -v, --version                           version for update
 

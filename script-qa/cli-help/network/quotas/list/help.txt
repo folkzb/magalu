@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help              help for list
-      --quota-slug enum   SlugQuotas (one of "nics", "public_ips", "security_group_rules", "security_groups", "subnet_pools", "subnets" or "vpcs")
+      --quota-slug enum   SlugQuotas (one of "nics", "public_ips", "security_group_rules", "security_groups", "subnet_pools", "subnets" or "vpcs") (required)
   -v, --version           version for list
 
 Global Flags:

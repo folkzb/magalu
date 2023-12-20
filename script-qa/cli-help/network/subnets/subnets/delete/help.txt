@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help               help for delete
-      --subnet-id string   Subnet Id
+      --subnet-id string   Subnet Id (required)
   -v, --version            version for delete
 
 Global Flags:

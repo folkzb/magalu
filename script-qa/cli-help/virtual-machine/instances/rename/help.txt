@@ -10,8 +10,8 @@ Usage:
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for rename
-      --id string                     Id
-      --name string                   Name (between 1 and 225 characters)
+      --id string                     Id (required)
+      --name string                   Name (between 1 and 225 characters) (required)
   -v, --version                       version for rename
 
 Global Flags:

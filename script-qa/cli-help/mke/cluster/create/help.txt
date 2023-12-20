@@ -9,7 +9,7 @@ Examples:
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
       --description string            Descrição do cluster
-      --enabled-bastion               Habilita bastion host
+      --enabled-bastion               Habilita bastion host (required)
       --enabled-server-group          Habilita o uso de server group, com política de anti-affinity, na criação do cluster e dos node pools (default true)
   -h, --help                          help for create
       --name string                   Nome do cluster kubernetes. O nome destina-se principalmente à idempotência, e deve ser exclusivo em um namespace. 0 nome não pode ser alterado.
@@ -18,9 +18,9 @@ Flags:
                                         - deve conter apenas caracteres alfanuméricos minúsculos ou '-'
                                         - deve começar com um caractere alfabético
                                         - deve terminar com um caractere alfanumérico
-                                      
+                                       (required)
       --node-pools array(object)      Conjunto de nodes em um cluster kubernetes
-                                      Use --node-pools=help for more details
+                                      Use --node-pools=help for more details (required)
       --param.version enum            Versão do kubernetes nativa do cluster (one of "v1.22.9", "v1.24.10", "v1.26.1" or "v1.28.2") (default "v1.28.2")
   -v, --version                       version for create
 

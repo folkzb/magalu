@@ -8,7 +8,7 @@ Flags:
       --headers object           Use --headers=help for more details
   -h, --help                     help for post
       --security array(object)   Use --security=help for more details
-      --url string               Golang template with the URL
+      --url string               Golang template with the URL (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

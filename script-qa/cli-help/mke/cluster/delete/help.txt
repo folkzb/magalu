@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help      help for delete
-      --id uuid   Identificador no padrão uuid para identificar o cluster
+      --id uuid   Identificador no padrão uuid para identificar o cluster (required)
   -v, --version   version for delete
 
 Global Flags:

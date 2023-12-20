@@ -7,7 +7,7 @@ Flags:
       --control.limit integer    limit (range: 1 - 25) (default 10)
       --control.offset integer   offset (min: 0)
   -h, --help                     help for list
-      --id uuid                  Value referring to instance Id.
+      --id uuid                  Value referring to instance Id. (required)
       --mode enum                Value referring to backup mode. (one of "FULL" or "INCREMENTAL")
       --status enum              Value referring to backup status. (one of "CREATED", "CREATING", "DELETED", "DELETING", "ERROR" or "PENDING")
       --type enum                Value referring to backup type. (one of "AUTOMATED" or "ON_DEMAND")

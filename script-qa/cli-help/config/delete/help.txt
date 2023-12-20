@@ -6,7 +6,7 @@ Usage:
 
 Flags:
   -h, --help         help for delete
-      --key string   Name of the config to be deleted
+      --key string   Name of the config to be deleted (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

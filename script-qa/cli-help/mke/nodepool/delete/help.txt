@@ -4,9 +4,9 @@ Usage:
   ./cli mke nodepool delete [cluster-id] [id] [flags]
 
 Flags:
-      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster
+      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster (required)
   -h, --help              help for delete
-      --id uuid           Identificador no padrão uuid para identificar o nodepool
+      --id uuid           Identificador no padrão uuid para identificar o nodepool (required)
   -v, --version           version for delete
 
 Global Flags:

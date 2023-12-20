@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help          help for set-current
-      --name string   Profile name
+      --name string   Profile name (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

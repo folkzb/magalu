@@ -6,7 +6,7 @@ Usage:
 Flags:
       --copy string   Name of the profile to copy content from. If this paramater is passed, the new Profile will be pre-populated with the contents of the Profile with the specified name
   -h, --help          help for create
-      --name string   Profile name
+      --name string   Profile name (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

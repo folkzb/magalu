@@ -173,6 +173,10 @@ func (d SchemaFlagValueDesc) Usage() (usage string) {
 		usage += fmt.Sprintf("Use --%s=%s for more details", d.FlagName, ValueHelpIsRequired)
 	}
 
+	if d.IsRequired {
+		usage += " (required)"
+	}
+
 	return
 }
 

@@ -9,8 +9,8 @@ Usage:
 
 Flags:
   -h, --help                help for rename
-      --id string           Id
-      --name string         Name (between 1 and 225 characters)
+      --id string           Id (required)
+      --name string         Name (between 1 and 225 characters) (required)
       --project-type enum   An enumeration. (one of "dbaas", "default", "iamaas", "k8saas" or "mngsvc") (default "default")
   -v, --version             version for rename
 

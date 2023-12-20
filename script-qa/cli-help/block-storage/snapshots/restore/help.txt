@@ -4,10 +4,10 @@ Usage:
   ./cli block-storage snapshots restore [id] [flags]
 
 Flags:
-      --description string   Description
+      --description string   Description (required)
   -h, --help                 help for restore
-      --id uuid              Snapshot Id: snapshot_id
-      --name string          Name
+      --id uuid              Snapshot Id: snapshot_id (required)
+      --name string          Name (required)
   -v, --version              version for restore
 
 Global Flags:

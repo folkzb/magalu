@@ -5,11 +5,11 @@ Usage:
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
-      --description string            Description
+      --description string            Description (required)
   -h, --help                          help for create
-      --name string                   Name
+      --name string                   Name (required)
   -v, --version                       version for create
-      --volume-id uuid                Id
+      --volume-id uuid                Id (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

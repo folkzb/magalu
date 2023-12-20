@@ -19,15 +19,15 @@ Examples:
 Flags:
       --availability-zone string              Availability Zone (min character count: 1)
   -h, --help                                  help for restore
-      --id string                             Id
-      --key-name string                       Key Name
+      --id string                             Id (required)
+      --key-name string                       Key Name (required)
       --machine-type object                   Machine Type (at least one of: single property: id or single property: name)
-                                              Use --machine-type=help for more details
+                                              Use --machine-type=help for more details (required)
       --machine-type.id string                Machine Type: Id (min character count: 1)
                                               This is the same as '--machine-type=id:string'.
       --machine-type.name string              Machine Type: Name (min character count: 1)
                                               This is the same as '--machine-type=name:string'.
-      --name string                           Name (between 1 and 225 characters)
+      --name string                           Name (between 1 and 225 characters) (required)
       --network object                        Network (properties: associate_public_ip and vpc)
                                               Use --network=help for more details (default {"associate_public_ip":true,"vpc":{"name":"default"}})
       --network.associate-public-ip boolean   Network: Associate Public Ip

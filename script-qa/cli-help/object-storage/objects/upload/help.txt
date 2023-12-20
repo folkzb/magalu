@@ -7,10 +7,10 @@ Examples:
   ./cli object-storage objects upload --dst="dir/file.txt"
 
 Flags:
-      --bucket string   Name of the bucket to upload to (between 3 and 63 characters)
+      --bucket string   Name of the bucket to upload to (between 3 and 63 characters) (required)
       --dst uri         Full destination path in the bucket with desired filename
   -h, --help            help for upload
-      --src file        Source file path to be uploaded
+      --src file        Source file path to be uploaded (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

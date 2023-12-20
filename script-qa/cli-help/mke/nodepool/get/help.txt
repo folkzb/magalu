@@ -5,9 +5,9 @@ Usage:
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
-      --cluster-id uuid               Identificador no padrão uuid para identificar o cluster
+      --cluster-id uuid               Identificador no padrão uuid para identificar o cluster (required)
   -h, --help                          help for get
-      --id uuid                       Identificador no padrão uuid para identificar o nodepool
+      --id uuid                       Identificador no padrão uuid para identificar o nodepool (required)
   -v, --version                       version for get
 
 Global Flags:

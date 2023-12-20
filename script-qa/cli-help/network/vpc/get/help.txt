@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help        help for get
-      --id string   Vpc Id
+      --id string   Vpc Id (required)
   -v, --version     version for get
 
 Global Flags:

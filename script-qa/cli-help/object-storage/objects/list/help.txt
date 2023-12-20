@@ -8,7 +8,7 @@ Examples:
 
 Flags:
       --continuation-token string   Token of result page to continue from
-      --dst uri                     Path of the bucket to list objects from
+      --dst uri                     Path of the bucket to list objects from (required)
       --exclude string              Filename pattern to exclude
   -h, --help                        help for list
       --include string              Filename pattern to include (default "*")

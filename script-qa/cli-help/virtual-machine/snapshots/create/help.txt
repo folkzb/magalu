@@ -20,10 +20,10 @@ Examples:
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for create
-      --name string                   Name (min character count: 1)
+      --name string                   Name (min character count: 1) (required)
   -v, --version                       version for create
       --virtual-machine object        Virtual Machine (at least one of: single property: id or single property: name)
-                                      Use --virtual-machine=help for more details
+                                      Use --virtual-machine=help for more details (required)
       --virtual-machine.id string     Virtual Machine: Id (min character count: 1)
                                       This is the same as '--virtual-machine=id:string'.
       --virtual-machine.name string   Virtual Machine: Name (min character count: 1)

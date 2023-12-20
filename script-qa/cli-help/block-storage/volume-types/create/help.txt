@@ -5,9 +5,9 @@ Usage:
 
 Flags:
   -h, --help          help for create
-      --internal      Internal
-      --name string   Name
-      --sku string    Sku
+      --internal      Internal (required)
+      --name string   Name (required)
+      --sku string    Sku (required)
   -v, --version       version for create
 
 Global Flags:

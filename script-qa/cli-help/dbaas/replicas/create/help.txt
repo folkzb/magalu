@@ -7,8 +7,8 @@ Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
       --flavor-id uuid                Flavor Id
   -h, --help                          help for create
-      --name string                   Name (max character count: 255)
-      --source-id uuid                Source Id
+      --name string                   Name (max character count: 255) (required)
+      --source-id uuid                Source Id (required)
   -v, --version                       version for create
 
 Global Flags:

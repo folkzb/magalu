@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help        help for delete
-      --id string   Vpc Id
+      --id string   Vpc Id (required)
   -v, --version     version for delete
 
 Global Flags:

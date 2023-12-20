@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help                  help for delete
-      --public-ip-id string   Public Ip Id
+      --public-ip-id string   Public Ip Id (required)
   -v, --version               version for delete
 
 Global Flags:

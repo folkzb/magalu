@@ -10,15 +10,15 @@ Flags:
       --backup-retention-days integer   Backup Retention Days: The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
       --backup-start-at time            Backup Start At: Start time which is allowed to start the automated backup process. (default "01:00:00")
       --cli.list-links enum[=table]     List all available links for this command (one of "json", "table" or "yaml")
-      --datastore-id uuid               Datastore Id
-      --flavor-id uuid                  Flavor Id
+      --datastore-id uuid               Datastore Id (required)
+      --flavor-id uuid                  Flavor Id (required)
   -h, --help                            help for create
-      --name string                     Name (max character count: 255)
-      --password string                 Password (max character count: 50)
-      --user string                     User (max character count: 25)
+      --name string                     Name (max character count: 255) (required)
+      --password string                 Password (max character count: 50) (required)
+      --user string                     User (max character count: 25) (required)
   -v, --version                         version for create
       --volume object                   Instance Volume Request (properties: size and type)
-                                        Use --volume=help for more details
+                                        Use --volume=help for more details (required)
       --volume.size number              Instance Volume Request: The size of the volume (in GiB). (range: 10 - 50000)
                                         This is the same as '--volume=size:number'.
       --volume.type enum                Instance Volume Request: The type of the volume. (one of "CLOUD_HDD" or "CLOUD_NVME")

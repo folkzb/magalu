@@ -6,7 +6,7 @@ Usage:
 Flags:
       --description string   Description
   -h, --help                 help for create
-      --name string          Name (between 5 and 100 characters)
+      --name string          Name (between 5 and 100 characters) (required)
       --validate-quota       validateQuota (default true)
   -v, --version              version for create
 

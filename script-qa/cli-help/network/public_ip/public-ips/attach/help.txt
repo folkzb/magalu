@@ -5,8 +5,8 @@ Usage:
 
 Flags:
   -h, --help                  help for attach
-      --port-id string        Port Id
-      --public-ip-id string   Public Ip Id
+      --port-id string        Port Id (required)
+      --public-ip-id string   Public Ip Id (required)
   -v, --version               version for attach
 
 Global Flags:

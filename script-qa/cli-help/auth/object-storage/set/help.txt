@@ -4,9 +4,9 @@ Usage:
   ./cli auth object-storage set [access-key-id] [secret-access-key] [flags]
 
 Flags:
-      --access-key-id string       Access key id value
+      --access-key-id string       Access key id value (required)
   -h, --help                       help for set
-      --secret-access-key string   Secret access key value
+      --secret-access-key string   Secret access key value (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

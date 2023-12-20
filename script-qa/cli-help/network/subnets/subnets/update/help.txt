@@ -6,7 +6,7 @@ Usage:
 Flags:
       --dns-nameservers array(ipvanyaddress)   Dns Nameservers (default [])
   -h, --help                                   help for update
-      --subnet-id string                       Subnet Id
+      --subnet-id string                       Subnet Id (required)
   -v, --version                                version for update
 
 Global Flags:

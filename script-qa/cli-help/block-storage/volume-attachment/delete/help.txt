@@ -5,8 +5,8 @@ Usage:
 
 Flags:
   -h, --help                        help for delete
-      --id string                   Block storage volume ID to be detached
-      --virtual-machine-id string   ID of the virtual machine instance to detach the volume from
+      --id string                   Block storage volume ID to be detached (required)
+      --virtual-machine-id string   ID of the virtual machine instance to detach the volume from (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

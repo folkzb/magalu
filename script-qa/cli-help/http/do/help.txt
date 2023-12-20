@@ -7,9 +7,9 @@ Flags:
       --body string              
       --headers object           Use --headers=help for more details
   -h, --help                     help for do
-      --method enum              (one of "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" or "TRACE")
+      --method enum              (one of "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" or "TRACE") (required)
       --security array(object)   Use --security=help for more details
-      --url string               Golang template with the URL
+      --url string               Golang template with the URL (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

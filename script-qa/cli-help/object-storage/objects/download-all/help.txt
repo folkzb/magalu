@@ -13,7 +13,7 @@ Flags:
   -h, --help                        help for download-all
       --include string              Filename pattern to include (default "*")
       --max-items integer           Limit of items to be listed (min: 1) (default 1000)
-      --src uri                     Path of the object to be downloaded
+      --src uri                     Path of the object to be downloaded (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

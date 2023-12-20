@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help      help for kubeconfig
-      --id uuid   Esquema de obter o arquivo do kubeconfig do cluster
+      --id uuid   Esquema de obter o arquivo do kubeconfig do cluster (required)
   -v, --version   version for kubeconfig
 
 Global Flags:

@@ -9,7 +9,7 @@ Examples:
 Flags:
       --dst file   Name of the file to be saved
   -h, --help       help for download
-      --src uri    Path of the object to be downloaded
+      --src uri    Path of the object to be downloaded (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

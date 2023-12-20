@@ -4,7 +4,7 @@ Usage:
   ./cli mke nodepool list [cluster-id] [flags]
 
 Flags:
-      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster
+      --cluster-id uuid   Identificador no padrão uuid para identificar o cluster (required)
   -h, --help              help for list
   -v, --version           version for list
 

@@ -21,9 +21,9 @@ Examples:
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for retype
-      --id uuid4                      Id
+      --id uuid4                      Id (required)
       --machine-type object           Machine Type (at least one of: single property: id or single property: name)
-                                      Use --machine-type=help for more details
+                                      Use --machine-type=help for more details (required)
       --machine-type.id string        Machine Type: Id (min character count: 1)
                                       This is the same as '--machine-type=id:string'.
       --machine-type.name string      Machine Type: Name (min character count: 1)

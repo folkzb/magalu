@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help              help for stop
-      --replica-id uuid   Value referring to replica Id.
+      --replica-id uuid   Value referring to replica Id. (required)
   -v, --version           version for stop
 
 Global Flags:

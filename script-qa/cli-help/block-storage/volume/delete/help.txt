@@ -6,7 +6,7 @@ Usage:
 Flags:
       --force     Force
   -h, --help      help for delete
-      --id uuid   Volume Id
+      --id uuid   Volume Id (required)
   -v, --version   version for delete
 
 Global Flags:

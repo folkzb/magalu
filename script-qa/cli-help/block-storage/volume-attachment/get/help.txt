@@ -5,8 +5,8 @@ Usage:
 
 Flags:
   -h, --help                        help for get
-      --id string                   Block storage volume ID
-      --virtual-machine-id string   Instance ID of the virtual machine to which the volume is attached
+      --id string                   Block storage volume ID (required)
+      --virtual-machine-id string   Instance ID of the virtual machine to which the volume is attached (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

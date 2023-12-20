@@ -7,7 +7,7 @@ Flags:
       --has-pip                            Has Pip (default true)
       --has-sg                             Has Sg (default true)
   -h, --help                               help for create
-      --name string                        Name (between 5 and 100 characters)
+      --name string                        Name (between 5 and 100 characters) (required)
       --security-groups-id array(string)   Security Groups Id (default [])
       --subnets array(string)              Subnets (default [])
   -v, --version                            version for create

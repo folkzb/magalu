@@ -9,7 +9,7 @@ Flags:
   -h, --help                          help for create
       --validate-quota                validateQuota (default true)
   -v, --version                       version for create
-      --vpc-id string                 Vpc Id
+      --vpc-id string                 Vpc Id (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

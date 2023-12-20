@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -h, --help      help for delete
-      --id uuid   Snapshot Id: snapshot_id
+      --id uuid   Snapshot Id: snapshot_id (required)
   -v, --version   version for delete
 
 Global Flags:

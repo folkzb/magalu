@@ -6,7 +6,7 @@ Usage:
 Flags:
       --delete-public-ip    Delete Public Ip
   -h, --help                help for delete
-      --id uuid             Id
+      --id uuid             Id (required)
       --project-type enum   An enumeration. (one of "dbaas", "default", "iamaas", "k8saas" or "mngsvc") (default "default")
   -v, --version             version for delete
 

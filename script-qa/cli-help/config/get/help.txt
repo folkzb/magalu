@@ -7,7 +7,7 @@ Usage:
 
 Flags:
   -h, --help         help for get
-      --key string   Name of the desired config
+      --key string   Name of the desired config (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

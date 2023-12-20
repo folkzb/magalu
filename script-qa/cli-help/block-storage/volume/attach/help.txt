@@ -6,9 +6,9 @@ Usage:
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for attach
-      --id uuid                       Volume Id
+      --id uuid                       Volume Id (required)
   -v, --version                       version for attach
-      --virtual-machine-id uuid       Virtual Machine Id: virtual_machine_id
+      --virtual-machine-id uuid       Virtual Machine Id: virtual_machine_id (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

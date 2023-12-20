@@ -6,8 +6,8 @@ Usage:
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for attach
-      --id string                     Port Id
-      --security-group-id string      Security Group Id
+      --id string                     Port Id (required)
+      --security-group-id string      Security Group Id (required)
   -v, --version                       version for attach
 
 Global Flags:
