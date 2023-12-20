@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/pipeline"
+	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
@@ -80,6 +81,13 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 	bucketName := common.NewBucketNameFromURI(src)
 	rootURI := bucketName.AsURI()
 
+	reportProgress := progress_report.FromContext(ctx)
+	reportMsg := "downloading objects from bucket: " + params.Source.String()
+	progress := uint64(0)
+	total := uint64(len(entries) - 1)
+
+	reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
+
 	var errors utils.MultiError
 	for _, entry := range entries {
 		objURI := rootURI.JoinPath(entry.Path())
@@ -119,7 +127,12 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}
+
+		progress += 1
+		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
 	}
+
+	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
 	if len(errors) > 0 {
 		return errors
