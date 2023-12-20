@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --batch-size integer   Limit of items per batch to delete (range: 1 - 1000) (default 1000)
-      --bucket string        Name of the bucket to delete objects from (between 3 and 63 characters)
+      --bucket string        Name of the bucket to delete objects from (between 3 and 63 characters) (required)
       --exclude string       Filename pattern to exclude
   -h, --help                 help for delete-all
       --include string       Filename pattern to include (default "*")

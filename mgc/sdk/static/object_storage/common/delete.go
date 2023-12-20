@@ -28,11 +28,11 @@ func deleteLogger() *zap.SugaredLogger {
 }
 
 type DeleteObjectParams struct {
-	Destination mgcSchemaPkg.URI `json:"dst,omitempty" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file1" mgc:"positional"`
+	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file1" mgc:"positional"`
 }
 
 type DeleteAllObjectsParams struct {
-	BucketName   BucketName       `json:"bucket,omitempty" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
+	BucketName   BucketName       `json:"bucket" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
 	BatchSize    int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to delete,default=1000,minimum=1,maximum=1000" example:"1000"`
 	FilterParams `json:",squash"` // nolint
 }

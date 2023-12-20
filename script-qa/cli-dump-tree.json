@@ -16653,6 +16653,9 @@
          "type": "string"
         }
        },
+       "required": [
+        "dst"
+       ],
        "type": "object"
       },
       "result": {
@@ -16739,6 +16742,9 @@
          "type": "string"
         }
        },
+       "required": [
+        "bucket"
+       ],
        "type": "object"
       },
       "result": {

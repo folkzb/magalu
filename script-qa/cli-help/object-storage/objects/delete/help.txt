@@ -7,7 +7,7 @@ Examples:
   ./cli object-storage objects delete --dst="s3://bucket1/file1"
 
 Flags:
-      --dst uri   Path of the object to be deleted
+      --dst uri   Path of the object to be deleted (required)
   -h, --help      help for delete
 
 Global Flags:
