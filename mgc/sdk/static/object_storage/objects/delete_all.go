@@ -17,7 +17,7 @@ var getDeleteAll = utils.NewLazyLoader[core.Executor](func() core.Executor {
 		deleteAll,
 	)
 
-	msg := "This command will delete all objects at {{.parameters.name}}, and its result is NOT reversible."
+	msg := "This command will delete all objects at {{.parameters.bucket}}, and its result is NOT reversible."
 
 	return core.NewConfirmableExecutor(
 		exec,
