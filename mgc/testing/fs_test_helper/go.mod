@@ -1,4 +1,4 @@
-module magalu.cloud/fs_test_helper
+module magalu.cloud/testing/fs_test_helper
 
 go 1.21.4
 

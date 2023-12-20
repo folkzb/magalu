@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 
 	"magalu.cloud/core/utils"
-	"magalu.cloud/fs_test_helper"
+	"magalu.cloud/testing/fs_test_helper"
 )
 
 type testCaseProfile struct {

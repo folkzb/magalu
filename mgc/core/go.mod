@@ -16,7 +16,7 @@ require (
 	go.uber.org/zap v1.25.0
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/sync v0.5.0
-	magalu.cloud/fs_test_helper v0.0.0-00010101000000-000000000000
+	magalu.cloud/testing/fs_test_helper v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -42,4 +42,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace magalu.cloud/fs_test_helper => .././testing/fs_test_helper
+replace magalu.cloud/testing/fs_test_helper => .././testing/fs_test_helper
