@@ -211,7 +211,7 @@ func (r *MgcConnectionResource) performLinkOperation(
 	diag *diag.Diagnostics,
 ) {
 	ctx = r.sdk.WrapContext(ctx)
-	configs := getConfigs(link.AdditionalConfigsSchema())
+	configs := getConfigs(ctx, link.AdditionalConfigsSchema())
 	params := readMgcMapSchemaFromTFState(r, link.AdditionalParametersSchema(), ctx, inState, diag)
 	if diag.HasError() {
 		return
@@ -264,7 +264,7 @@ func (r *MgcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	ctx = tflog.SetField(ctx, connectionResourceNameField, r.name)
 	ctx = r.sdk.WrapContext(ctx)
 
-	configs := getConfigs(r.create.ConfigsSchema())
+	configs := getConfigs(ctx, r.create.ConfigsSchema())
 	params := readMgcMapSchemaFromTFState(r, r.create.ParametersSchema(), ctx, tfsdk.State(req.Plan), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return

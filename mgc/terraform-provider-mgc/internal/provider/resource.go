@@ -214,7 +214,7 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 func (r *MgcResource) performOperation(ctx context.Context, exec core.Executor, inState tfsdk.State, outState *tfsdk.State, diag *diag.Diagnostics) {
 	ctx = r.sdk.WrapContext(ctx)
 
-	configs := getConfigs(exec.ConfigsSchema())
+	configs := getConfigs(ctx, exec.ConfigsSchema())
 	params := readMgcMapSchemaFromTFState(r, exec.ParametersSchema(), ctx, inState, diag)
 	if diag.HasError() {
 		return
