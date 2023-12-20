@@ -176,29 +176,24 @@ func applyStateAfter(
 	ctx context.Context,
 	tfState *tfsdk.State,
 	d *diag.Diagnostics,
-) {
+) (readResult core.ResultWithValue, readResultMap map[string]any) {
 	tflog.Debug(ctx, fmt.Sprintf("[resource] applying state after for %q", handler.Name()))
 
 	// First, apply the values that the user passed as Parameters to the state (assuming success)
 	applyMgcInputMapToTFState(handler, result.Source().Parameters, ctx, tfState, d)
 
-	resultMap := resultAsMap(result, d)
-	if !d.HasError() {
-		return
+	resultMapConvDiag := diag.Diagnostics{}
+	resultMap := resultAsMap(result, &resultMapConvDiag)
+	if !resultMapConvDiag.HasError() {
+		// Then, apply the result values of the request that was performed
+		applyMgcOutputMapToTFState(handler, resultMap, ctx, tfState, d)
+		verifyCurrentDesiredMismatch(handler, result.Source().Parameters, resultMap, d)
 	}
-	// Then, apply the result values of the request that was performed
-	applyMgcOutputMapToTFState(handler, resultMap, ctx, tfState, d)
-	verifyCurrentDesiredMismatch(handler, result.Source().Parameters, resultMap, d)
 
 	// Then, try to retrieve the Read executor for the Resource via links ('read' parameter may have been nil)
 	read = getReadForApplyStateAfter(ctx, handler, result, read, d)
 	if d.HasError() {
-		return
-	}
-
-	// If the original result schema is the same as the resource read, no need for further state appliance
-	if mgcSchemaPkg.CheckSimilarJsonSchemas(result.Schema(), read.ResultSchema()) {
-		return
+		return nil, nil
 	}
 
 	paramsSchema := read.ParametersSchema()
@@ -208,19 +203,21 @@ func applyStateAfter(
 			"applying state after failed",
 			fmt.Sprintf("unable to read resource due to insufficient state information. %s", err),
 		)
-		return
+		return nil, nil
 	}
 
-	readResult := execute(handler.Name(), ctx, read, params, core.Configs{}, d)
+	readResult = execute(handler.Name(), ctx, read, params, core.Configs{}, d)
 	if d.HasError() {
-		return
+		return nil, nil
 	}
 
-	readResultMap := resultAsMap(readResult, d)
+	readResultMap = resultAsMap(readResult, d)
 	if d.HasError() {
-		return
+		return nil, nil
 	}
 
 	applyMgcOutputMapToTFState(handler, readResultMap, ctx, tfState, d)
 	verifyCurrentDesiredMismatch(handler, result.Source().Parameters, readResultMap, d)
+
+	return readResult, readResultMap
 }
