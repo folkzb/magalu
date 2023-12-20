@@ -31,7 +31,7 @@ resource "mgc_block-storage_volume" "myvmvolume" {
     volume_type = "cloud_nvme"
 }
 
-resource "mgc_block-storage_volume-attachment" "myvmvolumeattachment" {
+resource "mgc_block-storage_volume_attach" "myvmvolumeattachment" {
     id = mgc_block-storage_volume.myvmvolume.id
     virtual_machine_id = mgc_virtual-machine_instances.myvm.id
 }

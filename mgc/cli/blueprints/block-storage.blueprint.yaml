@@ -20,6 +20,7 @@ components:
 children:
 - name: volume-attach-blueprint
   description: Block Storage Volume Attachment
+  isInternal: true
   children:
 
   - name: create

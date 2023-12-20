@@ -2115,7 +2115,7 @@
      }
     ],
     "description": "Block Storage Volume Attachment",
-    "isInternal": false,
+    "isInternal": true,
     "name": "volume-attach-blueprint",
     "version": ""
    },
@@ -2259,7 +2259,7 @@
      }
     ],
     "description": "Create and manage Volume Attachments",
-    "isInternal": false,
+    "isInternal": true,
     "name": "volume-attachment",
     "version": ""
    },

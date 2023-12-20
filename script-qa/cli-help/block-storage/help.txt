@@ -5,12 +5,10 @@ Usage:
   ./cli block-storage [command]
 
 Commands:
-  snapshots               snapshots
-  usage                   usage
-  volume                  Block Storage Volume Resources
-  volume-attach-blueprint Block Storage Volume Attachment
-  volume-attachment       Block Storage Volume Attachment
-  volume-types            volume types
+  snapshots    snapshots
+  usage        usage
+  volume       Block Storage Volume Resources
+  volume-types volume types
 
 Flags:
   -h, --help   help for block-storage

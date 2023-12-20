@@ -13,6 +13,7 @@ func newGroup() core.Grouper {
 			Name:        "volume-attachment",
 			Summary:     "Block Storage Volume Attachment",
 			Description: `Create and manage Volume Attachments`,
+			IsInternal:  true,
 		},
 		[]core.Descriptor{
 			getCreate(),
