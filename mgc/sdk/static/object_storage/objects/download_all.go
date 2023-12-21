@@ -84,7 +84,7 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 	reportProgress := progress_report.FromContext(ctx)
 	reportMsg := "downloading objects from bucket: " + params.Source.String()
 	progress := uint64(0)
-	total := uint64(len(entries) - 1)
+	total := uint64(len(entries))
 
 	reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
 
