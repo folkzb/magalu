@@ -80,6 +80,10 @@ func handleExecutor(
 
 	result, err := retry.Run(ctx, cb)
 
+	if pb != nil {
+		pb.Flush()
+	}
+
 	err = handleExecutorResult(ctx, sdk, cmd, result, err)
 	if err != nil {
 		return nil, err

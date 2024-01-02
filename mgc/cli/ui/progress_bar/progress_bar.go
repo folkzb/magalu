@@ -50,6 +50,11 @@ func (pb *ProgressBar) Finalize() {
 	pb.Stop()
 }
 
+func (pb *ProgressBar) Flush() {
+	pb.Finalize()
+	go pb.Render()
+}
+
 func (pb *ProgressBar) ReportProgress(msg string, done, total uint64, units progress_report.Units, reportErr error) {
 	tracker, found := pb.trackers.LoadOrStore(msg,
 		&progress.Tracker{
