@@ -46,6 +46,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace magalu.cloud/testing/fs_test_helper => .././testing/fs_test_helper
+replace magalu.cloud/testing/fs_test_helper => ../testing/fs_test_helper
 
 replace magalu.cloud/core => ../core
