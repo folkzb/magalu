@@ -163,10 +163,10 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 
 	objsBatch := pipeline.Batch(ctx, objs, params.BatchSize)
 	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objsBatch, createObjectDeletionProcessor(cfg, params.BucketName, reportChan), nil)
-	nonNilErrorsChan := pipeline.Filter(ctx, deleteObjectsErrorChan, pipeline.FilterNonNil[error]{})
+	deleteObjectsErrorChan = pipeline.Filter(ctx, deleteObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
 	// This cannot error, there is no cancel call in processor
-	objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, nonNilErrorsChan)
+	objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, deleteObjectsErrorChan)
 	if len(objErr) > 0 {
 		return objErr
 	}
