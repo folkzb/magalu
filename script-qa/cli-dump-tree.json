@@ -16898,7 +16898,7 @@
         },
         "src": {
          "description": "Path of objects to be downloaded",
-         "example": "s3://mybucket/",
+         "example": "s3://mybucket",
          "format": "uri",
          "type": "string"
         }
@@ -16975,7 +16975,7 @@
         },
         "dst": {
          "description": "Path of the bucket to list objects from",
-         "example": "s3://bucket1/",
+         "example": "s3://bucket1",
          "format": "uri",
          "type": "string"
         },

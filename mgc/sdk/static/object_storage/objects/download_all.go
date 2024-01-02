@@ -26,7 +26,7 @@ func downloadAllLogger() *zap.SugaredLogger {
 }
 
 type downloadAllObjectsParams struct {
-	Source              mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of objects to be downloaded,example=s3://mybucket/" mgc:"positional"`
+	Source              mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of objects to be downloaded,example=s3://mybucket" mgc:"positional"`
 	Destination         mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Path to save files,example=path/to/folder" mgc:"positional"`
 	common.FilterParams `json:",squash"`      // nolint
 }
