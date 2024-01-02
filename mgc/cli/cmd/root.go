@@ -96,6 +96,7 @@ can generate a command line on-demand for Rest manipulation`,
 
 	if !getHideProgressFlag(rootCmd) {
 		pb = progress_bar.New()
+		go pb.Render()
 		defer pb.Finalize()
 	}
 

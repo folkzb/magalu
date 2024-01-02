@@ -36,7 +36,6 @@ func New() *ProgressBar {
 	writer.SetMessageWidth(30)
 	writer.SetTrackerPosition(progress.PositionRight)
 	writer.SetTrackerLength(progress.DefaultLengthTracker)
-	go writer.Render()
 	return &ProgressBar{
 		Writer: writer,
 	}
