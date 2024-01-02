@@ -446,7 +446,10 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TenantAuth, error)
 		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
 	}
 
-	data := map[string]any{"tenant": id}
+	data := map[string]any{
+		"tenant": id,
+		"scopes": strings.Join(o.config.Scopes, " "),
+	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
