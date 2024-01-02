@@ -11,7 +11,7 @@ import (
 
 type listParams struct {
 	common.ListObjectsParams `json:",squash" mgc:"positional"` // nolint
-	common.FilterParams      `json:",squash"` // nolint
+	common.FilterParams      `json:",squash"`                  // nolint
 }
 
 type listResponse struct {
@@ -34,22 +34,7 @@ func List(ctx context.Context, params listParams, cfg common.Config) (result lis
 	defer cancel(nil)
 
 	objects := common.ListGenerator(ctx, params.ListObjectsParams, cfg)
-
-	if params.Include != "" {
-		includeFilter := pipeline.FilterRuleIncludeOnly[pipeline.WalkDirEntry]{
-			Pattern: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Include, CancelOnError: cancel},
-		}
-
-		objects = pipeline.Filter[pipeline.WalkDirEntry](ctx, objects, includeFilter)
-	}
-
-	if params.Exclude != "" {
-		excludeFilter := pipeline.FilterRuleNot[pipeline.WalkDirEntry]{
-			Not: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Exclude, CancelOnError: cancel},
-		}
-		objects = pipeline.Filter[pipeline.WalkDirEntry](ctx, objects, excludeFilter)
-	}
-
+	objects = common.ApplyFilters(ctx, objects, params.FilterParams, cancel)
 	entries, err := pipeline.SliceItemLimitedConsumer[[]pipeline.WalkDirEntry](ctx, params.MaxItems, objects)
 	if err != nil {
 		return result, err

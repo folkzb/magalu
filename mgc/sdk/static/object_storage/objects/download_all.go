@@ -55,22 +55,7 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 	}
 
 	objs := common.ListGenerator(ctx, listParams, cfg)
-
-	if params.Include != "" {
-		includeFilter := pipeline.FilterRuleIncludeOnly[pipeline.WalkDirEntry]{
-			Pattern: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Include},
-		}
-
-		objs = pipeline.Filter[pipeline.WalkDirEntry](ctx, objs, includeFilter)
-	}
-
-	if params.Exclude != "" {
-		excludeFilter := pipeline.FilterRuleNot[pipeline.WalkDirEntry]{
-			Not: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Exclude},
-		}
-		objs = pipeline.Filter[pipeline.WalkDirEntry](ctx, objs, excludeFilter)
-	}
-
+	objs = common.ApplyFilters(ctx, objs, params.FilterParams, nil)
 	entries, err := pipeline.SliceItemConsumer[[]pipeline.WalkDirEntry](ctx, objs)
 	if err != nil {
 		return err

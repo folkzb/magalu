@@ -133,21 +133,7 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 	}
 
 	objs := ListGenerator(ctx, listParams, cfg)
-
-	if params.Include != "" {
-		includeFilter := pipeline.FilterRuleIncludeOnly[pipeline.WalkDirEntry]{
-			Pattern: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Include},
-		}
-
-		objs = pipeline.Filter[pipeline.WalkDirEntry](ctx, objs, includeFilter)
-	}
-
-	if params.Exclude != "" {
-		excludeFilter := pipeline.FilterRuleNot[pipeline.WalkDirEntry]{
-			Not: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: params.Exclude},
-		}
-		objs = pipeline.Filter[pipeline.WalkDirEntry](ctx, objs, excludeFilter)
-	}
+	objs = ApplyFilters(ctx, objs, params.FilterParams, nil)
 
 	if params.BatchSize < minBatchSize || params.BatchSize > MaxBatchSize {
 		return core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", minBatchSize, MaxBatchSize, params.BatchSize)}

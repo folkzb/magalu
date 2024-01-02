@@ -27,11 +27,6 @@ type ListObjectsParams struct {
 	Recursive        bool             `json:"recursive,omitempty" jsonschema:"description=List folders and subfolders,default=false"`
 }
 
-type FilterParams struct {
-	Include string `json:"include,omitempty" jsonschema:"description=Filename pattern to include,default=*"`
-	Exclude string `json:"exclude,omitempty" jsonschema:"description=Filename pattern to exclude"`
-}
-
 type PaginationParams struct {
 	MaxItems          int    `json:"max-items,omitempty" jsonschema:"description=Limit of items to be listed,default=1000,minimum=1,example=1000"`
 	ContinuationToken string `json:"continuation-token,omitempty" jsonschema:"description=Token of result page to continue from"`
