@@ -3,6 +3,7 @@ package schema
 import (
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/invopop/jsonschema"
 )
@@ -26,6 +27,18 @@ func (u URI) JoinPath(parts ...string) URI {
 	toBeJoined = append(toBeJoined, string(u))
 	toBeJoined = append(toBeJoined, parts...)
 	return URI(path.Join(toBeJoined...))
+}
+
+func (u URI) Hostname() string {
+	if parsed, err := url.Parse(string(u)); err == nil {
+		if hostname := parsed.Hostname(); hostname != "" {
+			return hostname
+		}
+		if parsed.Path != "" {
+			return strings.Split(parsed.Path, "/")[0]
+		}
+	}
+	return u.String()
 }
 
 func (u URI) Path() string {

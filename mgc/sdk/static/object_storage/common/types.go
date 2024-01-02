@@ -33,7 +33,7 @@ func (b BucketName) String() string {
 }
 
 func NewBucketNameFromURI(u mgcSchemaPkg.URI) BucketName {
-	return BucketName(path.Dir(u.Path()))
+	return BucketName(u.Hostname())
 }
 
 type ObjectError struct {
