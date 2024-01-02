@@ -4,16 +4,16 @@ Usage:
   ./cli object-storage objects download-all [src] [dst] [flags]
 
 Examples:
-  ./cli object-storage objects download-all --dst="file1.txt" --max-items=1000 --src="s3://bucket1/file1"
+  ./cli object-storage objects download-all --dst="path/to/folder" --max-items=1000 --src="s3://mybucket/"
 
 Flags:
       --continuation-token string   Token of result page to continue from
-      --dst file                    Name of the file to be saved
+      --dst file                    Path to save files
       --exclude string              Filename pattern to exclude
   -h, --help                        help for download-all
       --include string              Filename pattern to include (default "*")
       --max-items integer           Limit of items to be listed (min: 1) (default 1000)
-      --src uri                     Path of the object to be downloaded (required)
+      --src uri                     Path of objects to be downloaded (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

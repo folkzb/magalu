@@ -16892,8 +16892,8 @@
          "type": "string"
         },
         "dst": {
-         "description": "Name of the file to be saved",
-         "example": "file1.txt",
+         "description": "Path to save files",
+         "example": "path/to/folder",
          "type": "string",
          "x-contentMediaType": "application/octet-stream"
         },
@@ -16914,8 +16914,8 @@
          "type": "integer"
         },
         "src": {
-         "description": "Path of the object to be downloaded",
-         "example": "s3://bucket1/file1",
+         "description": "Path of objects to be downloaded",
+         "example": "s3://mybucket/",
          "format": "uri",
          "type": "string"
         }
