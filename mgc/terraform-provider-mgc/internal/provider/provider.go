@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -19,6 +20,8 @@ import (
 var _ provider.Provider = (*MgcProvider)(nil)
 
 const providerTypeName = "mgc"
+
+var ignoredTFModules = []string{"profile"}
 
 type apiSpec struct {
 	name    string
@@ -139,6 +142,10 @@ func collectGroupResources(
 		}
 
 		if childGroup, ok := child.(mgcSdk.Grouper); ok {
+			if slices.Contains(ignoredTFModules, childGroup.Name()) {
+				return true, nil
+			}
+
 			oldLen := len(path)
 			path = append(path, childGroup.Name())
 			childResources, err := collectGroupResources(ctx, sdk, childGroup, path)
