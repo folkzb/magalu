@@ -16887,10 +16887,6 @@
       "name": "download-all",
       "parameters": {
        "properties": {
-        "continuation-token": {
-         "description": "Token of result page to continue from",
-         "type": "string"
-        },
         "dst": {
          "description": "Path to save files",
          "example": "path/to/folder",
@@ -16905,13 +16901,6 @@
          "default": "*",
          "description": "Filename pattern to include",
          "type": "string"
-        },
-        "max-items": {
-         "default": 1000,
-         "description": "Limit of items to be listed",
-         "example": 1000,
-         "minimum": 1,
-         "type": "integer"
         },
         "src": {
          "description": "Path of objects to be downloaded",

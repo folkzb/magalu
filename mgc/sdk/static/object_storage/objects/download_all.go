@@ -26,10 +26,9 @@ func downloadAllLogger() *zap.SugaredLogger {
 }
 
 type downloadAllObjectsParams struct {
-	Source                  mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of objects to be downloaded,example=s3://mybucket/" mgc:"positional"`
-	Destination             mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Path to save files,example=path/to/folder" mgc:"positional"`
-	common.FilterParams     `json:",squash"`      // nolint
-	common.PaginationParams `json:",squash"`      // nolint
+	Source              mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of objects to be downloaded,example=s3://mybucket/" mgc:"positional"`
+	Destination         mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Path to save files,example=path/to/folder" mgc:"positional"`
+	common.FilterParams `json:",squash"`      // nolint
 }
 
 var getDownloadAll = utils.NewLazyLoader[core.Executor](func() core.Executor {
@@ -74,7 +73,7 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 		objs = pipeline.Filter[pipeline.WalkDirEntry](ctx, objs, excludeFilter)
 	}
 
-	entries, err := pipeline.SliceItemLimitedConsumer[[]pipeline.WalkDirEntry](ctx, params.MaxItems, objs)
+	entries, err := pipeline.SliceItemConsumer[[]pipeline.WalkDirEntry](ctx, objs)
 	if err != nil {
 		return err
 	}
@@ -148,7 +147,6 @@ func downloadAll(ctx context.Context, p downloadAllObjectsParams, cfg common.Con
 		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 	}
 	p.Destination = dst
-	p.MaxItems = math.MaxInt64
 	err = downloadMultipleFiles(ctx, cfg, p)
 
 	if err != nil {
