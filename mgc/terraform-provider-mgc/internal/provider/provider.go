@@ -7,13 +7,10 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"magalu.cloud/core/auth"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -23,34 +20,11 @@ const providerTypeName = "mgc"
 
 var ignoredTFModules = []string{"profile"}
 
-type apiSpec struct {
-	name    string
-	version string
-}
-
-func (a apiSpec) String() string {
-	return fmt.Sprintf("%s@%s", a.name, a.version)
-}
-
-func parseApiSpec(spec string) *apiSpec {
-	parts := strings.Split(spec, "@")
-	name := parts[0]
-	version := parts[1]
-	return &apiSpec{name, version}
-}
-
 type MgcProvider struct {
 	version string
 	commit  string
 	date    string
 	sdk     *mgcSdk.Sdk
-	apis    []*apiSpec
-}
-
-type MgcProviderModel struct {
-	RefreshToken types.String   `tfsdk:"refresh_token"`
-	AccessToken  types.String   `tfsdk:"access_token"`
-	Apis         []types.String `tfsdk:"apis"`
 }
 
 func (p *MgcProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -62,52 +36,12 @@ func (p *MgcProvider) Metadata(ctx context.Context, req provider.MetadataRequest
 func (p *MgcProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	tflog.Debug(ctx, "setting provider schema")
 	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"refresh_token": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Refresh Token used to authenticate with the MagaluID platform.",
-			},
-			"access_token": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Access Token used to authenticate with the MagaluID platform.",
-			},
-			"apis": schema.ListAttribute{
-				Required:    true,
-				ElementType: types.StringType,
-				Description: "Which MagaluCloud products need to be supported by the provider.",
-				// Should we use validators to know if the apis exist? Or return an error later
-				// Validators: ,
-			},
-		},
+		Description: "Terraform Provider for Magalu Cloud",
 	}
 }
 
 func (p *MgcProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	tflog.Info(ctx, "configuring MGC provider")
-	var config MgcProviderModel
-
-	// Load all configurations
-	diags := req.Config.Get(ctx, &config)
-	resp.Diagnostics.Append(diags...)
-
-	refreshToken := config.RefreshToken.ValueString()
-	accessToken := config.AccessToken.ValueString()
-	if accessToken != "" || refreshToken != "" {
-		_ = p.sdk.Auth().SetTokens(&auth.LoginResult{AccessToken: accessToken, RefreshToken: refreshToken})
-	}
-
-	if len(config.Apis) == 0 {
-		p.attrErr(resp, "apis")
-		return
-	}
-	p.apis = make([]*apiSpec, len(config.Apis))
-	for i, spec := range config.Apis {
-		p.apis[i] = parseApiSpec(spec.ValueString())
-	}
-	tflog.Debug(ctx, "using `apis` property from tf file")
-
 	resp.DataSourceData = p.sdk
 	resp.ResourceData = p.sdk
 }
@@ -215,20 +149,6 @@ func collectGroupResources(
 
 func (p *MgcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return nil
-}
-
-func (p *MgcProvider) attrErr(resp *provider.ConfigureResponse, attr string, def ...string) {
-	exArg := ""
-	if len(def) > 0 {
-		exArg = fmt.Sprintf("You can set this configuration use one of the following: set %s attribute", attr)
-		exArg += strings.Join(def, ", ")
-		exArg += "."
-	}
-	resp.Diagnostics.AddAttributeError(
-		path.Root(attr),
-		fmt.Sprintf("missing %s", attr),
-		fmt.Sprintf("unable to create %s provider due to missing attributes.\n%s", providerTypeName, exArg),
-	)
 }
 
 func New(version string, commit string, date string) func() provider.Provider {

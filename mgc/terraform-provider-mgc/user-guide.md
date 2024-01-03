@@ -57,16 +57,11 @@ or
      ```hcl
      terraform {
         required_providers {
-            mgc = {
-                version = "0.1"
-                source = "magalucloud/mgc"
-            }
+            mgc = {}
         }
      }
 
-     provider "mgc" {
-        apis = ["virtual-machine@1.60.0", "block-storage@1.52.0"]
-     }
+     provider "mgc" {}
      ```
 
 ## Configuring Resources

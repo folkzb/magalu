@@ -7,10 +7,7 @@ terraform {
     }
 }
 
-provider "mgc" {
-    # This will be used later on to test the SDK loading functions
-    apis = ["virtual-machine@1.60.0", "block-storage@1.52.0"]
-}
+provider "mgc" {}
 
 resource "mgc_virtual-machine_instances" "myvm" {
   name = "my-tf-vm"
