@@ -8,7 +8,6 @@ import (
 	"math"
 	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 
@@ -51,12 +50,11 @@ func NewUploader(cfg Config, src mgcSchemaPkg.FilePath, dst mgcSchemaPkg.URI) (u
 }
 
 func newUploadRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI, reader io.Reader) (*http.Request, error) {
-	host := BuildHost(cfg)
-	url, err := url.JoinPath(host, dst.Path())
+	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodPut, url, reader)
+	return http.NewRequestWithContext(ctx, http.MethodPut, string(host), reader)
 }
 
 func readContent(p mgcSchemaPkg.FilePath) (*os.File, fs.FileInfo, error) {

@@ -2,7 +2,7 @@ package objects
 
 import (
 	"context"
-	"path"
+	"fmt"
 	"strings"
 
 	"magalu.cloud/core"
@@ -13,8 +13,7 @@ import (
 
 type uploadParams struct {
 	Source      mgcSchemaPkg.FilePath `json:"src" jsonschema:"description=Source file path to be uploaded" mgc:"positional"`
-	BucketName  common.BucketName     `json:"bucket" jsonschema:"description=Name of the bucket to upload to" mgc:"positional"`
-	Destination mgcSchemaPkg.URI      `json:"dst,omitempty" jsonschema:"description=Full destination path in the bucket with desired filename,example=dir/file.txt" mgc:"positional"`
+	Destination mgcSchemaPkg.URI      `json:"dst" jsonschema:"description=Full destination path in the bucket with desired filename,example=s3://my-bucket/dir/file.txt" mgc:"positional"`
 }
 
 type uploadTemplateResult struct {
@@ -37,15 +36,18 @@ var getUpload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploadTemplateResult, error) {
-	dst := params.BucketName.AsURI()
-	dst = dst.JoinPath(params.Destination.String())
-	fileName := path.Base(params.Source.String())
-	if params.Destination.String() == "" || strings.HasSuffix(params.Destination.String(), "/") {
-		// If it isn't a file path, don't rename, just append source with bucket URI
-		dst = dst.JoinPath(fileName)
+	fullDstPath := params.Destination
+	if fullDstPath == "" {
+		return nil, core.UsageError{Err: fmt.Errorf("destination cannot be empty")}
 	}
 
-	uploader, err := common.NewUploader(cfg, params.Source, dst)
+	fileName := params.Source.String()
+	if strings.HasSuffix(fullDstPath.String(), "/") {
+		// If it isn't a file path, don't rename, just append source with bucket URI
+		fullDstPath = fullDstPath.JoinPath(fileName)
+	}
+
+	uploader, err := common.NewUploader(cfg, params.Source, fullDstPath)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,7 @@ func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploa
 	}
 
 	return &uploadTemplateResult{
-		URI:  dst.String(),
+		URI:  fullDstPath.String(),
 		File: fileName,
 	}, nil
 }

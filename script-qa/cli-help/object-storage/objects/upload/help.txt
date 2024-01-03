@@ -1,16 +1,15 @@
 Upload a file to a bucket
 
 Usage:
-  ./cli object-storage objects upload [src] [bucket] [dst] [flags]
+  ./cli object-storage objects upload [src] [dst] [flags]
 
 Examples:
-  ./cli object-storage objects upload --dst="dir/file.txt"
+  ./cli object-storage objects upload --dst="s3://my-bucket/dir/file.txt"
 
 Flags:
-      --bucket string   Name of the bucket to upload to (between 3 and 63 characters) (required)
-      --dst uri         Full destination path in the bucket with desired filename
-  -h, --help            help for upload
-      --src file        Source file path to be uploaded (required)
+      --dst uri    Full destination path in the bucket with desired filename (required)
+  -h, --help       help for upload
+      --src file   Source file path to be uploaded (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

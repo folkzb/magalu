@@ -57,16 +57,15 @@ func download(ctx context.Context, p common.DownloadObjectParams, cfg common.Con
 	if err != nil {
 		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 	}
-	src := p.Source
 
 	reportProgress := progress_report.FromContext(ctx)
 	total := uint64(1)
 	progress := uint64(0)
-	name := src.String()
+	name := p.Source.String()
 
 	reportProgress(name, progress, total, progress_report.UnitsNone, nil)
 
-	err = downloadSingleFile(ctx, cfg, src, dst)
+	err = downloadSingleFile(ctx, cfg, p.Source, dst)
 
 	if err != nil {
 		reportProgress(name, progress, total, progress_report.UnitsNone, err)

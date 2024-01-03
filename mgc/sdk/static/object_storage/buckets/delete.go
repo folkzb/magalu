@@ -54,7 +54,8 @@ func delete(ctx context.Context, params deleteParams, cfg common.Config) (result
 		return nil, err
 	}
 
-	err = common.Delete(ctx, common.DeleteObjectParams{Destination: params.BucketName.AsURI()}, cfg)
+	dst := params.BucketName.AsURI()
+	err = common.Delete(ctx, common.DeleteObjectParams{Destination: dst}, cfg)
 	if err != nil {
 		return nil, err
 	}

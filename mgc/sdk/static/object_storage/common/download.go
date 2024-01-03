@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 
@@ -20,12 +19,11 @@ type DownloadObjectParams struct {
 }
 
 func NewDownloadRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI) (*http.Request, error) {
-	host := BuildHost(cfg)
-	url, err := url.JoinPath(host, src.Path())
+	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(src), src.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	return http.NewRequestWithContext(ctx, http.MethodGet, string(host), nil)
 }
 
 func WriteToFile(reader io.ReadCloser, outFile mgcSchemaPkg.FilePath) (err error) {

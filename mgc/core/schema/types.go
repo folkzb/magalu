@@ -43,7 +43,15 @@ func (u URI) Hostname() string {
 
 func (u URI) Path() string {
 	if parsed, err := url.Parse(string(u)); err == nil {
-		return parsed.Path
+		var path string
+		if parsed.Hostname() != "" {
+			path = parsed.Path
+		} else if pathEntries := strings.Split(parsed.Path, "/"); len(pathEntries) > 1 {
+			path = strings.Join(pathEntries[1:], "/")
+		} else {
+			return ""
+		}
+		return strings.Trim(path, "/")
 	}
 	return u.String()
 }

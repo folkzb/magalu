@@ -3,7 +3,6 @@ package buckets
 import (
 	"context"
 	"net/http"
-	"net/url"
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
@@ -40,12 +39,11 @@ var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func newCreateRequest(ctx context.Context, cfg common.Config, bucket common.BucketName) (*http.Request, error) {
-	host := common.BuildHost(cfg)
-	url, err := url.JoinPath(host, bucket.String())
+	url, err := common.BuildBucketHost(cfg, bucket)
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodPut, url, nil)
+	return http.NewRequestWithContext(ctx, http.MethodPut, string(url), nil)
 }
 
 func create(ctx context.Context, params createParams, cfg common.Config) (core.Value, error) {

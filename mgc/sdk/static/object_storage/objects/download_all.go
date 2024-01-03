@@ -46,10 +46,8 @@ var getDownloadAll = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downloadAllObjectsParams) error {
-	src := params.Source
-	dst := params.Destination
 	listParams := common.ListObjectsParams{
-		Destination: src,
+		Destination: params.Source,
 		Recursive:   true,
 		PaginationParams: common.PaginationParams{
 			MaxItems: math.MaxInt64,
@@ -78,7 +76,7 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 		return err
 	}
 
-	bucketName := common.NewBucketNameFromURI(src)
+	bucketName := common.NewBucketNameFromURI(params.Source)
 	rootURI := bucketName.AsURI()
 
 	reportProgress := progress_report.FromContext(ctx)
@@ -118,12 +116,12 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 		}
 
 		dir := path.Dir(entry.Path())
-		if err := os.MkdirAll(path.Join(dst.String(), dir), utils.DIR_PERMISSION); err != nil {
+		if err := os.MkdirAll(path.Join(params.Destination.String(), dir), utils.DIR_PERMISSION); err != nil {
 			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}
 
-		if err := common.WriteToFile(resp.Body, dst.Join(entry.Path())); err != nil {
+		if err := common.WriteToFile(resp.Body, params.Destination.Join(entry.Path())); err != nil {
 			errors = append(errors, &common.ObjectError{Url: objURI, Err: err})
 			continue
 		}

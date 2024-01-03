@@ -2,7 +2,7 @@ package common
 
 import (
 	"fmt"
-	"path"
+	"strings"
 
 	"github.com/invopop/jsonschema"
 
@@ -17,15 +17,11 @@ func (b BucketName) JSONSchemaExtend(s *jsonschema.Schema) {
 	s.MaxLength = 63
 }
 
-func (b BucketName) AsURI(pathParts ...string) mgcSchemaPkg.URI {
-	p := string(b)
-	if len(pathParts) > 0 {
-		parts := make([]string, 0, 1+len(pathParts))
-		parts = append(parts, p)
-		parts = append(parts, pathParts...)
-		p = path.Join(parts...)
+func (b BucketName) AsURI() mgcSchemaPkg.URI {
+	if !strings.HasPrefix(string(b), URIPrefix) {
+		return mgcSchemaPkg.URI(URIPrefix + b)
 	}
-	return mgcSchemaPkg.URI(p)
+	return mgcSchemaPkg.URI(b)
 }
 
 func (b BucketName) String() string {

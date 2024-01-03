@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -138,13 +137,13 @@ func (b *BucketContent) Type() fs.FileMode {
 var _ fs.DirEntry = (*BucketContent)(nil)
 var _ fs.FileInfo = (*BucketContent)(nil)
 
-func newListRequest(ctx context.Context, cfg Config, bucket string, page PaginationParams, recursive bool) (*http.Request, error) {
-	parsedUrl, err := parseURL(cfg, bucket)
+func newListRequest(ctx context.Context, cfg Config, bucketURI mgcSchemaPkg.URI, page PaginationParams, recursive bool) (*http.Request, error) {
+	url, err := buildListRequestURL(cfg, bucketURI)
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
 
-	listReqQuery := parsedUrl.Query()
+	listReqQuery := url.Query()
 	listReqQuery.Set("list-type", "2")
 	if page.ContinuationToken != "" {
 		listReqQuery.Set("continuation-token", page.ContinuationToken)
@@ -158,33 +157,23 @@ func newListRequest(ctx context.Context, cfg Config, bucket string, page Paginat
 	if !recursive {
 		listReqQuery.Set("delimiter", delimiter)
 	}
-	parsedUrl.RawQuery = listReqQuery.Encode()
+	url.RawQuery = listReqQuery.Encode()
 
-	return http.NewRequestWithContext(ctx, http.MethodGet, parsedUrl.String(), nil)
+	return http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 }
 
-func parseURL(cfg Config, bucketURI string) (*url.URL, error) {
-	// Bucket URI cannot end in '/' as this makes it search for a
-	// non existing directory
-	bucketURI = strings.TrimSuffix(bucketURI, delimiter)
-	pathEntries := strings.Split(bucketURI, delimiter)
-	bucket := pathEntries[0]
-	path, err := url.JoinPath(BuildHost(cfg), bucket)
-	if err != nil {
-		return nil, err
-	}
-	u, err := url.Parse(path)
+func buildListRequestURL(cfg Config, bucketURI mgcSchemaPkg.URI) (*url.URL, error) {
+	u, err := BuildBucketHostURL(cfg, NewBucketNameFromURI(bucketURI))
 	if err != nil {
 		return nil, err
 	}
 	q := u.Query()
-	if len(pathEntries) > 1 {
-		prefixQ := strings.Join(pathEntries[1:], delimiter)
-		lastChar := string(prefixQ[len(prefixQ)-1])
+	if path := bucketURI.Path(); path != "" {
+		lastChar := string(path[len(path)-1])
 		if lastChar != delimiter {
-			prefixQ += delimiter
+			path += delimiter
 		}
-		q.Set("prefix", prefixQ)
+		q.Set("prefix", path)
 	}
 	q.Set("encoding-type", "url")
 	u.RawQuery = q.Encode()
@@ -206,14 +195,14 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 			logger.Info("closed output channel")
 		}()
 
+		dst := params.Destination
 		page := params.PaginationParams
 		var requestedItems int
-		bucket := params.Destination.Path()
 	MainLoop:
 		for {
 			requestedItems = 0
 
-			req, err := newListRequest(ctx, cfg, bucket, page, params.Recursive)
+			req, err := newListRequest(ctx, cfg, dst, page, params.Recursive)
 			var result listObjectsRequestResponse
 			var resp *http.Response
 
@@ -230,14 +219,14 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 				select {
 				case <-ctx.Done():
 					logger.Debugw("context.Done()", "err", err)
-				case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent](params.Destination.String(), nil, err):
+				case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent](dst.Path(), nil, err):
 				}
 				return
 			}
 
 			for _, prefix := range result.CommonPrefixes {
 				dirEntry := pipeline.NewSimpleWalkDirEntry(
-					path.Join(params.Destination.String(), prefix.Path),
+					path.Join(dst.Path(), prefix.Path),
 					prefix,
 					nil,
 				)
@@ -257,7 +246,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 
 			for _, content := range result.Contents {
 				dirEntry := pipeline.NewSimpleWalkDirEntry(
-					path.Join(params.Destination.String(), content.Key),
+					path.Join(dst.Path(), content.Key),
 					content,
 					nil,
 				)

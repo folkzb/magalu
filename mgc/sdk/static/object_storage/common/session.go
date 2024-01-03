@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"magalu.cloud/core/auth"
@@ -21,11 +22,61 @@ var excludedHeaders = HeaderMap{
 	"Content-Length":        nil,
 }
 
-func BuildHost(cfg Config) string {
+type HostString string
+type BucketHostString string
+
+func BuildHost(cfg Config) HostString {
 	if cfg.ServerUrl != "" {
-		return cfg.ServerUrl
+		return HostString(cfg.ServerUrl)
 	}
-	return strings.ReplaceAll(templateUrl, "{{region}}", cfg.Region)
+	return HostString(strings.ReplaceAll(templateUrl, "{{region}}", cfg.Region))
+}
+
+func BuildHostURL(cfg Config) (*url.URL, error) {
+	host := BuildHost(cfg)
+	return url.Parse(string(host))
+}
+
+func BuildBucketHost(cfg Config, bucketName BucketName) (BucketHostString, error) {
+	host, err := url.JoinPath(string(BuildHost(cfg)), bucketName.String())
+	if err != nil {
+		return BucketHostString(host), err
+	}
+	// Bucket URI cannot end in '/' as this makes it search for a
+	// non existing directory
+	host = strings.TrimSuffix(host, "/")
+	return BucketHostString(host), nil
+}
+
+func BuildBucketHostWithPath(cfg Config, bucketName BucketName, path string) (BucketHostString, error) {
+	bucketHost, err := BuildBucketHost(cfg, bucketName)
+	if err != nil {
+		return bucketHost, err
+	}
+	bucketHostWithPath, err := url.JoinPath(string(bucketHost), path)
+	if err != nil {
+		return BucketHostString(bucketHostWithPath), err
+	}
+	// Bucket URI cannot end in '/' as this makes it search for a
+	// non existing directory
+	bucketHostWithPath = strings.TrimSuffix(string(bucketHostWithPath), "/")
+	return BucketHostString(bucketHostWithPath), err
+}
+
+func BuildBucketHostURL(cfg Config, bucketName BucketName) (*url.URL, error) {
+	bucketHost, err := BuildBucketHost(cfg, bucketName)
+	if err != nil {
+		return nil, err
+	}
+	return url.Parse(string(bucketHost))
+}
+
+func BuildBucketHostWithPathURL(cfg Config, bucketName BucketName, path string) (*url.URL, error) {
+	bucketHost, err := BuildBucketHostWithPath(cfg, bucketName, path)
+	if err != nil {
+		return nil, err
+	}
+	return url.Parse(string(bucketHost))
 }
 
 func SendRequest(ctx context.Context, req *http.Request) (res *http.Response, err error) {

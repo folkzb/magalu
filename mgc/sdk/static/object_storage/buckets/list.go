@@ -27,7 +27,7 @@ type ListResponse struct {
 }
 
 func newListRequest(ctx context.Context, cfg common.Config) (*http.Request, error) {
-	return http.NewRequestWithContext(ctx, http.MethodGet, common.BuildHost(cfg), nil)
+	return http.NewRequestWithContext(ctx, http.MethodGet, string(common.BuildHost(cfg)), nil)
 }
 
 var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {

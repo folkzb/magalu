@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"net/url"
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
@@ -46,18 +45,16 @@ type deleteBatchRequestBody struct {
 	Objects []objectIdentifier `xml:"Object"`
 }
 
-func newDeleteRequest(ctx context.Context, cfg Config, pathURIs ...string) (*http.Request, error) {
-	host := BuildHost(cfg)
-	url, err := url.JoinPath(host, pathURIs...)
+func newDeleteRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI) (*http.Request, error) {
+	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	return http.NewRequestWithContext(ctx, http.MethodDelete, string(host), nil)
 }
 
-func newDeleteBatchRequest(ctx context.Context, cfg Config, bucketName string, objKeys []objectIdentifier) (*http.Request, error) {
-	host := BuildHost(cfg)
-	url, err := url.JoinPath(host, bucketName)
+func newDeleteBatchRequest(ctx context.Context, cfg Config, bucketName BucketName, objKeys []objectIdentifier) (*http.Request, error) {
+	host, err := BuildBucketHost(cfg, bucketName)
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
@@ -69,7 +66,7 @@ func newDeleteBatchRequest(ctx context.Context, cfg Config, bucketName string, o
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(marshalledBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, string(host), bytes.NewBuffer(marshalledBody))
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +97,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName BucketName, reportChan
 			objIdentifiers = append(objIdentifiers, objectIdentifier{Key: obj.Key})
 		}
 
-		req, err := newDeleteBatchRequest(ctx, cfg, bucketName.String(), objIdentifiers)
+		req, err := newDeleteBatchRequest(ctx, cfg, bucketName, objIdentifiers)
 		if err != nil {
 			return &ObjectError{Err: err}, pipeline.ProcessAbort
 		}
@@ -126,8 +123,9 @@ type deleteProgressReport struct {
 }
 
 func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Config) error {
+	dst := params.BucketName.AsURI()
 	listParams := ListObjectsParams{
-		Destination: params.BucketName.AsURI(),
+		Destination: dst,
 		Recursive:   true,
 		PaginationParams: PaginationParams{
 			MaxItems: math.MaxInt64,
@@ -204,8 +202,7 @@ func reportDeleteProgress(reportProgress progress_report.ReportProgress, reportC
 }
 
 func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err error) {
-	bucketPath := params.Destination.Path()
-	req, err := newDeleteRequest(ctx, cfg, bucketPath)
+	req, err := newDeleteRequest(ctx, cfg, params.Destination)
 	if err != nil {
 		return
 	}
