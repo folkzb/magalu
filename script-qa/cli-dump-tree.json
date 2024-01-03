@@ -4701,8 +4701,7 @@
         "status",
         "created_at",
         "backup_start_at",
-        "backup_retention_days",
-        "replicas"
+        "backup_retention_days"
        ],
        "type": "object"
       },
@@ -5118,8 +5117,7 @@
            "status",
            "created_at",
            "backup_start_at",
-           "backup_retention_days",
-           "replicas"
+           "backup_retention_days"
           ],
           "type": "object"
          },
@@ -5530,8 +5528,7 @@
         "status",
         "created_at",
         "backup_start_at",
-        "backup_retention_days",
-        "replicas"
+        "backup_retention_days"
        ],
        "type": "object"
       },
@@ -5981,8 +5978,7 @@
         "status",
         "created_at",
         "backup_start_at",
-        "backup_retention_days",
-        "replicas"
+        "backup_retention_days"
        ],
        "type": "object"
       },
@@ -6362,8 +6358,7 @@
         "status",
         "created_at",
         "backup_start_at",
-        "backup_retention_days",
-        "replicas"
+        "backup_retention_days"
        ],
        "type": "object"
       },
@@ -6768,8 +6763,7 @@
         "status",
         "created_at",
         "backup_start_at",
-        "backup_retention_days",
-        "replicas"
+        "backup_retention_days"
        ],
        "type": "object"
       },
