@@ -148,12 +148,28 @@
       },
       "result": {
        "properties": {
-        "ID": {
+        "email": {
+         "type": "string"
+        },
+        "is_delegated": {
+         "type": "boolean"
+        },
+        "is_managed": {
+         "type": "boolean"
+        },
+        "legal_name": {
+         "type": "string"
+        },
+        "uuid": {
          "type": "string"
         }
        },
        "required": [
-        "ID"
+        "uuid",
+        "legal_name",
+        "email",
+        "is_managed",
+        "is_delegated"
        ],
        "type": "object"
       },
