@@ -176,6 +176,26 @@ func (o *Auth) CurrentTenantID() (string, error) {
 	return tenantId, err
 }
 
+func (o *Auth) CurrentTenant(ctx context.Context) (*Tenant, error) {
+	currentTenantId, err := o.CurrentTenantID()
+	if err != nil {
+		return nil, err
+	}
+
+	tenants, err := o.ListTenants(ctx)
+	if err != nil || len(tenants) == 0 {
+		return nil, fmt.Errorf("error when trying to list tenants for selection: %w", err)
+	}
+
+	for _, tenant := range tenants {
+		if tenant.UUID == currentTenantId {
+			return tenant, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unable to find Tenant in Tenant list that matches the current Tenant ID")
+}
+
 func (o *Auth) AccessKeyPair() (accessKeyId, secretAccessKey string) {
 	return o.accessKeyId, o.secretAccessKey
 }

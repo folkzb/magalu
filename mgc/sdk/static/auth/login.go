@@ -90,23 +90,17 @@ about a successful login, use the '--show' flag when logging in`,
 				return nil, result.err
 			}
 
-			tenants, err := auth.ListTenants(ctx)
-			if err != nil || len(tenants) == 0 {
-				return nil, fmt.Errorf("error when trying to list tenants for selection: %w", err)
-			}
-
-			defaultTenant := tenants[0]
-			tenantResult, err := auth.SelectTenant(ctx, defaultTenant.UUID)
+			currentTenant, err := auth.CurrentTenant(ctx)
 			if err != nil {
-				return nil, fmt.Errorf("error when trying to select default tenant: %w", err)
+				return nil, err
 			}
 
 			loginLogger().Infow("sucessfully logged in")
 
-			output = &loginResult{AccessToken: "", SelectedTenant: defaultTenant}
+			output = &loginResult{AccessToken: "", SelectedTenant: currentTenant}
 
 			if parameters.Show {
-				output.AccessToken = tenantResult.AccessToken
+				output.AccessToken = result.value
 			}
 
 			return output, nil
