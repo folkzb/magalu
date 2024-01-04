@@ -259,7 +259,6 @@ mke.openapi:
               - zone
             non-computed:
               - cluster_id
-              - enabled
               - flavor
               - max_replicas
               - min_replicas
@@ -269,6 +268,12 @@ mke.openapi:
               - taints
   missing-crud:
     - info:
+        - post
+        - delete
+    - flavor:
+        - post
+        - delete
+    - version:
         - post
         - delete
   non-json-responses:
