@@ -203,11 +203,11 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 func (u *bigFileUploader) Upload(ctx context.Context) error {
 	bigfileUploaderLogger().Debug("start")
 
-	if reportProgress := progress_report.FromContext(ctx); reportProgress != nil {
-		u.reportChan = make(chan progressReport)
-		defer close(u.reportChan)
-		go progressReportSubroutine(reportProgress, u.reportChan, u.fileInfo)
-	}
+	reportProgress := progress_report.FromContext(ctx)
+	u.reportChan = make(chan progressReport)
+	defer close(u.reportChan)
+
+	go progressReportSubroutine(reportProgress, u.reportChan, u.fileInfo)
 
 	ctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
