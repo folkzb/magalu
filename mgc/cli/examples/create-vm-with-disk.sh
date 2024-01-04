@@ -23,7 +23,7 @@ INSTANCE_NAME="vm-example-1"
 read VM_ID < <($MGC_CLI virtual-machine instances create \
     --image=name:"$IMAGE_NAME" \
     --machine-type=name:"$MACHINE_TYPE_NAME" \
-    --key_name="$SSH_KEY_NAME" \
+    --ssh-key-name="$SSH_KEY_NAME" \
     --name="$INSTANCE_NAME" \
     -o="jsonpath=$.id")
 

@@ -8,12 +8,11 @@ Usage:
   ./cli virtual-machine snapshots list [flags]
 
 Flags:
-      --control.limit integer     Limit (min: 1)
-      --control.offset integer    Offset (min: 0)
-      --control.sort string       Sort (pattern: (^[\w-]+:(asc|desc)(,[\w-]+:(asc|desc))*)?$) (default "created_at:desc")
-      --expand array(string)     Expand: You can get more detailed info about: ['image', 'type']  (default [])
+      --control.limit integer    Limit (min: 1) (default 50)
+      --control.offset integer   Offset (min: 0)
+      --control.sort string      Sort (pattern: ^(^[\w-]+:(asc|desc)(,[\w-]+:(asc|desc))*)?$) (default "created_at:asc")
+      --expand array(string)     Expand: You can get more detailed info about: ['image', 'machine-type']  (default [])
   -h, --help                     help for list
-      --project-type enum        An enumeration. (one of "dbaas", "default", "iamaas", "k8saas" or "mngsvc") (default "default")
   -v, --version                  version for list
 
 Global Flags:

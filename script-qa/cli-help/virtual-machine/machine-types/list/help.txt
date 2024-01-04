@@ -4,8 +4,11 @@ Usage:
   ./cli virtual-machine machine-types list [flags]
 
 Flags:
-  -h, --help      help for list
-  -v, --version   version for list
+      --control.limit integer    Limit (min: 1) (default 50)
+      --control.offset integer   Offset (min: 0)
+      --control.sort string      Sort (pattern: ^(^[\w-]+:(asc|desc)(,[\w-]+:(asc|desc))*)?$) (default "created_at:asc")
+  -h, --help                     help for list
+  -v, --version                  version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

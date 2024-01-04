@@ -83,7 +83,7 @@ or
             name = "cloud-ubuntu-22.04 LTS"
         }
 
-        key_name = "luizalabs-key"
+        ssh_key_name = "luizalabs-key"
 
         availability_zone = "br-ne-1c"
      }

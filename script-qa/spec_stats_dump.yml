@@ -472,11 +472,10 @@ virtual-machine.openapi:
             non-computed:
               - availability_zone
               - image
-              - key_name
               - machine_type
               - name
               - network
-              - project_type
+              - ssh_key_name
               - user_data
     - POST /v1/snapshots:
         - '202':
@@ -493,14 +492,10 @@ virtual-machine.openapi:
         - post
         - delete
   unused-components:
+    - '#/components/schemas/ImageRequestV1'
+    - '#/components/schemas/ImageResponseV1'
     - '#/components/schemas/ValidationError'
   xof-single-item:
-    - paths./v1/instances.get.parameters.project_type.schema
-    - paths./v1/instances.post.parameters.project_type.schema
-    - paths./v1/instances/{id}.delete.parameters.project_type.schema
-    - paths./v1/snapshots.get.parameters.project_type.schema
-    - paths./v1/snapshots/{id}.delete.parameters.project_type.schema
-    - paths./v1/snapshots/{id}/rename.patch.parameters.project_type.schema
+    - components.schemas.ImageRequestV1.status
     - components.schemas.InstanceCreateRequestV1.network
-    - components.schemas.InstanceV1Response.network
     - components.schemas.SnapshotRestoreRequestV1.network

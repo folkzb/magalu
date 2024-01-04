@@ -17290,6 +17290,27 @@
       "name": "list",
       "parameters": {
        "additionalProperties": false,
+       "properties": {
+        "_limit": {
+         "default": 50,
+         "exclusiveMinimum": true,
+         "minimum": 0,
+         "title": "Limit",
+         "type": "integer"
+        },
+        "_offset": {
+         "default": 0,
+         "minimum": 0,
+         "title": "Offset",
+         "type": "integer"
+        },
+        "_sort": {
+         "default": "platform:asc,end_life_at:desc",
+         "pattern": "^(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
+         "title": "Sort",
+         "type": "string"
+        }
+       },
        "type": "object"
       },
       "result": {
@@ -17299,6 +17320,9 @@
           "end_life_at": "2022-06-10T18:33:12Z",
           "end_standard_support_at": "2022-06-10T18:33:12Z",
           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "min_disk": 2,
+          "min_ram": 1,
+          "min_vcpu": 1,
           "name": "ubuntu 22.10",
           "platform": "linux",
           "release_at": "2022-06-10T18:33:12Z",
@@ -17314,6 +17338,9 @@
            "end_life_at": "2022-06-10T18:33:12Z",
            "end_standard_support_at": "2022-06-10T18:33:12Z",
            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "min_disk": 2,
+           "min_ram": 1,
+           "min_vcpu": 1,
            "name": "ubuntu 22.10",
            "platform": "linux",
            "release_at": "2022-06-10T18:33:12Z",
@@ -17322,14 +17349,14 @@
           },
           "properties": {
            "end_life_at": {
-            "example": "2023-10-11T11:33:47Z",
-            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "example": "2022-01-01T00:00:10Z",
+            "nullable": true,
             "title": "End Life At",
             "type": "string"
            },
            "end_standard_support_at": {
-            "example": "2023-10-11T11:33:47Z",
-            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "example": "2022-01-01T00:00:10Z",
+            "nullable": true,
             "title": "End Standard Support At",
             "type": "string"
            },
@@ -17337,22 +17364,34 @@
             "title": "Id",
             "type": "string"
            },
+           "min_disk": {
+            "title": "Min Disk",
+            "type": "integer"
+           },
+           "min_ram": {
+            "title": "Min Ram",
+            "type": "integer"
+           },
+           "min_vcpu": {
+            "title": "Min Vcpu",
+            "type": "integer"
+           },
            "name": {
             "title": "Name",
             "type": "string"
            },
            "platform": {
+            "nullable": true,
             "title": "Platform",
             "type": "string"
            },
            "release_at": {
-            "example": "2023-10-11T11:33:47Z",
-            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "example": "2022-01-01T00:00:10Z",
+            "nullable": true,
             "title": "Release At",
             "type": "string"
            },
            "status": {
-            "description": "An enumeration.",
             "enum": [
              "active",
              "deprecated",
@@ -17362,6 +17401,7 @@
             "type": "string"
            },
            "version": {
+            "nullable": true,
             "title": "Version",
             "type": "string"
            }
@@ -17369,7 +17409,10 @@
           "required": [
            "id",
            "name",
-           "status"
+           "status",
+           "min_vcpu",
+           "min_ram",
+           "min_disk"
           ],
           "title": "ImageResponseExternalV1",
           "type": "object"
@@ -17431,7 +17474,9 @@
        "additionalProperties": false,
        "properties": {
         "availability_zone": {
+         "maxLength": 255,
          "minLength": 1,
+         "nullable": true,
          "title": "Availability Zone",
          "type": "string"
         },
@@ -17443,6 +17488,7 @@
            },
            "properties": {
             "id": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Id",
              "type": "string"
@@ -17460,6 +17506,7 @@
            },
            "properties": {
             "name": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Name",
              "type": "string"
@@ -17475,10 +17522,6 @@
          "title": "Image",
          "type": "object"
         },
-        "key_name": {
-         "title": "Key Name",
-         "type": "string"
-        },
         "machine_type": {
          "anyOf": [
           {
@@ -17487,6 +17530,7 @@
            },
            "properties": {
             "id": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Id",
              "type": "string"
@@ -17504,6 +17548,7 @@
            },
            "properties": {
             "name": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Name",
              "type": "string"
@@ -17520,7 +17565,7 @@
          "type": "object"
         },
         "name": {
-         "maxLength": 225,
+         "maxLength": 255,
          "minLength": 1,
          "title": "Name",
          "type": "string"
@@ -17552,6 +17597,7 @@
              },
              "properties": {
               "id": {
+               "maxLength": 255,
                "minLength": 1,
                "title": "Id",
                "type": "string"
@@ -17569,6 +17615,7 @@
              },
              "properties": {
               "name": {
+               "maxLength": 255,
                "minLength": 1,
                "title": "Name",
                "type": "string"
@@ -17588,33 +17635,25 @@
            "type": "object"
           }
          },
-         "title": "Network",
          "type": "object"
         },
-        "project_type": {
-         "default": "default",
-         "description": "An enumeration.",
-         "enum": [
-          "dbaas",
-          "iamaas",
-          "k8saas",
-          "mngsvc",
-          "default"
-         ],
+        "ssh_key_name": {
+         "title": "Ssh Key Name",
          "type": "string"
         },
         "user_data": {
          "maxLength": 65000,
          "minLength": 1,
+         "nullable": true,
          "title": "User Data",
          "type": "string"
         }
        },
        "required": [
         "image",
-        "key_name",
         "machine_type",
-        "name"
+        "name",
+        "ssh_key_name"
        ],
        "type": "object"
       },
@@ -17681,18 +17720,6 @@
          "format": "uuid",
          "title": "Id",
          "type": "string"
-        },
-        "project_type": {
-         "default": "default",
-         "description": "An enumeration.",
-         "enum": [
-          "dbaas",
-          "iamaas",
-          "k8saas",
-          "mngsvc",
-          "default"
-         ],
-         "type": "string"
         }
        },
        "required": [
@@ -17744,7 +17771,7 @@
        "properties": {
         "expand": {
          "default": [],
-         "description": "You can get more detailed info about: ['image', 'type'] ",
+         "description": "You can get more detailed info about: ['image', 'machine-type', 'network'] ",
          "items": {
           "type": "string"
          },
@@ -17765,11 +17792,14 @@
        "example": {
         "availability_zone": "br-regiao-1a",
         "created_at": "2022-06-10T18:33:12Z",
+        "error": {
+         "message": "An error occurred while creating your instance. Please contact our support for assistance.",
+         "slug": "create_instance.keypair.not_found"
+        },
         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
         "image": {
          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
         },
-        "key_name": "keypair_name_here",
         "machine_type": {
          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
         },
@@ -17781,6 +17811,7 @@
           }
          ]
         },
+        "ssh_key_name": "keypair_name_here",
         "state": "done",
         "status": "completed",
         "updated_at": "2022-06-11T18:33:12Z",
@@ -17793,44 +17824,142 @@
          "type": "string"
         },
         "created_at": {
-         "example": "2023-10-11T11:33:47Z",
-         "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+         "example": "2022-01-01T00:00:10Z",
          "title": "Created At",
          "type": "string"
+        },
+        "error": {
+         "example": {
+          "message": "Unauthorized",
+          "slug": "Unauthorized"
+         },
+         "properties": {
+          "message": {
+           "title": "Message",
+           "type": "string"
+          },
+          "slug": {
+           "title": "Slug",
+           "type": "string"
+          }
+         },
+         "required": [
+          "slug",
+          "message"
+         ],
+         "title": "ErrorMessageV1",
+         "type": "object"
         },
         "id": {
          "title": "Id",
          "type": "string"
         },
         "image": {
-         "properties": {
-          "id": {
-           "title": "Id",
-           "type": "string"
+         "anyOf": [
+          {
+           "additionalProperties": true,
+           "properties": {
+            "id": {
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "ImageInstanceV1Response",
+           "type": "object"
+          },
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "name": "ubuntu",
+            "platform": "linux"
+           },
+           "properties": {
+            "id": {
+             "title": "Id",
+             "type": "string"
+            },
+            "name": {
+             "title": "Name",
+             "type": "string"
+            },
+            "platform": {
+             "nullable": true,
+             "title": "Platform",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id",
+            "name"
+           ],
+           "title": "ImageExtendResponse",
+           "type": "object"
           }
-         },
-         "required": [
-          "id"
          ],
-         "title": "ImageInstanceV1Response",
+         "title": "Image",
          "type": "object"
         },
-        "key_name": {
-         "nullable": true,
-         "title": "Key Name",
-         "type": "string"
-        },
         "machine_type": {
-         "properties": {
-          "id": {
-           "title": "Id",
-           "type": "string"
+         "anyOf": [
+          {
+           "additionalProperties": true,
+           "properties": {
+            "id": {
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "InstanceTypeForInstanceV1Response",
+           "type": "object"
+          },
+          {
+           "example": {
+            "disk": 10,
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "name": "abc.small",
+            "ram": 2,
+            "vcpus": 2
+           },
+           "properties": {
+            "disk": {
+             "title": "Disk",
+             "type": "integer"
+            },
+            "id": {
+             "title": "Id",
+             "type": "string"
+            },
+            "name": {
+             "title": "Name",
+             "type": "string"
+            },
+            "ram": {
+             "title": "Ram",
+             "type": "integer"
+            },
+            "vcpus": {
+             "title": "Vcpus",
+             "type": "integer"
+            }
+           },
+           "required": [
+            "id",
+            "name",
+            "vcpus",
+            "ram",
+            "disk"
+           ],
+           "title": "InstanceTypesExtendResponse",
+           "type": "object"
           }
-         },
-         "required": [
-          "id"
          ],
-         "title": "InstanceTypeForInstanceV1Response",
+         "title": "Machine Type",
          "type": "object"
         },
         "name": {
@@ -17839,31 +17968,108 @@
          "type": "string"
         },
         "network": {
-         "nullable": true,
-         "properties": {
-          "ports": {
-           "items": {
-            "properties": {
-             "id": {
-              "title": "Id",
-              "type": "string"
-             }
-            },
-            "required": [
-             "id"
-            ],
-            "title": "PortID",
-            "type": "object"
+         "anyOf": [
+          {
+           "properties": {
+            "ports": {
+             "items": {
+              "properties": {
+               "id": {
+                "title": "Id",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id"
+              ],
+              "title": "PortID",
+              "type": "object"
+             },
+             "title": "Ports",
+             "type": "array"
+            }
            },
-           "title": "Ports",
-           "type": "array"
+           "required": [
+            "ports"
+           ],
+           "title": "NetworkPortsV1",
+           "type": "object"
+          },
+          {
+           "properties": {
+            "ports": {
+             "items": {
+              "properties": {
+               "id": {
+                "title": "Id",
+                "type": "string"
+               },
+               "ipAddresses": {
+                "properties": {
+                 "privateIpAddress": {
+                  "title": "Privateipaddress",
+                  "type": "string"
+                 },
+                 "publicIpAddress": {
+                  "title": "Publicipaddress",
+                  "type": "string"
+                 }
+                },
+                "required": [
+                 "publicIpAddress",
+                 "privateIpAddress"
+                ],
+                "title": "IpAddressExpand",
+                "type": "object"
+               },
+               "name": {
+                "title": "Name",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id",
+               "name",
+               "ipAddresses"
+              ],
+              "title": "PortV1Expand",
+              "type": "object"
+             },
+             "nullable": true,
+             "title": "Ports",
+             "type": "array"
+            },
+            "vpc": {
+             "properties": {
+              "id": {
+               "title": "Id",
+               "type": "string"
+              },
+              "name": {
+               "title": "Name",
+               "type": "string"
+              }
+             },
+             "required": [
+              "id",
+              "name"
+             ],
+             "title": "VpcV1Expand",
+             "type": "object"
+            }
+           },
+           "title": "NetworkPortsV1Expand",
+           "type": "object"
           }
-         },
-         "required": [
-          "ports"
          ],
+         "nullable": true,
          "title": "Network",
          "type": "object"
+        },
+        "ssh_key_name": {
+         "nullable": true,
+         "title": "Ssh Key Name",
+         "type": "string"
         },
         "state": {
          "title": "State",
@@ -17874,9 +18080,8 @@
          "type": "string"
         },
         "updated_at": {
-         "example": "2023-10-11T11:33:47Z",
+         "example": "2022-01-01T00:00:10Z",
          "nullable": true,
-         "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
          "title": "Updated At",
          "type": "string"
         },
@@ -17936,41 +18141,32 @@
        "additionalProperties": false,
        "properties": {
         "_limit": {
-         "minimum": 1,
-         "title": " Limit",
+         "default": 50,
+         "exclusiveMinimum": true,
+         "minimum": 0,
+         "title": "Limit",
          "type": "integer"
         },
         "_offset": {
+         "default": 0,
          "minimum": 0,
-         "title": " Offset",
+         "title": "Offset",
          "type": "integer"
         },
         "_sort": {
-         "default": "created_at:desc",
-         "pattern": "(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
-         "title": " Sort",
+         "default": "created_at:asc",
+         "pattern": "^(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
+         "title": "Sort",
          "type": "string"
         },
         "expand": {
          "default": [],
-         "description": "You can get more detailed info about: ['image', 'type'] ",
+         "description": "You can get more detailed info about: ['image', 'machine-type', 'network'] ",
          "items": {
           "type": "string"
          },
          "title": "Expand",
          "type": "array"
-        },
-        "project_type": {
-         "default": "default",
-         "description": "An enumeration.",
-         "enum": [
-          "dbaas",
-          "iamaas",
-          "k8saas",
-          "mngsvc",
-          "default"
-         ],
-         "type": "string"
         }
        },
        "type": "object"
@@ -17981,6 +18177,10 @@
          {
           "availability_zone": "br-regiao-1a",
           "created_at": "2022-06-10T18:33:12Z",
+          "error": {
+           "message": "An error occurred while creating your instance. Please contact our support for assistance.",
+           "slug": "create_instance.keypair.not_found"
+          },
           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
           "image": {
            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -18010,11 +18210,14 @@
           "example": {
            "availability_zone": "br-regiao-1a",
            "created_at": "2022-06-10T18:33:12Z",
+           "error": {
+            "message": "An error occurred while creating your instance. Please contact our support for assistance.",
+            "slug": "create_instance.keypair.not_found"
+           },
            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
            "image": {
             "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
            },
-           "key_name": "keypair_name_here",
            "machine_type": {
             "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
            },
@@ -18026,6 +18229,7 @@
              }
             ]
            },
+           "ssh_key_name": "keypair_name_here",
            "state": "done",
            "status": "completed",
            "updated_at": "2022-06-11T18:33:12Z",
@@ -18038,44 +18242,142 @@
             "type": "string"
            },
            "created_at": {
-            "example": "2023-10-11T11:33:47Z",
-            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "example": "2022-01-01T00:00:10Z",
             "title": "Created At",
             "type": "string"
+           },
+           "error": {
+            "example": {
+             "message": "Unauthorized",
+             "slug": "Unauthorized"
+            },
+            "properties": {
+             "message": {
+              "title": "Message",
+              "type": "string"
+             },
+             "slug": {
+              "title": "Slug",
+              "type": "string"
+             }
+            },
+            "required": [
+             "slug",
+             "message"
+            ],
+            "title": "ErrorMessageV1",
+            "type": "object"
            },
            "id": {
             "title": "Id",
             "type": "string"
            },
            "image": {
-            "properties": {
-             "id": {
-              "title": "Id",
-              "type": "string"
+            "anyOf": [
+             {
+              "additionalProperties": true,
+              "properties": {
+               "id": {
+                "title": "Id",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id"
+              ],
+              "title": "ImageInstanceV1Response",
+              "type": "object"
+             },
+             {
+              "example": {
+               "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+               "name": "ubuntu",
+               "platform": "linux"
+              },
+              "properties": {
+               "id": {
+                "title": "Id",
+                "type": "string"
+               },
+               "name": {
+                "title": "Name",
+                "type": "string"
+               },
+               "platform": {
+                "nullable": true,
+                "title": "Platform",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id",
+               "name"
+              ],
+              "title": "ImageExtendResponse",
+              "type": "object"
              }
-            },
-            "required": [
-             "id"
             ],
-            "title": "ImageInstanceV1Response",
+            "title": "Image",
             "type": "object"
            },
-           "key_name": {
-            "nullable": true,
-            "title": "Key Name",
-            "type": "string"
-           },
            "machine_type": {
-            "properties": {
-             "id": {
-              "title": "Id",
-              "type": "string"
+            "anyOf": [
+             {
+              "additionalProperties": true,
+              "properties": {
+               "id": {
+                "title": "Id",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id"
+              ],
+              "title": "InstanceTypeForInstanceV1Response",
+              "type": "object"
+             },
+             {
+              "example": {
+               "disk": 10,
+               "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+               "name": "abc.small",
+               "ram": 2,
+               "vcpus": 2
+              },
+              "properties": {
+               "disk": {
+                "title": "Disk",
+                "type": "integer"
+               },
+               "id": {
+                "title": "Id",
+                "type": "string"
+               },
+               "name": {
+                "title": "Name",
+                "type": "string"
+               },
+               "ram": {
+                "title": "Ram",
+                "type": "integer"
+               },
+               "vcpus": {
+                "title": "Vcpus",
+                "type": "integer"
+               }
+              },
+              "required": [
+               "id",
+               "name",
+               "vcpus",
+               "ram",
+               "disk"
+              ],
+              "title": "InstanceTypesExtendResponse",
+              "type": "object"
              }
-            },
-            "required": [
-             "id"
             ],
-            "title": "InstanceTypeForInstanceV1Response",
+            "title": "Machine Type",
             "type": "object"
            },
            "name": {
@@ -18084,31 +18386,108 @@
             "type": "string"
            },
            "network": {
-            "nullable": true,
-            "properties": {
-             "ports": {
-              "items": {
-               "properties": {
-                "id": {
-                 "title": "Id",
-                 "type": "string"
-                }
-               },
-               "required": [
-                "id"
-               ],
-               "title": "PortID",
-               "type": "object"
+            "anyOf": [
+             {
+              "properties": {
+               "ports": {
+                "items": {
+                 "properties": {
+                  "id": {
+                   "title": "Id",
+                   "type": "string"
+                  }
+                 },
+                 "required": [
+                  "id"
+                 ],
+                 "title": "PortID",
+                 "type": "object"
+                },
+                "title": "Ports",
+                "type": "array"
+               }
               },
-              "title": "Ports",
-              "type": "array"
+              "required": [
+               "ports"
+              ],
+              "title": "NetworkPortsV1",
+              "type": "object"
+             },
+             {
+              "properties": {
+               "ports": {
+                "items": {
+                 "properties": {
+                  "id": {
+                   "title": "Id",
+                   "type": "string"
+                  },
+                  "ipAddresses": {
+                   "properties": {
+                    "privateIpAddress": {
+                     "title": "Privateipaddress",
+                     "type": "string"
+                    },
+                    "publicIpAddress": {
+                     "title": "Publicipaddress",
+                     "type": "string"
+                    }
+                   },
+                   "required": [
+                    "publicIpAddress",
+                    "privateIpAddress"
+                   ],
+                   "title": "IpAddressExpand",
+                   "type": "object"
+                  },
+                  "name": {
+                   "title": "Name",
+                   "type": "string"
+                  }
+                 },
+                 "required": [
+                  "id",
+                  "name",
+                  "ipAddresses"
+                 ],
+                 "title": "PortV1Expand",
+                 "type": "object"
+                },
+                "nullable": true,
+                "title": "Ports",
+                "type": "array"
+               },
+               "vpc": {
+                "properties": {
+                 "id": {
+                  "title": "Id",
+                  "type": "string"
+                 },
+                 "name": {
+                  "title": "Name",
+                  "type": "string"
+                 }
+                },
+                "required": [
+                 "id",
+                 "name"
+                ],
+                "title": "VpcV1Expand",
+                "type": "object"
+               }
+              },
+              "title": "NetworkPortsV1Expand",
+              "type": "object"
              }
-            },
-            "required": [
-             "ports"
             ],
+            "nullable": true,
             "title": "Network",
             "type": "object"
+           },
+           "ssh_key_name": {
+            "nullable": true,
+            "title": "Ssh Key Name",
+            "type": "string"
            },
            "state": {
             "title": "State",
@@ -18119,9 +18498,8 @@
             "type": "string"
            },
            "updated_at": {
-            "example": "2023-10-11T11:33:47Z",
+            "example": "2022-01-01T00:00:10Z",
             "nullable": true,
-            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
             "title": "Updated At",
             "type": "string"
            },
@@ -18248,7 +18626,7 @@
          "type": "string"
         },
         "name": {
-         "maxLength": 225,
+         "maxLength": 255,
          "minLength": 1,
          "title": "Name",
          "type": "string"
@@ -18303,7 +18681,7 @@
        "additionalProperties": false,
        "properties": {
         "id": {
-         "format": "uuid4",
+         "format": "uuid",
          "title": "Id",
          "type": "string"
         },
@@ -18315,6 +18693,7 @@
            },
            "properties": {
             "id": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Id",
              "type": "string"
@@ -18332,6 +18711,7 @@
            },
            "properties": {
             "name": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Name",
              "type": "string"
@@ -18562,6 +18942,27 @@
       "name": "list",
       "parameters": {
        "additionalProperties": false,
+       "properties": {
+        "_limit": {
+         "default": 50,
+         "exclusiveMinimum": true,
+         "minimum": 0,
+         "title": "Limit",
+         "type": "integer"
+        },
+        "_offset": {
+         "default": 0,
+         "minimum": 0,
+         "title": "Offset",
+         "type": "integer"
+        },
+        "_sort": {
+         "default": "created_at:asc",
+         "pattern": "^(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
+         "title": "Sort",
+         "type": "string"
+        }
+       },
        "type": "object"
       },
       "result": {
@@ -18689,6 +19090,7 @@
        "additionalProperties": false,
        "properties": {
         "name": {
+         "maxLength": 255,
          "minLength": 1,
          "title": "Name",
          "type": "string"
@@ -18701,6 +19103,7 @@
            },
            "properties": {
             "id": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Id",
              "type": "string"
@@ -18718,6 +19121,7 @@
            },
            "properties": {
             "name": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Name",
              "type": "string"
@@ -18798,18 +19202,6 @@
          "format": "uuid",
          "title": "Id",
          "type": "string"
-        },
-        "project_type": {
-         "default": "default",
-         "description": "An enumeration.",
-         "enum": [
-          "dbaas",
-          "iamaas",
-          "k8saas",
-          "mngsvc",
-          "default"
-         ],
-         "type": "string"
         }
        },
        "required": [
@@ -18853,6 +19245,261 @@
        },
        "type": "object"
       },
+      "description": "Get an snapshot details for the current tenant which is logged in.\n\n#### Notes\n- You can use the snapshots list command to retrieve all snapshots,\nso you can get the id of the snapshot that you want to get details.\n\n- You can use the **expand** argument to get more details from the inner objects\nlike image or type.",
+      "isInternal": false,
+      "name": "get",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "expand": {
+         "default": [],
+         "description": "You can get more detailed info about: ['image', 'machine-type'] ",
+         "items": {
+          "type": "string"
+         },
+         "title": "Expand",
+         "type": "array"
+        },
+        "id": {
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "created_at": "2022-06-10T18:33:12Z",
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        "instance": {
+         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+         "image": {
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+         },
+         "machine_type": {
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+         }
+        },
+        "name": "snapshot name",
+        "size": 1000,
+        "state": "available",
+        "status": "completed",
+        "updated_at": "2022-06-11T18:33:12Z"
+       },
+       "properties": {
+        "created_at": {
+         "example": "2022-01-01T00:00:10Z",
+         "title": "Created At",
+         "type": "string"
+        },
+        "id": {
+         "title": "Id",
+         "type": "string"
+        },
+        "instance": {
+         "example": {
+          "instance": {
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "image": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "machine_type": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           }
+          }
+         },
+         "properties": {
+          "id": {
+           "title": "Id",
+           "type": "string"
+          },
+          "image": {
+           "anyOf": [
+            {
+             "additionalProperties": true,
+             "properties": {
+              "id": {
+               "title": "Id",
+               "type": "string"
+              }
+             },
+             "required": [
+              "id"
+             ],
+             "title": "ImageInstanceV1Response",
+             "type": "object"
+            },
+            {
+             "example": {
+              "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+              "name": "ubuntu",
+              "platform": "linux"
+             },
+             "properties": {
+              "id": {
+               "title": "Id",
+               "type": "string"
+              },
+              "name": {
+               "title": "Name",
+               "type": "string"
+              },
+              "platform": {
+               "nullable": true,
+               "title": "Platform",
+               "type": "string"
+              }
+             },
+             "required": [
+              "id",
+              "name"
+             ],
+             "title": "ImageExtendResponse",
+             "type": "object"
+            }
+           ],
+           "title": "Image",
+           "type": "object"
+          },
+          "machine_type": {
+           "anyOf": [
+            {
+             "additionalProperties": true,
+             "properties": {
+              "id": {
+               "title": "Id",
+               "type": "string"
+              }
+             },
+             "required": [
+              "id"
+             ],
+             "title": "InstanceTypeForInstanceV1Response",
+             "type": "object"
+            },
+            {
+             "example": {
+              "disk": 10,
+              "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+              "name": "abc.small",
+              "ram": 2,
+              "vcpus": 2
+             },
+             "properties": {
+              "disk": {
+               "title": "Disk",
+               "type": "integer"
+              },
+              "id": {
+               "title": "Id",
+               "type": "string"
+              },
+              "name": {
+               "title": "Name",
+               "type": "string"
+              },
+              "ram": {
+               "title": "Ram",
+               "type": "integer"
+              },
+              "vcpus": {
+               "title": "Vcpus",
+               "type": "integer"
+              }
+             },
+             "required": [
+              "id",
+              "name",
+              "vcpus",
+              "ram",
+              "disk"
+             ],
+             "title": "InstanceTypesExtendResponse",
+             "type": "object"
+            }
+           ],
+           "title": "Machine Type",
+           "type": "object"
+          }
+         },
+         "required": [
+          "id",
+          "image",
+          "machine_type"
+         ],
+         "title": "InstanceResponseSnapshotV1",
+         "type": "object"
+        },
+        "name": {
+         "nullable": true,
+         "title": "Name",
+         "type": "string"
+        },
+        "size": {
+         "title": "Size",
+         "type": "integer"
+        },
+        "state": {
+         "title": "State",
+         "type": "string"
+        },
+        "status": {
+         "title": "Status",
+         "type": "string"
+        },
+        "updated_at": {
+         "example": "2022-01-01T00:00:10Z",
+         "nullable": true,
+         "title": "Updated At",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "status",
+        "state",
+        "created_at",
+        "size",
+        "instance"
+       ],
+       "title": "SnapshotResponseV1",
+       "type": "object"
+      },
+      "version": "0.1.0"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
       "description": "List all snapshots in the current tenant which is logged in.\n\n#### Notes\n- You can use the **expand** argument to get more details from the inner objects\nlike image and machine types.",
       "isInternal": false,
       "name": "list",
@@ -18860,41 +19507,32 @@
        "additionalProperties": false,
        "properties": {
         "_limit": {
-         "minimum": 1,
-         "title": " Limit",
+         "default": 50,
+         "exclusiveMinimum": true,
+         "minimum": 0,
+         "title": "Limit",
          "type": "integer"
         },
         "_offset": {
+         "default": 0,
          "minimum": 0,
-         "title": " Offset",
+         "title": "Offset",
          "type": "integer"
         },
         "_sort": {
-         "default": "created_at:desc",
-         "pattern": "(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
-         "title": " Sort",
+         "default": "created_at:asc",
+         "pattern": "^(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
+         "title": "Sort",
          "type": "string"
         },
         "expand": {
          "default": [],
-         "description": "You can get more detailed info about: ['image', 'type'] ",
+         "description": "You can get more detailed info about: ['image', 'machine-type'] ",
          "items": {
           "type": "string"
          },
          "title": "Expand",
          "type": "array"
-        },
-        "project_type": {
-         "default": "default",
-         "description": "An enumeration.",
-         "enum": [
-          "dbaas",
-          "iamaas",
-          "k8saas",
-          "mngsvc",
-          "default"
-         ],
-         "type": "string"
         }
        },
        "type": "object"
@@ -18945,8 +19583,7 @@
           },
           "properties": {
            "created_at": {
-            "example": "2023-10-11T11:33:47Z",
-            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
+            "example": "2022-01-01T00:00:10Z",
             "title": "Created At",
             "type": "string"
            },
@@ -18972,29 +19609,111 @@
               "type": "string"
              },
              "image": {
-              "properties": {
-               "id": {
-                "title": "Id",
-                "type": "string"
+              "anyOf": [
+               {
+                "additionalProperties": true,
+                "properties": {
+                 "id": {
+                  "title": "Id",
+                  "type": "string"
+                 }
+                },
+                "required": [
+                 "id"
+                ],
+                "title": "ImageInstanceV1Response",
+                "type": "object"
+               },
+               {
+                "example": {
+                 "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                 "name": "ubuntu",
+                 "platform": "linux"
+                },
+                "properties": {
+                 "id": {
+                  "title": "Id",
+                  "type": "string"
+                 },
+                 "name": {
+                  "title": "Name",
+                  "type": "string"
+                 },
+                 "platform": {
+                  "nullable": true,
+                  "title": "Platform",
+                  "type": "string"
+                 }
+                },
+                "required": [
+                 "id",
+                 "name"
+                ],
+                "title": "ImageExtendResponse",
+                "type": "object"
                }
-              },
-              "required": [
-               "id"
               ],
-              "title": "ImageInstanceV1Response",
+              "title": "Image",
               "type": "object"
              },
              "machine_type": {
-              "properties": {
-               "id": {
-                "title": "Id",
-                "type": "string"
+              "anyOf": [
+               {
+                "additionalProperties": true,
+                "properties": {
+                 "id": {
+                  "title": "Id",
+                  "type": "string"
+                 }
+                },
+                "required": [
+                 "id"
+                ],
+                "title": "InstanceTypeForInstanceV1Response",
+                "type": "object"
+               },
+               {
+                "example": {
+                 "disk": 10,
+                 "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                 "name": "abc.small",
+                 "ram": 2,
+                 "vcpus": 2
+                },
+                "properties": {
+                 "disk": {
+                  "title": "Disk",
+                  "type": "integer"
+                 },
+                 "id": {
+                  "title": "Id",
+                  "type": "string"
+                 },
+                 "name": {
+                  "title": "Name",
+                  "type": "string"
+                 },
+                 "ram": {
+                  "title": "Ram",
+                  "type": "integer"
+                 },
+                 "vcpus": {
+                  "title": "Vcpus",
+                  "type": "integer"
+                 }
+                },
+                "required": [
+                 "id",
+                 "name",
+                 "vcpus",
+                 "ram",
+                 "disk"
+                ],
+                "title": "InstanceTypesExtendResponse",
+                "type": "object"
                }
-              },
-              "required": [
-               "id"
               ],
-              "title": "InstanceTypeForInstanceV1Response",
+              "title": "Machine Type",
               "type": "object"
              }
             },
@@ -19024,9 +19743,8 @@
             "type": "string"
            },
            "updated_at": {
-            "example": "2023-10-11T11:33:47Z",
+            "example": "2022-01-01T00:00:10Z",
             "nullable": true,
-            "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$",
             "title": "Updated At",
             "type": "string"
            }
@@ -19095,21 +19813,9 @@
          "type": "string"
         },
         "name": {
-         "maxLength": 225,
+         "maxLength": 255,
          "minLength": 1,
          "title": "Name",
-         "type": "string"
-        },
-        "project_type": {
-         "default": "default",
-         "description": "An enumeration.",
-         "enum": [
-          "dbaas",
-          "iamaas",
-          "k8saas",
-          "mngsvc",
-          "default"
-         ],
          "type": "string"
         }
        },
@@ -19162,16 +19868,14 @@
        "additionalProperties": false,
        "properties": {
         "availability_zone": {
+         "maxLength": 255,
          "minLength": 1,
+         "nullable": true,
          "title": "Availability Zone",
          "type": "string"
         },
         "id": {
          "title": "Id",
-         "type": "string"
-        },
-        "key_name": {
-         "title": "Key Name",
          "type": "string"
         },
         "machine_type": {
@@ -19182,6 +19886,7 @@
            },
            "properties": {
             "id": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Id",
              "type": "string"
@@ -19199,6 +19904,7 @@
            },
            "properties": {
             "name": {
+             "maxLength": 255,
              "minLength": 1,
              "title": "Name",
              "type": "string"
@@ -19215,7 +19921,7 @@
          "type": "object"
         },
         "name": {
-         "maxLength": 225,
+         "maxLength": 255,
          "minLength": 1,
          "title": "Name",
          "type": "string"
@@ -19247,6 +19953,7 @@
              },
              "properties": {
               "id": {
+               "maxLength": 255,
                "minLength": 1,
                "title": "Id",
                "type": "string"
@@ -19264,6 +19971,7 @@
              },
              "properties": {
               "name": {
+               "maxLength": 255,
                "minLength": 1,
                "title": "Name",
                "type": "string"
@@ -19283,21 +19991,25 @@
            "type": "object"
           }
          },
-         "title": "Network",
          "type": "object"
+        },
+        "ssh_key_name": {
+         "title": "Ssh Key Name",
+         "type": "string"
         },
         "user_data": {
          "maxLength": 65000,
          "minLength": 1,
+         "nullable": true,
          "title": "User Data",
          "type": "string"
         }
        },
        "required": [
         "id",
-        "key_name",
         "machine_type",
-        "name"
+        "name",
+        "ssh_key_name"
        ],
        "type": "object"
       },

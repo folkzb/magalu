@@ -19,7 +19,7 @@ VPC_ID="ced3ed0a-044d-466c-9e9a-93fc8a78dba0"
 
 read VM_ID < <($MGC_CLI virtual-machine-v1 instances create \
     --image "{ \"id\": \"${IMAGE_ID}\"}" \
-    --key-name $KEY_NAME\
+    --ssh-key-name $KEY_NAME\
     --machine-type "{ \"id\": \"${MACHINE_TYPE_ID}\"}" \
     --name $NAME \
     --network "{ \"associate_public_ip\": true, \"interfaces\": [], \"vpc\": { \"id\": \"${VPC_ID}\" }}" \

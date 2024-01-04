@@ -618,8 +618,7 @@ def traverse_all_subschemas(
     for pn, p_or_ref in schema.get("properties", {}).items():
         traverse_all_subschemas(path + "." + pn, p_or_ref, visit, resolve)
 
-    if schema.get("additionalProperties"):
-        s = schema["additionalProperties"]
+    if (s := schema.get("additionalProperties")) is dict:
         traverse_all_subschemas(path + "|additional_properties|", s, visit, resolve)
 
     xOfs = schema.get("oneOf", []) + schema.get("anyOf", []) + schema.get("allOf", [])

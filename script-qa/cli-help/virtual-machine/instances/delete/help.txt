@@ -4,11 +4,10 @@ Usage:
   ./cli virtual-machine instances delete [id] [flags]
 
 Flags:
-      --delete-public-ip    Delete Public Ip
-  -h, --help                help for delete
-      --id uuid             Id (required)
-      --project-type enum   An enumeration. (one of "dbaas", "default", "iamaas", "k8saas" or "mngsvc") (default "default")
-  -v, --version             version for delete
+      --delete-public-ip   Delete Public Ip
+  -h, --help               help for delete
+      --id uuid            Id (required)
+  -v, --version            version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
