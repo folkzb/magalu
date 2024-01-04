@@ -16642,7 +16642,7 @@
        "properties": {
         "dst": {
          "description": "Path of the object to be deleted",
-         "example": "s3://bucket1/file1",
+         "example": "s3://bucket1/file.txt",
          "format": "uri",
          "type": "string"
         }
@@ -16804,13 +16804,13 @@
        "properties": {
         "dst": {
          "description": "Name of the file to be saved",
-         "example": "file1.txt",
+         "example": "file.txt",
          "type": "string",
          "x-contentMediaType": "application/octet-stream"
         },
         "src": {
          "description": "Path of the object to be downloaded",
-         "example": "s3://bucket1/file1",
+         "example": "s3://bucket1/file.txt",
          "format": "uri",
          "type": "string"
         }

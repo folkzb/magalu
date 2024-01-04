@@ -14,8 +14,8 @@ import (
 )
 
 type DownloadObjectParams struct {
-	Source      mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of the object to be downloaded,example=s3://bucket1/file1" mgc:"positional"`
-	Destination mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved,example=file1.txt" mgc:"positional"`
+	Source      mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of the object to be downloaded,example=s3://bucket1/file.txt" mgc:"positional"`
+	Destination mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved,example=file.txt" mgc:"positional"`
 }
 
 func NewDownloadRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI) (*http.Request, error) {

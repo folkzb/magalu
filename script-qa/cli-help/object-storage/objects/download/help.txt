@@ -4,7 +4,7 @@ Usage:
   ./cli object-storage objects download [src] [dst] [flags]
 
 Examples:
-  ./cli object-storage objects download --dst="file1.txt" --src="s3://bucket1/file1"
+  ./cli object-storage objects download --dst="file.txt" --src="s3://bucket1/file.txt"
 
 Flags:
       --dst file   Name of the file to be saved

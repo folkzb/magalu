@@ -27,7 +27,7 @@ func deleteLogger() *zap.SugaredLogger {
 }
 
 type DeleteObjectParams struct {
-	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file1" mgc:"positional"`
+	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file.txt" mgc:"positional"`
 }
 
 type DeleteAllObjectsParams struct {
