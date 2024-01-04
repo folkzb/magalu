@@ -17064,6 +17064,7 @@
         },
         "src": {
          "description": "Source file path to be uploaded",
+         "example": "./file.txt",
          "type": "string",
          "x-contentMediaType": "application/octet-stream"
         }
