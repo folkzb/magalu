@@ -28,7 +28,11 @@ func newCurrent() core.Executor {
 				return nil, fmt.Errorf("unable to get auth from context")
 			}
 
-			id := auth.CurrentTenantID()
+			id, err := auth.CurrentTenantID()
+			if err != nil {
+				return nil, err
+			}
+
 			if id == "" {
 				return nil, fmt.Errorf("current tenant ID is empty. Try logging in at least once or run the 'auth tenant select' operation")
 			}

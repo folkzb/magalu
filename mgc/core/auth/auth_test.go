@@ -28,16 +28,14 @@ var dummyConfig Config = Config{
 }
 
 var dummyConfigResult *ConfigResult = &ConfigResult{
-	AccessToken:     "access-token",
-	RefreshToken:    "refresh-token",
-	CurrentTenantID: "tenant-id",
-	CurrentEnv:      "test",
+	AccessToken:  "access-token",
+	RefreshToken: "refresh-token",
+	CurrentEnv:   "test",
 }
 
 var dummyConfigResultYaml = []byte(`---
 access_token: "access-token"
 refresh_token: "refresh-token"
-current_tenant_id: "tenant-id"
 current_environment: "test"
 `)
 
@@ -237,9 +235,6 @@ func newAuth(name string, envAccessToken string, expectedConfig *ConfigResult, p
 				return fmt.Errorf("expected auth.refreshToken == '', found: %v", auth.refreshToken)
 			}
 
-			if auth.currentTenantId != expectedConfig.CurrentTenantID {
-				return fmt.Errorf("expected auth.currentTenantId == '', found: %v", auth.currentTenantId)
-			}
 			return nil
 		},
 	}
@@ -262,7 +257,6 @@ func TestAuthManager(t *testing.T) {
 					Data: []byte(`access_key_id: ""
 access_token: access-token
 current_environment: ""
-current_tenant_id: ""
 refresh_token: refresh-token
 secret_access_key: ""
 `),
@@ -282,7 +276,6 @@ secret_access_key: ""
 					Data: []byte(`access_key_id: ""
 access_token: access-token
 current_environment: ""
-current_tenant_id: ""
 refresh_token: refresh-token
 secret_access_key: ""
 `),
@@ -301,7 +294,6 @@ secret_access_key: ""
 					Data: []byte(`access_key_id: MyAccessKeyIdTest
 access_token: ""
 current_environment: ""
-current_tenant_id: ""
 refresh_token: ""
 secret_access_key: MySecretAccessKeyTeste
 `),
@@ -320,7 +312,6 @@ secret_access_key: MySecretAccessKeyTeste
 					Data: []byte(`access_key_id: MyAccessKeyIdTest
 access_token: ""
 current_environment: ""
-current_tenant_id: ""
 refresh_token: ""
 secret_access_key: MySecretAccessKeyTeste
 `),
@@ -383,7 +374,6 @@ secret_access_key: MySecretAccessKeyTeste
 					Data: []byte(`access_key_id: ""
 access_token: ac-token
 current_environment: ""
-current_tenant_id: ""
 refresh_token: rf-token
 secret_access_key: ""
 `),
@@ -412,7 +402,6 @@ secret_access_key: ""
 					Data: []byte(`access_key_id: ""
 access_token: ac-token
 current_environment: ""
-current_tenant_id: ""
 refresh_token: rf-token
 secret_access_key: ""
 `),
@@ -574,7 +563,6 @@ secret_access_key: ""
 					Data: []byte(`access_key_id: ""
 access_token: ac-token
 current_environment: ""
-current_tenant_id: tenant-id
 refresh_token: rf-token
 secret_access_key: ""
 `),
@@ -671,7 +659,6 @@ secret_access_key: ""
 					Data: []byte(`access_key_id: ""
 access_token: abc
 current_environment: ""
-current_tenant_id: qwe123
 refresh_token: def
 secret_access_key: ""
 `),
@@ -727,9 +714,8 @@ secret_access_key: ""
 			}),
 		newAuth("Not-empty auth file with env var", "env-access-token",
 			&ConfigResult{
-				AccessToken:     "env-access-token",
-				RefreshToken:    dummyConfigResult.RefreshToken,
-				CurrentTenantID: dummyConfigResult.CurrentTenantID,
+				AccessToken:  "env-access-token",
+				RefreshToken: dummyConfigResult.RefreshToken,
 			},
 			[]fs_test_helper.TestFsEntry{
 				{

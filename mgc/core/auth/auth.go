@@ -15,6 +15,7 @@ import (
 	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/profile_manager"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/invopop/yaml"
 	"golang.org/x/sync/singleflight"
 )
@@ -43,7 +44,6 @@ type validationResult struct {
 type ConfigResult struct {
 	AccessToken     string `json:"access_token"`
 	RefreshToken    string `json:"refresh_token"`
-	CurrentTenantID string `json:"current_tenant_id"`
 	AccessKeyId     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
 	CurrentEnv      string `json:"current_environment"` // ignored - used just for compatibility
@@ -67,7 +67,6 @@ type Auth struct {
 	config          Config
 	accessToken     string
 	refreshToken    string
-	currentTenantId string
 	accessKeyId     string
 	secretAccessKey string
 	codeVerifier    *codeVerifier
@@ -156,8 +155,25 @@ func (o *Auth) TenantsSelectUrl() string {
 	return o.config.TenantsSelectUrl
 }
 
-func (o *Auth) CurrentTenantID() string {
-	return o.currentTenantId
+func (o *Auth) CurrentTenantID() (string, error) {
+	tokenClaims := jwt.MapClaims{}
+	tokenParser := jwt.NewParser()
+
+	_, _, err := tokenParser.ParseUnverified(o.accessToken, tokenClaims)
+	if err != nil {
+		return "", err
+	}
+
+	tenant, ok := tokenClaims["tenant"]
+	if !ok {
+		return "", err
+	}
+	tenantId, ok := tenant.(string)
+	if !ok {
+		return "", fmt.Errorf("unable cast tenant information from token into string. Data: %v", tenant)
+	}
+	tenantId = strings.TrimPrefix(tenantId, "GENPUB.")
+	return tenantId, err
 }
 
 func (o *Auth) AccessKeyPair() (accessKeyId, secretAccessKey string) {
@@ -179,16 +195,10 @@ func (o *Auth) SetAccessKey(id string, key string) error {
 	return o.writeCurrentConfig()
 }
 
-func (o *Auth) SetCurrentTenantID(id string) error {
-	o.currentTenantId = id
-	return o.writeCurrentConfig()
-}
-
 func (o *Auth) writeCurrentConfig() error {
 	authResult := &ConfigResult{}
 	authResult.AccessToken = o.accessToken
 	authResult.RefreshToken = o.refreshToken
-	authResult.CurrentTenantID = o.currentTenantId
 	authResult.AccessKeyId = o.accessKeyId
 	authResult.SecretAccessKey = o.secretAccessKey
 	return o.writeConfigFile(authResult)
@@ -199,7 +209,6 @@ func (o *Auth) InitTokensFromFile() {
 	if authResult != nil {
 		o.accessToken = authResult.AccessToken
 		o.refreshToken = authResult.RefreshToken
-		o.currentTenantId = authResult.CurrentTenantID
 		o.accessKeyId = authResult.AccessKeyId
 		o.secretAccessKey = authResult.SecretAccessKey
 	}
@@ -487,10 +496,6 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TenantAuth, error)
 		RefreshToken: payload.RefreshToken,
 	})
 	if err != nil {
-		return nil, err
-	}
-
-	if err := o.SetCurrentTenantID(id); err != nil {
 		return nil, err
 	}
 
