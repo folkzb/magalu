@@ -257,9 +257,7 @@ func (o *Auth) CodeChallengeToURL() (*url.URL, error) {
 	query.Add("code_challenge", o.codeVerifier.CodeChallengeS256())
 	query.Add("code_challenge_method", "S256")
 	query.Add("scope", strings.Join(config.Scopes, " "))
-	// TODO: Set choose tenants to true, and parse resulting token to get the selected tenant,
-	// then set it. For now, just leave the tenant as the default one
-	// query.Add("choose_tenants", "true")
+	query.Add("choose_tenants", "true")
 
 	loginUrl.RawQuery = query.Encode()
 
