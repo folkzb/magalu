@@ -226,7 +226,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 			}
 
 			if err != nil {
-				logger.Errorw("list request failed", "err", err, "req", req)
+				logger.Warnw("list request failed", "err", err, "req", (*mgcHttpPkg.LogRequest)(req))
 				select {
 				case <-ctx.Done():
 					logger.Debugw("context.Done()", "err", err)
