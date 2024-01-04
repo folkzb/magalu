@@ -8,7 +8,7 @@ paths:
     /v1/instances:
         get:
             x-mgc-description: List Virtual Machine instances
-            x-mgc-output-flag: table=NAME:$.instances[*].name,ID:$.instances[*].id
+            x-mgc-output-flag: table
         post:
             x-mgc-description: Create a Virtual Machine instance
             responses:

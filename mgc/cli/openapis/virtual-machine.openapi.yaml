@@ -127,7 +127,7 @@ paths:
             -   OAuth2:
                 - virtual-machine.read
             x-mgc-description: List Virtual Machine instances
-            x-mgc-output-flag: table=NAME:$.instances[*].name,ID:$.instances[*].id
+            x-mgc-output-flag: table
         post:
             tags:
             - instances
