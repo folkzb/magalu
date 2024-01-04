@@ -398,6 +398,7 @@ NON_JSON_REQUESTS = "non-json-requests"
 NON_JSON_RESPONSES = "non-json-responses"
 NON_SNAKECASE_VALUES = "non-snakecase-values"
 TAGLESS_OPERATIONS = "tagless-operations"
+MISSING_ROOT_FIELD = "missing-root-field"
 UNEVEN_RESOURCES = "uneven-resources"
 UNUSED_COMPONENTS = "unused-components"
 TYPELESS_SCHEMAS = "typeless-schemas"
@@ -523,6 +524,9 @@ def load_oapis(dir_or_path: str, ignore_disabled: bool) -> List[OAPI]:
             path = os.path.join(d, f)
             # Prevent file loading, save resources
             if ignore_disabled and ".disabled" in path:
+                continue
+            # Prevent load index
+            if "index." in path:
                 continue
 
             oapi = load_oapi(path)
@@ -1122,6 +1126,9 @@ def get_oapi_stats(o: OAPI) -> OAPIStats:
     if filterer.should_include(XOF_SCHEMA_SINGLE_ITEM):
         schema_handler = SchemaHandler(result)
         oapi_walker.add_handler(schema_handler.xof_single_item_handler)
+
+    if not o.obj.get("tags", []):
+        result.setdefault(MISSING_ROOT_FIELD, []).append("tags")
 
     oapi_walker.dfs()
 
