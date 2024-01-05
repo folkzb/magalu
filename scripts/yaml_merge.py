@@ -347,6 +347,7 @@ SUPPORTED_LINK_CUSTOMIZATIONS = {
     "parameters": check_is_link_parameters,
     "x-mgc-wait-termination": check_is_wait_termination,
     "x-mgc-extra-parameters": check_is_extra_parameters,
+    "x-mgc-hidden": check_is_bool,
 }
 
 

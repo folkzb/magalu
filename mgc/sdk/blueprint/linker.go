@@ -25,6 +25,10 @@ func (l *linker) Description() string {
 	return l.spec.Description
 }
 
+func (l *linker) IsInternal() bool {
+	return l.spec.IsInternal
+}
+
 func createAdditionalSchema(origSchema *schemaPkg.Schema, providedValues map[string]gval.Evaluable, providedProperties map[string]*schemaPkg.SchemaRef) *schemaPkg.Schema {
 	required := []string{}
 	properties := map[string]*schemaPkg.Schema{}

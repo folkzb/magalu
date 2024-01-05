@@ -13,6 +13,7 @@ type linkSpec struct {
 	name string // set externally
 
 	Description     string                      `json:"description"`
+	IsInternal      bool                        `json:"hidden"`
 	Target          core.RefPath                `json:"target"`
 	WaitTermination *core.WaitTerminationConfig `json:"waitTermination,omitempty"`
 	Parameters      map[string]string           `json:"parameters,omitempty"`

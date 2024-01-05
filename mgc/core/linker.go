@@ -10,6 +10,7 @@ import (
 type Linker interface {
 	Name() string
 	Description() string
+	IsInternal() bool
 	// Describes the additional parameters required by the created executor.
 	//
 	// This will match CreateExecutor().ParametersSchema()
@@ -69,6 +70,10 @@ func (l *simpleLink) Name() string {
 
 func (l *simpleLink) Description() string {
 	return l.description
+}
+
+func (l *simpleLink) IsInternal() bool {
+	return l.target.IsInternal()
 }
 
 func additionalProps(target *Schema, sources ...*Schema) *Schema {
