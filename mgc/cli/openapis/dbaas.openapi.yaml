@@ -129,7 +129,7 @@ paths:
             parameters:
             -   required: false
                 schema:
-                    title: 'Offset'
+                    title: Offset
                     minimum: 0.0
                     type: integer
                     default: 0
@@ -137,7 +137,7 @@ paths:
                 in: query
             -   required: false
                 schema:
-                    title: 'Limit'
+                    title: Limit
                     maximum: 25.0
                     minimum: 1.0
                     type: integer
@@ -278,7 +278,7 @@ paths:
             parameters:
             -   required: false
                 schema:
-                    title: 'Offset'
+                    title: Offset
                     minimum: 0.0
                     type: integer
                     default: 0
@@ -286,7 +286,7 @@ paths:
                 in: query
             -   required: false
                 schema:
-                    title: 'Limit'
+                    title: Limit
                     maximum: 25.0
                     minimum: 1.0
                     type: integer
@@ -367,7 +367,7 @@ paths:
                 in: path
             -   required: false
                 schema:
-                    title: 'Offset'
+                    title: Offset
                     minimum: 0.0
                     type: integer
                     default: 0
@@ -375,7 +375,7 @@ paths:
                 in: query
             -   required: false
                 schema:
-                    title: 'Limit'
+                    title: Limit
                     maximum: 25.0
                     minimum: 1.0
                     type: integer
@@ -625,7 +625,7 @@ paths:
             parameters:
             -   required: false
                 schema:
-                    title: 'Offset'
+                    title: Offset
                     minimum: 0.0
                     type: integer
                     default: 0
@@ -633,26 +633,26 @@ paths:
                 in: query
             -   required: false
                 schema:
-                    title: 'Limit'
+                    title: Limit
                     maximum: 25.0
                     minimum: 1.0
                     type: integer
                     default: 10
                 name: _limit
                 in: query
-            -   description: 'Instance extra attributes or relations to show with the main query.
-                    When available, more than one value
+            -   description: 'Instance extra attributes or relations to show with
+                    the main query. When available, more than one value
 
                     can be informed using commas. e.g: `_expand=value1,value2`'
                 required: false
                 schema:
                     allOf:
                     -   $ref: '#/components/schemas/ExpandTypes'
-                    description: 'Instance extra attributes or relations to show with the main
-                        query. When available, more than one value
+                    description: 'Instance extra attributes or relations to show with
+                        the main query. When available, more than one value
 
                         can be informed using commas. e.g: `_expand=value1,value2`'
-                    default: 'replicas'
+                    default: replicas
                     type: string
                 example: replicas
                 name: _expand
@@ -756,7 +756,7 @@ paths:
                 in: path
             -   required: false
                 schema:
-                    title: 'Expand'
+                    title: Expand
                     type: string
                     default: ''
                 example: replicas
@@ -1024,7 +1024,7 @@ paths:
                 in: query
             -   required: false
                 schema:
-                    title: 'Offset'
+                    title: Offset
                     minimum: 0.0
                     type: integer
                     default: 0
@@ -1032,7 +1032,7 @@ paths:
                 in: query
             -   required: false
                 schema:
-                    title: 'Limit'
+                    title: Limit
                     maximum: 25.0
                     minimum: 1.0
                     type: integer

@@ -24,7 +24,8 @@ Block Storage Volume Resources
 
 ### Optional
 
-- `force` (Boolean) force
+- `force` (Boolean) Enforces detachment during the deletion process, allowing the volume to be forcefully
+detached even if it is currently in use.
 
 ### Read-Only
 

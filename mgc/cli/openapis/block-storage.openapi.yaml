@@ -373,9 +373,10 @@ paths:
                     format: uuid
                 name: id
                 in: path
-            -   description: 'Enforces detachment during the deletion process, allowing the volume to be forcefully
+            -   description: 'Enforces detachment during the deletion process, allowing
+                    the volume to be forcefully
 
-            detached even if it is currently in use.'
+                    detached even if it is currently in use.'
                 required: false
                 schema:
                     title: Force
@@ -538,9 +539,10 @@ paths:
                     format: uuid
                 name: virtual_machine_id
                 in: path
-            -   description: 'Enforces detachment during the deletion process, allowing the volume to be forcefully
+            -   description: 'Enforces detachment during the deletion process, allowing
+                    the volume to be forcefully
 
-            detached even if it is currently in use.'
+                    detached even if it is currently in use.'
                 required: false
                 schema:
                     title: Force
