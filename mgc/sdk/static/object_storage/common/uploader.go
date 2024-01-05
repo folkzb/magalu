@@ -76,7 +76,6 @@ func readContent(p mgcSchemaPkg.FilePath) (*os.File, fs.FileInfo, error) {
 		reader, err := os.Open(path)
 		return reader, file, err
 	default:
-		// TODO: treat directory recursively
 		return nil, nil, fmt.Errorf("file type %s not supported", mode.Type())
 	}
 }

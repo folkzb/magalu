@@ -1,0 +1,21 @@
+Upload a directory to a bucket
+
+Usage:
+  ./cli object-storage objects upload-dir [src] [dst] [flags]
+
+Examples:
+  ./cli object-storage objects upload-dir --dst="s3://my-bucket/dir/" --src="path/to/folder"
+
+Flags:
+      --dst uri          Full destination path in the bucket (required)
+      --exclude string   Filename pattern to exclude
+  -h, --help             help for upload-dir
+      --include string   Filename pattern to include
+      --src directory    Source directory path for upload (required)
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --region enum            Region to reach the service (one of "br-ne-1" or "br-se-1") (default "br-ne-1")
+      --server-url uri         Manually specify the server to use
+      --workers integer        Number of routines that spawn to do parallel operations within object_storage (min: 1) (default 5)
+

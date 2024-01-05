@@ -17104,6 +17104,81 @@
        "type": "object"
       },
       "version": ""
+     },
+     {
+      "configs": {
+       "properties": {
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        },
+        "workers": {
+         "default": 5,
+         "description": "Number of routines that spawn to do parallel operations within object_storage",
+         "minimum": 1,
+         "type": "integer"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Upload a directory to a bucket",
+      "isInternal": false,
+      "name": "upload-dir",
+      "parameters": {
+       "properties": {
+        "dst": {
+         "description": "Full destination path in the bucket",
+         "example": "s3://my-bucket/dir/",
+         "format": "uri",
+         "type": "string"
+        },
+        "exclude": {
+         "description": "Filename pattern to exclude",
+         "type": "string"
+        },
+        "include": {
+         "description": "Filename pattern to include",
+         "type": "string"
+        },
+        "src": {
+         "description": "Source directory path for upload",
+         "example": "path/to/folder",
+         "type": "string",
+         "x-contentMediaType": "inode/directory"
+        }
+       },
+       "required": [
+        "src",
+        "dst"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "dir": {
+         "type": "string"
+        },
+        "uri": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "dir",
+        "uri"
+       ],
+       "type": "object"
+      },
+      "version": ""
      }
     ],
     "description": "Object operations for Object Storage API",
