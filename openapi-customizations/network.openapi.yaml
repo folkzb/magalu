@@ -344,16 +344,6 @@ paths:
       security:
         - OAuth2:
             - network.read
-  /v0/routers/default:
-    post:
-      security:
-        - OAuth2:
-            - network.write
-  /v0/routers:
-    get:
-      security:
-        - OAuth2:
-            - network.read
   /v0/security_groups/default:
     post:
       security:

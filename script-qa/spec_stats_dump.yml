@@ -378,38 +378,8 @@ network.openapi:
               - description
               - validate_quota
               - vpc_id
-    - POST /v0/routers/default:
-        - '201':
-            computed:
-              - id
-    - POST /v0/security_groups/{security_group_id}/rules:
-        - '200':
-            computed:
-              - id
-            non-computed:
-              - direction
-              - ethertype
-              - port_range_max
-              - port_range_min
-              - protocol
-              - remote_group_id
-              - remote_ip_prefix
-              - security_group_id
-              - validate_quota
               - wait
               - wait_timeout
-    - POST /v0/security_groups/default:
-        - '201':
-            computed:
-              - id
-    - POST /v0/security_groups:
-        - '200':
-            computed:
-              - id
-            non-computed:
-              - description
-              - name
-              - validate_quota
     - POST /v0/vpcs/{vpc_id}/security_groups:
         - '200':
             computed:
@@ -442,72 +412,92 @@ network.openapi:
             non-computed:
               - description
               - name
+    - POST /v0/security_groups/{security_group_id}/rules:
+        - '200':
+            computed:
+              - id
+            non-computed:
+              - direction
+              - ethertype
+              - port_range_max
+              - port_range_min
+              - protocol
+              - remote_group_id
+              - remote_ip_prefix
+              - security_group_id
+              - validate_quota
+              - wait
+              - wait_timeout
+    - POST /v0/security_groups/default:
+        - '201':
+            computed:
+              - id
+    - POST /v0/security_groups:
+        - '200':
+            computed:
+              - id
+            non-computed:
+              - description
+              - name
+              - validate_quota
   missing-crud:
     - quotas:
         - post
         - delete
+    - rule:
+        - post
+    - subnets:
+        - post
   typeless-schemas:
     - paths./v0/ports/{port_id}/attach/{security_group_id}.post.responses.200.content.application/json.schema
     - paths./v0/ports/{port_id}/detach/{security_group_id}.post.responses.200.content.application/json.schema
     - paths./v0/public_ips/{public_ip_id}/attach/{port_id}.post.responses.200.content.application/json.schema
     - paths./v0/public_ips/{public_ip_id}/detach/{port_id}.post.responses.200.content.application/json.schema
-    - paths./v0/routers.get.responses.200.content.application/json.schema
   uneven-resources:
     port:
       DELETE:
         - /v0/ports/{port_id}
         - /v0/ports/all
-      GET:
-        expected_prefix: /v0/ports
-        uneven:
-          - /v0/vpcs/{vpc_id}/ports
-      POST:
-        expected_prefix: /v0/ports
-        uneven:
-          - /v0/vpcs/{vpc_id}/ports
     public_ip:
-      GET:
-        expected_prefix: /v0/public_ips
-        uneven:
-          - /v0/vpcs/{vpc_id}/public_ips
       POST:
-        - /v0/vpcs/{vpc_id}/public_ips
         - /v0/public_ips/{public_ip_id}/attach/{port_id}
         - /v0/public_ips/{public_ip_id}/detach/{port_id}
-    rule:
-      GET:
-        - /v0/security_groups/{security_group_id}/rules
-        - /v0/rules/{rule_id}
     security_group:
       DELETE:
         - /v0/security_groups/{security_group_id}
         - /v0/security_groups_all
-      GET:
-        expected_prefix: /v0/security_groups
-        uneven:
-          - /v0/vpcs/{vpc_id}/security_groups
       POST:
         expected_prefix: /v0/security_groups
         uneven:
-          - /v0/vpcs/{vpc_id}/security_groups
-    subnets:
-      GET:
-        - /v0/vpcs/{vpc_id}/subnets
-        - /v0/subnets/{subnet_id}
+          - /v0/security_groups/default
     vpc:
       DELETE:
         - /v0/vpcs/{vpc_id}
         - /v0/vpcs/all
+      GET:
+        expected_prefix: /v0/vpcs
+        uneven:
+          - /v0/vpcs/{vpc_id}/public_ips
+          - /v0/vpcs/{vpc_id}/security_groups
+          - /v0/vpcs/{vpc_id}/subnets
+      POST:
+        expected_prefix: /v0/vpcs
+        uneven:
+          - /v0/vpcs/{vpc_id}/public_ips
+          - /v0/vpcs/{vpc_id}/security_groups
+          - /v0/vpcs/{vpc_id}/subnets
+          - /v0/vpcs/default
   unused-components:
     - '#/components/schemas/AddInterfaceRequest'
+    - '#/components/schemas/ListNetworkApiResponse'
     - '#/components/schemas/ProjectType'
+    - '#/components/schemas/RouteRequest'
     - '#/components/schemas/RouterInterfaceResponseList'
     - '#/components/schemas/SecurityGroupStatusEvent'
     - '#/components/schemas/SubnetPoolDetailsResponse'
     - '#/components/schemas/SubnetPoolRequest'
     - '#/components/schemas/SubnetPoolsResponse'
     - '#/components/schemas/ValidationError'
-    - '#/components/schemas/VpcRouteRequest'
     - '#/components/schemas/XVpcCreateRequest'
     - '#/components/schemas/vpc_api_product__vpc__models__rule__RuleDefaultStatusEvent'
 virtual-machine.openapi:

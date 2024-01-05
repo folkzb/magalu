@@ -8,8 +8,11 @@ Aliases:
   public-ip, public_ip
 
 Commands:
-  public-ips      public-ips
-  vpcs-public-ips vpcs-public-ips
+  attach      Attach Public IP
+  delete      Delete Public IP
+  detach      Detach Public IP
+  get         Public IP Details
+  list        Tenant's public IP list
 
 Flags:
   -h, --help      help for public-ip

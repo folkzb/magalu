@@ -5,8 +5,8 @@ Usage:
   ./cli network rule [command]
 
 Commands:
-  rules                 rules
-  security-groups-rules security-groups-rules
+  delete      Delete a Rule
+  get         Rule Details
 
 Flags:
   -h, --help      help for rule

@@ -5,8 +5,9 @@ Usage:
   ./cli network subnets [command]
 
 Commands:
-  subnets      subnets
-  vpcs-subnets vpcs-subnets
+  delete      Delete a Subnet
+  get         Subnet Details
+  update      Update Subnet
 
 Flags:
   -h, --help      help for subnets
