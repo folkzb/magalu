@@ -79,6 +79,7 @@ paths:
                             operationId: start_instance_v1_instances__id__start_post
                             parameters:
                                 id: $request.path.id
+                            x-mgc-hidden: true
                         stop:
                             description: Stop a Virtual Machine instance
                             operationId: stop_instance_v1_instances__id__stop_post
@@ -89,6 +90,7 @@ paths:
                             operationId: stop_instance_v1_instances__id__stop_post
                             parameters:
                                 id: $request.path.id
+                            x-mgc-hidden: true
                         suspend:
                             description: Suspend a Virtual Machine instance
                             operationId: suspend_instance_v1_instances__id__suspend_post
@@ -99,6 +101,7 @@ paths:
                             operationId: suspend_instance_v1_instances__id__suspend_post
                             parameters:
                                 id: $request.path.id
+                            x-mgc-hidden: true
                         rename:
                             description: Rename a Virtual Machine instance
                             operationId: update_instance_name_v1_instances__id__rename_patch
@@ -109,6 +112,7 @@ paths:
                             operationId: update_instance_name_v1_instances__id__rename_patch
                             parameters:
                                 id: $request.path.id
+                            x-mgc-hidden: true
                         retype:
                             description: Retype a Virtual Machine instance
                             operationId: retype_instance_v1_instances__id__retype_post
