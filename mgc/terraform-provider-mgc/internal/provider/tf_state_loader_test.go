@@ -291,14 +291,26 @@ var attrInfoTFNameObjectInList = resAttrInfoMap{
 	},
 }
 
-func tstCreateAttribute(mgcName mgcName, tfName tfName, mgcSchema *mgcSchemaPkg.Schema, isRequired bool, isOptional bool, isComputed bool, useStateForUnknown bool, requiresReplaceWhenChanged bool) *resAttrInfo {
-	tfSchema, childAttrs, err := mgcSchemaToTFAttribute(mgcSchema, attributeModifiers{isRequired, isOptional, isComputed, useStateForUnknown, requiresReplaceWhenChanged, getInputChildModifiers}, context.Background())
+func tstCreateAttribute(mgcName mgcName, attrTfName tfName, mgcSchema *mgcSchemaPkg.Schema, isRequired bool, isOptional bool, isComputed bool, useStateForUnknown bool, requiresReplaceWhenChanged bool) *resAttrInfo {
+	tfSchema, childAttrs, err := mgcSchemaToTFAttribute(
+		mgcSchema,
+		attributeModifiers{
+			isRequired,
+			isOptional,
+			isComputed,
+			useStateForUnknown,
+			requiresReplaceWhenChanged,
+			tfName(""),
+			getInputChildModifiers,
+		},
+		context.Background(),
+	)
 	if err != nil {
 		panic("Could not create test TF Schema")
 	}
 	return &resAttrInfo{
 		mgcName:         mgcName,
-		tfName:          tfName,
+		tfName:          attrTfName,
 		mgcSchema:       mgcSchema,
 		tfSchema:        tfSchema,
 		childAttributes: childAttrs,

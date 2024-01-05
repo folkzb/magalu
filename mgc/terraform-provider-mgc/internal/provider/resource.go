@@ -26,7 +26,8 @@ var _ resource.ResourceWithImportState = &MgcResource{}
 // MgcResource defines the resource implementation.
 type MgcResource struct {
 	sdk               *mgcSdk.Sdk
-	name              string
+	resTfName         tfName
+	resMgcName        mgcName
 	description       string
 	create            mgcSdk.Executor
 	read              mgcSdk.Executor
@@ -42,28 +43,30 @@ type MgcResource struct {
 func newMgcResource(
 	ctx context.Context,
 	sdk *mgcSdk.Sdk,
-	name, description string,
+	resTfName tfName,
+	resMgcName mgcName,
+	description string,
 	create, read, update, delete, list mgcSdk.Executor,
 ) (*MgcResource, error) {
 	if create == nil {
-		return nil, fmt.Errorf("resource %q misses create", name)
+		return nil, fmt.Errorf("resource %q misses create", resTfName)
 	}
 	if delete == nil {
-		return nil, fmt.Errorf("resource %q misses delete", name)
+		return nil, fmt.Errorf("resource %q misses delete", resTfName)
 	}
 	if read == nil {
 		if list == nil {
-			return nil, fmt.Errorf("resource %q misses read", name)
+			return nil, fmt.Errorf("resource %q misses read", resTfName)
 		}
 
 		readFromList, err := createReadFromList(list, create.ResultSchema(), delete.ParametersSchema())
 		if err != nil {
-			tflog.Warn(ctx, fmt.Sprintf("unable to generate 'read' operation from 'list' for %q", name), map[string]any{"error": err})
-			return nil, fmt.Errorf("resource %q misses read", name)
+			tflog.Warn(ctx, fmt.Sprintf("unable to generate 'read' operation from 'list' for %q", resTfName), map[string]any{"error": err})
+			return nil, fmt.Errorf("resource %q misses read", resTfName)
 		}
 
 		read = readFromList
-		tflog.Debug(ctx, fmt.Sprintf("generated 'read' operation based on 'list' for %q", name))
+		tflog.Debug(ctx, fmt.Sprintf("generated 'read' operation based on 'list' for %q", resTfName))
 	}
 	if update == nil {
 		update = core.NoOpExecutor()
@@ -95,7 +98,8 @@ func newMgcResource(
 
 	return &MgcResource{
 		sdk:             sdk,
-		name:            name,
+		resTfName:       resTfName,
+		resMgcName:      resMgcName,
 		description:     description,
 		create:          create,
 		read:            read,
@@ -113,7 +117,7 @@ func (r *MgcResource) doesPropHaveSetter(name mgcName) bool {
 // BEGIN: tfSchemaHandler implementation
 
 func (r *MgcResource) Name() string {
-	return r.name
+	return string(r.resTfName)
 }
 
 func (r *MgcResource) Description() string {
@@ -202,7 +206,7 @@ var _ tfSchemaHandler = (*MgcResource)(nil)
 
 func (r *MgcResource) InputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap {
 	if r.inputAttrInfoMap == nil {
-		r.inputAttrInfoMap = generateResAttrInfoMap(ctx, r.name,
+		r.inputAttrInfoMap = generateResAttrInfoMap(ctx, r.resTfName,
 			[]resAttrInfoGenMetadata{
 				{r.create.ParametersSchema(), r.getCreateParamsModifiers},
 				{r.update.ParametersSchema(), r.getUpdateParamsModifiers},
@@ -215,7 +219,7 @@ func (r *MgcResource) InputAttrInfoMap(ctx context.Context, d *diag.Diagnostics)
 
 func (r *MgcResource) OutputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap {
 	if r.outputAttrInfoMap == nil {
-		r.outputAttrInfoMap = generateResAttrInfoMap(ctx, r.name,
+		r.outputAttrInfoMap = generateResAttrInfoMap(ctx, r.resTfName,
 			[]resAttrInfoGenMetadata{
 				{r.create.ResultSchema(), r.getResultModifiers},
 				{r.read.ResultSchema(), r.getResultModifiers},
@@ -244,12 +248,12 @@ var _ tfStateHandler = (*MgcResource)(nil)
 // BEGIN: Resource implementation
 
 func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = r.name
+	resp.TypeName = string(r.resTfName)
 }
 
 func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	if r.tfschema == nil {
-		ctx = tflog.SetField(ctx, resourceNameField, r.name)
+		ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
 		tfs := generateTFSchema(r, ctx, &resp.Diagnostics)
 		r.tfschema = &tfs
 	}
@@ -268,7 +272,7 @@ func (r *MgcResource) performOperation(
 		return nil
 	}
 
-	return execute(r.name, ctx, exec, params, configs, d)
+	return execute(r.resTfName, ctx, exec, params, configs, d)
 }
 
 func (r *MgcResource) findAttrWithTFName(ctx context.Context, name tfName, d *diag.Diagnostics) (*resAttrInfo, bool) {
@@ -422,7 +426,7 @@ func (r *MgcResource) callPropertySetter(
 
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "create")
-	ctx = tflog.SetField(ctx, resourceNameField, r.name)
+	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
 	ctx = r.sdk.WrapContext(ctx)
 
 	createResult := r.performOperation(ctx, r.create, tfsdk.State(req.Plan), &resp.Diagnostics)
@@ -445,7 +449,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "read")
-	ctx = tflog.SetField(ctx, resourceNameField, r.name)
+	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
 	ctx = r.sdk.WrapContext(ctx)
 
 	readResult := r.performOperation(ctx, r.read, req.State, &resp.Diagnostics)
@@ -463,7 +467,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "update")
-	ctx = tflog.SetField(ctx, resourceNameField, r.name)
+	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
 	ctx = r.sdk.WrapContext(ctx)
 
 	updateResult := r.performOperation(ctx, r.update, tfsdk.State(req.Plan), &resp.Diagnostics)
@@ -486,7 +490,7 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "delete")
-	ctx = tflog.SetField(ctx, resourceNameField, r.name)
+	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
 	ctx = r.sdk.WrapContext(ctx)
 
 	r.performOperation(ctx, r.delete, req.State, &resp.Diagnostics)
@@ -499,7 +503,7 @@ func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 func (r *MgcResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ctx = tflog.SetField(ctx, rpcField, "import-state")
-	ctx = tflog.SetField(ctx, resourceNameField, r.name)
+	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 

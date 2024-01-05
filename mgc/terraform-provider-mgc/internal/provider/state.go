@@ -206,7 +206,7 @@ func applyStateAfter(
 		return nil, nil
 	}
 
-	readResult = execute(handler.Name(), ctx, read, params, core.Configs{}, d)
+	readResult = execute(tfName(handler.Name()), ctx, read, params, core.Configs{}, d)
 	if d.HasError() {
 		return nil, nil
 	}

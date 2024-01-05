@@ -156,7 +156,7 @@ func getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName m
 	}
 }
 
-func generateResAttrInfoMap(ctx context.Context, resName string, metadatas []resAttrInfoGenMetadata, d *diag.Diagnostics) resAttrInfoMap {
+func generateResAttrInfoMap(ctx context.Context, resName tfName, metadatas []resAttrInfoGenMetadata, d *diag.Diagnostics) resAttrInfoMap {
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, resName)
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading input attributes")
 

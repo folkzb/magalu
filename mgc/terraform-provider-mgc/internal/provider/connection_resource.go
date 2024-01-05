@@ -27,7 +27,7 @@ var _ resource.ResourceWithImportState = &MgcConnectionResource{}
 // a resource instance on on off, modifying its status, etc.
 type MgcConnectionResource struct {
 	sdk         *mgcSdk.Sdk
-	name        string
+	name        tfName
 	description string
 	create      mgcSdk.Executor
 	read        mgcSdk.Linker
@@ -42,7 +42,7 @@ type MgcConnectionResource struct {
 func newMgcConnectionResource(
 	ctx context.Context,
 	sdk *mgcSdk.Sdk,
-	name string,
+	name tfName,
 	description string,
 	connection mgcSdk.Executor,
 	sourceDelete mgcSdk.Executor,
@@ -86,7 +86,7 @@ func newMgcConnectionResource(
 // BEGIN: tfSchemaHandler implementation
 
 func (r *MgcConnectionResource) Name() string {
-	return r.name
+	return string(r.name)
 }
 
 func (r *MgcConnectionResource) Description() string {
@@ -174,7 +174,7 @@ var _ tfStateHandler = (*MgcConnectionResource)(nil)
 // BEGIN: Resource implementation
 
 func (r *MgcConnectionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = r.name
+	resp.TypeName = string(r.name)
 }
 
 func (r *MgcConnectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -189,7 +189,7 @@ func (r *MgcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 			return
 		}
 
-		tfs.MarkdownDescription = r.name
+		tfs.MarkdownDescription = string(r.name)
 		r.tfschema = &tfs
 	}
 

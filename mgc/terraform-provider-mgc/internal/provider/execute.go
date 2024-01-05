@@ -22,7 +22,7 @@ func validateResult(d *diag.Diagnostics, result core.ResultWithValue) error {
 
 // Does not return error, check for 'diag.HasError' to see if operation was successful
 func execute(
-	resName string,
+	resName tfName,
 	ctx context.Context,
 	exec core.Executor,
 	params core.Parameters,

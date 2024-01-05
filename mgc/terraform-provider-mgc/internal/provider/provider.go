@@ -114,10 +114,10 @@ func collectGroupResources(
 		return resources, err
 	}
 
-	resourceName := strings.Join(path, "_")
+	resourceName := tfName(strings.Join(path, "_"))
 	tflog.Debug(ctx, fmt.Sprintf("found resource %q", resourceName), debugMap)
 
-	res, err := newMgcResource(ctx, sdk, resourceName, group.Description(), create, read, update, delete, list)
+	res, err := newMgcResource(ctx, sdk, resourceName, mgcName(group.Name()), group.Description(), create, read, update, delete, list)
 	if err != nil {
 		tflog.Warn(ctx, err.Error(), debugMap)
 		return resources, nil
@@ -128,8 +128,8 @@ func collectGroupResources(
 
 	for _, connectionCreate := range connectionExecs {
 		path = append(path, connectionCreate.Name())
-		name := strings.Join(path, "_")
-		if strings.Contains(name, "get") {
+		name := tfName(strings.Join(path, "_"))
+		if strings.Contains(string(name), "get") {
 			tflog.Debug(ctx, fmt.Sprintf("connection creation %s is a non-modifying action, it can't be turned into a resource", name))
 			continue
 		}
