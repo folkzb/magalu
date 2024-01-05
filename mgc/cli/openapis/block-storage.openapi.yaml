@@ -193,7 +193,6 @@ paths:
                     format: uuid
                 name: snapshot_id
                 in: path
-                x-mgc-name: id
             requestBody:
                 content:
                     application/json:
@@ -232,7 +231,6 @@ paths:
                     format: uuid
                 name: snapshot_id
                 in: path
-                x-mgc-name: id
             responses:
                 '204':
                     description: Successful Response

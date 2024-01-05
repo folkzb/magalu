@@ -431,7 +431,7 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "snapshot_id": {
          "description": "snapshot_id",
          "format": "uuid",
          "title": "Snapshot Id",
@@ -439,7 +439,7 @@
         }
        },
        "required": [
-        "id"
+        "snapshot_id"
        ],
        "type": "object"
       },
@@ -618,21 +618,21 @@
          "title": "Description",
          "type": "string"
         },
-        "id": {
+        "name": {
+         "title": "Name",
+         "type": "string"
+        },
+        "snapshot_id": {
          "description": "snapshot_id",
          "format": "uuid",
          "title": "Snapshot Id",
-         "type": "string"
-        },
-        "name": {
-         "title": "Name",
          "type": "string"
         }
        },
        "required": [
         "description",
-        "id",
-        "name"
+        "name",
+        "snapshot_id"
        ],
        "type": "object"
       },
