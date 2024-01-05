@@ -596,10 +596,14 @@ func (n mgcName) asTFName() tfName {
 
 func (n mgcName) tfNameOverride(r *MgcResource, s *mgcSdk.Schema) tfName {
 	prefix := r.resMgcName.singular() + "_"
-	target := mgcName(strings.TrimPrefix(string(n), string(prefix)))
+
+	target, found := strings.CutPrefix(string(n), string(prefix))
+	if !found {
+		return ""
+	}
 
 	if _, ok := r.read.ResultSchema().Properties[string(target)]; ok {
-		return target.asTFName()
+		return mgcName(target).asTFName()
 	}
 
 	return ""

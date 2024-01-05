@@ -389,8 +389,11 @@ var testCases = []testCase{
 		},
 		expectedFinal: map[tfName]schema.Attribute{
 			"current_count": schema.Int64Attribute{
-				Computed:      true,
-				PlanModifiers: []planmodifier.Int64{},
+				Required: true,
+				Computed: false,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"count": schema.NumberAttribute{
 				Optional:      true,

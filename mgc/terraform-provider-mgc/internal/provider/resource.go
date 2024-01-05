@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"slices"
 
@@ -185,6 +184,14 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *m
 }
 
 func (r *MgcResource) getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	if _, isInRead := r.read.ParametersSchema().Properties[string(mgcName)]; isInRead {
+		return r.getUpdateParamsModifiers(ctx, mgcSchema, mgcName)
+	}
+
+	if _, isInUpdate := r.update.ParametersSchema().Properties[string(mgcName)]; isInUpdate {
+		return r.getUpdateParamsModifiers(ctx, mgcSchema, mgcName)
+	}
+
 	return attributeModifiers{
 		isRequired:                 false,
 		isOptional:                 r.doesPropHaveSetter(mgcName),
