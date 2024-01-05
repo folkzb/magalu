@@ -5,7 +5,7 @@
 # such as "x-mgc-name" or "x-mgc-description"
 
 paths:
-    /v1/instances/{id}/backups:
+    /v1/instances/{instance_id}/backups:
         post:
             responses:
                 '202':
@@ -25,7 +25,7 @@ paths:
             security:
                 -   OAuth2:
                     - dbaas.write
-    /v1/instances/{id}/backups/{backup_id}:
+    /v1/instances/{instance_id}/backups/{backup_id}:
         get:
             responses:
                 '200':
@@ -90,7 +90,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{id}:
+    /v1/instances/{instance_id}:
         get:
             responses:
               '200':
@@ -133,17 +133,17 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{id}/resize:
+    /v1/instances/{instance_id}/resize:
         post:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{id}/start:
+    /v1/instances/{instance_id}/start:
         post:
             security:
             -   OAuth2:
                 - dbaas.write
-    /v1/instances/{id}/stop:
+    /v1/instances/{instance_id}/stop:
         post:
             security:
             -   OAuth2:

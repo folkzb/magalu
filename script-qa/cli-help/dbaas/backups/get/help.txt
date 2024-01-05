@@ -4,9 +4,10 @@ Usage:
   ./cli dbaas backups get [backup-id] [flags]
 
 Flags:
-      --backup-id uuid   Value referring to backup Id. (required)
-  -h, --help             help for get
-  -v, --version          version for get
+      --backup-id uuid    Backup Id (required)
+      --exchange string   Exchange (default "dbaas-internal")
+  -h, --help              help for get
+  -v, --version           version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

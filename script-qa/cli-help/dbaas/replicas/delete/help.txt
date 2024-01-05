@@ -4,8 +4,9 @@ Usage:
   ./cli dbaas replicas delete [replica-id] [flags]
 
 Flags:
+      --exchange string   Exchange (default "dbaas-internal")
   -h, --help              help for delete
-      --replica-id uuid   Database Replica Id: Database Replica Unique Id (required)
+      --replica-id uuid   Replica Id (required)
   -v, --version           version for delete
 
 Global Flags:

@@ -10,6 +10,7 @@ Commands:
   flavors     Flavors available for database instances.
   instances   Database instances management.
   replicas    Database replicas management.
+  restores    Database restore management.
 
 Flags:
   -h, --help      help for dbaas

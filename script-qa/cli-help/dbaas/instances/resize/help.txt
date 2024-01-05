@@ -1,20 +1,20 @@
 Resizes a database instance.
 
 Usage:
-  ./cli dbaas instances resize [id] [flags]
-
-Examples:
-  ./cli dbaas instances resize --volume.size=30
+  ./cli dbaas instances resize [instance-id] [flags]
 
 Flags:
-      --flavor-id uuid       Flavor Id
-  -h, --help                 help for resize
-      --id uuid              Database Instance Id: Database Instance Unique Id. (required)
-  -v, --version              version for resize
-      --volume object        Instance Volume Request (single property: size)
-                             Use --volume=help for more details
-      --volume.size number   Instance Volume Request: The size of the volume (in GiB). (range: 10 - 50000)
-                             This is the same as '--volume=size:number'.
+      --exchange string       Exchange (default "dbaas-internal")
+      --flavor-id uuid        Flavor Id
+  -h, --help                  help for resize
+      --instance-id uuid      Instance Id (required)
+  -v, --version               version for resize
+      --volume object         InstanceVolumeRequest (properties: size and type)
+                              Use --volume=help for more details
+      --volume.size integer   InstanceVolumeRequest: Size (range: 10 - 50000)
+                              This is the same as '--volume=size:integer'.
+      --volume.type enum      InstanceVolumeRequest: An enumeration. (one of "CLOUD_HDD", "CLOUD_NVME" or "CLOUD_NVME_15K")
+                              This is the same as '--volume=type:enum'. (default "CLOUD_NVME_15K")
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

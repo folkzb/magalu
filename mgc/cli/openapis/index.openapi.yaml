@@ -10,7 +10,7 @@ modules:
     path: dbaas.openapi.yaml
     summary: DBaaS API Product.
     url: https://dbaas.jaxyendy.com/openapi.json
-    version: 1.10.1
+    version: 1.13.2
 -   description: APIs referentes ao produto de kubernetes
     name: mke
     path: mke.openapi.yaml

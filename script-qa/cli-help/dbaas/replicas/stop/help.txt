@@ -4,8 +4,9 @@ Usage:
   ./cli dbaas replicas stop [replica-id] [flags]
 
 Flags:
+      --exchange string   Exchange (default "dbaas-internal")
   -h, --help              help for stop
-      --replica-id uuid   Value referring to replica Id. (required)
+      --replica-id uuid   Replica Id (required)
   -v, --version           version for stop
 
 Global Flags:
