@@ -241,7 +241,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 
 			for _, content := range result.Contents {
 				dirEntry := pipeline.NewSimpleWalkDirEntry(
-					path.Join(dst.Path(), content.Key),
+					content.Key,
 					content,
 					nil,
 				)
