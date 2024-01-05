@@ -8,7 +8,7 @@ Flags:
       --bucket string        Name of the bucket to delete objects from (between 3 and 63 characters) (required)
       --exclude string       Filename pattern to exclude
   -h, --help                 help for delete-all
-      --include string       Filename pattern to include (default "*")
+      --include string       Filename pattern to include
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

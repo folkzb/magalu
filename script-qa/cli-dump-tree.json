@@ -16747,7 +16747,6 @@
          "type": "string"
         },
         "include": {
-         "default": "*",
          "description": "Filename pattern to include",
          "type": "string"
         }
@@ -16908,7 +16907,6 @@
          "type": "string"
         },
         "include": {
-         "default": "*",
          "description": "Filename pattern to include",
          "type": "string"
         },
@@ -17000,7 +16998,6 @@
          "type": "string"
         },
         "include": {
-         "default": "*",
          "description": "Filename pattern to include",
          "type": "string"
         },

@@ -7,7 +7,7 @@ import (
 )
 
 type FilterParams struct {
-	Include string `json:"include,omitempty" jsonschema:"description=Filename pattern to include,default=*"`
+	Include string `json:"include,omitempty" jsonschema:"description=Filename pattern to include"`
 	Exclude string `json:"exclude,omitempty" jsonschema:"description=Filename pattern to exclude"`
 }
 

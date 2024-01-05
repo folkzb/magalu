@@ -10,7 +10,7 @@ Flags:
       --dst file         Path to save files
       --exclude string   Filename pattern to exclude
   -h, --help             help for download-all
-      --include string   Filename pattern to include (default "*")
+      --include string   Filename pattern to include
       --src uri          Path of objects to be downloaded (required)
 
 Global Flags:
