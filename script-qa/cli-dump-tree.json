@@ -1061,7 +1061,7 @@
        "properties": {
         "force": {
          "default": false,
-         "description": "force",
+         "description": "Enforces detachment during the deletion process, allowing the volume to be forcefully\ndetached even if it is currently in use.",
          "title": "Force",
          "type": "boolean"
         },
@@ -1121,7 +1121,7 @@
        "properties": {
         "force": {
          "default": false,
-         "description": "force",
+         "description": "Enforces detachment during the deletion process, allowing the volume to be forcefully\ndetached even if it is currently in use.",
          "title": "Force",
          "type": "boolean"
         },

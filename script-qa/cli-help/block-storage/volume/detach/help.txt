@@ -9,7 +9,8 @@ Usage:
   ./cli block-storage volume detach [id] [virtual-machine-id] [flags]
 
 Flags:
-      --force                     Force
+      --force                     Enforces detachment during the deletion process, allowing the volume to be forcefully
+                                  detached even if it is currently in use.
   -h, --help                      help for detach
       --id uuid                   Volume Id (required)
   -v, --version                   version for detach
