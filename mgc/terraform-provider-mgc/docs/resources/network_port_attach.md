@@ -17,12 +17,12 @@ mgc_network_port_attach
 
 ### Required
 
+- `port_id` (String)
 - `security_group_id` (String)
 
 ### Read-Only
 
 - `created_at` (String)
-- `current_id` (String)
 - `description` (String)
 - `error` (String)
 - `external_id` (String)

@@ -1,12 +1,12 @@
 Delete a security group from the provided tenant_id
 
 Usage:
-  ./cli network security-group delete [id] [flags]
+  ./cli network security-group delete [security-group-id] [flags]
 
 Flags:
-  -h, --help        help for delete
-      --id string   Security Group Id (required)
-  -v, --version     version for delete
+  -h, --help                       help for delete
+      --security-group-id string   Security Group Id (required)
+  -v, --version                    version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

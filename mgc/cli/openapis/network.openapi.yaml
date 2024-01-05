@@ -220,7 +220,6 @@ paths:
                 schema:
                     title: Port Id
                     type: string
-                x-mgc-name: id
             responses:
                 '200':
                     description: Successful Response
@@ -257,7 +256,6 @@ paths:
                 schema:
                     title: Port Id
                     type: string
-                x-mgc-name: id
             responses:
                 '204':
                     description: Successful Response
@@ -308,7 +306,6 @@ paths:
                 schema:
                     title: Port Id
                     type: string
-                x-mgc-name: id
             -   name: security_group_id
                 in: path
                 required: true
@@ -361,7 +358,6 @@ paths:
                 schema:
                     title: Port Id
                     type: string
-                x-mgc-name: id
             -   name: security_group_id
                 in: path
                 required: true
@@ -1072,7 +1068,6 @@ paths:
                 schema:
                     title: Security Group Id
                     type: string
-                x-mgc-name: id
             responses:
                 '200':
                     description: Successful Response
@@ -1109,7 +1104,6 @@ paths:
                 schema:
                     title: Security Group Id
                     type: string
-                x-mgc-name: id
             responses:
                 '204':
                     description: Successful Response
@@ -1397,7 +1391,6 @@ paths:
                 schema:
                     title: Vpc Id
                     type: string
-                x-mgc-name: id
             responses:
                 '200':
                     description: Successful Response
@@ -1428,7 +1421,6 @@ paths:
                 schema:
                     title: Vpc Id
                     type: string
-                x-mgc-name: id
             responses:
                 '204':
                     description: Successful Response

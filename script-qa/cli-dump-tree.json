@@ -12108,7 +12108,7 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "port_id": {
          "title": "Port Id",
          "type": "string"
         },
@@ -12118,7 +12118,7 @@
         }
        },
        "required": [
-        "id",
+        "port_id",
         "security_group_id"
        ],
        "type": "object"
@@ -12258,13 +12258,13 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "port_id": {
          "title": "Port Id",
          "type": "string"
         }
        },
        "required": [
-        "id"
+        "port_id"
        ],
        "type": "object"
       },
@@ -12387,7 +12387,7 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "port_id": {
          "title": "Port Id",
          "type": "string"
         },
@@ -12397,7 +12397,7 @@
         }
        },
        "required": [
-        "id",
+        "port_id",
         "security_group_id"
        ],
        "type": "object"
@@ -12441,13 +12441,13 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "port_id": {
          "title": "Port Id",
          "type": "string"
         }
        },
        "required": [
-        "id"
+        "port_id"
        ],
        "type": "object"
       },
@@ -13676,13 +13676,13 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "security_group_id": {
          "title": "Security Group Id",
          "type": "string"
         }
        },
        "required": [
-        "id"
+        "security_group_id"
        ],
        "type": "object"
       },
@@ -13790,13 +13790,13 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "security_group_id": {
          "title": "Security Group Id",
          "type": "string"
         }
        },
        "required": [
-        "id"
+        "security_group_id"
        ],
        "type": "object"
       },
@@ -14883,13 +14883,13 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "vpc_id": {
          "title": "Vpc Id",
          "type": "string"
         }
        },
        "required": [
-        "id"
+        "vpc_id"
        ],
        "type": "object"
       },
@@ -15057,13 +15057,13 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "id": {
+        "vpc_id": {
          "title": "Vpc Id",
          "type": "string"
         }
        },
        "required": [
-        "id"
+        "vpc_id"
        ],
        "type": "object"
       },

@@ -1,12 +1,12 @@
 Delete a port from the provided tenant_id
 
 Usage:
-  ./cli network port delete [id] [flags]
+  ./cli network port delete [port-id] [flags]
 
 Flags:
-  -h, --help        help for delete
-      --id string   Port Id (required)
-  -v, --version     version for delete
+  -h, --help             help for delete
+      --port-id string   Port Id (required)
+  -v, --version          version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

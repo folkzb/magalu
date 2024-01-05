@@ -1,12 +1,12 @@
 Attach a Security Group to a Port
 
 Usage:
-  ./cli network port attach [id] [security-group-id] [flags]
+  ./cli network port attach [port-id] [security-group-id] [flags]
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
   -h, --help                          help for attach
-      --id string                     Port Id (required)
+      --port-id string                Port Id (required)
       --security-group-id string      Security Group Id (required)
   -v, --version                       version for attach
 

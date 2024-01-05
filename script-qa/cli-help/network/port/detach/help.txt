@@ -1,11 +1,11 @@
 Detach a Security Group to a Port
 
 Usage:
-  ./cli network port detach [id] [security-group-id] [flags]
+  ./cli network port detach [port-id] [security-group-id] [flags]
 
 Flags:
   -h, --help                       help for detach
-      --id string                  Port Id (required)
+      --port-id string             Port Id (required)
       --security-group-id string   Security Group Id (required)
   -v, --version                    version for detach
 
