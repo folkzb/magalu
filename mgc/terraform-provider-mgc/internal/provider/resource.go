@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"slices"
 
@@ -143,6 +144,7 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 		isOptional:                 !isRequired,
 		isComputed:                 isComputed,
 		useStateForUnknown:         false,
+		nameOverride:               mgcName.tfNameOverride(r, mgcSchema),
 		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil && !r.doesPropHaveSetter(mgcName),
 		getChildModifiers:          getInputChildModifiers,
 	}
@@ -158,6 +160,7 @@ func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *m
 		isOptional:                 !required && !isComputed,
 		isComputed:                 !required || isComputed,
 		useStateForUnknown:         true,
+		nameOverride:               mgcName.tfNameOverride(r, mgcSchema),
 		requiresReplaceWhenChanged: false,
 		getChildModifiers:          getInputChildModifiers,
 	}
@@ -175,6 +178,7 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *m
 		isOptional:                 true,
 		isComputed:                 isComputed,
 		useStateForUnknown:         true,
+		nameOverride:               mgcName.tfNameOverride(r, mgcSchema),
 		requiresReplaceWhenChanged: false,
 		getChildModifiers:          getInputChildModifiers,
 	}

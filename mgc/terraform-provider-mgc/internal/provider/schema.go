@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -70,6 +71,7 @@ type attributeModifiers struct {
 	isComputed                 bool
 	useStateForUnknown         bool
 	requiresReplaceWhenChanged bool
+	nameOverride               tfName
 	getChildModifiers          func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers
 }
 
@@ -118,8 +120,13 @@ func addMgcSchemaAttributes(
 			return fmt.Errorf("attribute %q, error=%s", propName, err)
 		}
 
+		name := mgcName.asTFName()
+		if modifiers.nameOverride != "" {
+			name = modifiers.nameOverride
+		}
+
 		attr := &resAttrInfo{
-			tfName:          mgcName.asTFName(),
+			tfName:          name,
 			mgcName:         mgcName,
 			mgcSchema:       propSchema,
 			tfSchema:        tfSchema,
@@ -585,6 +592,29 @@ func tfAttrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType re
 
 func (n mgcName) asTFName() tfName {
 	return tfName(strcase.SnakeCase(string(n)))
+}
+
+func (n mgcName) tfNameOverride(r *MgcResource, s *mgcSdk.Schema) tfName {
+	prefix := r.resMgcName.singular() + "_"
+	target := mgcName(strings.TrimPrefix(string(n), string(prefix)))
+
+	if _, ok := r.read.ResultSchema().Properties[string(target)]; ok {
+		return target.asTFName()
+	}
+
+	return ""
+}
+
+func (n mgcName) singular() mgcName {
+	if len(n) == 0 {
+		return n
+	}
+
+	if n[len(n)-1] != 's' {
+		return n
+	}
+
+	return n[:len(n)-1]
 }
 
 func (n tfName) asDesired() tfName {
