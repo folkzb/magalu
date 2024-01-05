@@ -57,6 +57,9 @@ func listLinks(f *flag.Flag, links core.Links) (err error) {
 	result := make(LinkerList, 0, len(links))
 
 	for linkName, link := range links {
+		if link.IsInternal() {
+			continue
+		}
 		result = append(result, LinkerListEntry{Name: linkName, Description: link.Description()})
 	}
 
@@ -277,6 +280,9 @@ Use "%[1]s ! <link> --help" for more information about a command.{{end}}
 `, c.cmdPath))
 
 	for _, link := range c.links {
+		if link.IsInternal() {
+			continue
+		}
 		c.addLinkCommand(link)
 	}
 
