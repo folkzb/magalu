@@ -19,7 +19,6 @@ mgc/terraform-provider-mgc/terraform-provider-mgc
 /build
 
 # Documentation
-mgc/terraform-provider-mgc/docs
 
 # Terraform
 *.tfstate*

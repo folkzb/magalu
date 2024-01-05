@@ -44,6 +44,11 @@ repos:
         language: python
         entry: bash -c './scripts/oapi_index_gen.sh'
         additional_dependencies: [PyYAML, typing, argparse]
+    -   id: generate tf docs
+        name: generate tf docs
+        language: system
+        entry: bash -c './scripts/tf_generate_docs.sh'
+        stages: [pre-commit]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
