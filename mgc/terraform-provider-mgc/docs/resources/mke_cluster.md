@@ -29,7 +29,6 @@ O nome deve seguir as seguintes regras:
 
 - `description` (String) Descrição do cluster
 - `enabled_server_group` (Boolean) Habilita o uso de server group, com política de anti-affinity, na criação do cluster e dos node pools
-- `id` (String) Identificador no padrão uuid para identificar o cluster
 - `node_pools` (Attributes List) Conjunto de nodes em um cluster kubernetes (see [below for nested schema](#nestedatt--node_pools))
 - `version` (String) Versão do kubernetes nativa do cluster
 
@@ -39,6 +38,7 @@ O nome deve seguir as seguintes regras:
 - `controlplane` (Attributes) Objeto da requisição da response do nodepool (see [below for nested schema](#nestedatt--controlplane))
 - `created_at` (String) Data de criação do cluster kubernetes
 - `current_node_pools` (Attributes List) Conjunto de nodes em um cluster kubernetes (see [below for nested schema](#nestedatt--current_node_pools))
+- `id` (String) Identificador no padrão uuid para identificar o cluster
 - `kube_api_server` (Attributes) Informações sobre o Kubernetes API Server do Cluster (see [below for nested schema](#nestedatt--kube_api_server))
 - `network` (Attributes) Objeto da requisição da response do recurso de rede do cluster kubernetes (see [below for nested schema](#nestedatt--network))
 - `project_id` (String) Identificador único do projeto onde o cluster foi provisionado

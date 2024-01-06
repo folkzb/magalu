@@ -17,7 +17,6 @@ Database instances management.
 
 ### Required
 
-- `current_status` (String) An enumeration.
 - `datastore_id` (String)
 - `flavor_id` (String)
 - `name` (String)
@@ -36,6 +35,7 @@ Database instances management.
 
 - `addresses` (Attributes List) (see [below for nested schema](#nestedatt--addresses))
 - `created_at` (String)
+- `current_status` (String) An enumeration.
 - `current_volume` (Attributes) (see [below for nested schema](#nestedatt--current_volume))
 - `finished_at` (String)
 - `id` (String) The ID of this resource.
