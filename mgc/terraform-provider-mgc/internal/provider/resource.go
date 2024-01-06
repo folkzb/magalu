@@ -354,6 +354,7 @@ func (r *MgcResource) callPostOpPropertySetters(
 		"[resource] will look for property setters to perform",
 		map[string]any{"resource": r.Name()},
 	)
+	var calledSetterExecs []core.Executor
 	for stateValKey, stateVal := range curStateAsMap {
 		tflog.Debug(
 			ctx,
@@ -418,9 +419,13 @@ func (r *MgcResource) callPostOpPropertySetters(
 			continue
 		}
 
-		r.callPropertySetter(ctx, inState, outState, attr.tfName, setter, currentVal, targetVal, readResult, d)
+		setterExec := r.callPropertySetter(ctx, inState, outState, attr.tfName, setter, calledSetterExecs, currentVal, targetVal, readResult, d)
 		if d.HasError() {
 			return
+		}
+
+		if setterExec != nil {
+			calledSetterExecs = append(calledSetterExecs, setterExec)
 		}
 	}
 }
@@ -431,10 +436,11 @@ func (r *MgcResource) callPropertySetter(
 	outState *tfsdk.State,
 	propTFName tfName,
 	setter propertySetter,
+	alreadyCalled []core.Executor,
 	currentVal, targetVal core.Value,
 	readResult core.ResultWithValue,
 	d *diag.Diagnostics,
-) {
+) core.Executor {
 	tflog.Debug(
 		ctx,
 		fmt.Sprintf("[resource] will update param %q with property setter", propTFName),
@@ -446,7 +452,7 @@ func (r *MgcResource) callPropertySetter(
 			"property setter fail",
 			fmt.Sprintf("unable to call property setter to update parameter %q: %v", propTFName, err),
 		)
-		return
+		return nil
 	}
 
 	setterExec, err := target.CreateExecutor(readResult)
@@ -455,14 +461,40 @@ func (r *MgcResource) callPropertySetter(
 			"property setter fail",
 			fmt.Sprintf("unable to call property setter to update parameter %q: %v", propTFName, err),
 		)
-		return
+		return nil
+	}
+
+	// Here, we compare each entry manually (check the name, parameter and result equality) to know if
+	// the executor has already been called. Unfortunately we can't simply use reflect.DeepEqual because
+	// it returns 'false' immediately if the underlying types have function fields which are not nil.
+	// https://pkg.go.dev/reflect#DeepEqual
+	for _, calledSetterExec := range alreadyCalled {
+		if setterExec.Name() != calledSetterExec.Name() {
+			continue
+		}
+
+		if !mgcSchemaPkg.CheckSimilarJsonSchemas(setterExec.ParametersSchema(), calledSetterExec.ParametersSchema()) {
+			continue
+		}
+
+		if !mgcSchemaPkg.CheckSimilarJsonSchemas(setterExec.ResultSchema(), calledSetterExec.ResultSchema()) {
+			continue
+		}
+
+		tflog.Debug(
+			ctx,
+			fmt.Sprintf("[resource] skipping %q property setter because it has already been called by another prop", propTFName),
+			map[string]any{"resource": r.Name()},
+		)
+		return nil
 	}
 
 	propSetResult := r.performOperation(ctx, setterExec, inState, d)
 	if d.HasError() {
-		return
+		return nil
 	}
 	applyStateAfter(r, propSetResult, r.read, ctx, outState, d)
+	return setterExec
 }
 
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
