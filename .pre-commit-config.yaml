@@ -39,11 +39,13 @@ repos:
         language: python
         entry: bash -c './scripts/oapi_apply_customizations.sh'
         additional_dependencies: [PyYAML, typing, argparse]
+        stages: [pre-commit]
     -   id: oapi-index-gen
         name: oapi-index-gen
         language: python
         entry: bash -c './scripts/oapi_index_gen.sh'
         additional_dependencies: [PyYAML, typing, argparse]
+        stages: [pre-commit]
     -   id: generate tf docs
         name: generate tf docs
         language: system
