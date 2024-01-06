@@ -1393,6 +1393,13 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SnapshotResponseV1'
+                    links:
+                        update/name:
+                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
+                            description: Rename the snapshot
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-hidden: true
                 '400':
                     description: Snapshot Not Allowed Exception
                     content:

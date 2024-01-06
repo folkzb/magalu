@@ -383,7 +383,16 @@ paths:
     /v1/snapshots/{id}:
         post:
             x-mgc-name: restore
-
+        get:
+            responses:
+                '200':
+                    links:
+                        update/name:
+                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
+                            description: Rename the snapshot
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-hidden: true
 components:
     schemas:
         InstanceV1Response:
