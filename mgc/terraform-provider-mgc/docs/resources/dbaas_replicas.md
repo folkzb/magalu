@@ -24,6 +24,7 @@ Database replicas management.
 
 - `exchange` (String)
 - `flavor_id` (String)
+- `status` (String) An enumeration.
 
 ### Read-Only
 
@@ -33,7 +34,6 @@ Database replicas management.
 - `finished_at` (String)
 - `id` (String) The ID of this resource.
 - `started_at` (String)
-- `status` (String) An enumeration.
 - `updated_at` (String)
 - `volume` (Attributes) (see [below for nested schema](#nestedatt--volume))
 
