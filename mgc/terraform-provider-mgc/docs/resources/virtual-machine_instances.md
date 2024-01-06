@@ -25,7 +25,6 @@ Operations with instances, including create, delete, start, stop, reboot and oth
 ### Optional
 
 - `availability_zone` (String)
-- `current_name` (String)
 - `delete_public_ip` (Boolean)
 - `network` (Attributes) (see [below for nested schema](#nestedatt--network))
 - `state` (String)
@@ -36,6 +35,7 @@ Operations with instances, including create, delete, start, stop, reboot and oth
 - `created_at` (String)
 - `current_image` (Attributes) (see [below for nested schema](#nestedatt--current_image))
 - `current_machine_type` (Attributes) (see [below for nested schema](#nestedatt--current_machine_type))
+- `current_name` (String)
 - `current_network` (Attributes) (see [below for nested schema](#nestedatt--current_network))
 - `current_ssh_key_name` (String)
 - `error` (Attributes) (see [below for nested schema](#nestedatt--error))

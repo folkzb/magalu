@@ -192,9 +192,27 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *m
 }
 
 func (r *MgcResource) getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	isOptional := r.doesPropHaveSetter(mgcName)
+	// In the following cases, this Result Attr will have a different structure when compared to its
+	// Input counterpart, and this it will be transformed into 'current_<name>'. These 'current_<name>'
+	// attributes, with mismatches, should NEVER be optional, the User must never deal with them
+	// directly. The Input counterpart will already have been computed, so this can safely be
+	// 'optional == false' since the '<name>' version of this attribute will be 'optional == true'
+	// (or 'required == true').
+	//
+	// Ideally we would make this check when generating the attributes and seeing if there are
+	// mismatches, when we transform this into a 'current_<name>' attribute, but we can't modify
+	// the 'isOptional' value to false in that step since it's after everything has already been
+	// created and we only have an interface to deal with the TF Schema :/
+	if createProp, ok := r.create.ParametersSchema().Properties[string(mgcName)]; isOptional && ok {
+		isOptional = mgcSchemaPkg.CheckSimilarJsonSchemas((*mgcSchemaPkg.Schema)(createProp.Value), mgcSchema)
+	} else if updateProp, ok := r.update.ParametersSchema().Properties[string(mgcName)]; isOptional && ok {
+		isOptional = mgcSchemaPkg.CheckSimilarJsonSchemas((*mgcSchemaPkg.Schema)(updateProp.Value), mgcSchema)
+	}
+
 	return attributeModifiers{
 		isRequired:                 false,
-		isOptional:                 r.doesPropHaveSetter(mgcName),
+		isOptional:                 isOptional,
 		isComputed:                 true,
 		useStateForUnknown:         false,
 		requiresReplaceWhenChanged: false,
