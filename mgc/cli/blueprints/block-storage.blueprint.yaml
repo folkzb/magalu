@@ -24,6 +24,9 @@ children:
 
   - name: create
     description: Attach a volume to a virtual machine instance
+    scopes:
+    - "block-storage.write"
+
     parametersSchema:
       $ref: blueprint#/components/schemas/VolumeAttachObject
     configsSchema:
@@ -45,6 +48,9 @@ children:
 
   - name: get
     description: Check if a volume is attached to a virtual machine instance
+    scopes:
+    - "block-storage.read"
+
     parametersSchema:
       $ref: blueprint#/components/schemas/VolumeAttachObject
     configsSchema:
@@ -82,6 +88,9 @@ children:
 
   - name: delete
     description: Detach a volume from a virtual machine instance
+    scopes:
+    - "block-storage.write"
+
     confirm: |
       Deleting {{ .parameters.block_storage_id }} from {{ .parameters.virtual_machine_id }} cannot be undone.
       Confirm?
