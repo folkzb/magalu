@@ -61,7 +61,7 @@ func newOperation(
 	refResolver *core.BoundRefPathResolver,
 ) *operation {
 	logger = logger.Named(name)
-	return &operation{
+	op := &operation{
 		SimpleDescriptor: core.SimpleDescriptor{Spec: core.DescriptorSpec{
 			Name:        name,
 			Description: getDescriptionExtension(extensionPrefix, desc.op.Extensions, desc.op.Description),
@@ -81,6 +81,17 @@ func newOperation(
 		requestBody:     newRequestBody(method, desc.op, logger, extensionPrefix),
 		server:          newServer(servers, extensionPrefix),
 	}
+	op.SimpleDescriptor.Spec.Scopes = collectAllScopes(op)
+
+	return op
+}
+
+func collectAllScopes(o *operation) (allScopes []string) {
+	_, _ = o.forEachSecurityRequirement(func(_ string, scopes []string) (run bool, err error) {
+		allScopes = append(allScopes, scopes...)
+		return true, nil
+	})
+	return allScopes
 }
 
 var (
