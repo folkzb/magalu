@@ -173,6 +173,41 @@
       "configs": {
        "type": "object"
       },
+      "description": "List all available scopes for all commands",
+      "isInternal": false,
+      "name": "list-all",
+      "parameters": {
+       "properties": {
+        "target": {
+         "description": "If specified, only scopes from the target operations will be listed",
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        }
+       },
+       "type": "object"
+      },
+      "result": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "version": ""
+     }
+    ],
+    "description": "Some operations require scopes to be executed. These scopes\ncan be managed here, with operations that change the current\naccess token used in all other operations.",
+    "isInternal": false,
+    "name": "scopes",
+    "version": ""
+   },
+   {
+    "children": [
+     {
+      "configs": {
+       "type": "object"
+      },
       "description": "The current Tenant is used for all Magalu HTTP requests",
       "isInternal": false,
       "name": "current",

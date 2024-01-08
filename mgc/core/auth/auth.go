@@ -223,6 +223,14 @@ func (o *Auth) AccessToken(ctx context.Context) (string, error) {
 	return o.accessToken, nil
 }
 
+func (o *Auth) BuiltInScopes() Scopes {
+	return Scopes{
+		"openid",
+		"cpo:read",
+		"cpo:write",
+	}
+}
+
 func (o *Auth) RedirectUri() string {
 	return o.getConfig().RedirectUri
 }

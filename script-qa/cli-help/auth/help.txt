@@ -10,6 +10,7 @@ Commands:
   access-token   Retrieve the access token used in the APIs
   login          Authenticate with Magalu Cloud
   object-storage Credentials used for Object Storage
+  scopes         Manage scope operations for current access token
   tenant         Manage Tenants
 
 Flags:

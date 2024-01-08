@@ -1,0 +1,19 @@
+Some operations require scopes to be executed. These scopes
+can be managed here, with operations that change the current
+access token used in all other operations.
+
+Usage:
+  ./cli auth scopes [flags]
+  ./cli auth scopes [command]
+
+Commands:
+  list-all    List all available scopes for all commands
+
+Flags:
+  -h, --help   help for scopes
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli auth scopes [command] --help" for more information about a command.
+
