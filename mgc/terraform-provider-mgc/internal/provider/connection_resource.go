@@ -178,27 +178,11 @@ func (r *MgcConnectionResource) Metadata(ctx context.Context, req resource.Metad
 }
 
 func (r *MgcConnectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "schema")
-	ctx = tflog.SetField(ctx, connectionResourceNameField, r.name)
-	tflog.Debug(ctx, "generating schema")
-
 	if r.tfschema == nil {
+		ctx = tflog.SetField(ctx, resourceNameField, r.name)
 		tfs := generateTFSchema(r, ctx, &resp.Diagnostics)
-		if resp.Diagnostics.HasError() {
-			tflog.Error(ctx, "error generating schema", map[string]any{"errors": resp.Diagnostics.Errors()})
-			return
-		}
-
-		tfs.MarkdownDescription = string(r.name)
 		r.tfschema = &tfs
 	}
-
-	attributes := []string{}
-	for attrName := range (*r.tfschema).Attributes {
-		attributes = append(attributes, attrName)
-	}
-
-	tflog.Debug(ctx, "generated tf schema", map[string]any{"attributes": attributes})
 	resp.Schema = *r.tfschema
 }
 

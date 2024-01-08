@@ -3,12 +3,12 @@
 page_title: "mgc_network_port_attach Resource - terraform-provider-mgc"
 subcategory: ""
 description: |-
-  mgcnetworkport_attach
+  Attach a Security Group to a Port
 ---
 
 # mgc_network_port_attach (Resource)
 
-mgc_network_port_attach
+Attach a Security Group to a Port
 
 
 

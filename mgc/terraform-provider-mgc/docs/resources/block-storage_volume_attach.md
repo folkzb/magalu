@@ -3,12 +3,12 @@
 page_title: "mgc_block-storage_volume_attach Resource - terraform-provider-mgc"
 subcategory: ""
 description: |-
-  mgcblock-storagevolume_attach
+  Attach a volume into an instance, both from the provided tenant_id
 ---
 
 # mgc_block-storage_volume_attach (Resource)
 
-mgc_block-storage_volume_attach
+Attach a volume into an instance, both from the provided tenant_id
 
 
 
