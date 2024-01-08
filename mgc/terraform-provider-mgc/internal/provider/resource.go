@@ -125,7 +125,13 @@ func (r *MgcResource) Description() string {
 }
 
 func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
-	k := string(mgcName)
+	var k = string(mgcName)
+	var nameOverride = mgcName.tfNameOverride(r, mgcSchema)
+
+	if nameOverride != "" {
+		k = string(nameOverride)
+	}
+
 	isRequired := slices.Contains(mgcSchema.Required, k)
 	isComputed := !isRequired
 	if isComputed {
@@ -134,7 +140,7 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 			isComputed = false
 		} else {
 			// If not required and present in read it can be compute
-			isComputed = mgcSchemaPkg.CheckSimilarJsonSchemas((*core.Schema)(readSchema.Value), (*core.Schema)(mgcSchema.Properties[string(mgcName)].Value))
+			isComputed = mgcSchemaPkg.CheckSimilarJsonSchemas((*core.Schema)(readSchema.Value), (*core.Schema)(mgcSchema.Properties[k].Value))
 		}
 	}
 
@@ -143,14 +149,20 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 		isOptional:                 !isRequired,
 		isComputed:                 isComputed,
 		useStateForUnknown:         false,
-		nameOverride:               mgcName.tfNameOverride(r, mgcSchema),
+		nameOverride:               nameOverride,
 		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil && !r.doesPropHaveSetter(mgcName),
 		getChildModifiers:          getInputChildModifiers,
 	}
 }
 
 func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
-	k := string(mgcName)
+	var k = string(mgcName)
+	var nameOverride = mgcName.tfNameOverride(r, mgcSchema)
+
+	if nameOverride != "" {
+		k = string(nameOverride)
+	}
+
 	isComputed := r.create.ResultSchema().Properties[k] != nil
 	required := slices.Contains(mgcSchema.Required, k)
 
@@ -159,7 +171,7 @@ func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *m
 		isOptional:                 !required && !isComputed,
 		isComputed:                 !required || isComputed,
 		useStateForUnknown:         true,
-		nameOverride:               mgcName.tfNameOverride(r, mgcSchema),
+		nameOverride:               nameOverride,
 		requiresReplaceWhenChanged: false,
 		getChildModifiers:          getInputChildModifiers,
 	}
