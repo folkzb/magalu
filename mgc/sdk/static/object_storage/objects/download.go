@@ -74,6 +74,5 @@ func download(ctx context.Context, p common.DownloadObjectParams, cfg common.Con
 
 	reportProgress(name, progress+1, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
-	// TODO: change API to use BucketName, URI and FilePath
 	return common.DownloadObjectParams{Source: p.Source, Destination: mgcSchemaPkg.FilePath(dst)}, nil
 }
