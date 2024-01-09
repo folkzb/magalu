@@ -3,10 +3,13 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"magalu.cloud/cli/ui"
 	"magalu.cloud/core"
+	"magalu.cloud/core/auth"
 	"magalu.cloud/core/progress_report"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -23,6 +26,32 @@ func handleExecutorResult(ctx context.Context, sdk *mgcSdk.Sdk, cmd *cobra.Comma
 	return formatResult(sdk, cmd, result)
 }
 
+func checkScopes(sdk *mgcSdk.Sdk, exec core.Executor) error {
+	a := sdk.Auth()
+	if a == nil {
+		return fmt.Errorf("programming error: context did not contain SDK Auth information")
+	}
+
+	currentScopes, err := a.CurrentScopes()
+	if err != nil {
+		return fmt.Errorf("unable to get current scopes: %w", err)
+	}
+
+	var missing []string
+	necessaryScopes := exec.Scopes()
+	for _, scope := range necessaryScopes {
+		if !slices.Contains(currentScopes, auth.Scope(scope)) {
+			missing = append(missing, scope)
+		}
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("this operation requires the following scopes: %v. To add them, run 'auth scopes add'", missing)
+	}
+
+	return nil
+}
+
 func handleExecutor(
 	ctx context.Context,
 	sdk *mgcSdk.Sdk,
@@ -31,6 +60,10 @@ func handleExecutor(
 	parameters core.Parameters,
 	configs core.Configs,
 ) (core.Result, error) {
+	if err := checkScopes(sdk, exec); err != nil {
+		return nil, err
+	}
+
 	if err := exec.ParametersSchema().VisitJSON(parameters); err != nil {
 		return nil, core.UsageError{Err: err}
 	}
