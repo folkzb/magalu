@@ -58,7 +58,7 @@ type Config struct {
 	ValidationUrl    string
 	RefreshUrl       string
 	TenantsListUrl   string
-	TenantsSelectUrl string
+	TokenExchangeUrl string
 	Scopes           []string
 }
 
@@ -93,8 +93,8 @@ type tenantResult struct {
 	TokenType    string `json:"scope_type"`
 }
 
-type TenantAuth struct {
-	ID           string    `json:"id"`
+type TokenExchangeResult struct {
+	TenantID     string    `json:"id"`
 	CreatedAt    core.Time `json:"created_at"`
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`
@@ -179,8 +179,8 @@ func (o *Auth) TenantsListUrl() string {
 	return o.getConfig().TenantsListUrl
 }
 
-func (o *Auth) TenantsSelectUrl() string {
-	return o.getConfig().TenantsSelectUrl
+func (o *Auth) TokenExchangeUrl() string {
+	return o.getConfig().TokenExchangeUrl
 }
 
 func (o *Auth) currentAccessTokenClaims() (*accessTokenClaims, error) {
@@ -502,15 +502,19 @@ func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
 	return result, nil
 }
 
-func (o *Auth) SelectTenant(ctx context.Context, id string) (*TenantAuth, error) {
+func (o *Auth) SelectTenant(ctx context.Context, id string) (*TokenExchangeResult, error) {
 	at, err := o.AccessToken(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
+		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
 	}
 
+	return o.runTokenExchange(ctx, at, id, strings.Join(o.getConfig().Scopes, " "))
+}
+
+func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes string) (*TokenExchangeResult, error) {
 	data := map[string]any{
-		"tenant": id,
-		"scopes": strings.Join(o.getConfig().Scopes, " "),
+		"tenant": tenantId,
+		"scopes": scopes,
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -518,8 +522,8 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TenantAuth, error)
 	}
 
 	bodyReader := bytes.NewReader(jsonData)
-	r, err := http.NewRequestWithContext(ctx, http.MethodPost, o.getConfig().TenantsSelectUrl, bodyReader)
-	r.Header.Set("Authorization", "Bearer "+at)
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, o.TokenExchangeUrl(), bodyReader)
+	r.Header.Set("Authorization", "Bearer "+currentAt)
 	r.Header.Set("Content-Type", "application/json")
 
 	if err != nil {
@@ -552,10 +556,10 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TenantAuth, error)
 
 	createdAt := core.Time(time.Unix(int64(payload.CreatedAt), 0))
 
-	return &TenantAuth{
+	return &TokenExchangeResult{
 		AccessToken:  payload.AccessToken,
 		CreatedAt:    createdAt,
-		ID:           id,
+		TenantID:     tenantId,
 		RefreshToken: payload.RefreshToken,
 		Scope:        strings.Split(payload.Scope, " "),
 	}, nil

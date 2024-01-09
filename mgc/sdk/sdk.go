@@ -213,7 +213,7 @@ func init() {
 			ValidationUrl:    "https://id.magalu.com/oauth/introspect",
 			RefreshUrl:       "https://id.magalu.com/oauth/token",
 			TenantsListUrl:   "https://id.magalu.com/account/api/v2/whoami/tenants",
-			TenantsSelectUrl: "https://id.magalu.com/oauth/token/exchange",
+			TokenExchangeUrl: "https://id.magalu.com/oauth/token/exchange",
 			Scopes: []string{
 				"openid",
 				"mke.read",
@@ -240,7 +240,7 @@ func init() {
 			ValidationUrl:    "https://idpa-api-preprod.luizalabs.com/oauth/introspect",
 			RefreshUrl:       "https://idpa-api-preprod.luizalabs.com/oauth/token",
 			TenantsListUrl:   "https://platform-account-api-preprod.luizalabs.com/api/v2/whoami/tenants",
-			TenantsSelectUrl: "https://idpa-api-preprod.luizalabs.com/oauth/token/exchange",
+			TokenExchangeUrl: "https://idpa-api-preprod.luizalabs.com/oauth/token/exchange",
 			Scopes: []string{
 				"openid",
 				"mke.read",

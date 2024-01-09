@@ -29,6 +29,12 @@ refresh_token: "refresh-token"
 current_environment: "test"
 `)
 
+var dummyConfigResultYamlRealToken = []byte(`---
+access_token: "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiYWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNzA0ODI0MzUzLCJpYXQiOjE3MDQ4MjQzNTN9.Eu1WKIEja4OQc87FH2ku-34Gir2P6RjGATEu-EQPAC8"
+refresh_token: "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiYWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNzA0ODI0MzUzLCJpYXQiOjE3MDQ4MjQzNTN9.Eu1WKIEja4OQc87FH2ku-34Gir2P6RjGATEu-EQPAC8"
+current_environment: "test"
+`)
+
 var dummyConfigMap map[string]Config = map[string]Config{
 	"temp": {
 		ClientId:       "client-id",
@@ -174,7 +180,7 @@ func validateAccessToken(name string, transport mockTransport, expectedErr bool,
 	}
 }
 
-func selectTenant(name string, transport mockTransport, expectedResult *TenantAuth, expectedErr bool, provided []fs_test_helper.TestFsEntry, expected []fs_test_helper.TestFsEntry) testCaseAuth {
+func selectTenant(name string, transport mockTransport, expectedResult *TokenExchangeResult, expectedErr bool, provided []fs_test_helper.TestFsEntry, expected []fs_test_helper.TestFsEntry) testCaseAuth {
 	provided = fs_test_helper.AutoMkdirAll(provided)
 	expected = fs_test_helper.AutoMkdirAll(expected)
 	return testCaseAuth{
@@ -187,7 +193,7 @@ func selectTenant(name string, transport mockTransport, expectedResult *TenantAu
 			hasErr := err != nil
 
 			if hasErr != expectedErr {
-				return fmt.Errorf("expected err == %v", expectedErr)
+				return fmt.Errorf("expected 'hasErr' == %v, got 'err' == %w", expectedErr, err)
 			}
 			if !reflect.DeepEqual(tnt, expectedResult) {
 				return fmt.Errorf("expected tnt == %v, found: %v", expectedResult, tnt)
@@ -755,8 +761,8 @@ secret_access_key: ""
 									"scope": "test"
 								}`))),
 			},
-			&TenantAuth{
-				ID:           "qwe123",
+			&TokenExchangeResult{
+				TenantID:     "qwe123",
 				CreatedAt:    core.Time(time.Unix(int64(0), 0)),
 				AccessToken:  "abc",
 				RefreshToken: "def",
@@ -767,7 +773,7 @@ secret_access_key: ""
 				{
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
-					Data: dummyConfigResultYaml,
+					Data: dummyConfigResultYamlRealToken,
 				},
 			}, []fs_test_helper.TestFsEntry{
 				{

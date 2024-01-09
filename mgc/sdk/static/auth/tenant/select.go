@@ -29,7 +29,7 @@ func newSelect() core.Executor {
 	})
 }
 
-func selectTenant(ctx context.Context, params tenantSetParams, _ struct{}) (*mgcAuthPkg.TenantAuth, error) {
+func selectTenant(ctx context.Context, params tenantSetParams, _ struct{}) (*mgcAuthPkg.TokenExchangeResult, error) {
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
 		return nil, fmt.Errorf("Unable to get auth from context")
