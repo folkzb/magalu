@@ -380,7 +380,7 @@ func (o *Auth) RefreshAccessToken(ctx context.Context) (string, error) {
 	return o.accessToken, nil
 }
 
-func (o *Auth) doRefreshAccessToken(ctx context.Context) (core.Value, error) {
+func (o *Auth) doRefreshAccessToken(ctx context.Context) (string, error) {
 	var err error
 	var resp *http.Response
 
