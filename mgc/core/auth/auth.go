@@ -101,6 +101,11 @@ type TenantAuth struct {
 	Scope        []string  `json:"scope"`
 }
 
+type accessTokenClaims struct {
+	jwt.RegisteredClaims
+	TenantIDGenPub string `json:"tenant"`
+}
+
 type FailedRefreshAccessToken struct {
 	Message string
 }
@@ -178,25 +183,30 @@ func (o *Auth) TenantsSelectUrl() string {
 	return o.getConfig().TenantsSelectUrl
 }
 
-func (o *Auth) CurrentTenantID() (string, error) {
-	tokenClaims := jwt.MapClaims{}
+func (o *Auth) currentAccessTokenClaims() (*accessTokenClaims, error) {
+	if o.accessToken == "" {
+		return &accessTokenClaims{}, nil
+	}
+
+	tokenClaims := &accessTokenClaims{}
 	tokenParser := jwt.NewParser()
 
 	_, _, err := tokenParser.ParseUnverified(o.accessToken, tokenClaims)
 	if err != nil {
+		return nil, err
+	}
+
+	return tokenClaims, nil
+}
+
+func (o *Auth) CurrentTenantID() (string, error) {
+	claims, err := o.currentAccessTokenClaims()
+	if err != nil {
 		return "", err
 	}
 
-	tenant, ok := tokenClaims["tenant"]
-	if !ok {
-		return "", err
-	}
-	tenantId, ok := tenant.(string)
-	if !ok {
-		return "", fmt.Errorf("unable cast tenant information from token into string. Data: %v", tenant)
-	}
-	tenantId = strings.TrimPrefix(tenantId, "GENPUB.")
-	return tenantId, err
+	tenantId := strings.TrimPrefix(claims.TenantIDGenPub, "GENPUB.")
+	return tenantId, nil
 }
 
 func (o *Auth) CurrentTenant(ctx context.Context) (*Tenant, error) {
