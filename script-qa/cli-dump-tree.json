@@ -36,6 +36,13 @@
     "name": "login",
     "parameters": {
      "properties": {
+      "scopes": {
+       "description": "All desired scopes for the resulting access token",
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
       "show": {
        "description": "Show the access token after the login completes",
        "type": "boolean"

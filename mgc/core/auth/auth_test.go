@@ -44,7 +44,6 @@ var dummyConfigMap map[string]Config = map[string]Config{
 		ValidationUrl:  "validation-url",
 		RefreshUrl:     "refresh-url",
 		TenantsListUrl: "tenant-list-url",
-		Scopes:         []string{"test"},
 	},
 }
 

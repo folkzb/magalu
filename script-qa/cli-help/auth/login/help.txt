@@ -6,8 +6,9 @@ Usage:
   ./cli auth login [flags]
 
 Flags:
-  -h, --help   help for login
-      --show   Show the access token after the login completes
+  -h, --help                   help for login
+      --scopes array(string)   All desired scopes for the resulting access token
+      --show                   Show the access token after the login completes
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

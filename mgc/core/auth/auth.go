@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -59,7 +60,6 @@ type Config struct {
 	RefreshUrl       string
 	TenantsListUrl   string
 	TokenExchangeUrl string
-	Scopes           []string
 }
 
 type Auth struct {
@@ -101,9 +101,61 @@ type TokenExchangeResult struct {
 	Scope        []string  `json:"scope"`
 }
 
+type Scope string
+type Scopes []Scope
+type ScopesString string
+
+func (s *Scopes) Add(scopes ...Scope) {
+	if s == nil {
+		return
+	}
+	for _, scope := range scopes {
+		if slices.Contains(*s, scope) {
+			continue
+		}
+		*s = append(*s, scope)
+	}
+}
+
+func (s *Scopes) Remove(toBeRemoved ...Scope) {
+	if s == nil {
+		return
+	}
+	result := make(Scopes, 0, len(*s)) // Capacity can't be lower because we can't know if there are repeated scopes to be removed...
+	for _, existingScope := range *s {
+		if slices.Contains(toBeRemoved, existingScope) {
+			continue
+		}
+		result = append(result, existingScope)
+	}
+	*s = result
+}
+
+func (s Scopes) AsScopesString() ScopesString {
+	// Can't use 'strings.Join' because of 'Scopes' type
+	var result ScopesString
+	for i, scope := range s {
+		if i > 0 {
+			result += " "
+		}
+		result += ScopesString(scope)
+	}
+	return result
+}
+
+func (s ScopesString) AsScopes() Scopes {
+	strSlice := strings.Split(string(s), " ")
+	result := make(Scopes, len(strSlice))
+	for i, scopeStr := range strSlice {
+		result[i] = Scope(scopeStr)
+	}
+	return result
+}
+
 type accessTokenClaims struct {
 	jwt.RegisteredClaims
-	TenantIDGenPub string `json:"tenant"`
+	TenantIDGenPub string       `json:"tenant"`
+	ScopesStr      ScopesString `json:"scope"`
 }
 
 type FailedRefreshAccessToken struct {
@@ -229,6 +281,24 @@ func (o *Auth) CurrentTenant(ctx context.Context) (*Tenant, error) {
 	return nil, fmt.Errorf("unable to find Tenant in Tenant list that matches the current Tenant ID")
 }
 
+func (o *Auth) CurrentScopesString() (ScopesString, error) {
+	claims, err := o.currentAccessTokenClaims()
+	if err != nil {
+		return "", err
+	}
+
+	return claims.ScopesStr, nil
+}
+
+func (o *Auth) CurrentScopes() (Scopes, error) {
+	scopesStr, err := o.CurrentScopesString()
+	if err != nil {
+		return nil, err
+	}
+
+	return scopesStr.AsScopes(), nil
+}
+
 func (o *Auth) AccessKeyPair() (accessKeyId, secretAccessKey string) {
 	return o.accessKeyId, o.secretAccessKey
 }
@@ -271,7 +341,7 @@ func (o *Auth) InitTokensFromFile() {
 	}
 }
 
-func (o *Auth) CodeChallengeToURL() (*url.URL, error) {
+func (o *Auth) CodeChallengeToURL(scopes Scopes) (*url.URL, error) {
 	config := o.getConfig()
 	loginUrl, err := url.Parse(config.LoginUrl)
 	if err != nil {
@@ -289,7 +359,7 @@ func (o *Auth) CodeChallengeToURL() (*url.URL, error) {
 	query.Add("redirect_uri", config.RedirectUri)
 	query.Add("code_challenge", o.codeVerifier.CodeChallengeS256())
 	query.Add("code_challenge_method", "S256")
-	query.Add("scope", strings.Join(config.Scopes, " "))
+	query.Add("scope", string(scopes.AsScopesString()))
 	query.Add("choose_tenants", "true")
 
 	loginUrl.RawQuery = query.Encode()
@@ -508,10 +578,15 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TokenExchangeResul
 		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
 	}
 
-	return o.runTokenExchange(ctx, at, id, strings.Join(o.getConfig().Scopes, " "))
+	scopes, err := o.CurrentScopesString()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get current scopes: %w", err)
+	}
+
+	return o.runTokenExchange(ctx, at, id, scopes)
 }
 
-func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes string) (*TokenExchangeResult, error) {
+func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes ScopesString) (*TokenExchangeResult, error) {
 	data := map[string]any{
 		"tenant": tenantId,
 		"scopes": scopes,

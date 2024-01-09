@@ -28,7 +28,12 @@ type authResult struct {
 }
 
 type loginParameters struct {
-	Show bool `json:"show,omitempty" jsonschema_description:"Show the access token after the login completes"`
+	// TODO: Remove 'omitempty', this parameter should not optional, but unfortunately the
+	// default values aren't being generated correctly in the schema. When this issue is
+	// resolved, 'omitempty' should be removed.
+	// Ref: https://github.com/invopop/jsonschema/issues/127
+	Scopes auth.Scopes `json:"scopes,omitempty" jsonschema:"description=All desired scopes for the resulting access token,default=openid,default=cpo:read,default=cpo:write"`
+	Show   bool        `json:"show,omitempty" jsonschema:"description=Show the access token after the login completes"`
 }
 
 type loginResult struct {
@@ -74,7 +79,13 @@ about a successful login, use the '--show' flag when logging in`,
 			}
 			defer cancel()
 
-			codeUrl, err := auth.CodeChallengeToURL()
+			// Always force built-in parameters
+			scopes := parameters.Scopes
+			for _, builtIn := range auth.BuiltInScopes() {
+				scopes.Add(builtIn)
+			}
+
+			codeUrl, err := auth.CodeChallengeToURL(scopes)
 			if err != nil {
 				return nil, err
 			}
