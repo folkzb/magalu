@@ -55,7 +55,7 @@ func handleResultWithValue(result core.ResultWithValue, output string) (err erro
 
 	err = result.ValidateSchema()
 	if err != nil {
-		logger().Warnw("result validation failed", "error", err.Error())
+		logValidationErr(err)
 	}
 
 	name, options := parseOutputFormatter(output)
