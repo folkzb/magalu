@@ -594,6 +594,20 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TokenExchangeResul
 	return o.runTokenExchange(ctx, at, id, scopes)
 }
 
+func (o *Auth) SetScopes(ctx context.Context, scopes Scopes) (*TokenExchangeResult, error) {
+	at, err := o.AccessToken(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
+	}
+
+	currentTenantId, err := o.CurrentTenantID()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get current tenant ID: %w", err)
+	}
+
+	return o.runTokenExchange(ctx, at, currentTenantId, scopes.AsScopesString())
+}
+
 func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes ScopesString) (*TokenExchangeResult, error) {
 	data := map[string]any{
 		"tenant": tenantId,

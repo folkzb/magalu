@@ -173,6 +173,36 @@
       "configs": {
        "type": "object"
       },
+      "description": "Add new scopes to the current access token. Run 'auth scopes list-all'\nto see all available scopes to be added",
+      "isInternal": false,
+      "name": "add",
+      "parameters": {
+       "properties": {
+        "scopes": {
+         "description": "Scopes to be added to the current access token",
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        }
+       },
+       "required": [
+        "scopes"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "type": "object"
+      },
       "description": "List all available scopes for all commands",
       "isInternal": false,
       "name": "list-all",
