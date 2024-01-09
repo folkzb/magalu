@@ -88,6 +88,10 @@ def check_unknown_default(k: str, v: Any, _: Any) -> Any:
     raise ValueError(f"unexpected customization {v!r}")
 
 
+def check_any(v: Any, _: Any) -> None:
+    return
+
+
 def check_is_object(
     o: Any,
     base: dict | None,
@@ -214,6 +218,7 @@ SUPPORTED_SCHEMA_CUSTOMIZATIONS = {
     "oneOf": check_is_schema_customization_list,
     "minimum": check_is_number,
     "exclusiveMinimum": check_is_bool,
+    "example": check_any,
 }
 
 
