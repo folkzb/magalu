@@ -10,6 +10,7 @@ Commands:
   add          Add new scopes to the current access token
   list-all     List all available scopes for all commands
   list-current List scopes present in the current access token
+  remove       Remove scopes from the current scopes in the access token.
 
 Flags:
   -h, --help   help for scopes

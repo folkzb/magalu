@@ -243,6 +243,36 @@
        "type": "array"
       },
       "version": ""
+     },
+     {
+      "configs": {
+       "type": "object"
+      },
+      "description": "Remove scopes from the current scopes in the access token.\nRun 'auth scopes list-current' to see current scopes",
+      "isInternal": false,
+      "name": "remove",
+      "parameters": {
+       "properties": {
+        "scopes": {
+         "description": "Scopes to be removed from the current access token",
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        }
+       },
+       "required": [
+        "scopes"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "version": ""
      }
     ],
     "description": "Some operations require scopes to be executed. These scopes\ncan be managed here, with operations that change the current\naccess token used in all other operations.",

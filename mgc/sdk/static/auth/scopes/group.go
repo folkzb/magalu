@@ -19,6 +19,7 @@ access token used in all other operations.`,
 				getAdd(),
 				getListAll(),
 				getListCurrent(),
+				getRemove(),
 			}
 		},
 	)
