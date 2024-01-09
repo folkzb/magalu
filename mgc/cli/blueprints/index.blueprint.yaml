@@ -1,7 +1,12 @@
 modules:
--   description: Operations for Block Storage API
+  - description: Operations for Block Storage API
     name: block-storage
     path: block-storage.blueprint.yaml
     url: https://block-storage.magalu.cloud
     version: 1.52.0
+  - description: Operations for DBaaS API
+    name: dbaas
+    path: dbaas.blueprint.yaml
+    url: https://dbaas.magalu.cloud
+    version: 1.13.2
 version: 1.0.0

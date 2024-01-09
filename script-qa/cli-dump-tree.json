@@ -3173,6 +3173,83 @@
        "type": "object"
       },
       "version": "1.13.2"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Restores a backup for an instance asynchronously",
+      "isInternal": false,
+      "name": "restore",
+      "parameters": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "backup_id": {
+         "format": "uuid",
+         "title": "Backup Id",
+         "type": "string"
+        },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
+        "instance_id": {
+         "format": "uuid",
+         "title": "Instance Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "backup_id",
+        "instance_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "title": "RestoreResponse",
+       "type": "object"
+      },
+      "version": ""
      }
     ],
     "description": "Database backups management.",
@@ -7727,6 +7804,7 @@
      {
       "configs": {
        "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
        "properties": {
         "env": {
          "default": "prod",
@@ -7759,6 +7837,7 @@
       "name": "create",
       "parameters": {
        "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
        "properties": {
         "backup_id": {
          "format": "uuid",
@@ -7783,6 +7862,7 @@
        "type": "object"
       },
       "result": {
+       "magalu.cloud/core/resolved": "true",
        "properties": {
         "id": {
          "format": "uuid",
@@ -7800,7 +7880,7 @@
      }
     ],
     "description": "Database restore management.",
-    "isInternal": false,
+    "isInternal": true,
     "name": "restores",
     "version": "1.13.2"
    }

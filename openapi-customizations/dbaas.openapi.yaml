@@ -199,6 +199,10 @@ paths:
             -   OAuth2:
                 - dbaas.write
 
+tags:
+  - name: restores
+    x-mgc-hidden: true
+
 servers:
 -   url: https://{env}/{region}/database
     variables:

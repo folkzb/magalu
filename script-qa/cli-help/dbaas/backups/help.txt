@@ -8,6 +8,7 @@ Commands:
   delete      Delete Backup.
   get         Backup Detail.
   list        Backups List.
+  restore     Restores a backup for an instance asynchronously
 
 Flags:
   -h, --help      help for backups

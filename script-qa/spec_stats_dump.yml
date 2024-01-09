@@ -247,9 +247,6 @@ dbaas.openapi:
     - flavors:
         - post
         - delete
-    - restores:
-        - get
-        - delete
   typeless-schemas:
     - paths./v1/healthcheck.get.responses.200.content.application/json.schema
     - paths./v1/backups/{backup_id}.delete.responses.202.content.application/json.schema
