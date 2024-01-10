@@ -48,7 +48,33 @@
       "access_token": {
        "type": "string"
       },
-      "selected_tenant": {}
+      "selected_tenant": {
+       "properties": {
+        "email": {
+         "type": "string"
+        },
+        "is_delegated": {
+         "type": "boolean"
+        },
+        "is_managed": {
+         "type": "boolean"
+        },
+        "legal_name": {
+         "type": "string"
+        },
+        "uuid": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "uuid",
+        "legal_name",
+        "email",
+        "is_managed",
+        "is_delegated"
+       ],
+       "type": "object"
+      }
      },
      "type": "object"
     },
@@ -186,7 +212,33 @@
        "type": "object"
       },
       "result": {
-       "items": {},
+       "items": {
+        "properties": {
+         "email": {
+          "type": "string"
+         },
+         "is_delegated": {
+          "type": "boolean"
+         },
+         "is_managed": {
+          "type": "boolean"
+         },
+         "legal_name": {
+          "type": "string"
+         },
+         "uuid": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "uuid",
+         "legal_name",
+         "email",
+         "is_managed",
+         "is_delegated"
+        ],
+        "type": "object"
+       },
        "type": "array"
       },
       "version": ""
@@ -215,7 +267,9 @@
         "access_token": {
          "type": "string"
         },
-        "created_at": {},
+        "created_at": {
+         "type": "object"
+        },
         "id": {
          "type": "string"
         },
@@ -2202,7 +2256,30 @@
        ],
        "type": "object"
       },
-      "result": {},
+      "result": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "array"
+        },
+        {
+         "additionalProperties": true,
+         "type": "object"
+        }
+       ],
+       "nullable": true
+      },
       "version": ""
      },
      {
@@ -2270,7 +2347,30 @@
        ],
        "type": "object"
       },
-      "result": {},
+      "result": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "array"
+        },
+        {
+         "additionalProperties": true,
+         "type": "object"
+        }
+       ],
+       "nullable": true
+      },
       "version": ""
      }
     ],
@@ -7981,7 +8081,10 @@
       "code": {
        "type": "integer"
       },
-      "headers": {},
+      "headers": {
+       "additionalProperties": true,
+       "type": "object"
+      },
       "status": {
        "type": "string"
       }
@@ -8054,11 +8157,37 @@
       },
       "result": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "code": {
          "type": "integer"
         },
-        "headers": {},
+        "headers": {
+         "additionalProperties": true,
+         "type": "object"
+        },
         "status": {
          "type": "string"
         }
@@ -8129,11 +8258,37 @@
       },
       "result": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "code": {
          "type": "integer"
         },
-        "headers": {},
+        "headers": {
+         "additionalProperties": true,
+         "type": "object"
+        },
         "status": {
          "type": "string"
         }
@@ -8204,11 +8359,37 @@
       },
       "result": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "code": {
          "type": "integer"
         },
-        "headers": {},
+        "headers": {
+         "additionalProperties": true,
+         "type": "object"
+        },
         "status": {
          "type": "string"
         }
@@ -8256,7 +8437,30 @@
       "name": "options",
       "parameters": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "headers": {
          "additionalProperties": true,
          "type": "object"
@@ -8280,11 +8484,37 @@
       },
       "result": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "code": {
          "type": "integer"
         },
-        "headers": {},
+        "headers": {
+         "additionalProperties": true,
+         "type": "object"
+        },
         "status": {
          "type": "string"
         }
@@ -8332,7 +8562,30 @@
       "name": "patch",
       "parameters": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "headers": {
          "additionalProperties": true,
          "type": "object"
@@ -8356,11 +8609,37 @@
       },
       "result": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "code": {
          "type": "integer"
         },
-        "headers": {},
+        "headers": {
+         "additionalProperties": true,
+         "type": "object"
+        },
         "status": {
          "type": "string"
         }
@@ -8408,7 +8687,30 @@
       "name": "post",
       "parameters": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "headers": {
          "additionalProperties": true,
          "type": "object"
@@ -8432,11 +8734,37 @@
       },
       "result": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "code": {
          "type": "integer"
         },
-        "headers": {},
+        "headers": {
+         "additionalProperties": true,
+         "type": "object"
+        },
         "status": {
          "type": "string"
         }
@@ -8484,7 +8812,30 @@
       "name": "put",
       "parameters": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "headers": {
          "additionalProperties": true,
          "type": "object"
@@ -8508,11 +8859,37 @@
       },
       "result": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "code": {
          "type": "integer"
         },
-        "headers": {},
+        "headers": {
+         "additionalProperties": true,
+         "type": "object"
+        },
         "status": {
          "type": "string"
         }
@@ -8583,11 +8960,37 @@
       },
       "result": {
        "properties": {
-        "body": {},
+        "body": {
+         "anyOf": [
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
+           "type": "object"
+          }
+         ],
+         "nullable": true
+        },
         "code": {
          "type": "integer"
         },
-        "headers": {},
+        "headers": {
+         "additionalProperties": true,
+         "type": "object"
+        },
         "status": {
          "type": "string"
         }
@@ -17459,10 +17862,38 @@
       "result": {
        "properties": {
         "Buckets": {
-         "items": {},
+         "items": {
+          "properties": {
+           "CreationDate": {
+            "type": "string"
+           },
+           "Name": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "CreationDate",
+           "Name"
+          ],
+          "type": "object"
+         },
          "type": "array"
         },
-        "Owner": {}
+        "Owner": {
+         "properties": {
+          "DisplayName": {
+           "type": "string"
+          },
+          "ID": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "DisplayName",
+          "ID"
+         ],
+         "type": "object"
+        }
        },
        "required": [
         "Buckets",
@@ -17957,11 +18388,39 @@
       "result": {
        "properties": {
         "CommonPrefixes": {
-         "items": {},
+         "items": {
+          "properties": {
+           "Path": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "Path"
+          ],
+          "type": "object"
+         },
          "type": "array"
         },
         "Contents": {
-         "items": {},
+         "items": {
+          "properties": {
+           "ContentSize": {
+            "type": "integer"
+           },
+           "Key": {
+            "type": "string"
+           },
+           "LastModified": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "Key",
+           "LastModified",
+           "ContentSize"
+          ],
+          "type": "object"
+         },
          "type": "array"
         }
        },
@@ -18231,7 +18690,17 @@
      "type": "object"
     },
     "result": {
-     "items": {},
+     "items": {
+      "properties": {
+       "Name": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "Name"
+      ],
+      "type": "object"
+     },
      "type": "array"
     },
     "version": ""

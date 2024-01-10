@@ -6,35 +6,41 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/go-openapi/jsonpointer"
 	"github.com/iancoleman/orderedmap"
 	"github.com/invopop/jsonschema"
+	"go.uber.org/zap"
 	"golang.org/x/exp/constraints"
+	"magalu.cloud/core/utils"
 )
+
+var convertLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
+	return logger().Named("convert")
+})
+
+// TODO: if not required and struct, make nullable
 
 func ToCoreSchema(s *jsonschema.Schema) (schema *Schema, err error) {
 	if s == nil {
 		return nil, fmt.Errorf("invalid jsonschema.Schema passed to 'toCoreSchema' function")
 	}
 
-	rootSchema := s
-	if s.Ref != "" {
-		rootDef, ok := lookupDefByPath(s.Definitions, getRefPath(s.Ref))
-		if !ok {
-			return nil, fmt.Errorf("unable to resolve reference %s when generating schema via 'toCoreSchema'", s.Ref)
-		}
-		rootSchema = rootDef
-	}
+	convertLogger().Debugw("ToCoreSchema called: will convert schema", "schema", s)
 
-	oapiSchema := convertJsonSchemaToOpenAPISchema(rootSchema)
-	refCache := map[string]*openapi3.Schema{}
-	err = resolveRefs(oapiSchema, s.Definitions, refCache)
+	refResolver := newRefResolver(s)
+	oapiSchemaRef := convertJsonSchemaToOpenAPISchemaRef(s, refResolver)
+	err = refResolver.resolvePending()
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	initializeExtensions(oapiSchema)
-	schema = (*Schema)(oapiSchema)
-	return SimplifySchema(schema)
+	schemaRefCow := NewCOWSchemaRef(oapiSchemaRef)
+	err = SimplifySchemaRefCOW(schemaRefCow)
+	if err != nil {
+		return
+	}
+	schema = schemaRefCow.Value()
+	return
 }
 
 func isJsonSchemaSchemaNullable(input *jsonschema.Schema) bool {
@@ -62,8 +68,11 @@ func addExtensions(output *openapi3.Schema, name string, value any) {
 	output.Extensions[name] = value
 }
 
-func convertJsonSchemaToOpenAPISchema(input *jsonschema.Schema) (output *openapi3.Schema) {
+func convertJsonSchemaToOpenAPISchema(input *jsonschema.Schema, refResolver *refResolver) (output *openapi3.Schema) {
+	convertLogger().Debugw("starting conversion from 'jsonschema.Schema' to 'kin-openapi.Schema'", "jsonschema", input)
+
 	if input == nil {
+		convertLogger().Debugw("returning nil, since input was nil")
 		return nil
 	}
 
@@ -72,28 +81,33 @@ func convertJsonSchemaToOpenAPISchema(input *jsonschema.Schema) (output *openapi
 	// Then do it manually.
 
 	if input == jsonschema.TrueSchema {
+		convertLogger().Debugw("returning 'any' schema")
 		return (*openapi3.Schema)(NewAnySchema())
 	}
 
 	additionalProperties := openapi3.AdditionalProperties{}
 	if input.AdditionalProperties != nil && input.AdditionalProperties != jsonschema.FalseSchema {
+		convertLogger().Debugw("will convert and add additional properties")
 		has := true
 		additionalProperties.Has = &has
-		additionalProperties.Schema = convertJsonSchemaToOpenAPISchemaRef(input.AdditionalProperties)
+		additionalProperties.Schema = convertJsonSchemaToOpenAPISchemaRef(input.AdditionalProperties, refResolver)
 	}
 	if len(input.PatternProperties) > 0 && additionalProperties.Has == nil {
+		convertLogger().Debugw("will convert and add additional properties")
 		has := true
 		additionalProperties.Has = &has
 		additionalProperties.Schema = &openapi3.SchemaRef{
-			Value: openapi3.NewAnyOfSchema(convertJsonSchemaToOpenAPISchemaMapToSlice(input.PatternProperties)...),
+			Value: &openapi3.Schema{
+				AnyOf: convertJsonSchemaToOpenAPISchemaMapToSlice(input.PatternProperties, refResolver),
+			},
 		}
 	}
 
 	output = &openapi3.Schema{
-		OneOf:        convertJsonSchemaToOpenAPISchemaSlice(input.OneOf),
-		AnyOf:        convertJsonSchemaToOpenAPISchemaSlice(input.AnyOf),
-		AllOf:        convertJsonSchemaToOpenAPISchemaSlice(input.AllOf),
-		Not:          convertJsonSchemaToOpenAPISchemaRef(input.Not),
+		OneOf:        convertJsonSchemaToOpenAPISchemaSlice(input.OneOf, refResolver),
+		AnyOf:        convertJsonSchemaToOpenAPISchemaSlice(input.AnyOf, refResolver),
+		AllOf:        convertJsonSchemaToOpenAPISchemaSlice(input.AllOf, refResolver),
+		Not:          convertJsonSchemaToOpenAPISchemaRef(input.Not, refResolver),
 		Type:         input.Type,
 		Title:        input.Title,
 		Format:       input.Format,
@@ -116,9 +130,9 @@ func convertJsonSchemaToOpenAPISchema(input *jsonschema.Schema) (output *openapi
 		Pattern:              input.Pattern,
 		MinItems:             uint64(input.MinItems),
 		MaxItems:             convertJsonSchemaNumberToOpenAPIPointer[uint64](input.MaxItems),
-		Items:                convertJsonSchemaToOpenAPISchemaRef(input.Items),
+		Items:                convertJsonSchemaToOpenAPISchemaRef(input.Items, refResolver),
 		Required:             input.Required,
-		Properties:           convertJsonSchemaToOpenAPISchemaMap(input.Properties),
+		Properties:           convertJsonSchemaToOpenAPISchemaMap(input.Properties, refResolver),
 		MinProps:             uint64(input.MinProperties),
 		MaxProps:             convertJsonSchemaNumberToOpenAPIPointer[uint64](input.MaxProperties),
 		AdditionalProperties: additionalProperties,
@@ -126,49 +140,77 @@ func convertJsonSchemaToOpenAPISchema(input *jsonschema.Schema) (output *openapi
 	}
 
 	if len(input.Examples) > 0 {
+		convertLogger().Debugw("will add add examples")
 		output.Example = input.Examples[0]
 	}
 
 	if input.ContentMediaType != "" {
+		convertLogger().Debugw("will add x-contentMediaType extension")
 		addExtensions(output, "x-contentMediaType", input.ContentMediaType)
 	}
 	if input.ContentEncoding != "" {
+		convertLogger().Debugw("will add x-contentEncoding extension")
 		addExtensions(output, "x-contentEncoding", input.ContentEncoding)
 	}
 	if input.ContentSchema != nil {
+		convertLogger().Debugw("will add x-contentSchema extension")
 		addExtensions(output, "x-contentSchema", input.ContentSchema)
 	}
 
-	if reflect.DeepEqual(&Schema{}, output) {
-		return (*openapi3.Schema)(NewAnySchema())
-	}
+	convertLogger().Debugw("finished converting 'jsonschema.Schema' to 'kin-openapi.Schema'", "jsonschema", input, "kin-openapi", output)
 
 	return
 }
 
-func convertJsonSchemaToOpenAPISchemaRef(input *jsonschema.Schema) (outpyt *openapi3.SchemaRef) {
+func convertJsonSchemaToOpenAPISchemaRef(input *jsonschema.Schema, refResolver *refResolver) (output *openapi3.SchemaRef) {
 	if input == nil {
 		return nil
 	}
-	s := convertJsonSchemaToOpenAPISchema(input)
+
+	convertLogger().Debugw("starting conversion from 'jsonschema.Schema' to 'kin-openapi.SchemaRef'", "ref", input.Ref)
+
+	s := convertJsonSchemaToOpenAPISchema(input, refResolver)
 	if s == nil {
 		return nil
 	}
-	return &openapi3.SchemaRef{Value: s}
+
+	ref := &openapi3.SchemaRef{}
+	if input.Ref != "" {
+		convertLogger().Debugw("adding ref to be resolved later", "ref", input.Ref)
+		ref = refResolver.add(input.Ref)
+	}
+
+	if isSchemaEmpty(s) {
+		if input.Ref != "" {
+			convertLogger().Debugw("returning ref without resolution, as it was empty", "ref", input.Ref)
+			return ref
+		} else {
+			convertLogger().Debugw("changing empty output to 'any' schema")
+			s = (*openapi3.Schema)(NewAnySchema())
+		}
+	}
+
+	ref.Value = s
+	convertLogger().Debugw("finished converting 'jsonschema.Schema' to 'kin-openapi.SchemaRef'", "input", input, "outputRef", ref.Ref, "outputValue", ref.Value)
+	return ref
 }
 
-func convertJsonSchemaToOpenAPISchemaSlice(input []*jsonschema.Schema) (output []*openapi3.SchemaRef) {
+func convertJsonSchemaToOpenAPISchemaSlice(input []*jsonschema.Schema, refResolver *refResolver) (output []*openapi3.SchemaRef) {
 	if len(input) == 0 {
 		return nil
 	}
+
+	convertLogger().Debugw("starting conversion from '[]jsonschema.Schema' to '[]kin-openapi.SchemaRef'", "jsonschemas", input)
+
 	output = make([]*openapi3.SchemaRef, len(input))
 	for i, value := range input {
-		output[i] = convertJsonSchemaToOpenAPISchemaRef(value)
+		convertLogger().Debugw("will convert schema in array", "index", i)
+		output[i] = convertJsonSchemaToOpenAPISchemaRef(value, refResolver)
 	}
 	return
 }
 
-func convertJsonSchemaToOpenAPISchemaMap(input *orderedmap.OrderedMap) (output map[string]*openapi3.SchemaRef) {
+func convertJsonSchemaToOpenAPISchemaMap(input *orderedmap.OrderedMap, refResolver *refResolver) (output map[string]*openapi3.SchemaRef) {
 	if input == nil {
 		return nil
 	}
@@ -176,182 +218,266 @@ func convertJsonSchemaToOpenAPISchemaMap(input *orderedmap.OrderedMap) (output m
 	if len(values) == 0 {
 		return nil
 	}
+	convertLogger().Debugw("starting conversion from 'map[string]jsonschema.Schema' to 'map[string]kin-openapi.SchemaRef'", "jsonschemas", input)
 	output = make(map[string]*openapi3.SchemaRef, len(values))
 	for key, value := range values {
-		output[key] = convertJsonSchemaToOpenAPISchemaRef(value.(*jsonschema.Schema))
+		output[key] = convertJsonSchemaToOpenAPISchemaRef(value.(*jsonschema.Schema), refResolver)
 	}
 	return
 }
 
-func convertJsonSchemaToOpenAPISchemaMapToSlice(input map[string]*jsonschema.Schema) (output []*openapi3.Schema) {
+func convertJsonSchemaToOpenAPISchemaMapToSlice(input map[string]*jsonschema.Schema, refResolver *refResolver) (output []*openapi3.SchemaRef) {
 	if len(input) == 0 {
 		return nil
 	}
-	output = make([]*openapi3.Schema, 0, len(input))
+	output = make([]*openapi3.SchemaRef, 0, len(input))
 	for _, value := range input {
-		output = append(output, convertJsonSchemaToOpenAPISchema(value))
+		output = append(output, convertJsonSchemaToOpenAPISchemaRef(value, refResolver))
 	}
 	return
-
 }
 
-func getRefPath(ref string) []string {
-	ref = strings.TrimPrefix(ref, "#/$defs/")
-	return strings.Split(ref, "/")
+type refResolver struct {
+	doc             *jsonschema.Schema
+	jsonSchemaCache map[string]*jsonschema.Schema
+	oapiSchemaCache map[string]*openapi3.Schema
+	pending         []*openapi3.SchemaRef
 }
 
-func lookupDefByPath(defs jsonschema.Definitions, path []string) (*jsonschema.Schema, bool) {
-	pathLength := len(path)
-	if pathLength == 0 {
-		return nil, false
+func newRefResolver(doc *jsonschema.Schema) *refResolver {
+	// Def overrides for kin-openapi Schema of Schema
+	// schemaSchema, schemasSchema, schemaRefSchema, schemaRefsSchema := newjsonschemaSchemaSchema()
+	// schemaSchema, schemasSchema, schemaRefSchema, schemaRefsSchema := newkinopenapiSchemaSchema()
+	resolver := &refResolver{
+		doc:             doc,
+		jsonSchemaCache: map[string]*jsonschema.Schema{},
+		oapiSchemaCache: map[string]*openapi3.Schema{},
 	}
 
-	def, ok := defs[path[0]]
-	if !ok {
-		return nil, false
-	}
+	hasSchemaOfSchema := false
 
-	if pathLength > 1 {
-		if def.Definitions != nil {
-			return lookupDefByPath(def.Definitions, path[1:])
-		} else {
-			return nil, false
+	for defs := range doc.Definitions {
+		if defs == "Schema" || defs == "Schemas" || defs == "SchemaRef" || defs == "SchemaRefs" {
+			hasSchemaOfSchema = true
+			break
 		}
-	} else {
-		return def, true
 	}
+
+	// If we:
+	// - Generate a reflected Schema via 'jsonschema' of a struct that has a field of type '*core.Schema'
+	// - Convert the reflect Schema to OpenAPI Schema (core.Schema)
+	// - Try to validate a variable of type '*core.Schema'
+	// We will get errors because the converted version of the Schema doesn't allow for 'null' to be passed
+	// to the 'AdditionalProperties' field. So we manually create a Schema to represent the '*core.Schema'
+	// if necessary, and then add it to the cache. If not necessary, don't even bother
+	if !hasSchemaOfSchema {
+		return resolver
+	}
+
+	schemaOfSchemaRef := openapi3.NewObjectSchema().WithProperties(map[string]*openapi3.Schema{
+		"ref": openapi3.NewStringSchema(),
+		// "value": openapi3.NewSchemaSchema(), // Will be inserted later
+	}).WithNullable()
+
+	schemaOfSchemas := openapi3.NewObjectSchema().WithAdditionalProperties((*openapi3.Schema)(schemaOfSchemaRef))
+	schemaOfSchemaRefs := openapi3.NewArraySchema().WithItems((*openapi3.Schema)(schemaOfSchemaRef))
+
+	refOfSchemaOfSchemaRefs := resolver.add("#/$defs/SchemaRefs")
+	refOfSchemaOfSchemaRef := resolver.add("#/$defs/SchemaRef")
+	refOfSchemaOfSchemas := resolver.add("#/$defs/Schemas")
+
+	schemaOfSchema := &openapi3.Schema{
+		Type:     "object",
+		Nullable: true,
+		Properties: openapi3.Schemas{
+			"extensions":  openapi3.NewSchemaRef("", openapi3.NewObjectSchema().WithAnyAdditionalProperties()),
+			"oneOf":       refOfSchemaOfSchemaRefs,
+			"anyOf":       refOfSchemaOfSchemaRefs,
+			"allOf":       refOfSchemaOfSchemaRefs,
+			"not":         refOfSchemaOfSchemaRef,
+			"type":        openapi3.NewSchemaRef("", openapi3.NewStringSchema()),
+			"title":       openapi3.NewSchemaRef("", openapi3.NewStringSchema()),
+			"format":      openapi3.NewSchemaRef("", openapi3.NewStringSchema()),
+			"description": openapi3.NewSchemaRef("", openapi3.NewStringSchema()),
+			"enum":        openapi3.NewSchemaRef("", openapi3.NewArraySchema().WithItems((*openapi3.Schema)(NewAnySchema()))),
+			"default":     openapi3.NewSchemaRef("", (*openapi3.Schema)(NewAnySchema())),
+			"example":     openapi3.NewSchemaRef("", (*openapi3.Schema)(NewAnySchema())),
+			"externalDocs": openapi3.NewSchemaRef("", openapi3.NewObjectSchema().WithProperties(map[string]*openapi3.Schema{
+				"extensions":  openapi3.NewObjectSchema().WithAnyAdditionalProperties(),
+				"description": openapi3.NewStringSchema(),
+				"url":         openapi3.NewStringSchema(),
+			})),
+			"uniqueItems":     openapi3.NewSchemaRef("", openapi3.NewBoolSchema()),
+			"exclusiveMin":    openapi3.NewSchemaRef("", openapi3.NewBoolSchema()),
+			"exclusiveMax":    openapi3.NewSchemaRef("", openapi3.NewBoolSchema()),
+			"nullable":        openapi3.NewSchemaRef("", openapi3.NewBoolSchema()),
+			"readOnly":        openapi3.NewSchemaRef("", openapi3.NewBoolSchema()),
+			"writeOnly":       openapi3.NewSchemaRef("", openapi3.NewBoolSchema()),
+			"allowEmptyValue": openapi3.NewSchemaRef("", openapi3.NewBoolSchema()),
+			"deprecated":      openapi3.NewSchemaRef("", openapi3.NewBoolSchema()),
+			"xml": openapi3.NewSchemaRef("", openapi3.NewObjectSchema().WithProperties(map[string]*openapi3.Schema{
+				"extensions": openapi3.NewObjectSchema().WithAnyAdditionalProperties(),
+				"name":       openapi3.NewStringSchema(),
+				"namespace":  openapi3.NewStringSchema(),
+				"prefix":     openapi3.NewStringSchema(),
+				"attribute":  openapi3.NewBoolSchema(),
+				"wrapped":    openapi3.NewBoolSchema(),
+			})),
+			"min":        openapi3.NewSchemaRef("", openapi3.NewFloat64Schema()),
+			"max":        openapi3.NewSchemaRef("", openapi3.NewFloat64Schema()),
+			"multipleOf": openapi3.NewSchemaRef("", openapi3.NewFloat64Schema()),
+			"minLength":  openapi3.NewSchemaRef("", openapi3.NewInt64Schema()),
+			"maxLength":  openapi3.NewSchemaRef("", openapi3.NewInt64Schema()),
+			"pattern":    openapi3.NewSchemaRef("", openapi3.NewStringSchema()),
+			// "compiledPattern": openapi3.NewSchemaRef("", openapi3.NewStringSchema()),
+			"minItems":   openapi3.NewSchemaRef("", openapi3.NewInt64Schema()),
+			"maxItems":   openapi3.NewSchemaRef("", openapi3.NewInt64Schema()),
+			"items":      refOfSchemaOfSchemaRef,
+			"required":   openapi3.NewSchemaRef("", openapi3.NewArraySchema().WithItems(openapi3.NewStringSchema())),
+			"properties": refOfSchemaOfSchemas,
+			"minProps":   openapi3.NewSchemaRef("", openapi3.NewInt64Schema()),
+			"maxProps":   openapi3.NewSchemaRef("", openapi3.NewInt64Schema()),
+			"additionalProperties": openapi3.NewSchemaRef("", &openapi3.Schema{
+				Type: "object",
+				Properties: openapi3.Schemas{
+					"has":    openapi3.NewSchemaRef("", openapi3.NewBoolSchema().WithNullable()),
+					"schema": refOfSchemaOfSchemaRef,
+				},
+			}),
+			"discriminator": openapi3.NewSchemaRef("", openapi3.NewObjectSchema().WithProperties(map[string]*openapi3.Schema{
+				"extensions":   openapi3.NewObjectSchema().WithAnyAdditionalProperties(),
+				"propertyName": openapi3.NewStringSchema(),
+				"mapping":      openapi3.NewObjectSchema().WithAdditionalProperties(openapi3.NewStringSchema()),
+			})),
+		},
+	}
+
+	schemaOfSchemaRef.Properties["value"] = openapi3.NewSchemaRef("", (*openapi3.Schema)(schemaOfSchema).WithNullable())
+
+	resolver.oapiSchemaCache["/$defs/Schema"] = schemaOfSchema
+	resolver.oapiSchemaCache["/$defs/Schemas"] = schemaOfSchemas
+	resolver.oapiSchemaCache["/$defs/SchemaRef"] = schemaOfSchemaRef
+	resolver.oapiSchemaCache["/$defs/SchemaRefs"] = schemaOfSchemaRefs
+
+	return resolver
 }
 
-func initializeExtensions(s *openapi3.Schema) {
-	if s.Extensions == nil {
-		s.Extensions = make(map[string]any)
-	}
-	_, _ = visitAllSubRefs(s, func(ref *openapi3.SchemaRef) error {
-		if ref.Value.Extensions == nil {
-			ref.Value.Extensions = make(map[string]any)
-		}
-
-		return nil
-	})
+func (r *refResolver) add(ref string) (schemaRef *openapi3.SchemaRef) {
+	schemaRef = &openapi3.SchemaRef{Ref: ref}
+	r.pending = append(r.pending, schemaRef)
+	return
 }
 
-type subRefVisitor func(ref *openapi3.SchemaRef) error
+const maxResolvePendingIterations = 10
 
-func visitAllSubRefs(s *openapi3.Schema, visitor subRefVisitor) (bool, error) {
-	if s == nil {
-		return true, nil
+func (r *refResolver) resolvePending() error {
+	for i := 0; i < maxResolvePendingIterations && len(r.pending) > 0; i++ {
+		convertLogger().Debugw("will start resolving all unresolved refs", "iteration", i, "count", len(r.pending))
+		pending := r.pending
+		r.pending = nil
+		for _, schemaRef := range pending {
+			convertLogger().Debugw("will resolve ref", "ref", schemaRef.Ref)
+			schema, err := r.resolveOpenAPI(schemaRef.Ref)
+			if err != nil {
+				return err
+			}
+
+			if schemaRef.Value == nil || reflect.DeepEqual(schemaRef.Value, schema) {
+				convertLogger().Debugw("resolved ref, setting value", "ref", schemaRef.Ref, "value", schema)
+				schemaRef.Value = schema
+			} else {
+				if isSchemaEmpty(schema) {
+					convertLogger().Debugw("resolved ref is empty, ignoring", "ref", schemaRef.Ref)
+					continue
+				} else if isSchemaEmpty(schemaRef.Value) {
+					convertLogger().Debugw("resolved ref, setting value", "ref", schemaRef.Ref, "value", schema)
+					schemaRef.Value = schema
+				} else {
+					// We need to merge the existing value with the ref because `jsonschema` will insert the Struct Tags customizations
+					// only in the non-ref value, so that the ref isn't changed everywhere, and only in the struct that used the tags.
+					// Use AllOf and then simplify, should never fail
+					convertLogger().Debugw("will merge current value with resolved as allOf", "ref", schemaRef.Ref, "current", schemaRef.Value, "resolved", schema)
+					allOf := NewAllOfSchema((*Schema)(schema), (*Schema)(schemaRef.Value))
+					allOf, err = SimplifySchema(allOf)
+					if err != nil {
+						return err
+					}
+
+					convertLogger().Debugw("resolved ref, setting value", "ref", schemaRef.Ref, "value", allOf)
+					schemaRef.Value = (*openapi3.Schema)(allOf)
+				}
+			}
+		}
 	}
 
-	if s.AdditionalProperties.Schema != nil {
-		if err := visitor(s.AdditionalProperties.Schema); err != nil {
-			return false, err
-		}
-		if shouldContinue, err := visitAllSubRefs(s.AdditionalProperties.Schema.Value, visitor); !shouldContinue {
-			return false, err
-		}
+	convertLogger().Debugw("finished resolving refs")
+
+	if len(r.pending) > 0 {
+		return fmt.Errorf(
+			"could not finish resolving pending %d references in %d iterations, likely a unsolvable cycle happened",
+			len(r.pending),
+			maxResolvePendingIterations,
+		)
 	}
 
-	if s.OneOf != nil {
-		for _, s := range s.OneOf {
-			if err := visitor(s); err != nil {
-				return false, err
-			}
-			if shouldContinue, err := visitAllSubRefs(s.Value, visitor); !shouldContinue {
-				return false, err
-			}
-		}
-	}
-	if s.AnyOf != nil {
-		for _, s := range s.AnyOf {
-			if err := visitor(s); err != nil {
-				return false, err
-			}
-			if shouldContinue, err := visitAllSubRefs(s.Value, visitor); !shouldContinue {
-				return false, err
-			}
-		}
-	}
-	if s.AllOf != nil {
-		for _, s := range s.AllOf {
-			if err := visitor(s); err != nil {
-				return false, err
-			}
-			if shouldContinue, err := visitAllSubRefs(s.Value, visitor); !shouldContinue {
-				return false, err
-			}
-		}
-	}
-	if s.Properties != nil {
-		for _, s := range s.Properties {
-			if err := visitor(s); err != nil {
-				return false, err
-			}
-			if shouldContinue, err := visitAllSubRefs(s.Value, visitor); !shouldContinue {
-				return false, err
-			}
-		}
-	}
-	if s.Not != nil {
-		if err := visitor(s.Not); err != nil {
-			return false, err
-		}
-		if shouldContinue, err := visitAllSubRefs(s.Not.Value, visitor); !shouldContinue {
-			return false, err
-		}
-	}
-	if s.Items != nil {
-		if err := visitor(s.Items); err != nil {
-			return false, err
-		}
-		if shouldContinue, err := visitAllSubRefs(s.Items.Value, visitor); !shouldContinue {
-			return false, err
-		}
-	}
-	return true, nil
+	return nil
 }
 
-func resolveRefs(s *openapi3.Schema, defs jsonschema.Definitions, cache map[string]*openapi3.Schema) error {
-	_, err := visitAllSubRefs(s, func(ref *openapi3.SchemaRef) error {
-		if ref == nil || ref.Value != nil {
-			return nil
-		}
-
-		if ref.Ref == "" {
-			return fmt.Errorf("schema with empty reference passed to 'toCoreSchema'")
-		}
-
-		if def, ok := findRef(getRefPath(ref.Ref), defs, cache); ok {
-			ref.Value = def
-			return resolveRefs(def, defs, cache)
-		}
-
-		return fmt.Errorf("unable to resolve %s reference when generating schema via 'toCoreSchema' function", ref.Ref)
-	})
-	return err
-}
-
-func findRef(refPath []string, defs jsonschema.Definitions, cache map[string]*openapi3.Schema) (*openapi3.Schema, bool) {
-	refPathLength := len(refPath)
-	if refPathLength == 0 {
-		return nil, false
+func (r *refResolver) resolveJsonSchema(ref string) (jsonSchema *jsonschema.Schema, err error) {
+	path, _ := strings.CutPrefix(ref, "#")
+	if jsonSchema = r.jsonSchemaCache[path]; jsonSchema != nil {
+		convertLogger().Debugw("returning schema from 'jsonschema' cache, it was already resolved", "ref", ref)
+		return
 	}
 
-	refName := strings.Join(refPath, "/")
-	if def, ok := cache[refName]; ok {
-		return def, true
-	}
-
-	def, ok := lookupDefByPath(defs, refPath)
-	if !ok {
-		return nil, false
-	}
-
-	oapiDef := convertJsonSchemaToOpenAPISchema(def)
-	err := resolveRefs(oapiDef, defs, cache)
+	jp, err := jsonpointer.New(path)
 	if err != nil {
-		return nil, false
+		return
 	}
 
-	cache[refName] = oapiDef
-	return oapiDef, true
+	v, _, err := jp.Get(r.doc)
+	if err != nil {
+		return
+	}
+
+	jsonSchema, ok := v.(*jsonschema.Schema)
+	if !ok {
+		err = fmt.Errorf("invalid type: expected *jsonschema.Schema, got %T", v)
+		return
+	}
+
+	if jsonSchema.Ref != "" {
+		jsonSchema, err = r.resolveJsonSchema(jsonSchema.Ref)
+		if err != nil {
+			return
+		}
+	}
+
+	convertLogger().Debugw("adding ref to jsonschema cache", "ref", ref)
+	r.jsonSchemaCache[path] = jsonSchema
+
+	return
+}
+
+func (r *refResolver) resolveOpenAPI(ref string) (oapiSchema *openapi3.Schema, err error) {
+	path, _ := strings.CutPrefix(ref, "#")
+	if oapiSchema = r.oapiSchemaCache[path]; oapiSchema != nil {
+		convertLogger().Debugw("returning schema from 'kin-openapi' cache, it was already resolved", "ref", ref)
+		return
+	}
+
+	jsonSchema, err := r.resolveJsonSchema(path)
+	if err != nil {
+		return
+	}
+
+	oapiSchema = convertJsonSchemaToOpenAPISchema(jsonSchema, r)
+	convertLogger().Debugw("adding ref to 'kin-openapi' cache", "ref", ref)
+	r.oapiSchemaCache[path] = oapiSchema
+
+	return
+}
+
+func isSchemaEmpty(s *openapi3.Schema) bool {
+	return s.IsEmpty() && s.Description == ""
 }

@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
@@ -98,8 +99,10 @@ func check_No_Changes[T any](t *testing.T, prefix string, orig, got *T, changed 
 }
 
 func checkSchemasEqual(t *testing.T, prefix string, expected, got *Schema) {
-	if !reflect.DeepEqual(expected, got) {
-		t.Errorf("%s. Diverging schemas.\nExpected:\n%#v\nGot:\n%#v\n", prefix, expected, got)
+	if err := CompareJsonSchemas(expected, got); err != nil {
+		expectedJson, _ := json.MarshalIndent(expected, "", "  ")
+		gotJson, _ := json.MarshalIndent(got, "", "  ")
+		t.Errorf("%s. Diverging schemas.\nExpected:\n%s\n%#v\nGot:\n%s\n%#v\nError: %s\n", prefix, expectedJson, expected, gotJson, got, err.Error())
 	}
 }
 
@@ -262,6 +265,50 @@ func checkSimplifySchemaSimplifies(t *testing.T, prefix string, tc testCaseSchem
 
 func TestSimplifySchema(t *testing.T) {
 	schema := NewStringSchema()
+
+	// TODO: Uncomment recursive schema tests when 'CompareJsonSchemas' supports recursive comparisons...
+
+	// recursiveUnchangedRootSchema := &Schema{Items: &SchemaRef{}}
+	// recursiveUnchangedRootSchema.Items.Value = (*openapi3.Schema)(recursiveUnchangedRootSchema)
+
+	// recursiveUnchangedRootSimplifiedSchema := &Schema{Items: &SchemaRef{Ref: "/"}}
+	// recursiveUnchangedRootSimplifiedSchema.Items.Value = (*openapi3.Schema)(recursiveUnchangedRootSimplifiedSchema)
+
+	// recursiveUnchangedChildSchema := &Schema{Items: &SchemaRef{
+	// 	Value: &openapi3.Schema{
+	// 		OneOf: openapi3.SchemaRefs{
+	// 			&SchemaRef{Value: &openapi3.Schema{Type: "string"}},
+	// 			&SchemaRef{Value: &openapi3.Schema{Type: "integer"}},
+	// 			&SchemaRef{},
+	// 		},
+	// 	},
+	// }}
+	// recursiveUnchangedChildSchema.Items.Value.OneOf[2].Value = recursiveUnchangedChildSchema.Items.Value
+
+	// recursiveUnchangedChildSimplifiedSchema := &Schema{Items: &SchemaRef{
+	// 	Value: &openapi3.Schema{
+	// 		OneOf: openapi3.SchemaRefs{
+	// 			&SchemaRef{Value: &openapi3.Schema{Type: "string"}},
+	// 			&SchemaRef{Value: &openapi3.Schema{Type: "integer"}},
+	// 			&SchemaRef{Ref: "/items"},
+	// 		},
+	// 	},
+	// }}
+	// recursiveUnchangedChildSimplifiedSchema.Items.Value.OneOf[2].Value = recursiveUnchangedChildSimplifiedSchema.Items.Value
+
+	// recursiveToBeSimplifiedSchema := &Schema{OneOf: openapi3.SchemaRefs{
+	// 	&SchemaRef{},
+	// 	&SchemaRef{Value: (*openapi3.Schema)(copySchema(templateComplexStringSchemaToBeSimplified))}},
+	// }
+	// recursiveToBeSimplifiedSchema.OneOf[0].Value = (*openapi3.Schema)(recursiveToBeSimplifiedSchema)
+
+	// recursiveSimplifiedSchema := &Schema{OneOf: openapi3.SchemaRefs{
+	// 	&SchemaRef{Ref: "/"},
+	// 	&SchemaRef{Value: (*openapi3.Schema)(copySchema(templateComplexStringSchema))}},
+	// 	Type: "string",
+	// }
+	// recursiveSimplifiedSchema.OneOf[0].Value = (*openapi3.Schema)(recursiveSimplifiedSchema)
+
 	runSubTests(t, "SimplifySchema", checkSimplifySchemaSimplifies, map[string]testCaseSchema{
 		"NilValue": {
 			orig:     nil,
@@ -275,6 +322,18 @@ func TestSimplifySchema(t *testing.T) {
 			orig:     copySchema(templateComplexStringSchemaToBeSimplified),
 			expected: copySchema(templateComplexStringSchema),
 		},
+		// "RecursiveUnchangedRoot": {
+		// 	orig:     recursiveUnchangedRootSchema,
+		// 	expected: recursiveUnchangedRootSimplifiedSchema,
+		// },
+		// "RecursiveUnchangedChild": {
+		// 	orig:     recursiveUnchangedChildSchema,
+		// 	expected: recursiveUnchangedChildSimplifiedSchema,
+		// },
+		// "RecursiveSimplified": {
+		// 	orig:     recursiveToBeSimplifiedSchema,
+		// 	expected: recursiveSimplifiedSchema,
+		// },
 	})
 }
 

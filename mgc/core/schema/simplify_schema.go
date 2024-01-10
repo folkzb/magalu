@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/go-openapi/jsonpointer"
 	"magalu.cloud/core/utils"
 )
 
@@ -15,6 +16,64 @@ var (
 	errorUnsupported     = errors.New("unsupported")
 	errorSingleNullChild = errors.New("it makes no sense to have single null child")
 )
+
+type simplifyContextItem struct {
+	name                string
+	schemaRefCow        *COWSchemaRef
+	schemaCow           *COWSchema
+	schema              *Schema
+	pendingSchemaRefCow []*COWSchemaRef
+}
+
+type simplifyContext struct {
+	trail []*simplifyContextItem
+}
+
+func (c *simplifyContext) find(schema *Schema) (i int, item *simplifyContextItem) {
+	for i, item = range c.trail {
+		if item.schema == schema {
+			return
+		}
+	}
+	return -1, nil
+}
+
+func (c *simplifyContext) startSchema(spec *simplifyContextItem) bool {
+	i, item := c.find(spec.schema)
+	if i >= 0 {
+		if spec.schemaRefCow == nil {
+			panic("programming error: expected schemaRefCow for replicated schema references")
+		}
+		item.pendingSchemaRefCow = append(item.pendingSchemaRefCow, spec.schemaRefCow)
+		return false
+	}
+	c.trail = append(c.trail, spec)
+	return true
+}
+
+func (c *simplifyContext) finishSchema(spec *simplifyContextItem) {
+	last := len(c.trail) - 1
+	if len(c.trail) == 0 || c.trail[last] != spec {
+		panic("programming error: trail mismatch")
+	}
+	path := ""
+	for _, item := range c.trail {
+		name := item.name
+		if name != "" {
+			path += "/" + name
+		}
+	}
+	if path == "" {
+		path = "/"
+	}
+	schema := spec.schemaCow.Peek()
+	schemaRef := &SchemaRef{Ref: path, Value: (*openapi3.Schema)(schema)}
+	for _, schemaRefCow := range spec.pendingSchemaRefCow {
+		// Replace so schema is referenced and not copied by its COW
+		schemaRefCow.Replace(schemaRef)
+	}
+	c.trail = c.trail[:last]
+}
 
 func hasSchemaRefValue(r *SchemaRef) bool {
 	return r != nil && r.Value != nil
@@ -82,15 +141,15 @@ func simplifyTypeIfAllMatches(input *COWSchema, children []*SchemaRef) (err erro
 	return nil
 }
 
-func simplifySchemaRefs(cowSchemaRefs *utils.COWSliceOfCOW[*SchemaRef, *COWSchemaRef]) (err error) {
+func (c *simplifyContext) simplifySchemaRefs(cowSchemaRefs *utils.COWSliceOfCOW[*SchemaRef, *COWSchemaRef], name string) (err error) {
 	_ = cowSchemaRefs.ForEachCOW(func(index int, schemaRef *COWSchemaRef) (run bool) {
-		err = SimplifySchemaRefCOW(schemaRef)
+		err = c.simplifySchemaRefCOW(schemaRef, fmt.Sprintf("%s/%d", name, index))
 		return err == nil
 	})
 	return
 }
 
-func simplifyNot(input *COWSchema) (err error) {
+func (c *simplifyContext) simplifyNot(input *COWSchema) (err error) {
 	if !hasSchemaRefValue(input.Not()) {
 		return
 	}
@@ -101,12 +160,12 @@ func simplifyNot(input *COWSchema) (err error) {
 	return errorUnsupported
 }
 
-func simplifyOneOf(input *COWSchema) (err error) {
+func (c *simplifyContext) simplifyOneOf(input *COWSchema) (err error) {
 	if len(input.OneOf()) == 0 {
 		return
 	}
 
-	if err = simplifySchemaRefs(input.OneOfCOW()); err != nil {
+	if err = c.simplifySchemaRefs(input.OneOfCOW(), "oneOf"); err != nil {
 		return
 	}
 
@@ -127,7 +186,7 @@ func simplifyOneOf(input *COWSchema) (err error) {
 			}
 		}
 		input.SetOneOf(nil)
-		return SimplifySchemaCOW(input) // again, so merged lists and items can be simplified with the final values
+		return c.simplifySchemaCOWInternal(input) // again, so merged lists and items can be simplified with the final values
 	}
 
 	if len(children) != 2 {
@@ -159,15 +218,15 @@ func simplifyOneOf(input *COWSchema) (err error) {
 		return
 	}
 
-	return SimplifySchemaCOW(input) // again, so merged lists and items can be simplified with the final values
+	return c.simplifySchemaCOWInternal(input) // again, so merged lists and items can be simplified with the final values
 }
 
-func simplifyAllOf(input *COWSchema) (err error) {
+func (c *simplifyContext) simplifyAllOf(input *COWSchema) (err error) {
 	if len(input.AllOf()) == 0 {
 		return
 	}
 
-	if err = simplifySchemaRefs(input.AllOfCOW()); err != nil {
+	if err = c.simplifySchemaRefs(input.AllOfCOW(), "allOf"); err != nil {
 		return
 	}
 
@@ -202,15 +261,15 @@ func simplifyAllOf(input *COWSchema) (err error) {
 
 	input.SetAllOf(nil)
 
-	return SimplifySchemaCOW(input) // again, so merged lists and items can be simplified with the final values
+	return c.simplifySchemaCOWInternal(input) // again, so merged lists and items can be simplified with the final values
 }
 
-func simplifyAnyOf(input *COWSchema) (err error) {
+func (c *simplifyContext) simplifyAnyOf(input *COWSchema) (err error) {
 	if len(input.AnyOf()) == 0 {
 		return
 	}
 
-	if err = simplifySchemaRefs(input.AnyOfCOW()); err != nil {
+	if err = c.simplifySchemaRefs(input.AnyOfCOW(), "anyOf"); err != nil {
 		return
 	}
 
@@ -231,7 +290,7 @@ func simplifyAnyOf(input *COWSchema) (err error) {
 			}
 		}
 		input.SetAnyOf(nil)
-		return SimplifySchemaCOW(input) // again, so merged lists and items can be simplified with the final values
+		return c.simplifySchemaCOWInternal(input) // again, so merged lists and items can be simplified with the final values
 	}
 
 	if input.Type() == "" {
@@ -265,26 +324,26 @@ func simplifyAnyOf(input *COWSchema) (err error) {
 			input.SetAnyOf(remaining)
 		}
 
-		return simplifyAnyOf(input) // try again, maybe type can be simplified
+		return c.simplifyAnyOf(input) // try again, maybe type can be simplified
 	}
 
 	return
 }
 
-func simplifyItems(input *COWSchema) (err error) {
+func (c *simplifyContext) simplifyItems(input *COWSchema) (err error) {
 	if !hasSchemaRefValue(input.Items()) {
 		return
 	}
-	return SimplifySchemaRefCOW(input.ItemsCOW())
+	return c.simplifySchemaRefCOW(input.ItemsCOW(), "items")
 }
 
-func simplifyProperties(input *COWSchema) (err error) {
+func (c *simplifyContext) simplifyProperties(input *COWSchema) (err error) {
 	if len(input.Properties()) == 0 {
 		return
 	}
 
 	_ = input.PropertiesCOW().ForEachCOW(func(k string, propRefCow *COWSchemaRef) (run bool) {
-		if err = SimplifySchemaRefCOW(propRefCow); err != nil {
+		if err = c.simplifySchemaRefCOW(propRefCow, "properties/"+jsonpointer.Escape(k)); err != nil {
 			err = &utils.ChainedError{Name: k, Err: err}
 			return false
 		}
@@ -294,14 +353,14 @@ func simplifyProperties(input *COWSchema) (err error) {
 	return
 }
 
-func simplifyAdditionalProperties(input *COWSchema) (err error) {
+func (c *simplifyContext) simplifyAdditionalProperties(input *COWSchema) (err error) {
 	v := input.AdditionalProperties()
 	if !hasSchemaRefValue(v.Schema) {
 		return
 	}
 
 	schemaRef := NewCOWSchemaRef(v.Schema)
-	if err = SimplifySchemaRefCOW(schemaRef); err != nil {
+	if err = c.simplifySchemaRefCOW(schemaRef, "additionalProperties"); err != nil {
 		return
 	}
 
@@ -584,10 +643,29 @@ func mergeIntoParent(parent *COWSchema, child *Schema) (err error) {
 //   - `allOf` schemas are merged into the input schema, allOf is then removed
 //   - `not` schemas are not supported and will cause an error
 func SimplifySchemaCOW(input *COWSchema) (err error) {
-	if input.Peek() == nil {
+	c := &simplifyContext{}
+	spec := &simplifyContextItem{
+		schemaCow: input,
+		schema:    input.Peek(),
+	}
+	return c.simplifySchemaCOW(spec)
+}
+
+func (c *simplifyContext) simplifySchemaCOW(spec *simplifyContextItem) (err error) {
+	schema := spec.schema
+	if schema == nil {
 		return
 	}
 
+	if !c.startSchema(spec) {
+		return
+	}
+	err = c.simplifySchemaCOWInternal(spec.schemaCow)
+	c.finishSchema(spec)
+	return
+}
+
+func (c *simplifyContext) simplifySchemaCOWInternal(input *COWSchema) (err error) {
 	if input.Type() == "" {
 		if len(input.Enum()) > 0 {
 			if t, _ := getJsonEnumType(input.Peek()); t != "" { // ignore errors, just don't set the type
@@ -596,31 +674,31 @@ func SimplifySchemaCOW(input *COWSchema) (err error) {
 		}
 	}
 
-	if err = simplifyNot(input); err != nil {
+	if err = c.simplifyNot(input); err != nil {
 		return &utils.ChainedError{Name: "not", Err: err}
 	}
 
-	if err = simplifyOneOf(input); err != nil {
+	if err = c.simplifyOneOf(input); err != nil {
 		return &utils.ChainedError{Name: "oneOf", Err: err}
 	}
 
-	if err = simplifyAllOf(input); err != nil {
+	if err = c.simplifyAllOf(input); err != nil {
 		return &utils.ChainedError{Name: "allOf", Err: err}
 	}
 
-	if err = simplifyAnyOf(input); err != nil {
+	if err = c.simplifyAnyOf(input); err != nil {
 		return &utils.ChainedError{Name: "anyOf", Err: err}
 	}
 
-	if err = simplifyItems(input); err != nil {
+	if err = c.simplifyItems(input); err != nil {
 		return &utils.ChainedError{Name: "items", Err: err}
 	}
 
-	if err = simplifyProperties(input); err != nil {
+	if err = c.simplifyProperties(input); err != nil {
 		return &utils.ChainedError{Name: "properties", Err: err}
 	}
 
-	if err = simplifyAdditionalProperties(input); err != nil {
+	if err = c.simplifyAdditionalProperties(input); err != nil {
 		return &utils.ChainedError{Name: "additionalProperties", Err: err}
 	}
 
@@ -644,13 +722,36 @@ func SimplifySchema(input *Schema) (output *Schema, err error) {
 
 // Simplifies the Value and make sure the Ref string is unset.
 func SimplifySchemaRefCOW(input *COWSchemaRef) (err error) {
+	c := &simplifyContext{}
+	return c.simplifySchemaRefCOW(input, "")
+}
+
+// Special case: when the schema is recursive, the ref should NOT be unset. Otherwise, infinite
+// recursion would happen when trying to print it, marshal it, etc.
+func shouldUnsetRefWhenSimplifying(input *COWSchemaRef) bool {
+	ref := input.Ref()
+	return ref != "#/$defs/Schema" &&
+		ref != "#/$defs/Schemas" &&
+		ref != "#/$defs/SchemaRef" &&
+		ref != "#/$defs/SchemaRefs"
+}
+
+func (c *simplifyContext) simplifySchemaRefCOW(input *COWSchemaRef, name string) (err error) {
 	if input == nil {
 		return
 	}
 
-	if err = SimplifySchemaCOW(input.ValueCOW()); err != nil {
+	if shouldUnsetRefWhenSimplifying(input) {
+		input.UnsetRef() // make sure there is no Ref, even if the value wasn't changed
+	}
+	spec := &simplifyContextItem{
+		name:         name,
+		schemaRefCow: input,
+		schemaCow:    input.ValueCOW(),
+		schema:       input.ValueCOW().Peek(),
+	}
+	if err = c.simplifySchemaCOW(spec); err != nil {
 		return
 	}
-	input.UnsetRef() // make sure there is no Ref, even if the value wasn't changed
 	return
 }

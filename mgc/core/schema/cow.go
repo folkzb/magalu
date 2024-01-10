@@ -64,7 +64,6 @@ func (c *COWSchemaRef) materializeCOW() {
 		return
 	}
 	c.copyIfNeeded()
-	c.s.Ref = ""
 	c.s.Value = (*openapi3.Schema)(c.cowValue.Peek())
 }
 
