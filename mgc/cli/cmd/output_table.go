@@ -183,6 +183,37 @@ func (c *colorString) UnmarshalJSON(data []byte) (err error) {
 	return nil
 }
 
+var noBorderBoxStyle = table.BoxStyle{
+	BottomLeft:       "",
+	BottomRight:      "",
+	BottomSeparator:  "",
+	EmptySeparator:   "",
+	Left:             "",
+	LeftSeparator:    "",
+	MiddleHorizontal: "",
+	MiddleSeparator:  "",
+	MiddleVertical:   "",
+	PaddingLeft:      " ",
+	PaddingRight:     " ",
+	PageSeparator:    "\n",
+	Right:            "",
+	RightSeparator:   "",
+	TopLeft:          "",
+	TopRight:         "",
+	TopSeparator:     "",
+	UnfinishedRow:    " ≈",
+}
+
+var noBorderStyle = tableStyleString(table.Style{
+	Name:    "noBorderStyle",
+	Box:     noBorderBoxStyle,
+	Color:   table.ColorOptionsDefault,
+	Format:  table.FormatOptionsDefault,
+	HTML:    table.DefaultHTMLOptions,
+	Options: table.OptionsDefault,
+	Title:   table.TitleOptionsDefault,
+})
+
 type colorStrings []colorString
 
 func (c *colorStrings) toColors() text.Colors {
@@ -701,6 +732,10 @@ func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 	}
 
 	tableOptions := &tableOptions{Columns: columns, BuildVertically: buildVertically}
+
+	if !buildVertically {
+		tableOptions.Style = &noBorderStyle
+	}
 
 	return formatTableWithOptions(val, tableOptions)
 }
