@@ -3,6 +3,9 @@ Resizes a database instance.
 Usage:
   ./cli dbaas instances resize [instance-id] [flags]
 
+Examples:
+  ./cli dbaas instances resize --volume.size=12 --volume.type="CLOUD_NVME_15K"
+
 Flags:
       --exchange string       Exchange (default "dbaas-internal")
       --flavor-id uuid        Flavor Id

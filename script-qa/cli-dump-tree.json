@@ -4320,6 +4320,7 @@
          "type": "string"
         },
         "datastore_id": {
+         "example": "063f3994-b6c2-4c37-96c9-bab8d82d36f7",
          "format": "uuid",
          "title": "Datastore Id",
          "type": "string"
@@ -4330,21 +4331,25 @@
          "type": "string"
         },
         "flavor_id": {
+         "example": "8bbe8e01-40c8-4d2b-80e8-189debc44b1c",
          "format": "uuid",
          "title": "Flavor Id",
          "type": "string"
         },
         "name": {
+         "example": "dbaas-name",
          "maxLength": 100,
          "title": "Name",
          "type": "string"
         },
         "password": {
+         "example": "dbaas-password",
          "maxLength": 50,
          "title": "Password",
          "type": "string"
         },
         "user": {
+         "example": "dbaas-user",
          "maxLength": 25,
          "title": "User",
          "type": "string"
@@ -4352,6 +4357,7 @@
         "volume": {
          "properties": {
           "size": {
+           "example": 12,
            "maximum": 50000,
            "minimum": 10,
            "title": "Size",
@@ -4365,6 +4371,7 @@
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "example": "CLOUD_NVME_15K",
            "type": "string"
           }
          },
@@ -5260,6 +5267,7 @@
         "volume": {
          "properties": {
           "size": {
+           "example": 12,
            "maximum": 50000,
            "minimum": 10,
            "title": "Size",
@@ -5273,6 +5281,7 @@
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "example": "CLOUD_NVME_15K",
            "type": "string"
           }
          },

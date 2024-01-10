@@ -1651,22 +1651,27 @@ components:
                     title: Name
                     maxLength: 100
                     type: string
+                    example: dbaas-name
                 datastore_id:
                     title: Datastore Id
                     type: string
                     format: uuid
+                    example: 063f3994-b6c2-4c37-96c9-bab8d82d36f7
                 flavor_id:
                     title: Flavor Id
                     type: string
                     format: uuid
+                    example: 8bbe8e01-40c8-4d2b-80e8-189debc44b1c
                 user:
                     title: User
                     maxLength: 25
                     type: string
+                    example: dbaas-user
                 password:
                     title: Password
                     maxLength: 50
                     type: string
+                    example: dbaas-password
                 volume:
                     $ref: '#/components/schemas/InstanceVolumeRequest'
                 backup_retention_days:
@@ -1819,10 +1824,12 @@ components:
                     maximum: 50000.0
                     minimum: 10.0
                     type: integer
+                    example: 12
                 type:
                     allOf:
                     -   $ref: '#/components/schemas/VolumeType'
                     default: CLOUD_NVME_15K
+                    example: CLOUD_NVME_15K
         InstanceVolumeResponse:
             title: InstanceVolumeResponse
             required:

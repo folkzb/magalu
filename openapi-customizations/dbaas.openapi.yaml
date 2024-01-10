@@ -251,6 +251,27 @@ tags:
 -   name: restores
     x-mgc-hidden: true
 
+components:
+    schemas:
+        InstanceCreateRequest:
+            properties:
+                name:
+                    example: dbaas-name
+                datastore_id:
+                    example: 063f3994-b6c2-4c37-96c9-bab8d82d36f7
+                flavor_id:
+                    example: 8bbe8e01-40c8-4d2b-80e8-189debc44b1c
+                user:
+                    example: dbaas-user
+                password:
+                    example: dbaas-password
+        InstanceVolumeRequest:
+            properties:
+                size:
+                    example: 12
+                type:
+                    example: CLOUD_NVME_15K
+
 servers:
 -   url: https://{env}/{region}/database
     variables:
