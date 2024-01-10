@@ -14,13 +14,13 @@ paths:
                             operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
                             description: Read a Backup
                             parameters:
-                                id: $request.path.id
+                                id: $request.path.instance_id
                                 backup_id: $response.body#/id
                         delete:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                id: $request.path.id
+                                id: $request.path.instance_id
                                 backup_id: $response.body#/id
             security:
                 -   OAuth2:
@@ -34,8 +34,8 @@ paths:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                id: $request.path.id
-                                backup_id: request.path.id
+                                id: $response.body#/id
+                                backup_id: $request.path.backup_id
             security:
             -   OAuth2:
                 - dbaas.read

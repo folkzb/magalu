@@ -55,7 +55,7 @@ paths:
                             operationId: deleteCluster
                             description: Delete cluster
                             parameters:
-                                custer_id: $request.path.id
+                                custer_id: $response.body#/id
         delete:
             parameters:
             -   name: cluster_id
