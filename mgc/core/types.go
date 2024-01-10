@@ -31,16 +31,15 @@ type contextKey string
 // instead of using this key directly.
 var grouperContextKey contextKey = "magalu.cloud/core/Grouper"
 
-func NewGrouperContext(parent context.Context, group Grouper) context.Context {
+func NewGrouperContext(parent context.Context, group func() Grouper) context.Context {
 	return context.WithValue(parent, grouperContextKey, group)
 }
 
 func GrouperFromContext(ctx context.Context) Grouper {
-	if value, ok := ctx.Value(grouperContextKey).(Grouper); !ok {
-		return nil
-	} else {
-		return value
+	if value, ok := ctx.Value(grouperContextKey).(func() Grouper); ok {
+		return value()
 	}
+	return nil
 }
 
 // Type comes from the Schema

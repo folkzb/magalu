@@ -97,7 +97,7 @@ func (o *Sdk) WrapContext(ctx context.Context) context.Context {
 	}
 
 	ctx = core.NewRefPathResolverContext(ctx, o.RefResolver())
-	ctx = core.NewGrouperContext(ctx, o.Group())
+	ctx = core.NewGrouperContext(ctx, o.Group)
 	ctx = profile_manager.NewContext(ctx, o.ProfileManager())
 	ctx = auth.NewContext(ctx, o.Auth())
 	// Needs to be called after Auth, because we need the refresh token callback for the interceptor
