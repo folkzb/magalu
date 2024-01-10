@@ -200,7 +200,14 @@ paths:
                 - dbaas.write
 
 tags:
-  - name: restores
+-   name: healthcheck
+    x-mgc-hidden: true
+-   name: backups
+-   name: datastores
+-   name: instances
+-   name: flavors
+-   name: replicas
+-   name: restores
     x-mgc-hidden: true
 
 servers:
