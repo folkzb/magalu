@@ -133,8 +133,8 @@ paths:
             -   OAuth2:
                 - dbaas.read
             x-mgc-wait-termination:
-                maxRetries: 30
-                interval: 10s
+                maxRetries: 100
+                interval: 20s
                 jsonPathQuery: $.result.status == "ACTIVE" || $.result.status == "ERROR"
         delete:
             security:
