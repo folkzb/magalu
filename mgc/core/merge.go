@@ -1,28 +1,18 @@
 package core
 
-import "errors"
-
 type MergeGroup struct {
 	SimpleDescriptor
-	toMerge []Grouper
+	createToMerge func() []Grouper
 	*GrouperLazyChildren[Descriptor]
 }
 
-func NewMergeGroup(desc DescriptorSpec, toMerge []Grouper) (o *MergeGroup) {
-	o = &MergeGroup{SimpleDescriptor{desc}, toMerge, NewGrouperLazyChildren[Descriptor](func() (merged []Descriptor, err error) {
-		merged, err = createChildren(o.toMerge)
-		o.toMerge = nil
+func NewMergeGroup(desc DescriptorSpec, createToMerge func() []Grouper) (o *MergeGroup) {
+	o = &MergeGroup{SimpleDescriptor{desc}, createToMerge, NewGrouperLazyChildren[Descriptor](func() (merged []Descriptor, err error) {
+		merged, err = createChildren(o.createToMerge)
+		o.createToMerge = nil
 		return merged, err
 	})}
 	return o
-}
-
-func (o *MergeGroup) Add(child Grouper) error {
-	if o.toMerge == nil {
-		return errors.New("cannot add children after the group's children were accessed")
-	}
-	o.toMerge = append(o.toMerge, child)
-	return nil
 }
 
 func mergeAfter(toMerge []Grouper, target Grouper, start int) (result []Grouper) {
@@ -42,7 +32,8 @@ func mergeAfter(toMerge []Grouper, target Grouper, start int) (result []Grouper)
 	return result
 }
 
-func createChildren(toMerge []Grouper) (children []Descriptor, err error) {
+func createChildren(createToMerge func() []Grouper) (children []Descriptor, err error) {
+	toMerge := createToMerge()
 	children = make([]Descriptor, 0)
 	used := make(map[string]bool)
 
@@ -57,7 +48,7 @@ func createChildren(toMerge []Grouper) (children []Descriptor, err error) {
 			if group, ok := child.(Grouper); ok {
 				merged := mergeAfter(toMerge, group, i+1)
 				if len(merged) > 1 {
-					child = NewMergeGroup(group.DescriptorSpec(), merged)
+					child = NewMergeGroup(group.DescriptorSpec(), func() []Grouper { return merged })
 				}
 			}
 

@@ -173,10 +173,12 @@ func (o *Sdk) Group() core.Grouper {
 				Version:     "1.0",
 				Description: "All MagaLu Groups & Executors",
 			},
-			[]core.Grouper{
-				static.GetGroup(),
-				o.newOpenApiSource(),
-				o.newBlueprintSource(o.RefResolver()),
+			func() []core.Grouper {
+				return []core.Grouper{
+					static.GetGroup(),
+					o.newOpenApiSource(),
+					o.newBlueprintSource(o.RefResolver()),
+				}
 			},
 		)
 	}
