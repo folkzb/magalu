@@ -374,7 +374,7 @@ paths:
                             operationId: deleteCluster
                             description: Delete cluster
                             parameters:
-                                custer_id: $request.path.id
+                                custer_id: $response.body#/id
                 '400':
                     description: Bad Request
                     content:

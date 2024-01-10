@@ -459,13 +459,13 @@ paths:
                             operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
                             description: Read a Backup
                             parameters:
-                                id: $request.path.id
+                                id: $request.path.instance_id
                                 backup_id: $response.body#/id
                         delete:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                id: $request.path.id
+                                id: $request.path.instance_id
                                 backup_id: $response.body#/id
                 '422':
                     description: Validation Error
@@ -517,8 +517,8 @@ paths:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                id: $request.path.id
-                                backup_id: request.path.id
+                                id: $response.body#/id
+                                backup_id: $request.path.backup_id
                 '422':
                     description: Validation Error
                     content:
@@ -781,12 +781,12 @@ paths:
                             operationId: instances_v1_patch
                             description: Update Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                         update/flavor_id:
                             operationId: instances_v1_resize
                             description: Resizes a database instance.
@@ -896,12 +896,12 @@ paths:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
                             parameters:
-                                id: $request.path.id
+                               id: $response.body#/id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
