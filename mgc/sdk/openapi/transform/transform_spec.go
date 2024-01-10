@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/exp/maps"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
@@ -22,7 +23,15 @@ type transformerRegistryEntry struct {
 	creator transformerCreator
 }
 
-var registry = map[string]*transformerRegistryEntry{}
+var registryInits = map[string]func() *transformerRegistryEntry{}
+var registry = utils.NewLazyLoader(func() map[string]*transformerRegistryEntry {
+	reg := map[string]*transformerRegistryEntry{}
+	for n, init := range registryInits {
+		reg[n] = init()
+	}
+	maps.Clear(registryInits)
+	return reg
+})
 
 type transformSpec struct {
 	Type string `json:"type"`
@@ -87,7 +96,7 @@ func getTransformationSpecs(extensions map[string]any, transformationKey string)
 func getTransformers(extensions map[string]any, transformationKey string) (transformers []transformer, err error) {
 	specs := getTransformationSpecs(extensions, transformationKey)
 	for i, spec := range specs {
-		entry := registry[spec.Type]
+		entry := registry()[spec.Type]
 		if entry == nil {
 			return nil, &utils.ChainedError{Name: fmt.Sprint(i), Err: fmt.Errorf("unknown transformer type: %q", spec.Type)}
 		}
@@ -119,22 +128,27 @@ func addTransformer[T any](creator transformerCreator, names ...string) {
 	}
 	rt := reflect.TypeOf(*new(T))
 
-	var schema *mgcSchemaPkg.Schema = baseSchema()
-	if rt.Kind() == reflect.Struct && rt.NumField() > 0 {
-		transformerSchema, err := mgcSchemaPkg.SchemaFromType[T]()
-		if err != nil {
-			panic(err.Error())
+	initSchema := func() *mgcSchemaPkg.Schema {
+		var schema *mgcSchemaPkg.Schema = baseSchema()
+		if rt.Kind() == reflect.Struct && rt.NumField() > 0 {
+			transformerSchema, err := mgcSchemaPkg.SchemaFromType[T]()
+			if err != nil {
+				panic(err.Error())
+			}
+			schema, err = mgcSchemaPkg.SimplifySchema(mgcSchemaPkg.NewAllOfSchema(schema, transformerSchema))
+			if err != nil {
+				panic(err.Error())
+			}
 		}
-		schema, err = mgcSchemaPkg.SimplifySchema(mgcSchemaPkg.NewAllOfSchema(schema, transformerSchema))
-		if err != nil {
-			panic(err.Error())
-		}
+		return schema
 	}
 
 	for _, n := range names {
-		if existing := registry[n]; existing != nil {
-			panic(fmt.Sprintf("existing transformer: %q => creator=%#v, schema=%#v\n", n, existing.creator, existing.schema))
+		if existing := registryInits[n]; existing != nil {
+			panic(fmt.Sprintf("existing transformer: %q => creator=%#v, schema=%#v\n", n, existing().creator, existing().schema))
 		}
-		registry[n] = &transformerRegistryEntry{n, schema, creator}
+		registryInits[n] = func() *transformerRegistryEntry {
+			return &transformerRegistryEntry{n, initSchema(), creator}
+		}
 	}
 }
