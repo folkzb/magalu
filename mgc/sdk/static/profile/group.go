@@ -5,7 +5,7 @@ import (
 	"magalu.cloud/core/utils"
 )
 
-var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
+var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name: "profile",
@@ -14,12 +14,14 @@ Users can create as many profiles as they choose to. Auth and config operations 
 current profile, so users can alter and switch between profiles without loosing the previous configuration`,
 			Summary: "Profile related commands",
 		},
-		[]core.Descriptor{
-			getCurrent(),
-			getCreate(),
-			getSetCurrent(),
-			getList(),
-			getDelete(),
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				getCurrent(),
+				getCreate(),
+				getSetCurrent(),
+				getList(),
+				getDelete(),
+			}
 		},
 	)
 })

@@ -174,7 +174,7 @@ func (o *Sdk) Group() core.Grouper {
 				Description: "All MagaLu Groups & Executors",
 			},
 			[]core.Grouper{
-				static.NewGroup(),
+				static.GetGroup(),
 				o.newOpenApiSource(),
 				o.newBlueprintSource(o.RefResolver()),
 			},

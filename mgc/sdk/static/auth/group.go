@@ -7,9 +7,7 @@ import (
 	"magalu.cloud/sdk/static/auth/tenant"
 )
 
-var GetGroup = utils.NewLazyLoader[core.Grouper](newGroup)
-
-func newGroup() core.Grouper {
+var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:    "auth",
@@ -18,11 +16,13 @@ func newGroup() core.Grouper {
 of HTTP requests using the MgcSDK. Authentication is done via Magalu Cloud account
 (Object Storage requires special keys, refer to it for more info)`,
 		},
-		[]core.Descriptor{
-			getLogin(),
-			getAccessToken(),
-			objectstorage.GetGroup(),
-			tenant.GetGroup(),
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				getLogin(),
+				getAccessToken(),
+				objectstorage.GetGroup(),
+				tenant.GetGroup(),
+			}
 		},
 	)
-}
+})

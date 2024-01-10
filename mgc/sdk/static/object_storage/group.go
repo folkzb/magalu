@@ -7,18 +7,18 @@ import (
 	"magalu.cloud/sdk/static/object_storage/objects"
 )
 
-var GetGroup = utils.NewLazyLoader[core.Grouper](newGroup)
-
-func newGroup() core.Grouper {
+var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:        "object-storage",
 			Summary:     "Operations for Object Storage API",
 			Description: `Create and manage Buckets and Objects via the Object Storage API`,
 		},
-		[]core.Descriptor{
-			buckets.GetGroup(), // object-storage buckets
-			objects.GetGroup(), // object-storage objects
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				buckets.GetGroup(), // object-storage buckets
+				objects.GetGroup(), // object-storage objects
+			}
 		},
 	)
-}
+})

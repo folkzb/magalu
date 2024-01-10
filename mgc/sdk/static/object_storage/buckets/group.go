@@ -11,10 +11,12 @@ var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
 			Name:        "buckets",
 			Description: "Bucket operations for Object Storage API",
 		},
-		[]core.Descriptor{
-			getCreate(), // object-storage buckets create
-			getDelete(), // object-storage buckets delete
-			getList(),   // object-storage buckets list
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				getCreate(), // object-storage buckets create
+				getDelete(), // object-storage buckets delete
+				getList(),   // object-storage buckets list
+			}
 		},
 	)
 })

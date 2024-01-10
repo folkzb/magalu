@@ -5,9 +5,7 @@ import (
 	"magalu.cloud/core/utils"
 )
 
-var GetGroup = utils.NewLazyLoader[core.Grouper](newGroup)
-
-func newGroup() core.Grouper {
+var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:    "tenant",
@@ -16,10 +14,12 @@ func newGroup() core.Grouper {
 Magalu Cloud account and they each store their data separately, but are billed
 under the same account`,
 		},
-		[]core.Descriptor{
-			getList(),
-			getSelect(),
-			getCurrent(),
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				getList(),
+				getSelect(),
+				getCurrent(),
+			}
 		},
 	)
-}
+})

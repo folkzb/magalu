@@ -15,11 +15,13 @@ func newGroup() core.Grouper {
 			Description: `Create and manage Volume Attachments`,
 			IsInternal:  true,
 		},
-		[]core.Descriptor{
-			getCreate(),
-			getGet(),
-			getUpdate(),
-			getDelete(),
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				getCreate(),
+				getGet(),
+				getUpdate(),
+				getDelete(),
+			}
 		},
 	)
 }

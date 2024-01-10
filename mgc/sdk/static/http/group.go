@@ -12,9 +12,11 @@ var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 			Description: "HTTP access",
 			IsInternal:  true,
 		},
-		[]core.Descriptor{
-			getJsonGroup(),    // http json
-			getHttpExecutor(), // http do
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				getJsonGroup(),    // http json
+				getHttpExecutor(), // http do
+			}
 		},
 	)
 })

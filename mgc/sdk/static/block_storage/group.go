@@ -15,8 +15,10 @@ func newGroup() core.Grouper {
 			Summary:     "Operations for Block Storage API",
 			Description: `Create and manage Volumes via the Block Storage API`,
 		},
-		[]core.Descriptor{
-			attachment.GetGroup(),
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				attachment.GetGroup(),
+			}
 		},
 	)
 }

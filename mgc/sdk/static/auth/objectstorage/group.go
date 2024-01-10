@@ -5,9 +5,7 @@ import (
 	"magalu.cloud/core/utils"
 )
 
-var GetGroup = utils.NewLazyLoader(newGroup)
-
-func newGroup() core.Grouper {
+var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:    "object-storage",
@@ -17,9 +15,11 @@ to normal HTTP requests. Two keys are needed, the 'SecretKey' and
 'AccessKeyId'. Instructions on how to create these can be found
 here: https://id.magalu.com/api-keys`,
 		},
-		[]core.Descriptor{
-			getSet(),
-			getGet(),
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				getSet(),
+				getGet(),
+			}
 		},
 	)
-}
+})

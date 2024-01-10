@@ -5,9 +5,7 @@ import (
 	"magalu.cloud/core/utils"
 )
 
-var GetGroup = utils.NewLazyLoader[*core.StaticGroup](newGroup)
-
-func newGroup() *core.StaticGroup {
+var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 	return core.NewStaticGroup(
 		core.DescriptorSpec{
 			Name:    "config",
@@ -17,11 +15,13 @@ different executions of the MgcSDK. They reside in a YAML file when set.
 Config values may also be loaded via Environment Variables. Any Config available
 (see 'list') may be exported as an env variable in uppercase with the 'MGC_' prefix`,
 		},
-		[]core.Descriptor{
-			getList(),
-			getGet(),
-			getSet(),
-			getDelete(),
+		func() []core.Descriptor {
+			return []core.Descriptor{
+				getList(),
+				getGet(),
+				getSet(),
+				getDelete(),
+			}
 		},
 	)
-}
+})

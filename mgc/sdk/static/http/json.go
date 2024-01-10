@@ -104,9 +104,13 @@ func newExecuteJsonBody(method string) func(ctx context.Context, params jsonBody
 }
 
 var getJsonGroup = utils.NewLazyLoader(func() core.Grouper {
-	executors := []core.Descriptor{}
-	for method, hasBody := range httpMethodsBody {
-		executors = append(executors, newJsonExecutor(method, hasBody))
+	executors := []func() core.Descriptor{}
+	for k, v := range httpMethodsBody {
+		// Do this because of Go's weird loops lol
+		// https://go.dev/blog/loopvar-preview
+		method := k
+		hasBody := v
+		executors = append(executors, func() core.Descriptor { return newJsonExecutor(method, hasBody) })
 	}
 
 	return core.NewStaticGroup(
@@ -114,6 +118,11 @@ var getJsonGroup = utils.NewLazyLoader(func() core.Grouper {
 			Name:        "json",
 			Description: "JSON HTTP access",
 		},
-		executors,
+		func() (children []core.Descriptor) {
+			for _, exec := range executors {
+				children = append(children, exec())
+			}
+			return children
+		},
 	)
 })
