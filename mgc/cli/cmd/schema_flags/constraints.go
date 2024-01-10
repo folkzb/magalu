@@ -21,6 +21,11 @@ func addXOfSchemaConstraints(message string, refs mgcSchemaPkg.SchemaRefs, dst *
 		}
 		if desc := getDescriptionConstraints((*mgcSchemaPkg.Schema)(ref.Value)); desc != "" {
 			constraints = append(constraints, desc)
+			continue
+		}
+		if t := getFlagType((*mgcSchemaPkg.Schema)(ref.Value)); t != "" {
+			constraints = append(constraints, t)
+			continue
 		}
 	}
 
