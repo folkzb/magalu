@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 )
@@ -354,20 +353,15 @@ var attrInfos = []resAttrInfoMap{
 }
 
 func TestToMgcSchemaValue(t *testing.T) {
-	conv := tfStateLoader{
-		ctx:  context.Background(),
-		diag: &diag.Diagnostics{},
-	}
-
 	for i := 0; i < len(states); i++ {
 		atinfo := resAttrInfo{
 			tfName:          "schema",
 			mgcSchema:       schemas[i],
 			childAttributes: attrInfos[i],
 		}
-		result, _ := conv.loadMgcSchemaValue(&atinfo, states[i], true, true)
+		result, _, d := loadMgcSchemaValue(context.Background(), &atinfo, states[i], true, true)
 		if !reflect.DeepEqual(result, results[i]) {
-			t.Fatalf("result %d differs from expected: %T -> %T:\nRECEIVED: %+v\nEXPECTED: %+v\nDIAG: %+v\n", i, result, results[i], result, results[i], conv.diag)
+			t.Fatalf("result %d differs from expected: %T -> %T:\nRECEIVED: %+v\nEXPECTED: %+v\nDIAG: %+v\n", i, result, results[i], result, results[i], d)
 		}
 	}
 }

@@ -6,9 +6,6 @@ import (
 	"reflect"
 	"slices"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"golang.org/x/exp/maps"
@@ -16,17 +13,6 @@ import (
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	mgcSdk "magalu.cloud/sdk"
 )
-
-type tfStateHandler interface {
-	Name() string
-
-	TFSchema() *schema.Schema
-	ReadResultSchema() *mgcSdk.Schema
-
-	InputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap
-	OutputAttrInfoMap(ctx context.Context, d *diag.Diagnostics) resAttrInfoMap
-	SplitAttributes() []splitResAttribute
-}
 
 func missingSchemaKeysInMap(m map[string]core.Value, s *mgcSchemaPkg.Schema, prefix string) (missing []string) {
 	for propName, propSchemaRef := range s.Properties {
@@ -53,171 +39,184 @@ func missingSchemaKeysInMap(m map[string]core.Value, s *mgcSchemaPkg.Schema, pre
 }
 
 // Try to read attributes from both Input and Output to fill a map that matches the 'mgcSchema'. If any values are missing in the end, errors are diagnosed
-func readMgcMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	result := readMgcInputMapSchemaFromTFState(handler, mgcSchema, ctx, tfState, diag)
-	output := readMgcOutputMapSchemaFromTFState(handler, mgcSchema, ctx, tfState, diag)
-	maps.Copy(result, output)
+func readMgcMapSchemaFromTFState(ctx context.Context, attrTree resAttrInfoTree, mgcSchema *mgcSdk.Schema, tfState tfsdk.State) (map[string]any, Diagnostics) {
+	diagnostics := Diagnostics{}
 
+	result, d := readMgcMap(ctx, mgcSchema, attrTree.input, tfState)
+	if !d.HasError() {
+		return result, diagnostics.AppendReturn(d...)
+	}
+	output, d := readMgcMap(ctx, mgcSchema, attrTree.output, tfState)
+	if !d.HasError() {
+		return result, diagnostics.AppendReturn(d...)
+	}
+
+	maps.Copy(result, output)
 	if missingKeys := missingSchemaKeysInMap(result, mgcSchema, ""); len(missingKeys) > 0 {
-		diag.AddError(
+		diagnostics.AddError(
 			"unable to read MgcMap from Input and Output Terraform attributes",
 			fmt.Sprintf("Reading Input and Output attributes into MgcMap didn't match requested schema. Map: %#v, Schema: %#v, Missing Keys: %v", result, mgcSchema, missingKeys),
 		)
+		return nil, diagnostics
 	}
 
-	return result
+	return result, diagnostics
 }
 
-// If the Input Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
-func readMgcInputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	loader := newTFStateLoader(ctx, diag)
-	return loader.readMgcMap(mgcSchema, handler.InputAttrInfoMap(ctx, diag), tfState)
-}
+func verifyCurrentDesiredMismatch(inputAttr resAttrInfoMap, inputMgcMap map[string]any, outputMgcMap map[string]any) Diagnostics {
+	diagnostics := Diagnostics{}
 
-// If the Output Attributes don't have an attribute requested by 'mgcSchema', it will be ignored, but no errors will be diagnosed
-func readMgcOutputMapSchemaFromTFState(handler tfStateHandler, mgcSchema *mgcSdk.Schema, ctx context.Context, tfState tfsdk.State, diag *diag.Diagnostics) map[string]any {
-	loader := newTFStateLoader(ctx, diag)
-	return loader.readMgcMap(mgcSchema, handler.OutputAttrInfoMap(ctx, diag), tfState)
-}
+	for _, desired := range inputAttr {
+		current := desired.currentCounterpart
+		if current == nil {
+			continue
+		}
 
-func applyMgcInputMapToTFState(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
-	applier := newTFStateApplier(ctx, diag, handler.TFSchema())
-	applier.applyMgcMap(mgcMap, handler.InputAttrInfoMap(ctx, diag), ctx, tfState, path.Empty())
-}
-
-func applyMgcOutputMapToTFState(handler tfStateHandler, mgcMap map[string]any, ctx context.Context, tfState *tfsdk.State, diag *diag.Diagnostics) {
-	applier := newTFStateApplier(ctx, diag, handler.TFSchema())
-	applier.applyMgcMap(mgcMap, handler.OutputAttrInfoMap(ctx, diag), ctx, tfState, path.Empty())
-}
-
-func verifyCurrentDesiredMismatch(handler tfStateHandler, inputMgcMap map[string]any, outputMgcMap map[string]any, diag *diag.Diagnostics) {
-	for _, splitAttr := range handler.SplitAttributes() {
-		input, ok := inputMgcMap[string(splitAttr.desired.mgcName)]
+		input, ok := inputMgcMap[string(desired.mgcName)]
 		if !ok {
 			continue
 		}
 
-		output, ok := outputMgcMap[string(splitAttr.current.mgcName)]
+		output, ok := outputMgcMap[string(current.mgcName)]
 		if !ok {
 			continue
 		}
 
 		if !reflect.DeepEqual(input, output) {
-			diag.AddWarning(
+			diagnostics.AddWarning(
 				"current/desired attribute mismatch",
 				fmt.Sprintf(
 					"Terraform isn't able to verify the equality between %q (%v) and %q (%v) because their structures are different. Assuming success.",
-					splitAttr.current.tfName,
+					current.tfName,
 					output,
-					splitAttr.desired.tfName,
+					desired.tfName,
 					input,
 				),
 			)
 		}
 	}
+	return diagnostics
 }
 
 // Does not return error, check for 'diag.HasError' to see if operation was successful
-func resultAsMap(result core.ResultWithValue, diag *diag.Diagnostics) map[string]any {
+func resultAsMap(result core.ResultWithValue) (map[string]any, Diagnostics) {
 	if result == nil {
-		return map[string]any{}
+		return nil, nil
 	}
 	resultMap, ok := result.Value().(map[string]any)
 	if !ok {
-		diag.AddError(
+		return nil, NewErrorDiagnostics(
 			"Operation output mismatch",
 			fmt.Sprintf("Unable to convert %v to map.", result),
 		)
 	}
-	return resultMap
+
+	return resultMap, nil
 }
 
 // If 'result.Source().Executor' has a "read" link, return that. Otherwise, return 'resourceRead'
 func getReadForApplyStateAfter(
 	ctx context.Context,
-	handler tfStateHandler,
+	resourceName tfName,
 	result core.ResultWithValue,
 	resourceRead core.Executor,
-	diag *diag.Diagnostics,
-) core.Executor {
+) (core.Executor, Diagnostics) {
 	if readLink, ok := result.Source().Executor.Links()["get"]; ok {
 		var err error
 		resourceRead, err = readLink.CreateExecutor(result)
 		if err != nil {
-			diag.AddError(
+			return nil, NewErrorDiagnostics(
 				"Read link failed",
-				fmt.Sprintf("Unable to create Read link executor for applying new state on resource %q: %s", handler.Name(), err),
+				fmt.Sprintf("Unable to create Read link executor for applying new state on resource %q: %s", resourceName, err),
 			)
-			return nil
 		}
 		tflog.Debug(ctx, "[resource] will read using link")
-		return resourceRead
+		return resourceRead, nil
 	}
 
 	tflog.Debug(ctx, "[resource] will read using resource read call")
 
 	// Should not happen, but check just in case, to avoid potential crashes
 	if resourceRead == nil {
-		diag.AddError(
+		return nil, NewErrorDiagnostics(
 			"applying state after failed",
-			fmt.Sprintf("operation has no 'read' link and resource has no 'read' call. Reading is impossible for %q'.", handler.Name()),
+			fmt.Sprintf("operation has no 'read' link and resource has no 'read' call. Reading is impossible for %q'.", resourceName),
 		)
-		return nil
 	}
 
-	return resourceRead
+	return resourceRead, nil
 }
 
 // 'read' parameter may be nil ONLY IF 'result.Source().Executor' already has a Link named "read"
 func applyStateAfter(
-	handler tfStateHandler,
+	ctx context.Context,
+	resourceName tfName,
+	attrTree resAttrInfoTree,
 	result core.ResultWithValue,
 	read core.Executor,
-	ctx context.Context,
 	tfState *tfsdk.State,
-	d *diag.Diagnostics,
-) (readResult core.ResultWithValue, readResultMap map[string]any) {
-	tflog.Debug(ctx, fmt.Sprintf("[resource] applying state after for %q", handler.Name()))
+) (readResult core.ResultWithValue, readResultMap map[string]any, diagnostics Diagnostics) {
+	diagnostics = Diagnostics{}
+	tflog.Debug(ctx, fmt.Sprintf("[resource] applying state after for %q", resourceName))
 
+	tflog.Debug(ctx, "[resource] applying request parameters in state")
 	// First, apply the values that the user passed as Parameters to the state (assuming success)
-	applyMgcInputMapToTFState(handler, result.Source().Parameters, ctx, tfState, d)
+	d := applyMgcMapToTFState(ctx, result.Source().Parameters, attrTree.input, tfState)
+	if diagnostics.AppendCheckError(d...) {
+		return nil, nil, d
+	}
 
-	resultMapConvDiag := diag.Diagnostics{}
-	resultMap := resultAsMap(result, &resultMapConvDiag)
-	if !resultMapConvDiag.HasError() {
+	resultMap, d := resultAsMap(result)
+	if !d.HasError() {
+		tflog.Debug(ctx, "[resource] applying request result in state")
 		// Then, apply the result values of the request that was performed
-		applyMgcOutputMapToTFState(handler, resultMap, ctx, tfState, d)
-		verifyCurrentDesiredMismatch(handler, result.Source().Parameters, resultMap, d)
+		d := applyMgcMapToTFState(ctx, resultMap, attrTree.output, tfState)
+		if diagnostics.AppendCheckError(d...) {
+			return nil, nil, diagnostics
+		}
+
+		tflog.Debug(ctx, "[resource] checking result state current/desired mismatches")
+		d = verifyCurrentDesiredMismatch(attrTree.input, result.Source().Parameters, resultMap)
+		if diagnostics.AppendCheckError(d...) {
+			return nil, nil, diagnostics
+		}
+	} else {
+		tflog.Debug(ctx, "[resource] request result was not a map, not applying")
 	}
 
 	// Then, try to retrieve the Read executor for the Resource via links ('read' parameter may have been nil)
-	read = getReadForApplyStateAfter(ctx, handler, result, read, d)
-	if d.HasError() {
-		return nil, nil
+	read, d = getReadForApplyStateAfter(ctx, resourceName, result, read)
+	if diagnostics.AppendCheckError(d...) {
+		return nil, nil, diagnostics
 	}
 
 	paramsSchema := read.ParametersSchema()
-	params := readMgcMapSchemaFromTFState(handler, paramsSchema, ctx, *tfState, d)
+	params, d := readMgcMapSchemaFromTFState(ctx, attrTree, paramsSchema, *tfState)
+	if diagnostics.AppendCheckError(d...) {
+		return nil, nil, diagnostics
+	}
+
 	if err := paramsSchema.VisitJSON(params); err != nil {
-		d.AddError(
+		diagnostics.AddError(
 			"applying state after failed",
 			fmt.Sprintf("unable to read resource due to insufficient state information. %s", err),
 		)
-		return nil, nil
+		return nil, nil, diagnostics
 	}
 
-	readResult = execute(tfName(handler.Name()), ctx, read, params, core.Configs{}, d)
-	if d.HasError() {
-		return nil, nil
+	readResult, ed := execute(ctx, resourceName, read, params, core.Configs{})
+	if diagnostics.AppendCheckError(ed...) {
+		return nil, nil, diagnostics
 	}
 
-	readResultMap = resultAsMap(readResult, d)
-	if d.HasError() {
-		return nil, nil
+	readResultMap, d = resultAsMap(readResult)
+	if diagnostics.AppendCheckError(d...) {
+		return nil, nil, diagnostics
 	}
 
-	applyMgcOutputMapToTFState(handler, readResultMap, ctx, tfState, d)
-	verifyCurrentDesiredMismatch(handler, result.Source().Parameters, readResultMap, d)
+	applyMgcMapToTFState(ctx, readResultMap, attrTree.output, tfState)
+	d = verifyCurrentDesiredMismatch(attrTree.input, result.Source().Parameters, readResultMap)
+	diagnostics.Append(d...)
 
-	return readResult, readResultMap
+	return readResult, readResultMap, diagnostics
 }

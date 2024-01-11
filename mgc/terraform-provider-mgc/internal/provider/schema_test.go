@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -452,7 +451,7 @@ func TestGenerateTFAttributes(t *testing.T) {
 	// comparisons (unless both functions are nil)
 	// TODO: investigate lib reporting false negatives/positives on deep comparisons...
 	for _, testCase := range testCases {
-		d := diag.Diagnostics{}
+		d := Diagnostics{}
 		inputAttr := testCase.res.InputAttrInfoMap(ctx, &d)
 		if diff := deep.Equal(inputAttr, testCase.expectedInput); diff != nil {
 			t.Errorf("MgcResource.readInputAttributes failed. Diff list: %v", diff)
@@ -461,7 +460,7 @@ func TestGenerateTFAttributes(t *testing.T) {
 		if diff := deep.Equal(outputAttr, testCase.expectedOutput); diff != nil {
 			t.Errorf("MgcResource.readOutputAttributes failed. Diff list: %v", diff)
 		}
-		finalAttr := generateTFAttributes(ctx, testCase.res, &d)
+		finalAttr := generateTFAttributes(ctx, resAttrInfoTree{input: inputAttr, output: outputAttr}, &d)
 		if diff := deep.Equal(finalAttr, testCase.expectedFinal); diff != nil {
 			t.Errorf("MgcResource.generateTFAttributes failed. Diff list: %v", diff)
 		}

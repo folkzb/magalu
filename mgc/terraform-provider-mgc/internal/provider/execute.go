@@ -4,31 +4,30 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"magalu.cloud/core"
 )
 
-func validateResult(d *diag.Diagnostics, result core.ResultWithValue) error {
+func validateResult(result core.ResultWithValue) Diagnostics {
 	err := result.ValidateSchema()
 	if err != nil {
-		d.AddWarning(
+		// TODO: Return errors instead of warnings
+		return NewWarningDiagnostics(
 			"Operation output mismatch",
 			fmt.Sprintf("Result has invalid structure: %v", err),
 		)
 	}
-	return err
+	return nil
 }
 
-// Does not return error, check for 'diag.HasError' to see if operation was successful
 func execute(
-	resName tfName,
 	ctx context.Context,
+	resName tfName,
 	exec core.Executor,
 	params core.Parameters,
 	configs core.Configs,
-	diag *diag.Diagnostics,
-) core.ResultWithValue {
+) (core.ResultWithValue, Diagnostics) {
+	var diagnostics = Diagnostics{}
 	var result core.Result
 	var err error
 
@@ -41,11 +40,10 @@ func execute(
 		result, err = exec.Execute(ctx, params, configs)
 	}
 	if err != nil {
-		diag.AddError(
+		return nil, diagnostics.AppendErrorReturn(
 			fmt.Sprintf("Unable to %s %s", exec.Name(), resName),
 			fmt.Sprintf("Service returned with error: %v", err),
 		)
-		return nil
 	}
 
 	resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
@@ -53,20 +51,19 @@ func execute(
 		if resultSchema := exec.ResultSchema(); resultSchema.Nullable || resultSchema.IsEmpty() {
 			resultWithValue = core.NewSimpleResult(result.Source(), exec.ResultSchema(), nil)
 		} else {
-			diag.AddError(
+			// Should this really be an error? Don't really know. Why not let 'validateResult' handle this?
+			// This would probably further state updates so it's probably better NOT to error here
+			return nil, diagnostics.AppendErrorReturn(
 				"Operation output mismatch",
 				fmt.Sprintf("result has no value %#v", result),
 			)
-			return nil
 		}
 	}
 
-	/* TODO:
-	if err := validateResult(diag, result); err != nil {
-		return
+	d := validateResult(resultWithValue)
+	if diagnostics.AppendCheckError(d...) {
+		return nil, diagnostics
 	}
-	*/
-	_ = validateResult(diag, resultWithValue) // just ignore errors for now
 
-	return resultWithValue
+	return resultWithValue, diagnostics
 }

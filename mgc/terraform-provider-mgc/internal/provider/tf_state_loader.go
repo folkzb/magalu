@@ -5,90 +5,84 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	mgcSdk "magalu.cloud/sdk"
 )
 
-type tfStateLoader struct {
-	ctx  context.Context
-	diag *diag.Diagnostics
-}
-
-func newTFStateLoader(ctx context.Context, diag *diag.Diagnostics) tfStateLoader {
-	return tfStateLoader{
-		ctx:  ctx,
-		diag: diag,
-	}
-}
-
-func (c *tfStateLoader) loadMgcSchemaValue(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcValue any, isKnown bool) {
+func loadMgcSchemaValue(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcValue any, isKnown bool, d Diagnostics) {
 	tflog.Debug(
-		c.ctx,
+		ctx,
 		"[loader] starting loading from TF state value to mgc value",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
 	)
+
 	mgcSchema := atinfo.mgcSchema
 	if mgcSchema == nil {
-		c.diag.AddError("Invalid schema", "null schema provided to load state to go values")
-		return nil, false
+		return nil, false, NewErrorDiagnostics("Invalid schema", "null schema provided to load state to go values")
 	}
 
 	if !tfValue.IsKnown() {
 		if !ignoreUnknown {
-			c.diag.AddError(
+			return nil, false, NewErrorDiagnostics(
 				"Unable to load unknown value",
 				fmt.Sprintf("[loader] unable to load %q since value is unknown: value %+v - schema: %+v", atinfo.mgcName, tfValue, mgcSchema),
 			)
-			return nil, false
 		}
-		return nil, false
+		tflog.Debug(
+			ctx,
+			"[loader] value is not known, returning nothing",
+			map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
+		)
+		return nil, false, nil
 	}
 
 	if tfValue.IsNull() {
 		if filterUnset {
-			return nil, false
+			return nil, false, nil
 		}
 
 		if atinfo.tfSchema.IsOptional() && !atinfo.tfSchema.IsComputed() {
+			tflog.Debug(
+				ctx,
+				"[loader] value is null in state due to not being specified, returning null as if unknown",
+				map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
+			)
 			// Optional values that aren't computed will never be unknown
 			// this means they will be null in the state
-			return nil, true
+			return nil, false, nil
 		} else if !mgcSchema.Nullable {
-			c.diag.AddError(
+			return nil, true, NewErrorDiagnostics(
 				"Unable to load non nullable value",
 				fmt.Sprintf("[loader] unable to load %q since value is null and not nullable by the schema: value %+v - schema: %+v", atinfo.mgcName, tfValue, mgcSchema),
 			)
-			return nil, true
 		}
-		return nil, true
+		return nil, true, nil
 	}
 
 	switch mgcSchema.Type {
 	case "string":
-		return c.loadMgcSchemaString(atinfo, tfValue, ignoreUnknown, filterUnset)
+		return loadMgcSchemaString(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "number":
-		return c.loadMgcSchemaNumber(atinfo, tfValue, ignoreUnknown, filterUnset)
+		return loadMgcSchemaNumber(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "integer":
-		return c.loadMgcSchemaInt(atinfo, tfValue, ignoreUnknown, filterUnset)
+		return loadMgcSchemaInt(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "boolean":
-		return c.loadMgcSchemaBool(atinfo, tfValue, ignoreUnknown, filterUnset)
+		return loadMgcSchemaBool(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "array":
-		return c.loadMgcSchemaArray(atinfo, tfValue, ignoreUnknown, filterUnset)
+		return loadMgcSchemaArray(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "object":
-		return c.loadMgcSchemaMap(atinfo, tfValue, ignoreUnknown, filterUnset)
+		return loadMgcSchemaMap(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	default:
-		c.diag.AddError("Unknown value", fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v", atinfo.mgcName, tfValue, mgcSchema))
-		return nil, false
+		return nil, false, NewErrorDiagnostics("Unknown value", fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v", atinfo.mgcName, tfValue, mgcSchema))
 	}
 }
 
-func (c *tfStateLoader) loadMgcSchemaString(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool) {
+func loadMgcSchemaString(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool, d Diagnostics) {
 	mgcSchema := atinfo.mgcSchema
 	tflog.Debug(
-		c.ctx,
+		ctx,
 		"[loader] will load as string",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue, "mgcSchema": mgcSchema},
 	)
@@ -96,20 +90,19 @@ func (c *tfStateLoader) loadMgcSchemaString(atinfo *resAttrInfo, tfValue tftypes
 	var state string
 	err := tfValue.As(&state)
 	if err != nil {
-		c.diag.AddError(
+		return nil, true, NewErrorDiagnostics(
 			"Unable to load value to string",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
-		return nil, true
 	}
-	tflog.Debug(c.ctx, "[loader] finished loading string", map[string]any{"tfName": atinfo.tfName, "resulting value": state})
-	return state, true
+	tflog.Debug(ctx, "[loader] finished loading string", map[string]any{"tfName": atinfo.tfName, "resulting value": state})
+	return state, true, nil
 }
 
-func (c *tfStateLoader) loadMgcSchemaNumber(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool) {
+func loadMgcSchemaNumber(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool, d Diagnostics) {
 	mgcSchema := atinfo.mgcSchema
 	tflog.Debug(
-		c.ctx,
+		ctx,
 		"[loader] will load as number",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue, "mgcSchema": mgcSchema},
 	)
@@ -117,29 +110,27 @@ func (c *tfStateLoader) loadMgcSchemaNumber(atinfo *resAttrInfo, tfValue tftypes
 	var state big.Float
 	err := tfValue.As(&state)
 	if err != nil {
-		c.diag.AddError(
+		return nil, true, NewErrorDiagnostics(
 			"Unable to load value to number",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
-		return nil, true
 	}
 
 	result, accuracy := state.Float64()
 	if accuracy != big.Exact {
-		c.diag.AddError(
+		return nil, true, NewErrorDiagnostics(
 			"Unable to load value to float",
 			fmt.Sprintf("[loader] %q with value %+v lost accuracy in conversion to %+v", atinfo.mgcName, state, result),
 		)
-		return nil, true
 	}
-	tflog.Debug(c.ctx, "[loader] finished loading number", map[string]any{"tfName": atinfo.tfName, "resulting value": result})
-	return result, true
+	tflog.Debug(ctx, "[loader] finished loading number", map[string]any{"tfName": atinfo.tfName, "resulting value": result})
+	return result, true, nil
 }
 
-func (c *tfStateLoader) loadMgcSchemaInt(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool) {
+func loadMgcSchemaInt(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool, d Diagnostics) {
 	mgcSchema := atinfo.mgcSchema
 	tflog.Debug(
-		c.ctx,
+		ctx,
 		"[loader] will load as int",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue, "mgcSchema": mgcSchema},
 	)
@@ -147,29 +138,27 @@ func (c *tfStateLoader) loadMgcSchemaInt(atinfo *resAttrInfo, tfValue tftypes.Va
 	var state big.Float
 	err := tfValue.As(&state)
 	if err != nil {
-		c.diag.AddError(
+		return nil, true, NewErrorDiagnostics(
 			"Unable to load value to integer",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
-		return nil, true
 	}
 
 	result, accuracy := state.Int64()
 	if accuracy != big.Exact {
-		c.diag.AddError(
+		return nil, true, NewErrorDiagnostics(
 			"Unable to load value to integer",
 			fmt.Sprintf("[loader] %q with value %+v lost accuracy in conversion to %+v", atinfo.mgcName, state, result),
 		)
-		return nil, true
 	}
-	tflog.Debug(c.ctx, "[loader] finished loading integer", map[string]any{"tfName": atinfo.tfName, "resulting value": result})
-	return result, true
+	tflog.Debug(ctx, "[loader] finished loading integer", map[string]any{"tfName": atinfo.tfName, "resulting value": result})
+	return result, true, nil
 }
 
-func (c *tfStateLoader) loadMgcSchemaBool(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool) {
+func loadMgcSchemaBool(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (result any, isKnown bool, d Diagnostics) {
 	mgcSchema := atinfo.mgcSchema
 	tflog.Debug(
-		c.ctx,
+		ctx,
 		"[loader] will load as bool",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue, "mgcSchema": mgcSchema},
 	)
@@ -177,19 +166,19 @@ func (c *tfStateLoader) loadMgcSchemaBool(atinfo *resAttrInfo, tfValue tftypes.V
 	var state bool
 	err := tfValue.As(&state)
 	if err != nil {
-		c.diag.AddError(
+		return nil, false, NewErrorDiagnostics(
 			"Unable to load value to boolean",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
-		return nil, false
 	}
-	tflog.Debug(c.ctx, "[loader] finished loading bool", map[string]any{"tfName": atinfo.tfName, "resulting value": state})
-	return state, true
+	tflog.Debug(ctx, "[loader] finished loading bool", map[string]any{"tfName": atinfo.tfName, "resulting value": state})
+	return state, true, nil
 }
 
-func (c *tfStateLoader) loadMgcSchemaArray(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any, isKnown bool) {
+func loadMgcSchemaArray(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (mgcArray []any, isKnown bool, diagnostics Diagnostics) {
+	diagnostics = Diagnostics{}
 	tflog.Debug(
-		c.ctx,
+		ctx,
 		"[loader] will load as array",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
 	)
@@ -198,50 +187,49 @@ func (c *tfStateLoader) loadMgcSchemaArray(atinfo *resAttrInfo, tfValue tftypes.
 	var tfArray []tftypes.Value
 	err := tfValue.As(&tfArray)
 	if err != nil {
-		c.diag.AddError(
+		return nil, false, diagnostics.AppendErrorReturn(
 			"Unable to load value to list",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
-		return nil, false
 	}
 
 	itemAttr := atinfo.childAttributes["0"]
 	mgcArray = make([]any, len(tfArray))
 	isKnown = true
 	for i, tfItem := range tfArray {
-		mgcItem, isItemKnown := c.loadMgcSchemaValue(itemAttr, tfItem, ignoreUnknown, filterUnset)
-		if c.diag.HasError() {
-			c.diag.AddError("Unable to load array", fmt.Sprintf("unknown value inside %q array at %v", atinfo.mgcName, i))
-			return nil, isItemKnown
+		mgcItem, isItemKnown, d := loadMgcSchemaValue(ctx, itemAttr, tfItem, ignoreUnknown, filterUnset)
+		if diagnostics.AppendCheckError(d...) {
+			diagnostics.AddError("Unable to load array", fmt.Sprintf("unknown value inside %q array at %v", atinfo.mgcName, i))
+			return nil, isItemKnown, diagnostics
 		}
 		if !isItemKnown {
 			// TODO: confirm this logic, should we just keep going?
-			c.diag.AddWarning("Unknown list item", fmt.Sprintf("Item %d in %q is unknown: %+v", i, atinfo.mgcName, tfItem))
+			diagnostics.AddWarning("Unknown list item", fmt.Sprintf("Item %d in %q is unknown: %+v", i, atinfo.mgcName, tfItem))
 			isKnown = false
-			return
+			return mgcArray, isKnown, diagnostics
 		}
 		mgcArray[i] = mgcItem
 	}
-	tflog.Debug(c.ctx, "[loader] finished loading array", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcArray})
-	return
+	tflog.Debug(ctx, "[loader] finished loading array", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcArray})
+	return mgcArray, isKnown, diagnostics
 }
 
 // If 'atinfo' doesn't have a property present in 'atinfo.mgcSchema', it will be ignored. This means that the resulting MgcMap may be incomplete and it is up
 // to the caller to ensure that all properties of 'atinfo.mgcSchema' were fulfilled in the resulting mgcMap
-func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (any, bool) {
+func loadMgcSchemaMap(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (any, bool, Diagnostics) {
+	diagnostics := Diagnostics{}
 	tflog.Debug(
-		c.ctx,
+		ctx,
 		"[loader] will load as map",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
 	)
 	var tfMap map[string]tftypes.Value
 	err := tfValue.As(&tfMap)
 	if err != nil {
-		c.diag.AddError(
+		return nil, false, diagnostics.AppendErrorReturn(
 			"Unable to load value to map",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, atinfo.mgcSchema, err.Error()),
 		)
-		return nil, false
 	}
 
 	mgcMap := map[string]any{}
@@ -254,7 +242,7 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 		propMgcName := mgcName(propName)
 
 		tflog.Debug(
-			c.ctx,
+			ctx,
 			"[loader] will try to load map property",
 			map[string]any{"propMgcName": propMgcName},
 		)
@@ -262,7 +250,7 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 		propAttr, ok := atinfo.childAttributes[propMgcName]
 		if !ok {
 			tflog.Debug(
-				c.ctx,
+				ctx,
 				"[loader] ignoring non-existent value",
 				map[string]any{"mgcName": propMgcName, "value": tfValue},
 			)
@@ -272,23 +260,22 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 		propTFItem, ok := tfMap[string(propAttr.tfName)]
 		if !ok {
 			if propAttr.tfSchema.IsRequired() {
-				c.diag.AddError(
+				return mgcMap, false, diagnostics.AppendErrorReturn(
 					"Schema attribute missing from state value",
 					fmt.Sprintf("[loader] schema attribute %q with info `%+v` missing from state %+v", propMgcName, atinfo, tfMap),
 				)
-				return mgcMap, false
 			}
 			continue
 		}
 
-		propMgcItem, isItemKnown := c.loadMgcSchemaValue(propAttr, propTFItem, ignoreUnknown, filterUnset)
-		if c.diag.HasError() {
-			return nil, false
+		propMgcItem, isItemKnown, d := loadMgcSchemaValue(ctx, propAttr, propTFItem, ignoreUnknown, filterUnset)
+		if diagnostics.AppendCheckError(d...) {
+			return nil, false, diagnostics
 		}
 
 		if !isItemKnown && ignoreUnknown {
 			tflog.Debug(
-				c.ctx,
+				ctx,
 				"[loader] ignoring prop, unknown",
 				map[string]any{"propMgcName": propMgcName, "propTFName": propAttr.tfName, "value": propMgcItem},
 			)
@@ -296,7 +283,7 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 		}
 		if propMgcItem == nil && filterUnset {
 			tflog.Debug(
-				c.ctx,
+				ctx,
 				"[loader] ignoring prop, value is nil and 'filterUnset' is set to true",
 				map[string]any{"propMgcName": propMgcName, "propTFName": propAttr.tfName},
 			)
@@ -305,7 +292,7 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 
 		if propXOfKey, ok := propAttr.mgcSchema.Extensions[xOfPromotionKey].(string); ok {
 			tflog.Debug(
-				c.ctx,
+				ctx,
 				fmt.Sprintf("[loader] found xOf promotion key: %q", propXOfKey),
 				map[string]any{"propMgcName": propMgcName},
 			)
@@ -314,36 +301,35 @@ func (c *tfStateLoader) loadMgcSchemaMap(atinfo *resAttrInfo, tfValue tftypes.Va
 				xOfKey = propXOfKey
 				xOfPromotedValues = append(xOfPromotedValues, propName)
 			} else if xOfKey != propXOfKey {
-				c.diag.AddError(
+				return mgcMap, false, diagnostics.AppendErrorReturn(
 					"mutually exclusive attributes specified",
 					fmt.Sprintf("attribute %q cannot be specified if attribute(s) %v have already been specified and vice-versa", propName, xOfPromotedValues),
 				)
-				return mgcMap, false
 			}
 		}
 
 		if isSchemaXOfAlternative(propAttr.mgcSchema) {
 			tflog.Debug(
-				c.ctx,
+				ctx,
 				"[loader] returning value from map as map itself, since it was a promoted xOf schema",
 				map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": propMgcItem},
 			)
-			return propMgcItem, isKnown
+			return propMgcItem, isKnown, diagnostics
 		} else {
 			tflog.Debug(
-				c.ctx,
+				ctx,
 				"[loader] loaded map prop",
 				map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": propMgcItem},
 			)
 			mgcMap[string(propMgcName)] = propMgcItem
 		}
 	}
-	tflog.Debug(c.ctx, "[loader] finished loading map", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcMap})
-	return mgcMap, isKnown
+	tflog.Debug(ctx, "[loader] finished loading map", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcMap})
+	return mgcMap, isKnown, diagnostics
 }
 
 // Read values from tfValue into a map suitable to MGC
-func (c *tfStateLoader) readMgcMap(mgcSchema *mgcSdk.Schema, attributes resAttrInfoMap, tfState tfsdk.State) (mgcMap map[string]any) {
+func readMgcMap(ctx context.Context, mgcSchema *mgcSdk.Schema, attributes resAttrInfoMap, tfState tfsdk.State) (map[string]any, Diagnostics) {
 	attr := &resAttrInfo{
 		tfName:          "inputSchemasInfo",
 		mgcName:         "inputSchemasInfo",
@@ -351,10 +337,11 @@ func (c *tfStateLoader) readMgcMap(mgcSchema *mgcSdk.Schema, attributes resAttrI
 		childAttributes: attributes,
 	}
 
-	m, _ := c.loadMgcSchemaMap(attr, tfState.Raw, true, true)
-	if c.diag.HasError() {
-		return nil
+	diagnostics := Diagnostics{}
+	m, _, d := loadMgcSchemaMap(ctx, attr, tfState.Raw, true, true)
+	if diagnostics.AppendCheckError(d...) {
+		return nil, diagnostics
 	}
 
-	return m.(map[string]any)
+	return m.(map[string]any), diagnostics
 }

@@ -5,67 +5,81 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type tfStateApplier struct {
-	ctx      context.Context
-	diag     *diag.Diagnostics
-	tfSchema *schema.Schema
-}
-
-func newTFStateApplier(ctx context.Context, diag *diag.Diagnostics, tfSchema *schema.Schema) tfStateApplier {
-	return tfStateApplier{
-		ctx:      ctx,
-		diag:     diag,
-		tfSchema: tfSchema,
+func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, attrInfoMap resAttrInfoMap, tfState *tfsdk.State) Diagnostics {
+	resInfo := &resAttrInfo{
+		tfName: "tfState",
+		mgcName: "tfState",
+		childAttributes: attrInfoMap,
 	}
+	return applyMgcMap(ctx, mgcMap, resInfo, tfState, path.Empty())
 }
 
-func (c *tfStateApplier) applyMgcMap(mgcMap map[string]any, attributes resAttrInfoMap, ctx context.Context, tfState *tfsdk.State, path path.Path) {
-	for mgcName, attr := range attributes {
+func applyMgcMap(ctx context.Context, mgcMap map[string]any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
+	diagnostics := Diagnostics{}
+	tflog.Debug(
+		ctx,
+		"[applier] will apply as map",
+		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcMap},
+	)
+	for mgcName, attr := range attr.childAttributes {
 		mgcValue, ok := mgcMap[string(mgcName)]
 		if !ok {
 			continue
 		}
 
+		tflog.Debug(
+			ctx,
+			"[applier] will try to apply map property",
+			map[string]any{"propMgcName": mgcName, "propMgcValue": mgcValue},
+		)
+
 		tflog.Debug(ctx, fmt.Sprintf("applying %q attribute in state", mgcName), map[string]any{"value": mgcValue})
 
 		attrPath := path.AtName(string(attr.tfName))
-		c.applyValueToState(mgcValue, attr, ctx, tfState, attrPath)
+		d := applyValueToState(ctx, mgcValue, attr, tfState, attrPath)
 
-		if c.diag.HasError() {
+		if diagnostics.AppendCheckError(d...) {
 			attrSchema, _ := tfState.Schema.AttributeAtPath(ctx, attrPath)
-			c.diag.AddAttributeError(
+			diagnostics.AddAttributeError(
 				attrPath,
 				"unable to load value",
 				fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema),
 			)
-			return
+			return diagnostics
 		}
 	}
+	return diagnostics
 }
 
-func (c *tfStateApplier) applyMgcList(mgcList []any, attributes resAttrInfoMap, ctx context.Context, tfState *tfsdk.State, path path.Path) {
-	attr := attributes["0"]
+func applyMgcList(ctx context.Context, mgcList []any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
+	diagnostics := Diagnostics{}
+	attr = attr.childAttributes["0"]
 
 	for i, mgcValue := range mgcList {
 		attrPath := path.AtListIndex(i)
-		c.applyValueToState(mgcValue, attr, ctx, tfState, attrPath)
-
-		if c.diag.HasError() {
+		d := applyValueToState(ctx, mgcValue, attr, tfState, attrPath)
+		if diagnostics.AppendCheckError(d...) {
 			attrSchema, _ := tfState.Schema.AttributeAtPath(ctx, attrPath)
-			c.diag.AddAttributeError(attrPath, "unable to load value", fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema))
-			return
+			diagnostics.AddAttributeError(attrPath, "unable to load value", fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema))
+			return diagnostics
 		}
 	}
+
+	return diagnostics
 }
 
-func (c *tfStateApplier) applyValueToState(mgcValue any, attr *resAttrInfo, ctx context.Context, tfState *tfsdk.State, path path.Path) {
+func applyValueToState(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
+	tflog.Debug(
+		ctx,
+		"[applier] starting applying mgc value to TF state",
+		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcValue},
+	)
+
 	rv := reflect.ValueOf(mgcValue)
 	if mgcValue == nil {
 		// We must check the nil value type, since SetAttribute method requires a typed nil
@@ -84,13 +98,14 @@ func (c *tfStateApplier) applyValueToState(mgcValue any, attr *resAttrInfo, ctx 
 	switch attr.mgcSchema.Type {
 	case "array":
 		tflog.Debug(ctx, fmt.Sprintf("populating list in state at path %#v", path))
-		c.applyMgcList(mgcValue.([]any), attr.childAttributes, ctx, tfState, path)
+		return applyMgcList(ctx, mgcValue.([]any), attr, tfState, path)
 
 	case "object":
 		tflog.Debug(ctx, fmt.Sprintf("populating nested object in state at path %#v", path))
-		c.applyMgcMap(mgcValue.(map[string]any), attr.childAttributes, ctx, tfState, path)
+		return applyMgcMap(ctx, mgcValue.(map[string]any), attr, tfState, path)
 
 	default:
-		c.diag.Append(tfState.SetAttribute(ctx, path, rv.Interface())...)
+		d := tfState.SetAttribute(ctx, path, rv.Interface())
+		return Diagnostics(d)
 	}
 }
