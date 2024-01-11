@@ -36,7 +36,7 @@ paths:
             responses:
                 '201':
                     links:
-                        read:
+                        get:
                             operationRef: '#/paths/~1v0~1volumes~1{id}/get'
                             description: Read Block Storage volume
                             parameters:
@@ -74,7 +74,7 @@ paths:
             responses:
                 '200':
                     links:
-                        read:
+                        get:
                             operationRef: '#/paths/~1v0~1volumes~1{id}/get'
                             description: Read Block Storage volume
                             parameters:
@@ -95,7 +95,7 @@ paths:
                             operationRef: '#/paths/~1v0~1volumes~1{id}~1detach~1{virtual_machine_id}/post'
                             parameters:
                                 id: $request.path.id
-                        read:
+                        get:
                             description: Check if block storage is attached to Virtual
                                 Machine instance
                             operationRef: '#/paths/~1v0~1volumes/get'

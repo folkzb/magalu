@@ -46,7 +46,7 @@ paths:
       responses:
         '200':
           links:
-            read:
+            get:
               operationId: portDetails
               description: Read Port
               parameters:
@@ -93,7 +93,7 @@ paths:
       responses:
         '200':
           links:
-            read:
+            get:
               operationId: publicIpDetails
               description: Read Public IP
               parameters:
@@ -132,7 +132,7 @@ paths:
       responses:
         '200':
           links:
-            read:
+            get:
               operationId: securityGroupDetails
               description: Read Security Group
               parameters:
@@ -187,7 +187,7 @@ paths:
       responses:
         '200':
           links:
-            read:
+            get:
               operationId: ruleDetails
               description: Read Rule
               parameters:
@@ -257,7 +257,7 @@ paths:
       responses:
         '200':
           links:
-            read: # Connection resources
+            get: # Connection resources
               description: Check if a Security Group is attached to this Port
               operationId: securityGroupDetails
               x-mgc-wait-termination:
@@ -297,7 +297,7 @@ paths:
       responses:
         '200':
           links:
-            read: # Connection Resource
+            get: # Connection Resource
               description: Check if this Public IP is attached to this Port
               operationRef: '#/paths/~1v0~1ports~1{port_id}/get'
               parameters:

@@ -287,11 +287,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/VolumeCreateResponse'
                     links:
-                        read:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
-                            description: Read Block Storage volume
-                            parameters:
-                                id: $response.body#/id
                         update:
                             operationRef: '#/paths/~1v0~1volumes~1{id}/patch'
                             description: Update Block Storage volume
@@ -300,6 +295,11 @@ paths:
                         delete:
                             operationRef: '#/paths/~1v0~1volumes~1{id}/delete'
                             description: Delete Block Storage volume
+                            parameters:
+                                id: $response.body#/id
+                        get:
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
+                            description: Read Block Storage volume
                             parameters:
                                 id: $response.body#/id
                 '422':
@@ -424,14 +424,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/VolumeResponse'
                     links:
-                        read:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
-                            description: Read Block Storage volume
-                            parameters:
-                                id: $request.path.id
                         delete:
                             operationRef: '#/paths/~1v0~1volumes~1{id}/delete'
                             description: Delete Block Storage volume
+                            parameters:
+                                id: $request.path.id
+                        get:
+                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
+                            description: Read Block Storage volume
                             parameters:
                                 id: $request.path.id
                 '422':
@@ -482,7 +482,7 @@ paths:
                             operationRef: '#/paths/~1v0~1volumes~1{id}~1detach~1{virtual_machine_id}/post'
                             parameters:
                                 id: $request.path.id
-                        read:
+                        get:
                             description: Check if block storage is attached to Virtual
                                 Machine instance
                             operationRef: '#/paths/~1v0~1volumes/get'

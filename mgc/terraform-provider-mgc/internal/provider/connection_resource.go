@@ -50,7 +50,7 @@ func newMgcConnectionResource(
 	var read, update, delete mgcSdk.Linker
 	for k, link := range connection.Links() {
 		switch k {
-		case "read":
+		case "get":
 			read = link
 		case "update":
 			update = link

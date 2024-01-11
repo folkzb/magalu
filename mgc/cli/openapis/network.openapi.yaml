@@ -119,14 +119,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/PortCreateResponse'
                     links:
-                        read:
-                            operationId: portDetails
-                            description: Read Port
-                            parameters:
-                                port_id: $response.body#/id
                         delete:
                             operationId: deletePort
                             description: Delete Port
+                            parameters:
+                                port_id: $response.body#/id
+                        get:
+                            operationId: portDetails
+                            description: Read Port
                             parameters:
                                 port_id: $response.body#/id
                 '422':
@@ -318,7 +318,13 @@ paths:
                         application/json:
                             schema: {}
                     links:
-                        read:
+                        delete:
+                            description: Detach this BS Volume to a VM instance
+                            operationId: detachSecurityGroup
+                            parameters:
+                                port_id: $request.path.port_id
+                                security_group_i: $request.path.security_group_id
+                        get:
                             description: Check if a Security Group is attached to
                                 this Port
                             operationId: securityGroupDetails
@@ -327,12 +333,6 @@ paths:
                                 interval: 5s
                                 jsonPathQuery: $.owner.result.security_groups[?(@
                                     == $.parameters.security_group_id)]
-                        delete:
-                            description: Detach this BS Volume to a VM instance
-                            operationId: detachSecurityGroup
-                            parameters:
-                                port_id: $request.path.port_id
-                                security_group_i: $request.path.security_group_id
                 '422':
                     description: Validation Error
                     content:
@@ -434,14 +434,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/PublicIpCreateResponse'
                     links:
-                        read:
-                            operationId: publicIpDetails
-                            description: Read Public IP
-                            parameters:
-                                public_ip_id: $response.body#/id
                         delete:
                             operationId: deletePublicIp
                             description: Delete Public IP
+                            parameters:
+                                public_ip_id: $response.body#/id
+                        get:
+                            operationId: publicIpDetails
+                            description: Read Public IP
                             parameters:
                                 public_ip_id: $response.body#/id
                 '422':
@@ -574,7 +574,13 @@ paths:
                         application/json:
                             schema: {}
                     links:
-                        read:
+                        delete:
+                            description: Detach this BS Volume to a VM instance
+                            operationRef: '#/paths/~1v0~1public_ips~1{public_ip_id}~1detach~1{port_id}/post'
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+                                port_id: $request.path.port_id
+                        get:
                             description: Check if this Public IP is attached to this
                                 Port
                             operationRef: '#/paths/~1v0~1ports~1{port_id}/get'
@@ -585,12 +591,6 @@ paths:
                                 interval: 5s
                                 jsonPathQuery: $.result.public_ip[?(@.public_ip_id
                                     == $.owner.parameters.public_ip_id)]
-                        delete:
-                            description: Detach this BS Volume to a VM instance
-                            operationRef: '#/paths/~1v0~1public_ips~1{public_ip_id}~1detach~1{port_id}/post'
-                            parameters:
-                                public_ip_id: $request.path.public_ip_id
-                                port_id: $request.path.port_id
                 '422':
                     description: Validation Error
                     content:
@@ -747,14 +747,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/RuleCreateResponse'
                     links:
-                        read:
-                            operationId: ruleDetails
-                            description: Read Rule
-                            parameters:
-                                rule_id: $response.body#/id
                         delete:
                             operationId: deleteRule
                             description: Delete Rule
+                            parameters:
+                                rule_id: $response.body#/id
+                        get:
+                            operationId: ruleDetails
+                            description: Read Rule
                             parameters:
                                 rule_id: $response.body#/id
                 '422':
@@ -1003,14 +1003,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/SecurityGroupCreateResponse'
                     links:
-                        read:
-                            operationId: securityGroupDetails
-                            description: Read Security Group
-                            parameters:
-                                security_group_id: $response.body#/id
                         delete:
                             operationId: deleteSecurityGroup
                             description: Delete Security Group
+                            parameters:
+                                security_group_id: $response.body#/id
+                        get:
+                            operationId: securityGroupDetails
+                            description: Read Security Group
                             parameters:
                                 security_group_id: $response.body#/id
                 '422':

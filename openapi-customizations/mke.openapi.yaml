@@ -33,7 +33,7 @@ paths:
             responses:
                 '201':
                     links:
-                        read:
+                        get:
                             operationId: getClusterById
                             description: Read cluster
                             parameters:
@@ -70,7 +70,7 @@ paths:
             responses:
                 '201':
                     links:
-                        read:
+                        get:
                             operationId: getNodePool
                             description: Read node pool
                             parameters:
@@ -117,7 +117,7 @@ paths:
             responses:
                 '200':
                     links:
-                        read:
+                        get:
                             operationId: getNodePool
                             description: Read node pool
                             parameters:

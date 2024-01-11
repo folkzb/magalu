@@ -10,7 +10,7 @@ paths:
             responses:
                 '202':
                     links:
-                        read:
+                        get:
                             operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
                             description: Read a Backup
                             parameters:
@@ -72,7 +72,7 @@ paths:
             responses:
               '202':
                   links:
-                      read:
+                      get:
                           operationId: instances_v1_get_by_id
                           description: Read Database instance
                           parameters:
@@ -144,7 +144,7 @@ paths:
             responses:
               '200':
                   links:
-                      read:
+                      get:
                           operationId: instances_v1_get_by_id
                           description: Read Database instance
                           parameters:
@@ -181,7 +181,7 @@ paths:
             responses:
               '202':
                   links:
-                      read:
+                      get:
                           operationId: replica_detail_v1_replicas__replica_id__get
                           description: Read Database replica
                           parameters:

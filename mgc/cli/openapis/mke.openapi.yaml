@@ -69,14 +69,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/CreateClusterResponse'
                     links:
-                        read:
-                            operationId: getClusterById
-                            description: Read cluster
-                            parameters:
-                                custer_id: $response.body#/id
                         delete:
                             operationId: deleteCluster
                             description: Delete cluster
+                            parameters:
+                                custer_id: $response.body#/id
+                        get:
+                            operationId: getClusterById
+                            description: Read cluster
                             parameters:
                                 custer_id: $response.body#/id
                 '400':
@@ -756,12 +756,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/NodePoolsResponse'
                     links:
-                        read:
-                            operationId: getNodePool
-                            description: Read node pool
-                            parameters:
-                                cluster_id: $request.path.cluster_id
-                                node_pool_id: $response.body#/id
                         update:
                             operationId: patchNodePool
                             description: Read node pool
@@ -771,6 +765,12 @@ paths:
                         delete:
                             operationId: deleteNodePool
                             description: Delete node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $response.body#/id
+                        get:
+                            operationId: getNodePool
+                            description: Read node pool
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $response.body#/id
@@ -1212,15 +1212,15 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/NodePoolsResponse'
                     links:
-                        read:
-                            operationId: getNodePool
-                            description: Read node pool
-                            parameters:
-                                cluster_id: $request.path.cluster_id
-                                node_pool_id: $request.path.node_pool_id
                         delete:
                             operationId: deleteNodePool
                             description: Delete node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
+                        get:
+                            operationId: getNodePool
+                            description: Read node pool
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id

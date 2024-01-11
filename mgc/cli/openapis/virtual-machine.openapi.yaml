@@ -211,11 +211,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/CreateResponse'
                     links:
-                        read:
-                            description: Read Virtual Machine instance
-                            operationId: instance_details_v1_v1_instances__id__get
-                            parameters:
-                                id: $response.body#/id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -249,6 +244,11 @@ paths:
                         delete:
                             description: Delete Virtual Machine instance
                             operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $response.body#/id
+                        get:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
                             parameters:
                                 id: $response.body#/id
                 '400':
@@ -545,11 +545,6 @@ paths:
                 '204':
                     description: Successful Response
                     links:
-                        read:
-                            description: Read Virtual Machine instance
-                            operationId: instance_details_v1_v1_instances__id__get
-                            parameters:
-                                id: $request.path.id
                         start:
                             description: Start a Virtual Machine instance
                             operationId: start_instance_v1_instances__id__start_post
@@ -578,6 +573,11 @@ paths:
                         delete:
                             description: Delete Virtual Machine instance
                             operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+                        get:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
                             parameters:
                                 id: $request.path.id
                 '422':
@@ -624,11 +624,6 @@ paths:
                 '204':
                     description: Successful Response
                     links:
-                        read:
-                            description: Read Virtual Machine instance
-                            operationId: instance_details_v1_v1_instances__id__get
-                            parameters:
-                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -657,6 +652,11 @@ paths:
                         delete:
                             description: Delete Virtual Machine instance
                             operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+                        get:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
                             parameters:
                                 id: $request.path.id
                 '400':
@@ -746,11 +746,6 @@ paths:
                 '204':
                     description: Successful Response
                     links:
-                        read:
-                            description: Read Virtual Machine instance
-                            operationId: instance_details_v1_v1_instances__id__get
-                            parameters:
-                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -779,6 +774,11 @@ paths:
                         delete:
                             description: Delete Virtual Machine instance
                             operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+                        get:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
                             parameters:
                                 id: $request.path.id
                 '400':
@@ -847,11 +847,6 @@ paths:
                 '204':
                     description: Successful Response
                     links:
-                        read:
-                            description: Read Virtual Machine instance
-                            operationId: instance_details_v1_v1_instances__id__get
-                            parameters:
-                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -880,6 +875,11 @@ paths:
                         delete:
                             description: Delete Virtual Machine instance
                             operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+                        get:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
                             parameters:
                                 id: $request.path.id
                 '422':
@@ -925,11 +925,6 @@ paths:
                 '204':
                     description: Successful Response
                     links:
-                        read:
-                            description: Read Virtual Machine instance
-                            operationId: instance_details_v1_v1_instances__id__get
-                            parameters:
-                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -958,6 +953,11 @@ paths:
                         delete:
                             description: Delete Virtual Machine instance
                             operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+                        get:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
                             parameters:
                                 id: $request.path.id
                 '422':
@@ -1004,11 +1004,6 @@ paths:
                 '204':
                     description: Successful Response
                     links:
-                        read:
-                            description: Read Virtual Machine instance
-                            operationId: instance_details_v1_v1_instances__id__get
-                            parameters:
-                                id: $request.path.id
                         reboot:
                             description: Reboot a Virtual Machine instance
                             operationId: reboot_instance_v1_instances__id__reboot_post
@@ -1037,6 +1032,11 @@ paths:
                         delete:
                             description: Delete Virtual Machine instance
                             operationId: instance_delete_v1_v1_instances__id__delete
+                            parameters:
+                                id: $request.path.id
+                        get:
+                            description: Read Virtual Machine instance
+                            operationId: instance_details_v1_v1_instances__id__get
                             parameters:
                                 id: $request.path.id
                 '422':

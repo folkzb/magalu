@@ -455,15 +455,15 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/BackupResponse'
                     links:
-                        read:
-                            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
-                            description: Read a Backup
-                            parameters:
-                                id: $request.path.instance_id
-                                backup_id: $response.body#/id
                         delete:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
+                            parameters:
+                                id: $request.path.instance_id
+                                backup_id: $response.body#/id
+                        get:
+                            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
+                            description: Read a Backup
                             parameters:
                                 id: $request.path.instance_id
                                 backup_id: $response.body#/id
@@ -713,11 +713,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/InstanceResponse'
                     links:
-                        read:
-                            operationId: instances_v1_get_by_id
-                            description: Read Database instance
-                            parameters:
-                                id: $response.body#/id
                         update:
                             operationId: instances_v1_patch
                             description: Update Database instance
@@ -726,6 +721,11 @@ paths:
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
+                            parameters:
+                                id: $response.body#/id
+                        get:
+                            operationId: instances_v1_get_by_id
+                            description: Read Database instance
                             parameters:
                                 id: $response.body#/id
                 '422':
@@ -781,12 +781,12 @@ paths:
                             operationId: instances_v1_patch
                             description: Update Database instance
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
                         update/flavor_id:
                             operationId: instances_v1_resize
                             description: Resizes a database instance.
@@ -892,16 +892,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/InstanceDetailResponse'
                     links:
-                        read:
-                            operationId: instances_v1_get_by_id
-                            description: Read Database instance
-                            parameters:
-                               id: $response.body#/id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                id: $response.body#/id
+                                id: $request.path.id
+                        get:
+                            operationId: instances_v1_get_by_id
+                            description: Read Database instance
+                            parameters:
+                                id: $request.path.id
                 '422':
                     description: Validation Error
                     content:
@@ -1114,14 +1114,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ReplicaResponse'
                     links:
-                        read:
-                            operationId: replica_detail_v1_replicas__replica_id__get
-                            description: Read Database replica
-                            parameters:
-                                replica_id: $response.body#/id
                         delete:
                             operationId: replica_v1_delete
                             description: Delete Database replica
+                            parameters:
+                                replica_id: $response.body#/id
+                        get:
+                            operationId: replica_detail_v1_replicas__replica_id__get
+                            description: Read Database replica
                             parameters:
                                 replica_id: $response.body#/id
                 '422':
