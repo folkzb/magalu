@@ -17,12 +17,20 @@ func SimplifyAny(value any) (converted any, err error) {
 	v := reflect.ValueOf(value)
 
 	switch v.Kind() {
-	case reflect.Bool,
-		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Float32, reflect.Float64,
-		reflect.String:
-		return value, nil
+	case reflect.Bool:
+		return v.Bool(), nil
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int(), nil
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return v.Uint(), nil
+
+	case reflect.Float32, reflect.Float64:
+		return v.Float(), nil
+
+	case reflect.String:
+		return v.String(), nil
 
 	case reflect.Invalid,
 		reflect.Chan,
