@@ -35,7 +35,6 @@ paths:
         - name: vpc_id
           schema:
             type: string
-          x-mgc-name: vpc
       security:
         - OAuth2:
             - network.read

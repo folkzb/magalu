@@ -1,7 +1,7 @@
 List VPC ports
 
 Usage:
-  ./cli network vpc ports list [vpc] [flags]
+  ./cli network vpc ports list [vpc-id] [flags]
 
 Flags:
       --control.limit integer        Items Per Page (min: 1) (default 10)
@@ -10,7 +10,7 @@ Flags:
   -h, --help                         help for list
       --port-id-list array(string)   Port Id List (default [])
   -v, --version                      version for list
-      --vpc string                   Vpc Id (required)
+      --vpc-id string                Vpc Id (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

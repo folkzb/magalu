@@ -152,7 +152,6 @@ paths:
                 schema:
                     title: Vpc Id
                     type: string
-                x-mgc-name: vpc
             -   name: detailed
                 in: query
                 required: false

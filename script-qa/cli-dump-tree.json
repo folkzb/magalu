@@ -15584,13 +15584,13 @@
            "title": "Port Id List",
            "type": "array"
           },
-          "vpc": {
+          "vpc_id": {
            "title": "Vpc Id",
            "type": "string"
           }
          },
          "required": [
-          "vpc"
+          "vpc_id"
          ],
          "type": "object"
         },
