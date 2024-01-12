@@ -13,6 +13,7 @@ var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
 		},
 		func() []core.Descriptor {
 			return []core.Descriptor{
+				getCopy(),        // object-storage objects copy
 				getDelete(),      // object-storage objects delete
 				getDeleteAll(),   // object-storage objects delete-all
 				getDownload(),    // object-storage objects download

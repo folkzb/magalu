@@ -5,6 +5,7 @@ Usage:
   ./cli object-storage objects [command]
 
 Commands:
+  copy         Copy an object from a bucket to another
   delete       Delete an object from a bucket
   delete-all   Delete all objects from a bucket
   download     download an object from a bucket
