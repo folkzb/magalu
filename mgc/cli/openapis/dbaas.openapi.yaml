@@ -781,12 +781,12 @@ paths:
                             operationId: instances_v1_patch
                             description: Update Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                         update/flavor_id:
                             operationId: instances_v1_resize
                             description: Resizes a database instance.
