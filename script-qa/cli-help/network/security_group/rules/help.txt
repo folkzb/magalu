@@ -2,11 +2,6 @@ VPC Security Groups | rules
 
 Usage:
   ./cli network security-group rules [flags]
-  ./cli network security-group rules [command]
-
-Commands:
-  create      Create Rule
-  list        List Rules
 
 Flags:
   -h, --help      help for rules
@@ -14,6 +9,4 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli network security-group rules [command] --help" for more information about a command.
 

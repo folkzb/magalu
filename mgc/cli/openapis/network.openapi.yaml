@@ -454,6 +454,7 @@ paths:
             security:
             -   OAuth2:
                 - network.write
+            x-mgc-hidden: true
         get:
             tags:
             - vpc
@@ -767,6 +768,7 @@ paths:
             security:
             -   OAuth2:
                 - network.write
+            x-mgc-hidden: true
         get:
             tags:
             - security_group
@@ -797,6 +799,7 @@ paths:
             security:
             -   OAuth2:
                 - network.read
+            x-mgc-hidden: true
     /v0/rules/{rule_id}:
         get:
             tags:
@@ -1171,6 +1174,7 @@ paths:
             security:
             -   OAuth2:
                 - network.read
+            x-mgc-hidden: true
         post:
             tags:
             - vpc
@@ -1207,6 +1211,7 @@ paths:
             security:
             -   OAuth2:
                 - network.write
+            x-mgc-hidden: true
     /v0/subnets/{subnet_id}:
         delete:
             tags:

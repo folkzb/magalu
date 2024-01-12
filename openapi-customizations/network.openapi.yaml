@@ -86,6 +86,7 @@ paths:
             - network.write
   /v0/vpcs/{vpc_id}/public_ips:
     post:
+      x-mgc-hidden: true
       parameters:
         - name: vpc_id
           schema:
@@ -180,6 +181,7 @@ paths:
             - network.write
   /v0/security_groups/{security_group_id}/rules:
     post:
+      x-mgc-hidden: true
       parameters:
         - name: security_group_id
           schema:
@@ -201,6 +203,7 @@ paths:
         - OAuth2:
             - network.write
     get:
+      x-mgc-hidden: true
       parameters:
         - name: security_group_id
           schema:
@@ -358,6 +361,7 @@ paths:
             - network.write
   /v0/vpcs/{vpc_id}/subnets:
     get:
+      x-mgc-hidden: true
       parameters:
         - name: vpc_id
           schema:
@@ -366,6 +370,7 @@ paths:
         - OAuth2:
             - network.read
     post:
+      x-mgc-hidden: true
       parameters:
         - name: vpc_id
           schema:

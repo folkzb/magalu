@@ -5,8 +5,10 @@ Usage:
   ./cli network subnets [command]
 
 Commands:
+  create      Create Subnet
   delete      Delete a Subnet
   get         Subnet Details
+  list        List Subnets
   update      Update Subnet
 
 Flags:

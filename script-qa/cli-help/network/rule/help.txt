@@ -5,8 +5,10 @@ Usage:
   ./cli network rule [command]
 
 Commands:
+  create      Create Rule
   delete      Delete a Rule
   get         Rule Details
+  list        List Rules
 
 Flags:
   -h, --help      help for rule

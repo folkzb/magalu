@@ -5,7 +5,6 @@ Usage:
   ./cli network vpc public-ips [command]
 
 Commands:
-  create      Create Public IP
   list        List Public IPs
 
 Flags:

@@ -9,4 +9,9 @@ modules:
     path: dbaas.blueprint.yaml
     url: https://dbaas.magalu.cloud
     version: 1.13.2
+  - description: Operations for Network API
+    name: network
+    path: network.blueprint.yaml
+    url: https://network.magalu.cloud
+    version: 1.13.2
 version: 1.0.0

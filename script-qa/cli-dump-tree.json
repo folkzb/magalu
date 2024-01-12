@@ -12928,6 +12928,95 @@
      {
       "configs": {
        "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Create a Public IP",
+      "isInternal": false,
+      "name": "create",
+      "parameters": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "description": {
+         "nullable": true,
+         "title": "Description",
+         "type": "string"
+        },
+        "validate_quota": {
+         "default": true,
+         "title": "validateQuota",
+         "type": "boolean"
+        },
+        "vpc_id": {
+         "title": "Vpc Id",
+         "type": "string"
+        },
+        "wait": {
+         "default": true,
+         "title": "wait",
+         "type": "boolean"
+        },
+        "wait_timeout": {
+         "default": 120,
+         "description": "the approximate time in seconds you want to wait when simulating the request as synchronous (only works with wait=true)",
+         "nullable": true,
+         "title": "waitTimeout",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "vpc_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+       },
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "id": {
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "title": "PublicIpCreateResponse",
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
        "properties": {
         "env": {
          "default": "prod",
@@ -13405,6 +13494,126 @@
      {
       "configs": {
        "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Create a Rule",
+      "isInternal": false,
+      "name": "create",
+      "parameters": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "direction": {
+         "nullable": true,
+         "title": "Direction",
+         "type": "string"
+        },
+        "ethertype": {
+         "nullable": true,
+         "title": "Ethertype",
+         "type": "string"
+        },
+        "port_range_max": {
+         "nullable": true,
+         "title": "Port Range Max",
+         "type": "integer"
+        },
+        "port_range_min": {
+         "nullable": true,
+         "title": "Port Range Min",
+         "type": "integer"
+        },
+        "protocol": {
+         "nullable": true,
+         "title": "Protocol",
+         "type": "string"
+        },
+        "remote_group_id": {
+         "nullable": true,
+         "title": "Remote Group Id",
+         "type": "string"
+        },
+        "remote_ip_prefix": {
+         "nullable": true,
+         "title": "Remote Ip Prefix",
+         "type": "string"
+        },
+        "security_group_id": {
+         "title": "Security Group Id",
+         "type": "string"
+        },
+        "validate_quota": {
+         "default": true,
+         "title": "validateQuota",
+         "type": "boolean"
+        },
+        "wait": {
+         "default": true,
+         "nullable": true,
+         "title": "Wait",
+         "type": "boolean"
+        },
+        "wait_timeout": {
+         "default": 120,
+         "description": "the approximate time in seconds you want to wait when simulating the request as synchronous (only works with wait=true)",
+         "nullable": true,
+         "title": "waitTimeout",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "security_group_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+       },
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "id": {
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "title": "RuleCreateResponse",
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
        "properties": {
         "env": {
          "default": "prod",
@@ -13588,6 +13797,173 @@
        "type": "object"
       },
       "version": "1.99.5"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Returns a list of rules for a provided security_group_id",
+      "isInternal": false,
+      "name": "list",
+      "parameters": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "security_group_id": {
+         "title": "Security Group Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "security_group_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "rules": [
+         {
+          "created_at": "2022-01-01 00:00:00",
+          "direction": "egress",
+          "ethertype": "IPv4",
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "port_range_max": 8028,
+          "port_range_min": 8028,
+          "protocol": "tcp",
+          "remote_group_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "remote_ip_prefix": "100.94.0.0/24",
+          "security_group_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+         }
+        ]
+       },
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "rules": {
+         "items": {
+          "example": {
+           "created_at": "2022-01-01 00:00:00",
+           "direction": "egress",
+           "ethertype": "IPv4",
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "port_range_max": 8028,
+           "port_range_min": 8028,
+           "protocol": "tcp",
+           "remote_group_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "remote_ip_prefix": "100.94.0.0/24",
+           "security_group_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "status": "created"
+          },
+          "properties": {
+           "created_at": {
+            "format": "date-time",
+            "nullable": true,
+            "title": "Created At",
+            "type": "string"
+           },
+           "direction": {
+            "nullable": true,
+            "title": "Direction",
+            "type": "string"
+           },
+           "error": {
+            "nullable": true,
+            "title": "Error",
+            "type": "string"
+           },
+           "ethertype": {
+            "nullable": true,
+            "title": "Ethertype",
+            "type": "string"
+           },
+           "id": {
+            "nullable": true,
+            "title": "Id",
+            "type": "string"
+           },
+           "port_range_max": {
+            "nullable": true,
+            "title": "Port Range Max",
+            "type": "integer"
+           },
+           "port_range_min": {
+            "nullable": true,
+            "title": "Port Range Min",
+            "type": "integer"
+           },
+           "protocol": {
+            "nullable": true,
+            "title": "Protocol",
+            "type": "string"
+           },
+           "remote_group_id": {
+            "nullable": true,
+            "title": "Remote Group Id",
+            "type": "string"
+           },
+           "remote_ip_prefix": {
+            "nullable": true,
+            "title": "Remote Ip Prefix",
+            "type": "string"
+           },
+           "security_group_id": {
+            "nullable": true,
+            "title": "Security Group Id",
+            "type": "string"
+           },
+           "status": {
+            "enum": [
+             "created",
+             "pending",
+             "error"
+            ],
+            "title": "RuleStatus",
+            "type": "string"
+           }
+          },
+          "required": [
+           "status"
+          ],
+          "title": "RuleResponse",
+          "type": "object"
+         },
+         "title": "Rules",
+         "type": "array"
+        }
+       },
+       "required": [
+        "rules"
+       ],
+       "title": "RulesList",
+       "type": "object"
+      },
+      "version": ""
      }
     ],
     "description": "VPC Rules",
@@ -14237,6 +14613,7 @@
        {
         "configs": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "env": {
            "default": "prod",
@@ -14265,10 +14642,11 @@
          "type": "object"
         },
         "description": "Create a Rule",
-        "isInternal": false,
+        "isInternal": true,
         "name": "create",
         "parameters": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "direction": {
            "nullable": true,
@@ -14337,6 +14715,7 @@
          "example": {
           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
          },
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "id": {
            "title": "Id",
@@ -14354,6 +14733,7 @@
        {
         "configs": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "env": {
            "default": "prod",
@@ -14382,10 +14762,11 @@
          "type": "object"
         },
         "description": "Returns a list of rules for a provided security_group_id",
-        "isInternal": false,
+        "isInternal": true,
         "name": "list",
         "parameters": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "security_group_id": {
            "title": "Security Group Id",
@@ -14414,6 +14795,7 @@
            }
           ]
          },
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "rules": {
            "items": {
@@ -14529,6 +14911,102 @@
    },
    {
     "children": [
+     {
+      "configs": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Create a Subnet",
+      "isInternal": false,
+      "name": "create",
+      "parameters": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "cidr_block": {
+         "nullable": true,
+         "title": "Cidr Block",
+         "type": "string"
+        },
+        "description": {
+         "nullable": true,
+         "title": "Description",
+         "type": "string"
+        },
+        "dns_nameservers": {
+         "default": [],
+         "items": {
+          "format": "ipvanyaddress",
+          "type": "string"
+         },
+         "title": "Dns Nameservers",
+         "type": "array"
+        },
+        "ip_version": {
+         "title": "Ip Version",
+         "type": "integer"
+        },
+        "name": {
+         "title": "Name",
+         "type": "string"
+        },
+        "vpc_id": {
+         "title": "Vpc Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "ip_version",
+        "name",
+        "vpc_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+       },
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "id": {
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "title": "SubnetCreateResponse",
+       "type": "object"
+      },
+      "version": ""
+     },
      {
       "configs": {
        "additionalProperties": false,
@@ -14734,6 +15212,142 @@
        "type": "object"
       },
       "version": "1.99.5"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Returns a list of subnets for a provided vpc_id",
+      "isInternal": false,
+      "name": "list",
+      "parameters": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "vpc_id": {
+         "title": "Vpc Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "vpc_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "subnets": [
+         {
+          "cidr_block": "172.20.0.0/24",
+          "created_at": "2022-01-01 00:00:00",
+          "description": "vpc description",
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "ip_version": "4",
+          "name": "vpc_name",
+          "updated": "2022-01-01 00:00:00",
+          "vpc_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+         }
+        ]
+       },
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "subnets": {
+         "default": [],
+         "items": {
+          "example": {
+           "cidr_block": "172.20.0.0/24",
+           "created_at": "2022-01-01 00:00:00",
+           "description": "vpc description",
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "ip_version": "4",
+           "name": "vpc_name",
+           "updated": "2022-01-01 00:00:00",
+           "vpc_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          },
+          "properties": {
+           "cidr_block": {
+            "title": "Cidr Block",
+            "type": "string"
+           },
+           "created_at": {
+            "format": "date-time",
+            "nullable": true,
+            "title": "Created At",
+            "type": "string"
+           },
+           "description": {
+            "nullable": true,
+            "title": "Description",
+            "type": "string"
+           },
+           "id": {
+            "title": "Id",
+            "type": "string"
+           },
+           "ip_version": {
+            "title": "Ip Version",
+            "type": "string"
+           },
+           "name": {
+            "nullable": true,
+            "title": "Name",
+            "type": "string"
+           },
+           "updated": {
+            "format": "date-time",
+            "nullable": true,
+            "title": "Updated",
+            "type": "string"
+           },
+           "vpc_id": {
+            "title": "Vpc Id",
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "vpc_id",
+           "cidr_block",
+           "ip_version"
+          ],
+          "title": "SubnetResponse",
+          "type": "object"
+         },
+         "title": "Subnets",
+         "type": "array"
+        }
+       },
+       "title": "SubnetsResponse",
+       "type": "object"
+      },
+      "version": ""
      },
      {
       "configs": {
@@ -15861,6 +16475,7 @@
        {
         "configs": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "env": {
            "default": "prod",
@@ -15889,10 +16504,11 @@
          "type": "object"
         },
         "description": "Create a Public IP",
-        "isInternal": false,
+        "isInternal": true,
         "name": "create",
         "parameters": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "description": {
            "nullable": true,
@@ -15930,6 +16546,7 @@
          "example": {
           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
          },
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "id": {
            "title": "Id",
@@ -16359,6 +16976,7 @@
        {
         "configs": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "env": {
            "default": "prod",
@@ -16387,10 +17005,11 @@
          "type": "object"
         },
         "description": "Create a Subnet",
-        "isInternal": false,
+        "isInternal": true,
         "name": "create",
         "parameters": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "cidr_block": {
            "nullable": true,
@@ -16435,6 +17054,7 @@
          "example": {
           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
          },
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "id": {
            "title": "Id",
@@ -16452,6 +17072,7 @@
        {
         "configs": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "env": {
            "default": "prod",
@@ -16480,10 +17101,11 @@
          "type": "object"
         },
         "description": "Returns a list of subnets for a provided vpc_id",
-        "isInternal": false,
+        "isInternal": true,
         "name": "list",
         "parameters": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "vpc_id": {
            "title": "Vpc Id",
@@ -16510,6 +17132,7 @@
            }
           ]
          },
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "subnets": {
            "default": [],
