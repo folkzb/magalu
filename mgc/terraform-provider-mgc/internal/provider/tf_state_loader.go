@@ -48,6 +48,10 @@ func (c *tfStateLoader) loadMgcSchemaValue(atinfo *resAttrInfo, tfValue tftypes.
 	}
 
 	if tfValue.IsNull() {
+		if filterUnset {
+			return nil, false
+		}
+
 		if atinfo.tfSchema.IsOptional() && !atinfo.tfSchema.IsComputed() {
 			// Optional values that aren't computed will never be unknown
 			// this means they will be null in the state
