@@ -17,7 +17,7 @@ var getDownload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "download",
-			Description: "download an object from a bucket",
+			Description: "Download an object from a bucket",
 		},
 		download,
 	)

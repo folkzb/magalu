@@ -17124,7 +17124,7 @@
        },
        "type": "object"
       },
-      "description": "download an object from a bucket",
+      "description": "Download an object from a bucket",
       "isInternal": false,
       "name": "download",
       "parameters": {
@@ -17203,7 +17203,7 @@
        },
        "type": "object"
       },
-      "description": "download all objects from a bucket",
+      "description": "Download all objects from a bucket",
       "isInternal": false,
       "name": "download-all",
       "parameters": {

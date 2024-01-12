@@ -1,4 +1,4 @@
-download an object from a bucket
+Download an object from a bucket
 
 Usage:
   ./cli object-storage objects download [src] [dst] [flags]
