@@ -1,0 +1,19 @@
+Copy an object from a bucket to another
+
+Usage:
+  ./cli object-storage objects copy [src] [dst] [flags]
+
+Examples:
+  ./cli object-storage objects copy --dst="s3://bucket2/dir/file.txt" --src="s3://bucket1/file.txt"
+
+Flags:
+      --dst uri   Full destination path in the bucket with desired filename (required)
+  -h, --help      help for copy
+      --src uri   Path of the object to be copied (required)
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --region enum            Region to reach the service (one of "br-ne-1" or "br-se-1") (default "br-ne-1")
+      --server-url uri         Manually specify the server to use
+      --workers integer        Number of routines that spawn to do parallel operations within object_storage (min: 1) (default 5)
+
