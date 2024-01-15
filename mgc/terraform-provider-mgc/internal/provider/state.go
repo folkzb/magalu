@@ -140,7 +140,7 @@ func getReadForApplyStateAfter(
 	resourceRead core.Executor,
 	diag *diag.Diagnostics,
 ) core.Executor {
-	if readLink, ok := result.Source().Executor.Links()["read"]; ok {
+	if readLink, ok := result.Source().Executor.Links()["get"]; ok {
 		var err error
 		resourceRead, err = readLink.CreateExecutor(result)
 		if err != nil {
