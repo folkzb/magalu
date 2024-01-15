@@ -223,7 +223,10 @@ func generateTFAttributes(ctx context.Context, handler tfSchemaHandler, d *diag.
 	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "generating attributes using input")
 	for name, iattr := range inputAttrInfoMap {
 		// Split attributes that differ between input/output
-		if oattr := outputAttrInfoMap[name]; oattr != nil {
+		for _, oattr := range outputAttrInfoMap {
+			if iattr.tfName != oattr.tfName {
+				continue
+			}
 			if err := mgcSchemaPkg.CompareJsonSchemas(oattr.mgcSchema, iattr.mgcSchema); err != nil {
 				os, _ := oattr.mgcSchema.MarshalJSON()
 				is, _ := iattr.mgcSchema.MarshalJSON()

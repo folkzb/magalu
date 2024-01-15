@@ -26,6 +26,7 @@ Virtual Private Cloud (VPC)
 ### Read-Only
 
 - `created_at` (String)
+- `current_id` (String)
 - `current_name` (String)
 - `external_network` (String)
 - `id` (String) The ID of this resource.
