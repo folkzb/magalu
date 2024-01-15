@@ -52,6 +52,8 @@ func styleHeaders(template string, config *ColorScheme) string {
 			"Additional help topics:", `{{headerStyle "Additional help topics:"}}`,
 			"Flags:", `{{headerStyle "Flags:"}}`,
 			"{{.Title}}", `{{headerStyle .Title}}`,
+			"Available links:", `{{headerStyle "Available Links:"}}`,
+			"Additional Commands:", `{{headerStyle "Additional Commands:"}}`,
 		).Replace(template)
 	}
 	return template
