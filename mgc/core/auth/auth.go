@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/config"
 	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/profile_manager"
 
@@ -64,13 +65,14 @@ type Config struct {
 type Auth struct {
 	httpClient      *http.Client
 	profileManager  *profile_manager.ProfileManager
-	config          Config
+	configMap       map[string]Config
 	accessToken     string
 	refreshToken    string
 	accessKeyId     string
 	secretAccessKey string
 	codeVerifier    *codeVerifier
 	group           singleflight.Group
+	mgcConfig       *config.Config
 }
 
 type Tenant struct {
@@ -117,16 +119,37 @@ func FromContext(ctx context.Context) *Auth {
 	return a
 }
 
-func New(config Config, client *http.Client, profileManager *profile_manager.ProfileManager) *Auth {
+func New(configMap map[string]Config, client *http.Client, profileManager *profile_manager.ProfileManager, mgcConfig *config.Config) *Auth {
 	newAuth := Auth{
 		httpClient:     client,
-		config:         config,
+		configMap:      configMap,
 		codeVerifier:   nil,
 		profileManager: profileManager,
+		mgcConfig:      mgcConfig,
 	}
 	newAuth.InitTokensFromFile()
 
 	return &newAuth
+}
+
+func (a *Auth) getConfig() Config {
+	var env string
+	err := a.mgcConfig.Get("env", &env)
+	if err != nil {
+		logger().Debugw(
+			"getConfig couldn't get 'env' from config",
+		)
+		return a.configMap["default"]
+	}
+
+	c, ok := a.configMap[env]
+	if !ok {
+		logger().Debugw(
+			"getConfig couldn't find a valid config to the env", env,
+		)
+		return a.configMap["default"]
+	}
+	return c
 }
 
 /*
@@ -144,15 +167,15 @@ func (o *Auth) AccessToken(ctx context.Context) (string, error) {
 }
 
 func (o *Auth) RedirectUri() string {
-	return o.config.RedirectUri
+	return o.getConfig().RedirectUri
 }
 
 func (o *Auth) TenantsListUrl() string {
-	return o.config.TenantsListUrl
+	return o.getConfig().TenantsListUrl
 }
 
 func (o *Auth) TenantsSelectUrl() string {
-	return o.config.TenantsSelectUrl
+	return o.getConfig().TenantsSelectUrl
 }
 
 func (o *Auth) CurrentTenantID() (string, error) {
@@ -239,7 +262,7 @@ func (o *Auth) InitTokensFromFile() {
 }
 
 func (o *Auth) CodeChallengeToURL() (*url.URL, error) {
-	config := o.config
+	config := o.getConfig()
 	loginUrl, err := url.Parse(config.LoginUrl)
 	if err != nil {
 		return nil, err
@@ -272,7 +295,7 @@ func (o *Auth) RequestAuthTokenWithAuthorizationCode(ctx context.Context, authCo
 		logger().Errorw("no code verification provided")
 		return fmt.Errorf("no code verification provided, first execute a code challenge request")
 	}
-	config := o.config
+	config := o.getConfig()
 	data := url.Values{}
 	data.Set("client_id", config.ClientId)
 	data.Set("redirect_uri", config.RedirectUri)
@@ -335,7 +358,7 @@ func (o *Auth) ValidateAccessToken(ctx context.Context) error {
 }
 
 func (o *Auth) newValidateAccessTokenRequest(ctx context.Context) (*http.Request, error) {
-	config := o.config
+	config := o.getConfig()
 	data := url.Values{}
 	data.Set("client_id", config.ClientId)
 	data.Set("token_hint", "access_token")
@@ -400,7 +423,7 @@ func (o *Auth) newRefreshAccessTokenRequest(ctx context.Context) (*http.Request,
 		return nil, fmt.Errorf("RefreshToken is not set")
 	}
 
-	config := o.config
+	config := o.getConfig()
 	data := url.Values{}
 	data.Set("client_id", config.ClientId)
 	data.Set("grant_type", "refresh_token")
@@ -445,7 +468,7 @@ func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
 		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
 	}
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, o.config.TenantsListUrl, nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, o.getConfig().TenantsListUrl, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -477,7 +500,7 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TenantAuth, error)
 
 	data := map[string]any{
 		"tenant": id,
-		"scopes": strings.Join(o.config.Scopes, " "),
+		"scopes": strings.Join(o.getConfig().Scopes, " "),
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -485,7 +508,7 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TenantAuth, error)
 	}
 
 	bodyReader := bytes.NewReader(jsonData)
-	r, err := http.NewRequestWithContext(ctx, http.MethodPost, o.config.TenantsSelectUrl, bodyReader)
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, o.getConfig().TenantsSelectUrl, bodyReader)
 	r.Header.Set("Authorization", "Bearer "+at)
 	r.Header.Set("Content-Type", "application/json")
 

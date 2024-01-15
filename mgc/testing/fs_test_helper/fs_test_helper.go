@@ -26,7 +26,7 @@ func FindFsEntry(path string, entries []TestFsEntry) (TestFsEntry, error) {
 func PrepareFs(afs afero.Fs, provided []TestFsEntry) (err error) {
 	for _, p := range provided {
 		if p.Mode&fs.ModeDir != 0 {
-			err = afs.Mkdir(p.Path, p.Mode)
+			err = afs.MkdirAll(p.Path, p.Mode)
 		} else {
 			err = afero.WriteFile(afs, p.Path, p.Data, p.Mode)
 		}

@@ -42,35 +42,6 @@ type contextKey string
 
 var ctxWrappedKey contextKey = "magalu.cloud/sdk/SdkWrapped"
 
-// TODO: Change authConfig with build tags or from environment
-var authConfig auth.Config = auth.Config{
-	ClientId:         "cw9qpaUl2nBiC8PVjNFN5jZeb2vTd_1S5cYs1FhEXh0",
-	RedirectUri:      "http://localhost:8095/callback",
-	LoginUrl:         "https://id.magalu.com/login",
-	TokenUrl:         "https://id.magalu.com/oauth/token",
-	ValidationUrl:    "https://id.magalu.com/oauth/introspect",
-	RefreshUrl:       "https://id.magalu.com/oauth/token",
-	TenantsListUrl:   "https://id.magalu.com/account/api/v2/whoami/tenants",
-	TenantsSelectUrl: "https://id.magalu.com/oauth/token/exchange",
-	Scopes: []string{
-		"openid",
-		"mke.read",
-		"mke.write",
-		"network.read",
-		"network.write",
-		"object-storage.read",
-		"object-storage.write",
-		"block-storage.read",
-		"block-storage.write",
-		"virtual-machine.read",
-		"virtual-machine.write",
-		"dbaas.read",
-		"dbaas.write",
-		"cpo:read",
-		"cpo:write",
-	},
-}
-
 func NewSdk() *Sdk {
 	return &Sdk{}
 }
@@ -99,11 +70,10 @@ func (o *Sdk) WrapContext(ctx context.Context) context.Context {
 	ctx = core.NewRefPathResolverContext(ctx, o.RefResolver())
 	ctx = core.NewGrouperContext(ctx, o.Group)
 	ctx = profile_manager.NewContext(ctx, o.ProfileManager())
+	ctx = config.NewContext(ctx, o.Config())
 	ctx = auth.NewContext(ctx, o.Auth())
 	// Needs to be called after Auth, because we need the refresh token callback for the interceptor
 	ctx = mgcHttpPkg.NewClientContext(ctx, o.HttpClient())
-	ctx = config.NewContext(ctx, o.Config())
-
 	ctx = context.WithValue(ctx, ctxWrappedKey, true)
 	return ctx
 }
@@ -210,8 +180,9 @@ func (o *Sdk) ProfileManager() *profile_manager.ProfileManager {
 func (o *Sdk) Auth() *auth.Auth {
 	if o.auth == nil {
 		client := &http.Client{Transport: newHttpTransport()}
-		o.auth = auth.New(authConfig, client, o.ProfileManager())
+		o.auth = auth.New(authConfigMap, client, o.ProfileManager(), o.Config())
 	}
+
 	return o.auth
 }
 
@@ -228,4 +199,66 @@ func (o *Sdk) Config() *config.Config {
 		o.config = config.New(o.ProfileManager())
 	}
 	return o.config
+}
+
+var authConfigMap map[string]auth.Config
+
+func init() {
+	authConfigMap = map[string]auth.Config{
+		"prod": {
+			ClientId:         "cw9qpaUl2nBiC8PVjNFN5jZeb2vTd_1S5cYs1FhEXh0",
+			RedirectUri:      "http://localhost:8095/callback",
+			LoginUrl:         "https://id.magalu.com/login",
+			TokenUrl:         "https://id.magalu.com/oauth/token",
+			ValidationUrl:    "https://id.magalu.com/oauth/introspect",
+			RefreshUrl:       "https://id.magalu.com/oauth/token",
+			TenantsListUrl:   "https://id.magalu.com/account/api/v2/whoami/tenants",
+			TenantsSelectUrl: "https://id.magalu.com/oauth/token/exchange",
+			Scopes: []string{
+				"openid",
+				"mke.read",
+				"mke.write",
+				"network.read",
+				"network.write",
+				"object-storage.read",
+				"object-storage.write",
+				"block-storage.read",
+				"block-storage.write",
+				"virtual-machine.read",
+				"virtual-machine.write",
+				"dbaas.read",
+				"dbaas.write",
+				"cpo:read",
+				"cpo:write",
+			},
+		},
+		"pre-prod": { // TODO update this links to the correct ones
+			ClientId:         "cw9qpaUl2nBiC8PVjNFN5jZeb2vTd_1S5cYs1FhEXh0",
+			RedirectUri:      "http://localhost:8095/callback",
+			LoginUrl:         "https://idmagalu-preprod.luizalabs.com/login",
+			TokenUrl:         "https://idpa-api-preprod.luizalabs.com/oauth/token",
+			ValidationUrl:    "https://idpa-api-preprod.luizalabs.com/oauth/introspect",
+			RefreshUrl:       "https://idpa-api-preprod.luizalabs.com/oauth/token",
+			TenantsListUrl:   "https://platform-account-api-preprod.luizalabs.com/api/v2/whoami/tenants",
+			TenantsSelectUrl: "https://idpa-api-preprod.luizalabs.com/oauth/token/exchange",
+			Scopes: []string{
+				"openid",
+				"mke.read",
+				"mke.write",
+				"network.read",
+				"network.write",
+				"object-storage.read",
+				"object-storage.write",
+				"block-storage.read",
+				"block-storage.write",
+				"virtual-machine.read",
+				"virtual-machine.write",
+				"dbaas.read",
+				"dbaas.write",
+				"cpo:read",
+				"cpo:write",
+			},
+		},
+	}
+	authConfigMap["default"] = authConfigMap["prod"]
 }

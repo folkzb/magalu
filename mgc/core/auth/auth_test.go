@@ -11,21 +11,11 @@ import (
 	"time"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/config"
 	"magalu.cloud/core/profile_manager"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/testing/fs_test_helper"
 )
-
-var dummyConfig Config = Config{
-	ClientId:       "client-id",
-	RedirectUri:    "redirect-uri",
-	LoginUrl:       "login-url",
-	TokenUrl:       "token-url",
-	ValidationUrl:  "validation-url",
-	RefreshUrl:     "refresh-url",
-	TenantsListUrl: "tenant-list-url",
-	Scopes:         []string{"test"},
-}
 
 var dummyConfigResult *ConfigResult = &ConfigResult{
 	AccessToken:  "access-token",
@@ -38,6 +28,19 @@ access_token: "access-token"
 refresh_token: "refresh-token"
 current_environment: "test"
 `)
+
+var dummyConfigMap map[string]Config = map[string]Config{
+	"temp": {
+		ClientId:       "client-id",
+		RedirectUri:    "redirect-uri",
+		LoginUrl:       "login-url",
+		TokenUrl:       "token-url",
+		ValidationUrl:  "validation-url",
+		RefreshUrl:     "refresh-url",
+		TenantsListUrl: "tenant-list-url",
+		Scopes:         []string{"test"},
+	},
+}
 
 type mockTransport struct {
 	statusCode        int
@@ -261,6 +264,12 @@ refresh_token: refresh-token
 secret_access_key: ""
 `),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		setTokens("Valid token without auth file", nil, "access-token", "refresh-token", mockTransport{},
 			[]fs_test_helper.TestFsEntry{
@@ -278,6 +287,12 @@ access_token: access-token
 current_environment: ""
 refresh_token: refresh-token
 secret_access_key: ""
+`),
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
 `),
 				},
 			}),
@@ -298,6 +313,12 @@ refresh_token: ""
 secret_access_key: MySecretAccessKeyTeste
 `),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		setAccessKey("Valid keys without auth file", nil, "MyAccessKeyIdTest", "MySecretAccessKeyTeste", mockTransport{},
 			[]fs_test_helper.TestFsEntry{
@@ -316,6 +337,12 @@ refresh_token: ""
 secret_access_key: MySecretAccessKeyTeste
 `),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		requestAuthTokenWithAuthorizationCode("Code verifier == nil", mockTransport{}, nil, true,
 			[]fs_test_helper.TestFsEntry{
@@ -329,6 +356,12 @@ secret_access_key: MySecretAccessKeyTeste
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte(``),
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 		requestAuthTokenWithAuthorizationCode("Bad request",
@@ -349,6 +382,12 @@ secret_access_key: MySecretAccessKeyTeste
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte{},
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 		requestAuthTokenWithAuthorizationCode("Valid login result",
@@ -376,6 +415,12 @@ access_token: ac-token
 current_environment: ""
 refresh_token: rf-token
 secret_access_key: ""
+`),
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
 `),
 				},
 			}),
@@ -406,6 +451,12 @@ refresh_token: rf-token
 secret_access_key: ""
 `),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		requestAuthTokenWithAuthorizationCode("Invalid login result",
 			mockTransport{
@@ -426,6 +477,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte(``),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		requestAuthTokenWithAuthorizationCode("Request with error",
 			mockTransport{
@@ -445,6 +502,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte(``),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		validateAccessToken("Request ended with error",
 			mockTransport{
@@ -462,6 +525,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte(``),
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 		validateAccessToken("Invalid validation result",
@@ -482,6 +551,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte(``),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		validateAccessToken("Bad request",
 			mockTransport{
@@ -500,6 +575,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte(``),
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 		validateAccessToken("Active validation result",
@@ -522,6 +603,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte(``),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		doRefreshAccessToken("Valid response json",
 			mockTransport{
@@ -538,6 +625,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			},
 		),
@@ -567,6 +660,12 @@ refresh_token: rf-token
 secret_access_key: ""
 `),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			},
 		),
 		doRefreshAccessToken("Bad request",
@@ -586,6 +685,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			},
 		),
 		doRefreshAccessToken("Invalid response json",
@@ -604,6 +709,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			},
 		),
@@ -625,6 +736,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 		selectTenant("Valid tenant result",
@@ -663,6 +780,12 @@ refresh_token: def
 secret_access_key: ""
 `),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		listTenants("empty tenant list",
 			mockTransport{
@@ -681,6 +804,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		newAuth("empty auth file", "",
 			&ConfigResult{},
@@ -696,6 +825,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: []byte(``),
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		newAuth("non empty auth file", "",
 			dummyConfigResult,
@@ -710,6 +845,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 		newAuth("Not-empty auth file with env var", "env-access-token",
@@ -728,6 +869,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 
@@ -766,6 +913,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		listTenants("request ended with err", mockTransport{
 			shouldReturnError: true,
@@ -781,6 +934,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 		listTenants("bad request", mockTransport{
@@ -799,6 +958,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 
 		listTenants("invalid tenant list", mockTransport{
@@ -816,6 +981,12 @@ secret_access_key: ""
 					Path: "/default/auth.yaml",
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
+				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
 				},
 			}),
 		selectTenant("Bad request",
@@ -837,6 +1008,12 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 		selectTenant("Request ended with error",
 
@@ -857,12 +1034,22 @@ secret_access_key: ""
 					Mode: utils.FILE_PERMISSION,
 					Data: dummyConfigResultYaml,
 				},
+				{
+					Path: "/default/cli.yaml",
+					Mode: utils.FILE_PERMISSION,
+					Data: []byte(`env: temp
+`),
+				},
 			}),
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			m, fs := profile_manager.NewInMemoryProfileManager()
-
+			config := config.New(m)
+			err := config.Set("env", "temp")
+			if err != nil {
+				t.Errorf("could not set env")
+			}
 			fs_err := fs_test_helper.PrepareFs(fs, tc.providedFs)
 			if fs_err != nil {
 				t.Errorf("could not prepare provided FS: %s", fs_err.Error())
@@ -871,7 +1058,7 @@ secret_access_key: ""
 			// TODO: it's required to NewAuth test. Check how to handle it better
 			t.Setenv("MGC_SDK_ACCESS_TOKEN", tc.envAccessToken)
 
-			auth := New(dummyConfig, &http.Client{Transport: tc.transport}, m)
+			auth := New(dummyConfigMap, &http.Client{Transport: tc.transport}, m, config)
 
 			run_error := tc.run(auth)
 
