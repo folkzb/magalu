@@ -791,19 +791,19 @@ paths:
                             operationId: instances_v1_resize
                             description: Resizes a database instance.
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-hidden: true
                         update/status/ACTIVE:
                             operationId: instances_v1_start
                             description: Starts a database instance.
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-hidden: true
                         update/status/STOPPED:
                             operationId: instances_v1_stop
                             description: Stops a database instance.
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-hidden: true
                 '422':
                     description: Validation Error
@@ -892,7 +892,7 @@ paths:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                         get:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
@@ -1212,13 +1212,13 @@ paths:
                             operationId: replica_start_v1_replicas__replica_id__start_post
                             description: Start an instance replica.
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-hidden: true
                         update/status/STOPPED:
                             operationId: replica_stop_v1_replicas__replica_id__stop_post
                             description: Stop an instance replica.
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-hidden: true
                 '422':
                     description: Validation Error

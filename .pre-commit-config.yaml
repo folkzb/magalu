@@ -51,6 +51,12 @@ repos:
         language: system
         entry: bash -c './scripts/tf_generate_docs.sh'
         stages: [pre-commit]
+    -   id: check-openapi-links
+        name: check openapi links
+        language: system
+        entry: bash -c './scripts/oapi_check_links.sh'
+        require_serial: true
+        stages: [pre-commit]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
