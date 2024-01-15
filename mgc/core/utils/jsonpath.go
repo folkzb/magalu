@@ -8,7 +8,29 @@ import (
 	"github.com/PaesslerAG/jsonpath"
 )
 
-var jsonPathBuilder = gval.Full(jsonpath.PlaceholderExtension())
+var hasKeyFunc = gval.Function("hasKey", func(args ...any) (any, error) {
+	if len(args) < 2 {
+		return nil, fmt.Errorf("'hasKey' jsonpath function expects two arguments, a map[string]any and a string (key). Got %v instead", args...)
+	}
+
+	m, ok := args[0].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("'hasKey' jsonpath function expected map[string]any as first argument, got %T instead: %v", args[0], args[0])
+	}
+
+	k, ok := args[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("'hasKey' jsonpath function expected string as second argument, got %T instead: %v", args[1], args[1])
+	}
+
+	_, hasKey := m[k]
+	return hasKey, nil
+})
+
+var jsonPathBuilder = gval.Full(
+	jsonpath.PlaceholderExtension(),
+	hasKeyFunc,
+)
 
 func NewJsonPath(expression string) (jp gval.Evaluable, err error) {
 	return jsonPathBuilder.NewEvaluable(expression)

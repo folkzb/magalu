@@ -149,6 +149,15 @@ paths:
                           description: Read Database instance
                           parameters:
                               id: $request.path.id
+                          x-mgc-wait-termination:
+                              maxRetries: 20
+                              interval: 10s
+                              jsonPathQuery: (hasKey($.owner.parameters, "status")
+                                  && $.result["status"] == $.owner.parameters["status"])
+                                  || (hasKey($.owner.parameters, "backup_retention_days")
+                                  && $.result["backup_retention_days"] == $.owner.parameters["backup_retention_days"])
+                                  || (hasKey($.owner.parameters, "backup_starts_at")
+                                  && $.result["backup_start_at"] == $.owner.parameters["backup_start_at"])
                       delete:
                           operationId: instances_v1_delete
                           description: Delete Database instance
