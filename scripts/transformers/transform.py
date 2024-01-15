@@ -1,10 +1,8 @@
 import argparse
-import json
-import yaml
 from typing import List
-from urllib import request, parse
-
-from spec_types import OAPISchema, SpecTranformer
+from urllib import parse
+from transform_helpers import fetch_and_parse, load_yaml, save_external, add_spec_uid
+from spec_types import SpecTranformer
 from spec_version_convert import ConvertVersionTransformer
 from spec_remove_tenant_id import RemoveParamTransformer
 from spec_update_error import UpdateErrorTransformer
@@ -14,25 +12,6 @@ from spec_add_security import AddSecurityTransformer
 from spec_add_parameters_type import AddParameterTypes
 from spec_check_links import FixLinksTransformer
 from validate_openapi_specs import validate_oapi
-
-
-def fetch_and_parse(json_oapi_url: str) -> OAPISchema:
-    with request.urlopen(json_oapi_url, timeout=5) as response:
-        return json.loads(response.read())
-
-
-def load_yaml(path: str) -> OAPISchema:
-    with open(path, "r") as fd:
-        return yaml.load(fd, Loader=yaml.CLoader)
-
-
-def save_external(spec: OAPISchema, path: str):
-    with open(path, "w") as fd:
-        yaml.dump(spec, fd, sort_keys=False, indent=4, allow_unicode=True)
-
-
-def add_spec_uid(spec: OAPISchema, uid: str):
-    spec["$id"] = uid
 
 
 if __name__ == "__main__":
