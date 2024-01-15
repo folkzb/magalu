@@ -1,5 +1,9 @@
+import argparse
 from typing import Dict, Optional, Tuple, Union
 from spec_types import OAPISchema, SpecTranformer
+from urllib import parse
+
+from transform_helpers import fetch_and_parse, load_yaml, save_external
 
 POSSIBLE_SOURCES = ["query", "header", "path", "body"]
 
@@ -328,3 +332,23 @@ class FixLinksTransformer(SpecTranformer):
                 return None
 
         return current_dict
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="Check for OpenAPI links",
+        description="Run through OpenAPI files check the path" "of each link parameter",
+    )
+    parser.add_argument(
+        "spec_file", type=str, help="OpenAPI schema that need to be checked"
+    )
+    args = parser.parse_args()
+
+    if parse.urlparse(args.spec_file).scheme != "":
+        product_spec = fetch_and_parse(args.spec_file)
+    else:
+        product_spec = load_yaml(args.spec_file)
+
+    instance = FixLinksTransformer()
+    updated_spec = instance.transform(product_spec)
+    save_external(product_spec, args.spec_file)
