@@ -7,7 +7,7 @@ Usage:
 
 Product catalog:
   auth            Actions with ID Magalu to log in, refresh tokens, change tenants and others
-  block-storage   Operations for Block Storage API
+  block-storage   Block Storage API Product Documentation
   config          Manage Configuration values
   dbaas           DBaaS API Product.
   mke             APIs referentes ao produto de kubernetes

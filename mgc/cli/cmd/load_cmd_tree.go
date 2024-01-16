@@ -11,6 +11,8 @@ import (
 	mgcSdk "magalu.cloud/sdk"
 )
 
+var descriptorsToIgnore = []string{"volume-attachment"}
+
 func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (cmd *cobra.Command, flags *cmdFlags, err error) {
 	if childGroup, ok := child.(mgcSdk.Grouper); ok {
 		cmd, err = addGroup(sdk, parentCmd, childGroup)
@@ -79,7 +81,10 @@ func loadAllGrouperChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core
 		if child.IsInternal() && !getShowInternalFlag(cmd.Root()) {
 			return true, nil
 		}
-		_, _, err = addChildDesc(sdk, cmd, child)
+		if !slices.Contains(descriptorsToIgnore, child.Name()) {
+			_, _, err = addChildDesc(sdk, cmd, child)
+		}
+
 		return true, err
 	})
 	return err

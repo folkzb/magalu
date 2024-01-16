@@ -18,9 +18,8 @@ components:
       $ref: /block-storage/volume/get/configsSchema
 
 children:
-- name: volume-attach-blueprint
+- name: volume-attachment
   description: Block Storage Volume Attachment
-  isInternal: true
   children:
 
   - name: create
@@ -73,13 +72,13 @@ children:
   - name: update
     description: Update a block storage volume attachment
     parametersSchema:
-      $ref: /block-storage/volume-attach-blueprint/get/parametersSchema
+      $ref: /block-storage/volume-attachment/get/parametersSchema
     configsSchema:
-      $ref: /block-storage/volume-attach-blueprint/get/configsSchema
+      $ref: /block-storage/volume-attachment/get/configsSchema
     resultSchema:
-      $ref: /block-storage/volume-attach-blueprint/get/resultSchema
+      $ref: /block-storage/volume-attachment/get/resultSchema
     steps:
-    - target: /block-storage/volume-attach-blueprint/get
+    - target: /block-storage/volume-attachment/get
 
   - name: delete
     description: Detach a volume from a virtual machine instance

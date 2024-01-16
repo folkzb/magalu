@@ -1,4 +1,4 @@
-Create and manage Volume Attachments
+Block Storage Volume Attachment
 
 Usage:
   ./cli block-storage volume-attachment [flags]
