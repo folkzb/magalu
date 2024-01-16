@@ -80,11 +80,12 @@ func collectGroupResources(
 				return true, nil
 			}
 
-			oldLen := len(path)
-			path = append(path, childGroup.Name())
-			childResources, err := collectGroupResources(ctx, sdk, childGroup, path)
+			childResources, err := collectGroupResources(ctx, sdk, childGroup, append(path, childGroup.Name()))
+			if err != nil {
+				return false, err
+			}
+
 			resources = append(resources, childResources...)
-			path = path[:oldLen]
 			return true, err
 		} else if exec, ok := child.(mgcSdk.Executor); ok {
 			// TODO: see how this stands in practice
@@ -93,14 +94,19 @@ func collectGroupResources(
 			// maybe something to check with scripts/spec_stats.py
 			switch exec.Name() {
 			case "create":
+				tflog.Debug(ctx, "found create operation", debugMap)
 				create = exec
 			case "get":
+				tflog.Debug(ctx, "found get/read operation", debugMap)
 				read = exec
 			case "update":
+				tflog.Debug(ctx, "found update operation", debugMap)
 				update = exec
 			case "delete":
+				tflog.Debug(ctx, "found delete operation", debugMap)
 				delete = exec
 			case "list":
+				tflog.Debug(ctx, "found list operation", debugMap)
 				list = exec
 			default:
 				connectionExecs = append(connectionExecs, exec)
@@ -127,8 +133,8 @@ func collectGroupResources(
 	resources = append(resources, func() resource.Resource { return res })
 
 	for _, connectionCreate := range connectionExecs {
-		path = append(path, connectionCreate.Name())
-		name := tfName(strings.Join(path, "_"))
+		connectionPath := append(path, connectionCreate.Name())
+		name := tfName(strings.Join(connectionPath, "_"))
 		if strings.Contains(string(name), "get") {
 			tflog.Debug(ctx, fmt.Sprintf("connection creation %s is a non-modifying action, it can't be turned into a resource", name))
 			continue
