@@ -87,7 +87,7 @@ func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsP
 			return err, pipeline.ProcessSkip
 		}
 
-		if err = common.WriteToFile(resp.Body, params.Destination.Join(dirEntry.Path())); err != nil {
+		if err = common.WriteToFile(ctx, resp.Body, resp.ContentLength, params.Destination.Join(dirEntry.Path())); err != nil {
 			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
 			return err, pipeline.ProcessSkip
 		}

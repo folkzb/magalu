@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
@@ -26,7 +27,7 @@ func NewDownloadRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI) (
 	return http.NewRequestWithContext(ctx, http.MethodGet, string(host), nil)
 }
 
-func WriteToFile(reader io.ReadCloser, outFile mgcSchemaPkg.FilePath) (err error) {
+func WriteToFile(ctx context.Context, reader io.ReadCloser, fileSize int64, outFile mgcSchemaPkg.FilePath) (err error) {
 	defer reader.Close()
 
 	writer, err := os.OpenFile(outFile.String(), os.O_WRONLY|os.O_TRUNC|os.O_CREATE, utils.FILE_PERMISSION)
@@ -34,7 +35,14 @@ func WriteToFile(reader io.ReadCloser, outFile mgcSchemaPkg.FilePath) (err error
 		return err
 	}
 
-	n, err := writer.ReadFrom(reader)
+	reportProgress := progress_report.FromContext(ctx)
+	downloadedBytes := uint64(0)
+	progressReader := progress_report.NewReporterReader(reader, func(n int, err error) {
+		downloadedBytes += uint64(n)
+		reportProgress(outFile.String(), downloadedBytes, uint64(fileSize), progress_report.UnitsBytes, err)
+	})
+
+	n, err := io.Copy(writer, progressReader)
 	defer writer.Close()
 	if err != nil {
 		return fmt.Errorf("error writing to file (wrote %d bytes): %w", n, err)

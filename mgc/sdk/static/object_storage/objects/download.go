@@ -7,7 +7,6 @@ import (
 	"path"
 
 	"magalu.cloud/core"
-	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
@@ -45,7 +44,7 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg
 		}
 	}
 
-	if err := common.WriteToFile(resp.Body, dst); err != nil {
+	if err := common.WriteToFile(ctx, resp.Body, resp.ContentLength, dst); err != nil {
 		return err
 	}
 
@@ -58,21 +57,11 @@ func download(ctx context.Context, p common.DownloadObjectParams, cfg common.Con
 		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 	}
 
-	reportProgress := progress_report.FromContext(ctx)
-	total := uint64(1)
-	progress := uint64(0)
-	name := p.Source.String()
-
-	reportProgress(name, progress, total, progress_report.UnitsNone, nil)
-
 	err = downloadSingleFile(ctx, cfg, p.Source, dst)
 
 	if err != nil {
-		reportProgress(name, progress, total, progress_report.UnitsNone, err)
 		return nil, err
 	}
-
-	reportProgress(name, progress+1, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
 	return common.DownloadObjectParams{Source: p.Source, Destination: mgcSchemaPkg.FilePath(dst)}, nil
 }
