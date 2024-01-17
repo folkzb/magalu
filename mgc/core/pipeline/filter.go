@@ -139,6 +139,27 @@ func (r FilterRuleAny[T]) RecursiveWrap(wrapper filterRuleWrapper[T]) FilterRule
 var _ FilterRule[any] = (*FilterRuleAny[any])(nil)
 var _ FilterRuleRecursiveWrapper[any] = (*FilterRuleAny[any])(nil)
 
+// All values must match FilterInclude or FilterUnknown. If so, return FilterInclude. Otherwise, return FilterExclude
+type FilterRuleAnd[T any] struct {
+	And []FilterRule[T]
+}
+
+func (r FilterRuleAnd[T]) Filter(ctx context.Context, entry T) FilterStatus {
+	for _, f := range r.And {
+		if f.Filter(ctx, entry) == FilterExclude {
+			return FilterExclude
+		}
+	}
+	return FilterInclude
+}
+
+func (r FilterRuleAnd[T]) RecursiveWrap(wrapper filterRuleWrapper[T]) FilterRule[T] {
+	return &FilterRuleAnd[T]{wrapFilterRuleLogArray[T](r.And, wrapper)}
+}
+
+var _ FilterRule[any] = (*FilterRuleAnd[any])(nil)
+var _ FilterRuleRecursiveWrapper[any] = (*FilterRuleAnd[any])(nil)
+
 // Log the given rule
 //
 // ContextLogger() is used to get the logger
