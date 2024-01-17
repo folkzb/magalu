@@ -16,22 +16,24 @@ type FilterParams struct {
 }
 
 func ApplyFilters(ctx context.Context, entries <-chan pipeline.WalkDirEntry, params []FilterParams, cancel context.CancelCauseFunc) <-chan pipeline.WalkDirEntry {
+	filters := []pipeline.FilterRule[pipeline.WalkDirEntry]{}
 	for _, filter := range params {
 		if filter.Include != "" {
-			includeFilter := pipeline.FilterRuleIncludeOnly[pipeline.WalkDirEntry]{
+			filters = append(filters, pipeline.FilterRuleIncludeOnly[pipeline.WalkDirEntry]{
 				Pattern: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: filter.Include, CancelOnError: cancel},
-			}
-
-			entries = pipeline.Filter[pipeline.WalkDirEntry](ctx, entries, includeFilter)
+			})
 		}
-
 		if filter.Exclude != "" {
-			excludeFilter := pipeline.FilterRuleNot[pipeline.WalkDirEntry]{
+			filters = append(filters, pipeline.FilterRuleNot[pipeline.WalkDirEntry]{
 				Not: pipeline.FilterWalkDirEntryIncludeGlobMatch{Pattern: filter.Exclude, CancelOnError: cancel},
-			}
-			entries = pipeline.Filter[pipeline.WalkDirEntry](ctx, entries, excludeFilter)
+			})
 		}
 	}
 
-	return entries
+	if len(filters) < 1 {
+		return entries
+	}
+
+	filterRule := pipeline.FilterRuleAnd[pipeline.WalkDirEntry]{And: filters}
+	return pipeline.Filter[pipeline.WalkDirEntry](ctx, entries, filterRule)
 }
