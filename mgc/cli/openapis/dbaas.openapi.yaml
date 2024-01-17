@@ -897,7 +897,7 @@ paths:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-wait-termination:
                                 maxRetries: 20
                                 interval: 10s
@@ -956,7 +956,7 @@ paths:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-wait-termination:
                                 maxRetries: 20
                                 interval: 10s
@@ -1004,7 +1004,7 @@ paths:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-wait-termination:
                                 maxRetries: 20
                                 interval: 10s
@@ -1052,7 +1052,7 @@ paths:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
                             parameters:
-                                id: $request.path.id
+                                id: $response.body#/id
                             x-mgc-wait-termination:
                                 maxRetries: 20
                                 interval: 10s
