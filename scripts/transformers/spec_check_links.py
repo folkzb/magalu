@@ -27,7 +27,7 @@ class FixLinksTransformer(SpecTranformer):
                 for status_code, response in action.get("responses", {}).items():
                     if status_code == "default" or status_code.startswith("2"):
                         if "links" in response:
-                            for op, link in response["links"].items():
+                            for op, link in response.get("links", {}).items():
                                 try:
                                     action_parameters = action.get("parameters")
 
@@ -42,7 +42,9 @@ class FixLinksTransformer(SpecTranformer):
                                         spec, response
                                     )
 
-                                    for key, link_path in link["parameters"].items():
+                                    for key, link_path in link.get(
+                                        "parameters", {}
+                                    ).items():
                                         field, result = self.handle_exp(
                                             link_path,
                                             request_schema,
@@ -300,7 +302,7 @@ class FixLinksTransformer(SpecTranformer):
         Check for a field in response schema
         """
         if schema:
-            if field in schema["properties"]:
+            if field in schema.get("properties", {}):
                 return True
         return False
 

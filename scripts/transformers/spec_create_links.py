@@ -56,7 +56,7 @@ class CreateLinks(SpecTranformer):
             generated_links = {}
             for operation, value in pre_links.items():
                 params = {}
-                for param in value["parameters"]:
+                for param in value.get("parameters", {}):
                     result = self.search_for_path(
                         param["name"],
                         response_schema,
@@ -253,7 +253,7 @@ class CreateLinks(SpecTranformer):
         and that parameter is returned on the GET
         for the same path
         """
-        return len(schema["properties"].keys()) == 1
+        return len(schema.get("properties", {}).keys()) == 1
 
     def _get_content_app_json_schema(self, spec: OAPISchema, sourceDict):
         """
@@ -438,7 +438,7 @@ class CreateLinks(SpecTranformer):
         Check for a field in response schema
         """
         if schema:
-            if field in schema["properties"]:
+            if field in schema.get("properties", {}):
                 return True
         return False
 
