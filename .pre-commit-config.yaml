@@ -55,8 +55,14 @@ repos:
         name: check openapi links
         language: system
         entry: bash -c './scripts/oapi_check_links.sh'
-        require_serial: true
         stages: [pre-commit]
+        require_serial: true
+    -   id: blueprint-index-gen
+        name: blueprint-index-gen
+        language: system
+        entry: bash -c './scripts/blueprint_index_gen.sh'
+        stages: [pre-commit]
+        require_serial: true
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
