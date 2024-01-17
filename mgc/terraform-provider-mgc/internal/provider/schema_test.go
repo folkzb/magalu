@@ -140,7 +140,7 @@ var update = core.NewSimpleExecutor(
 	},
 )
 
-var delete = core.NewSimpleExecutor(
+var deleteOp = core.NewSimpleExecutor(
 	core.ExecutorSpec{
 		DescriptorSpec: core.DescriptorSpec{
 			Name:        "mock delete",
@@ -163,7 +163,7 @@ var delete = core.NewSimpleExecutor(
 
 var testCases = []testCase{
 	{
-		res: &MgcResource{create: create, read: read, update: update, delete: delete},
+		res: &MgcResource{create: create, read: read, update: update, delete: deleteOp},
 		expectedInput: resAttrInfoMap{
 			"count": {
 				mgcName:   "count",
