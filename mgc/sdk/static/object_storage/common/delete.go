@@ -104,9 +104,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName BucketName, reportChan
 
 		_, err = SendRequest(ctx, req)
 
-		defer func() {
-			reportChan <- deleteProgressReport{uint64(len(dirEntries)), err}
-		}()
+		reportChan <- deleteProgressReport{uint64(len(dirEntries)), 0, err}
 
 		if err != nil {
 			return &ObjectError{Url: mgcSchemaPkg.URI(bucketName), Err: err}, pipeline.ProcessOutput
@@ -119,6 +117,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName BucketName, reportChan
 
 type deleteProgressReport struct {
 	files uint64
+	total uint64
 	err   error
 }
 
@@ -132,16 +131,20 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 		},
 	}
 
-	objs := ListGenerator(ctx, listParams, cfg, nil)
+	reportProgress := progress_report.FromContext(ctx)
+	reportChan := make(chan deleteProgressReport)
+	defer close(reportChan)
+
+	onNewPage := func(objCount uint64) {
+		reportChan <- deleteProgressReport{0, objCount, nil}
+	}
+
+	objs := ListGenerator(ctx, listParams, cfg, onNewPage)
 	objs = ApplyFilters(ctx, objs, params.FilterParams, nil)
 
 	if params.BatchSize < MinBatchSize || params.BatchSize > MaxBatchSize {
 		return core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", MinBatchSize, MaxBatchSize, params.BatchSize)}
 	}
-
-	reportProgress := progress_report.FromContext(ctx)
-	reportChan := make(chan deleteProgressReport)
-	defer close(reportChan)
 
 	go reportDeleteProgress(reportProgress, reportChan, params)
 
@@ -170,7 +173,7 @@ func reportDeleteProgress(reportProgress progress_report.ReportProgress, reportC
 	var errors utils.MultiError
 	for report := range reportChan {
 		progress += report.files
-		total += report.files
+		total += report.total
 
 		if report.err != nil {
 			errors = append(errors, report.err)
