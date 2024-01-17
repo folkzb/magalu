@@ -65,7 +65,7 @@ class CreateLinks(SpecTranformer):
                         action_parameters,
                     )
                     if result:
-                        params["name"] = result
+                        params[param["name"]] = result
                 if params:
                     new_link = {
                         "operationId": value["operationId"],
