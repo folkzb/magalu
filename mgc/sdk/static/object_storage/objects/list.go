@@ -11,7 +11,7 @@ import (
 
 type listParams struct {
 	common.ListObjectsParams `json:",squash" mgc:"positional"` // nolint
-	common.FilterParams      `json:",squash"`                  // nolint
+	common.Filters           `json:",squash"`                  // nolint
 }
 
 type listResponse struct {

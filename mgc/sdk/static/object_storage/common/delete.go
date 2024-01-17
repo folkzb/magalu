@@ -31,9 +31,9 @@ type DeleteObjectParams struct {
 }
 
 type DeleteAllObjectsParams struct {
-	BucketName   BucketName       `json:"bucket" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
-	BatchSize    int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to delete,default=1000,minimum=1,maximum=1000" example:"1000"`
-	FilterParams `json:",squash"` // nolint
+	BucketName BucketName       `json:"bucket" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
+	BatchSize  int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to delete,default=1000,minimum=1,maximum=1000" example:"1000"`
+	Filters    `json:",squash"` // nolint
 }
 
 type objectIdentifier struct {

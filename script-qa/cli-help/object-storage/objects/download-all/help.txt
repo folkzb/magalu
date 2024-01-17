@@ -7,11 +7,11 @@ Examples:
   ./cli object-storage objects download-all --dst="path/to/folder" --src="s3://mybucket"
 
 Flags:
-      --dst file         Path to save files
-      --exclude string   Filename pattern to exclude
-  -h, --help             help for download-all
-      --include string   Filename pattern to include
-      --src uri          Path of objects to be downloaded (required)
+      --dst file               Path to save files
+      --filter array(object)   File name pattern to include or exclude
+                               Use --filter=help for more details
+  -h, --help                   help for download-all
+      --src uri                Path of objects to be downloaded (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

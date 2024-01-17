@@ -13,9 +13,9 @@ import (
 )
 
 type uploadDirParams struct {
-	Source              mgcSchemaPkg.DirPath `json:"src" jsonschema:"description=Source directory path for upload,example=path/to/folder" mgc:"positional"`
-	Destination         mgcSchemaPkg.URI     `json:"dst" jsonschema:"description=Full destination path in the bucket,example=s3://my-bucket/dir/" mgc:"positional"`
-	common.FilterParams `json:",squash"`     // nolint
+	Source         mgcSchemaPkg.DirPath `json:"src" jsonschema:"description=Source directory path for upload,example=path/to/folder" mgc:"positional"`
+	Destination    mgcSchemaPkg.URI     `json:"dst" jsonschema:"description=Full destination path in the bucket,example=s3://my-bucket/dir/" mgc:"positional"`
+	common.Filters `json:",squash"`     // nolint
 }
 
 type uploadDirResult struct {

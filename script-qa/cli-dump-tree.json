@@ -18068,13 +18068,22 @@
          "minLength": 3,
          "type": "string"
         },
-        "exclude": {
-         "description": "Filename pattern to exclude",
-         "type": "string"
-        },
-        "include": {
-         "description": "Filename pattern to include",
-         "type": "string"
+        "filter": {
+         "description": "File name pattern to include or exclude",
+         "items": {
+          "properties": {
+           "exclude": {
+            "description": "Filename pattern to exclude",
+            "type": "string"
+           },
+           "include": {
+            "description": "Filename pattern to include",
+            "type": "string"
+           }
+          },
+          "type": "object"
+         },
+         "type": "array"
         }
        },
        "required": [
@@ -18228,13 +18237,22 @@
          "type": "string",
          "x-contentMediaType": "application/octet-stream"
         },
-        "exclude": {
-         "description": "Filename pattern to exclude",
-         "type": "string"
-        },
-        "include": {
-         "description": "Filename pattern to include",
-         "type": "string"
+        "filter": {
+         "description": "File name pattern to include or exclude",
+         "items": {
+          "properties": {
+           "exclude": {
+            "description": "Filename pattern to exclude",
+            "type": "string"
+           },
+           "include": {
+            "description": "Filename pattern to include",
+            "type": "string"
+           }
+          },
+          "type": "object"
+         },
+         "type": "array"
         },
         "src": {
          "description": "Path of objects to be downloaded",
@@ -18319,13 +18337,22 @@
          "format": "uri",
          "type": "string"
         },
-        "exclude": {
-         "description": "Filename pattern to exclude",
-         "type": "string"
-        },
-        "include": {
-         "description": "Filename pattern to include",
-         "type": "string"
+        "filter": {
+         "description": "File name pattern to include or exclude",
+         "items": {
+          "properties": {
+           "exclude": {
+            "description": "Filename pattern to exclude",
+            "type": "string"
+           },
+           "include": {
+            "description": "Filename pattern to include",
+            "type": "string"
+           }
+          },
+          "type": "object"
+         },
+         "type": "array"
         },
         "max-items": {
          "default": 1000,
@@ -18496,13 +18523,22 @@
          "format": "uri",
          "type": "string"
         },
-        "exclude": {
-         "description": "Filename pattern to exclude",
-         "type": "string"
-        },
-        "include": {
-         "description": "Filename pattern to include",
-         "type": "string"
+        "filter": {
+         "description": "File name pattern to include or exclude",
+         "items": {
+          "properties": {
+           "exclude": {
+            "description": "Filename pattern to exclude",
+            "type": "string"
+           },
+           "include": {
+            "description": "Filename pattern to include",
+            "type": "string"
+           }
+          },
+          "type": "object"
+         },
+         "type": "array"
         },
         "src": {
          "description": "Source directory path for upload",

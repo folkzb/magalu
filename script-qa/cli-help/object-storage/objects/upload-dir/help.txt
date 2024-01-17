@@ -7,11 +7,11 @@ Examples:
   ./cli object-storage objects upload-dir --dst="s3://my-bucket/dir/" --src="path/to/folder"
 
 Flags:
-      --dst uri          Full destination path in the bucket (required)
-      --exclude string   Filename pattern to exclude
-  -h, --help             help for upload-dir
-      --include string   Filename pattern to include
-      --src directory    Source directory path for upload (required)
+      --dst uri                Full destination path in the bucket (required)
+      --filter array(object)   File name pattern to include or exclude
+                               Use --filter=help for more details
+  -h, --help                   help for upload-dir
+      --src directory          Source directory path for upload (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
