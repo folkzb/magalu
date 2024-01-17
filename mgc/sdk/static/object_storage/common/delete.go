@@ -132,7 +132,7 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 		},
 	}
 
-	objs := ListGenerator(ctx, listParams, cfg)
+	objs := ListGenerator(ctx, listParams, cfg, nil)
 	objs = ApplyFilters(ctx, objs, params.FilterParams, nil)
 
 	if params.BatchSize < MinBatchSize || params.BatchSize > MaxBatchSize {

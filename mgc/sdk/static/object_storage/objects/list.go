@@ -33,7 +33,7 @@ func List(ctx context.Context, params listParams, cfg common.Config) (result lis
 	ctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
 
-	objects := common.ListGenerator(ctx, params.ListObjectsParams, cfg)
+	objects := common.ListGenerator(ctx, params.ListObjectsParams, cfg, nil)
 	objects = common.ApplyFilters(ctx, objects, params.FilterParams, cancel)
 	entries, err := pipeline.SliceItemLimitedConsumer[[]pipeline.WalkDirEntry](ctx, params.MaxItems, objects)
 	if err != nil {

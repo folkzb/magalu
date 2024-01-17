@@ -175,7 +175,7 @@ func buildListRequestURL(cfg Config, bucketURI mgcSchemaPkg.URI) (*url.URL, erro
 	return u, nil
 }
 
-func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (outputChan <-chan pipeline.WalkDirEntry) {
+func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config, onNewPage func(objCount uint64)) (outputChan <-chan pipeline.WalkDirEntry) {
 	ch := make(chan pipeline.WalkDirEntry)
 	outputChan = ch
 
@@ -217,6 +217,10 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config) (o
 				case ch <- pipeline.NewSimpleWalkDirEntry[*BucketContent](dst.Path(), nil, err):
 				}
 				return
+			}
+
+			if onNewPage != nil {
+				onNewPage(uint64(len(result.Contents)))
 			}
 
 			for _, prefix := range result.CommonPrefixes {

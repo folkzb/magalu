@@ -110,7 +110,7 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 		},
 	}
 
-	objs := common.ListGenerator(ctx, listParams, cfg)
+	objs := common.ListGenerator(ctx, listParams, cfg, nil)
 	objs = common.ApplyFilters(ctx, objs, params.FilterParams, nil)
 
 	reportProgress := progress_report.FromContext(ctx)
