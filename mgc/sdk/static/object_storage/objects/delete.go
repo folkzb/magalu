@@ -14,7 +14,7 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 			Name:        "delete",
 			Description: "Delete an object from a bucket",
 		},
-		delete,
+		deleteObject,
 	)
 
 	msg := "This command will delete the object at {{.parameters.dst}}, and its result is NOT reversible."
@@ -25,7 +25,7 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 })
 
-func delete(ctx context.Context, params common.DeleteObjectParams, cfg common.Config) (result core.Value, err error) {
+func deleteObject(ctx context.Context, params common.DeleteObjectParams, cfg common.Config) (result core.Value, err error) {
 	err = common.Delete(ctx, params, cfg)
 	return
 }
