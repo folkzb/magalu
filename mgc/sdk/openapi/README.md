@@ -46,58 +46,190 @@ modules:
 
 ## Extensions
 
-Some extensions may be added in the OpenAPI in order to control the
-runtime generation:
+Some extensions may be added in the OpenAPI spec in order to control the runtime generation. They are prefixed with `x-mgc`
+and can be used to edit names and more complex behaviors. Be aware that some extensions can only be used in certain OpenAPI spec
+elements. The following list shows which extensions can be used in the spec:
 
-* `x-mgc-name` may be present to change the tag, operation, parameter
-  or JSON Schema properties (ie: request body) to control its name.
-* `x-mgc-name` like `x-mgc-name`, but affects the description.
-* `x-mgc-hidden: true` like `x-mgc-name`, but if `true` will skip
-  using such entry.
+- Path
+    - `x-mgc-name`
+    - `x-mgc-description`
+    - `x-mgc-hidden`
+    - `x-mgc-confirmable`
+    - `x-mgc-wait-termination`
+    - `x-mgc-output-flag`
+- Parameter
+    - `x-mgc-name`
+    - `x-mgc-description`
+    - `x-mgc-hidden`
+- Tag
+    - `x-mgc-name`
+    - `x-mgc-description`
+    - `x-mgc-hidden`
+- Operation
+    - `x-mgc-name`
+    - `x-mgc-description`
+    - `x-mgc-hidden`
+    - `x-mgc-confirmable`
+    - `x-mgc-wait-termination`
+    - `x-mgc-output-flag`
+    - `x-mgc-transforms`
+- Link
+    - `x-mgc-wait-termination`
+    - `x-mgc-extra-parameters`
+    - `x-mgc-hidden`
+- Schema
+    - `x-mgc-name`
+    - `x-mgc-description`
+    - `x-mgc-hidden`
+    - `x-mgc-transforms`
 
-> **NOTE:**
-> it's easier to keep the customizations in another YAML file and use
-> `scripts/yaml_merge.py` to merge the original file with the
-> desired customizations, producing the final file to be used.
+# ## `x-mgc-name`
 
-### Example
+Use this extension to rename a tag, operation, parameter or a JSON Schema property (i.e: request body).
 
-The following snippet show how to customize `visible-tag`, giving it
-another name `my-resource-name` and description `my resource description`.
+```yaml
+tags:
+  - name: tag_key
+    x-mgc-name: new_tag_name
+```
 
-We're hiding `POST /v0/some/path` using `x-mgc-hidden`, so
-`my-resource-name` will have a single action `GET /v0/some/path` that
-will be named `retrieve` and description `this will be used`.
+### `x-mgc-description`
 
-Note that `hidden-tag` is not used since it's hidden.
+Use this extension to edit a description in the OpenAPI spec.
 
 ```yaml
 paths:
    /v0/some/path:
         get:
-            tags:
-            - visible-tag
-            description: this won't be used
-            x-mgc-name: retrieve
-            x-mgc-description: this will be used
-        post:
-            tags:
-            - visible-tag
-            x-mgc-hidden: true
-
-   /v0/other/path:
-        get:
-            tags:
-            - hidden-tag
-tags:
--   name: visible-tag
-    description: this won't be used
-    x-mgc-name: my-resource-name
-    x-mgc-description: my resource description
--   name: hidden-tag
-    x-mgc-hidden: true # no resources using this tag will be visible
+            description: operation description
+            x-mgc-description: edited description. This one will be used
 ```
 
+### `x-mgc-hidden`
+
+Use this extension to hide a tag or path in the OpenAPI spec. Anything marked with this tag will be invisible to the
+autocomplete and help outputs, unless `--cli.show-internal` is passed. The operations can still be accessed by passing
+their explicit names.
+
+
+```yaml
+paths:
+   /v0/some/path:
+        get:
+            x-mgc-hidden: true
+```
+
+### `x-mgc-confirmable`
+
+Add this extension to an operation to require user confirmation before execution in the CLI (all `delete` operations apply
+this extension by default). This extension is an object with a single string property called `message` used to define the
+confirmation message to be shown to the user.
+
+
+```yaml
+paths:
+   /v0/some/path:
+        patch:
+            x-mgc-confirmable:
+                message: "This action requires confirmation. Are you sure you wish to continue?"
+```
+
+### `x-mgc-wait-termination`
+
+Add this extension to an operation to add a termination conditon. The operation will be executed until the condition
+is satisfied, or until a maximum number of attempts. The `x-mgc-wait-termination` extension is an object with three properties:
+
+- `maxRetries`: an integer defining the max number of attempts
+- `interval`: interval in seconds between each attempt
+- `jsonPathQuery`: the termination condition expressed in jsonpath syntax
+- `templateQuery`: the termination condition expressed in Go Template syntax
+
+```yaml
+paths:
+   /v0/some/path:
+        post:
+            x-mgc-wait-termination:
+                maxRetries: 10
+                interval: 1s
+                jsonPathQuery: $.result.status == "completed"
+```
+
+### `x-mgc-output-flag`
+
+Defines the default output format. Accepted formats: json, yaml, table, template, jsonpath, template-file and jsonpath-file.
+Similar to the `--cli.output`/`-o` flag in the CLI.
+
+When choosing `table` you can specify columns and rows using jsonpath syntax. The following example outputs a table with
+three columns (ID, NAME and VERSION) where each row is defined by a jsonpath expression.
+
+```yaml
+paths:
+   /v0/some/path:
+        post:
+            x-mgc-output-flag: yaml # Will show output as yaml
+            x-mgc-output-flag: table=ID:$.images[*].id,NAME:$.images[*].name,VERSION:$.images[*].version
+            x-mgc-output-flag: jsonpath=$.id
+            x-mgc-output-flag: template={{.id}}
+```
+
+
+### `x-mgc-extra-parameters`
+
+Add extra parameters to a link. This extension is an array of objects of the form:
+
+- name: parameter name
+- required: a bool indicating whether the parameter is required or not
+- schema: parameter schema
+
+> NOTE: if a extra parameter has the same name of an existing parameter in the target request, it will not be added
+
+```yaml
+paths:
+   /v0/some/path:
+        post:
+            links:
+                delete:
+                    x-mgc-extra-parameters:
+                        - name: id
+                          required: true
+                          schema:
+                            type: string
+                            format: uuid
+                            title: Id
+```
+
+### `x-mgc-transforms`
+
+Apply the following transformation to a OAPI Spec item:
+
+- uppercase: applies upper case
+- lowercase: applies lower case
+- pascalcase: applies pascal case
+- kebabcase: applies kebab case
+- snakecase: applies snakecase
+- camelcase: applies camel case
+
+- translate: applies a series of translations to the spec, replacing regex expression matches
+
+```yaml
+servers:
+-   url: https://{env}/{region}/database
+    variables:
+        env:
+            description: Environment to use
+            default: api.magalu.cloud
+            enum:
+            - api.magalu.cloud
+            - api.pre-prod.jaxyendy.com
+            x-mgc-tranforms: lowercase
+            x-mgc-transforms:
+            -   type: translate
+                translations:
+                -   from: prod
+                    to: api.magalu.cloud
+                -   from: pre-prod
+                    to: api.pre-prod.jaxyendy.com
+```
 ## Parameters x Config
 
 Server variables, header and cookie parameters are handled as **Config**.
