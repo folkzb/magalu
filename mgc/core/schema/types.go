@@ -64,6 +64,21 @@ func (u URI) AsDirPath() DirPath {
 	return DirPath(u.Path())
 }
 
+func (u URI) Scheme() string {
+	if parsed, err := url.Parse(string(u)); err == nil && parsed.Scheme != "" {
+		return parsed.Scheme
+	}
+	return ""
+}
+
+func (u URI) IsRoot() bool {
+	scheme := u.Scheme()
+	if scheme != "" {
+		return u.String() == scheme+"://"+u.Hostname()
+	}
+	return u.String() == u.Hostname()
+}
+
 type FilePath string
 
 func (p FilePath) JSONSchemaExtend(s *jsonschema.Schema) {
