@@ -45,55 +45,51 @@ var getDownloadAll = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsParams, reportChan chan<- downloadAllProgressReport) pipeline.Processor[[]pipeline.WalkDirEntry, error] {
-	return func(ctx context.Context, dirEntries []pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
+func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsParams, reportChan chan<- downloadAllProgressReport) pipeline.Processor[pipeline.WalkDirEntry, error] {
+	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
 		bucketName := common.NewBucketNameFromURI(params.Source)
 		rootURI := bucketName.AsURI()
-		var errors utils.MultiError
+		var err error
 
-		for _, dirEntry := range dirEntries {
-			objURI := rootURI.JoinPath(dirEntry.Path())
+		defer func() {
+			reportChan <- downloadAllProgressReport{uint64(1), err}
+		}()
 
-			if dirEntry.Err() != nil {
-				errors = append(errors, &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: dirEntry.Err()})
-				continue
-			}
+		objURI := rootURI.JoinPath(dirEntry.Path())
 
-			_, ok := dirEntry.DirEntry().(*common.BucketContent)
-			if !ok {
-				errors = append(errors, &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: fmt.Errorf("expected object, got directory")})
-				continue
-			}
-
-			downloadAllLogger().Infow("Downloading object", "uri", objURI)
-			req, err := common.NewDownloadRequest(ctx, cfg, mgcSchemaPkg.URI(objURI))
-			if err != nil {
-				errors = append(errors, &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err})
-				continue
-			}
-
-			resp, err := common.SendRequest(ctx, req)
-			if err != nil {
-				errors = append(errors, &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err})
-				continue
-			}
-
-			dir := path.Dir(dirEntry.Path())
-			if err = os.MkdirAll(path.Join(params.Destination.String(), dir), utils.DIR_PERMISSION); err != nil {
-				errors = append(errors, &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err})
-				continue
-			}
-
-			if err = common.WriteToFile(resp.Body, params.Destination.Join(dirEntry.Path())); err != nil {
-				errors = append(errors, &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err})
-				continue
-			}
+		if dirEntry.Err() != nil {
+			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: dirEntry.Err()}
+			return err, pipeline.ProcessSkip
 		}
 
-		reportChan <- downloadAllProgressReport{uint64(len(dirEntries)), errors}
+		_, ok := dirEntry.DirEntry().(*common.BucketContent)
+		if !ok {
+			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: fmt.Errorf("expected object, got directory")}
+			return err, pipeline.ProcessSkip
+		}
 
-		if len(errors) > 0 {
-			return errors, pipeline.ProcessOutput
+		downloadAllLogger().Infow("Downloading object", "uri", objURI)
+		req, err := common.NewDownloadRequest(ctx, cfg, mgcSchemaPkg.URI(objURI))
+		if err != nil {
+			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
+			return err, pipeline.ProcessSkip
+		}
+
+		resp, err := common.SendRequest(ctx, req)
+		if err != nil {
+			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
+			return err, pipeline.ProcessSkip
+		}
+
+		dir := path.Dir(dirEntry.Path())
+		if err = os.MkdirAll(path.Join(params.Destination.String(), dir), utils.DIR_PERMISSION); err != nil {
+			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
+			return err, pipeline.ProcessSkip
+		}
+
+		if err = common.WriteToFile(resp.Body, params.Destination.Join(dirEntry.Path())); err != nil {
+			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
+			return err, pipeline.ProcessSkip
 		}
 
 		return nil, pipeline.ProcessOutput
@@ -102,7 +98,7 @@ func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsP
 
 type downloadAllProgressReport struct {
 	files uint64
-	err   utils.MultiError
+	err   error
 }
 
 func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downloadAllObjectsParams) error {
@@ -123,8 +119,7 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 
 	go reportDownloadAllProgress(reportProgress, reportChan, params)
 
-	objsBatch := pipeline.Batch(ctx, objs, common.MaxBatchSize)
-	downloadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objsBatch, createObjectDownloadProcessor(cfg, params, reportChan), nil)
+	downloadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectDownloadProcessor(cfg, params, reportChan), nil)
 	downloadObjectsErrorChan = pipeline.Filter(ctx, downloadObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
 	objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, downloadObjectsErrorChan)
