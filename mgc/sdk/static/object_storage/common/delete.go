@@ -135,8 +135,8 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 	objs := ListGenerator(ctx, listParams, cfg)
 	objs = ApplyFilters(ctx, objs, params.FilterParams, nil)
 
-	if params.BatchSize < minBatchSize || params.BatchSize > MaxBatchSize {
-		return core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", minBatchSize, MaxBatchSize, params.BatchSize)}
+	if params.BatchSize < MinBatchSize || params.BatchSize > MaxBatchSize {
+		return core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", MinBatchSize, MaxBatchSize, params.BatchSize)}
 	}
 
 	reportProgress := progress_report.FromContext(ctx)

@@ -44,7 +44,7 @@ const (
 
 	MaxBatchSize = 1000
 
-	minBatchSize = 1
+	MinBatchSize = 1
 
 	delimiter = "/"
 )
