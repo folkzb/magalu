@@ -137,12 +137,12 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 
 func reportDownloadAllProgress(reportProgress progress_report.ReportProgress, reportChan <-chan downloadAllProgressReport, params downloadAllObjectsParams) {
 	reportMsg := "downloading objects from bucket: " + params.Source.String()
-	total := uint64(0)
+	total := uint64(1)
 	progress := uint64(0)
 
 	// total here must be reported as one, otherwise the progress-bar shows
 	// an animation we do not wish the user to see
-	reportProgress(reportMsg, progress, 1, progress_report.UnitsNone, nil)
+	reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
 
 	var errors utils.MultiError
 	for report := range reportChan {
