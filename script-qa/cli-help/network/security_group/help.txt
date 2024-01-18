@@ -12,7 +12,6 @@ Commands:
   delete      Delete a security group
   get         Security Group Details
   list        List Security Groups by Tenant
-  rules       rules
 
 Flags:
   -h, --help      help for security-group

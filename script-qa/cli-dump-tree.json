@@ -15306,7 +15306,7 @@
        }
       ],
       "description": "VPC Security Groups | rules",
-      "isInternal": false,
+      "isInternal": true,
       "name": "rules",
       "version": "1.101.2"
      }
@@ -17374,7 +17374,7 @@
        }
       ],
       "description": "Virtual Private Cloud (VPC) | security-groups",
-      "isInternal": false,
+      "isInternal": true,
       "name": "security-groups",
       "version": "1.101.2"
      },
@@ -17614,7 +17614,7 @@
        }
       ],
       "description": "Virtual Private Cloud (VPC) | subnets",
-      "isInternal": false,
+      "isInternal": true,
       "name": "subnets",
       "version": "1.101.2"
      }

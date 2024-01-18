@@ -5,14 +5,12 @@ Usage:
   ./cli network vpc [command]
 
 Commands:
-  create          Create VPC
-  delete          Delete VPC
-  get             VPC Details
-  list            List VPC
-  ports           ports
-  public-ips      public-ips
-  security-groups security-groups
-  subnets         subnets
+  create      Create VPC
+  delete      Delete VPC
+  get         VPC Details
+  list        List VPC
+  ports       ports
+  public-ips  public-ips
 
 Flags:
   -h, --help      help for vpc

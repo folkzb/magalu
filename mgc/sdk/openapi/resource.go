@@ -133,6 +133,12 @@ func collectResourceChildren(
 			logger,
 			refResolver,
 		)
+		allChildrenInternal, _ := subResource.VisitChildren(func(child core.Descriptor) (run bool, err error) {
+			return child.IsInternal(), nil
+		})
+		if allChildrenInternal {
+			subResource.Spec.IsInternal = true
+		}
 		children = append(children, subResource)
 		childrenByName[childTable.name] = subResource
 	}
