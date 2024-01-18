@@ -198,11 +198,11 @@ func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err err
 	progress := uint64(0)
 	total := uint64(1)
 
-	reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
+	reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, nil)
 
 	resp, err := SendRequest(ctx, req)
 	if err != nil {
-		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, err)
+		reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, err)
 		return
 	}
 
