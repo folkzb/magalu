@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 pyyaml = "^6.0.1"
 jsonschema = { version = "^4.19.0", extras = ["format"] }
+jsonpointer = "^2.4"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^3.4.0"

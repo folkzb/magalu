@@ -1,8 +1,9 @@
 import argparse
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Optional
+from links_helper import get_response_header, handle_exp
 from spec_types import OAPISchema, SpecTranformer
 from urllib import parse
-
+import jsonpointer
 from transform_helpers import fetch_and_parse, load_yaml, save_external
 
 POSSIBLE_SOURCES = ["query", "header", "path", "body"]
@@ -38,14 +39,14 @@ class FixLinksTransformer(SpecTranformer):
                                         spec, response
                                     )
 
-                                    response_header = self._get_response_header(
+                                    response_header = get_response_header(
                                         spec, response
                                     )
 
                                     for key, link_path in link.get(
                                         "parameters", {}
                                     ).items():
-                                        field, result = self.handle_exp(
+                                        field, result = handle_exp(
                                             link_path,
                                             request_schema,
                                             response_schema,
@@ -94,145 +95,9 @@ class FixLinksTransformer(SpecTranformer):
 
         if "$ref" in schema:
             schema_path = schema["$ref"]
-            return self._resolve_schema_path(spec, schema_path)
+            return jsonpointer.resolve_pointer(spec, schema_path[1:])
         else:
             return schema
-
-    def _get_response_header(self, spec: OAPISchema, response: dict):
-        return response.get("headers", {})
-
-    def handle_exp(
-        self,
-        path: str,
-        request_schema: Optional[Dict],
-        response_schema: Optional[Dict],
-        response_header: dict,
-        action_parameters: list,
-    ):
-        # TODO if necessary, we could handle the other expressions here
-        # https://spec.openapis.org/oas/latest.html#runtime-expressions
-        if path.startswith("$request."):
-
-            def find_headers(field_name: str):
-                return self._is_action_parameter_present(
-                    field_name, "header", action_parameters
-                )
-
-            return self.handle_source_exp(
-                path,
-                path.removeprefix("$request."),
-                request_schema,
-                find_headers,
-                action_parameters,
-            )
-        elif path.startswith("$response."):
-
-            def find_headers(field_name: str):
-                return self._is_header_present(field_name, response_header)
-
-            return self.handle_source_exp(
-                path,
-                path.removeprefix("$response."),
-                response_schema,
-                find_headers,
-                action_parameters,
-            )
-        else:
-            return None, None
-
-    def handle_source_exp(
-        self, entire_path, path, body, find_headers, action_parameters
-    ):
-        if path.startswith("path."):
-            return self.get_rt_exp_path(
-                entire_path,
-                path.removeprefix("path"),
-                action_parameters,
-            )
-        if path.startswith("body"):
-            return self.get_rt_exp_body(
-                entire_path,
-                path.removeprefix("body"),
-                body,
-            )
-        if path.startswith("header."):
-            return self.get_rt_exp_header(
-                entire_path,
-                path.removeprefix("header"),
-                find_headers,
-            )
-        if path.startswith("query."):
-            return self.get_rt_exp_query(
-                entire_path,
-                path.removeprefix("query"),
-                action_parameters,
-            )
-
-    def get_rt_exp_path(
-        self,
-        entire_exp: str,
-        field: str,
-        action_parameters: list,
-    ) -> Tuple[str, Union[str, None]]:
-        field_in_parameters = self._is_action_parameter_present(
-            field.removeprefix("."), "path", action_parameters
-        )
-        if field_in_parameters:
-            return field, entire_exp
-        else:
-            return field, None
-
-    def get_rt_exp_body(
-        self,
-        entire_path,
-        json_pointer: str,
-        body: dict,
-    ) -> Tuple[str, Union[str, None]]:
-        # TODO: find a way to solve the json_pointer for field
-        # but that is not dependent of the data structure
-        field = self.get_field_from_json_pointer(json_pointer)
-
-        if body and self._check_field_in_schema(field.removeprefix("."), body):
-            new_path = self.build_path(entire_path, field.removeprefix("."))
-            return field, new_path
-        else:
-            return field, None
-
-    def build_path(self, json_pointer: str, field: str) -> str:
-        if "#/" in json_pointer:
-            index = json_pointer.index("#/") + 2
-            return json_pointer[:index] + field
-        else:
-            return json_pointer
-
-    def get_rt_exp_header(
-        self,
-        entire_exp: str,
-        field: str,
-        find_headers,
-    ) -> Tuple[str, Union[str, None]]:
-        field_in_parameters = find_headers(
-            field.removeprefix("."),
-        )
-        if field_in_parameters:
-            return field, entire_exp
-        else:
-            return field, None
-
-    def get_rt_exp_query(
-        self,
-        entire_exp: str,
-        field: str,
-        action_parameters: list,
-    ) -> Tuple[str, Union[str, None]]:
-        field_in_parameters = self._is_action_parameter_present(
-            field.removeprefix("."), "query", action_parameters
-        )
-
-        if field_in_parameters:
-            return field, entire_exp
-        else:
-            return field, None
 
     def search_for_all_except_current(
         self,
@@ -258,7 +123,7 @@ class FixLinksTransformer(SpecTranformer):
                 if new_exp == current:
                     continue
 
-                field, result = self.handle_exp(
+                field, result = handle_exp(
                     new_exp,
                     requestBody,
                     responseBody,
@@ -269,71 +134,6 @@ class FixLinksTransformer(SpecTranformer):
                     continue
                 else:
                     return result
-
-    def get_field_from_json_pointer(self, json_pointer):
-        json_pointer = json_pointer.removeprefix("#/")
-        for i, char in enumerate(json_pointer):
-            if char in ["[", "/"]:
-                json_pointer = json_pointer[:i]
-                break
-
-        return json_pointer
-
-    def _is_header_present(self, field_name: str, headers: dict) -> bool:
-        if headers:
-            if field_name in headers.values():
-                return True
-        return False
-
-    def _is_action_parameter_present(
-        self, field_name: str, source: str, action_parameters: list
-    ) -> bool:
-        """
-        Check for a field in action_parameters with specific source
-        """
-        if action_parameters:
-            for obj in action_parameters:
-                if obj["name"] == field_name and obj["in"] == source:
-                    return True
-        return False
-
-    def _check_field_in_schema(self, field: str, schema: Dict) -> bool:
-        """
-        Check for a field in response schema
-        """
-        if schema:
-            if field in schema.get("properties", {}):
-                return True
-        return False
-
-    def _resolve_schema_path(self, spec: Dict, path: str) -> Optional[Dict]:
-        """
-        Resolves the path to a schema.
-
-        Args:
-            spec: the openapi definition
-            path: the path of the schema defined in $ref.
-            Example: '#/components/schemas/<name>'
-
-        Returns:
-            The schema definition dictionary, or None if not found.
-        """
-        if not path:
-            return None
-
-        components = path.split("/")
-
-        if components[0] == "#":
-            components = components[1:]
-
-        current_dict = spec
-        for component in components:
-            if component in current_dict:
-                current_dict = current_dict[component]
-            else:
-                return None
-
-        return current_dict
 
 
 if __name__ == "__main__":
