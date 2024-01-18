@@ -18275,6 +18275,13 @@
       "name": "download-all",
       "parameters": {
        "properties": {
+        "batch_size": {
+         "default": 1000,
+         "description": "Limit of items per batch to download",
+         "maximum": 1000,
+         "minimum": 1,
+         "type": "integer"
+        },
         "dst": {
          "description": "Path to save files",
          "example": "path/to/folder",
