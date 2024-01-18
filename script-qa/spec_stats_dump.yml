@@ -78,14 +78,6 @@ block-storage.openapi:
     - '#/components/schemas/ValidationError'
 dbaas.openapi:
   computed-variables:
-    - POST /v1/instances/{instance_id}/backups:
-        - '202':
-            computed:
-              - id
-            non-computed:
-              - exchange
-              - instance_id
-              - mode
     - POST /v1/instances:
         - '202':
             computed:
@@ -94,7 +86,6 @@ dbaas.openapi:
               - backup_retention_days
               - backup_start_at
               - datastore_id
-              - exchange
               - flavor_id
               - name
               - password
@@ -112,16 +103,17 @@ dbaas.openapi:
               - finished_at
               - id
               - name
+              - password
               - replicas
               - started_at
               - status
+              - type
               - updated_at
+              - user
             non-computed:
-              - exchange
               - flavor_id
               - instance_id
               - size
-              - type
     - POST /v1/instances/{instance_id}/start:
         - '200':
             computed:
@@ -134,14 +126,15 @@ dbaas.openapi:
               - flavor_id
               - id
               - name
+              - password
               - replicas
               - size
               - started_at
               - status
               - type
               - updated_at
+              - user
             non-computed:
-              - exchange
               - instance_id
     - POST /v1/instances/{instance_id}/stop:
         - '200':
@@ -155,29 +148,35 @@ dbaas.openapi:
               - flavor_id
               - id
               - name
+              - password
               - replicas
               - size
               - started_at
               - status
               - type
               - updated_at
+              - user
             non-computed:
-              - exchange
               - instance_id
+    - POST /v1/instances/{instance_id}/backups:
+        - '202':
+            computed:
+              - id
+            non-computed:
+              - instance_id
+              - mode
     - POST /v1/instances/{instance_id}/restores:
         - '202':
             computed:
               - id
             non-computed:
               - backup_id
-              - exchange
               - instance_id
     - POST /v1/replicas:
         - '202':
             computed:
               - id
             non-computed:
-              - exchange
               - flavor_id
               - name
               - source_id
@@ -197,7 +196,6 @@ dbaas.openapi:
               - type
               - updated_at
             non-computed:
-              - exchange
               - flavor_id
               - replica_id
     - POST /v1/replicas/{replica_id}/start:
@@ -217,7 +215,6 @@ dbaas.openapi:
               - type
               - updated_at
             non-computed:
-              - exchange
               - replica_id
     - POST /v1/replicas/{replica_id}/stop:
         - '200':
@@ -236,35 +233,16 @@ dbaas.openapi:
               - type
               - updated_at
             non-computed:
-              - exchange
               - replica_id
   missing-crud:
-    - backups:
-        - post
     - datastores:
         - post
         - delete
     - flavors:
         - post
         - delete
-  typeless-schemas:
-    - paths./v1/healthcheck.get.responses.200.content.application/json.schema
-    - paths./v1/backups/{backup_id}.delete.responses.202.content.application/json.schema
-    - paths./v1/instances/{instance_id}/backups/{backup_id}.delete.responses.202.content.application/json.schema
-  uneven-resources:
-    instances:
-      GET:
-        expected_prefix: /v1/instances
-        uneven:
-          - /v1/instances/{instance_id}
-  unused-components:
-    - '#/components/schemas/AllDatabasesResponse'
-    - '#/components/schemas/ValidationError'
-  xof-single-item:
-    - paths./v1/datastores.get.parameters.status.schema
-    - paths./v1/flavors.get.parameters.status.schema
-    - paths./v1/instances.get.parameters._expand.schema
-    - components.schemas.InstanceVolumeRequest.type
+    - backups:
+        - post
 mke.openapi:
   computed-variables:
     - POST /v0/clusters:

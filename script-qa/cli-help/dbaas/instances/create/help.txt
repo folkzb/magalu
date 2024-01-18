@@ -4,26 +4,25 @@ Usage:
   ./cli dbaas instances create [flags]
 
 Examples:
-  ./cli dbaas instances create --datastore-id="063f3994-b6c2-4c37-96c9-bab8d82d36f7" --flavor-id="8bbe8e01-40c8-4d2b-80e8-189debc44b1c" --name="dbaas-name" --password="dbaas-password" --user="dbaas-user" --volume.size=12 --volume.type="CLOUD_NVME_15K"
+  ./cli dbaas instances create --backup-retention-days=7 --backup-start-at="03:00:00" --datastore-id="063f3994-b6c2-4c37-96c9-bab8d82d36f7" --flavor-id="8bbe8e01-40c8-4d2b-80e8-189debc44b1c" --name="dbaas-name" --password="dbaas-password" --user="dbaas-user" --volume.size=30 --volume.type="CLOUD_NVME"
 
 Flags:
-      --backup-retention-days integer   Backup Retention Days (min: 1) (default 7)
-      --backup-start-at time            Backup Start At (default "04:00:00")
+      --backup-retention-days integer   Backup Retention Days: The number of days that a particular backup is kept until its deletion. (min: 1) (default 30)
+      --backup-start-at time            Backup Start At: Start time which is allowed to start the automated backup process. (default "01:00:00")
       --cli.list-links enum[=table]     List all available links for this command (one of "json", "table" or "yaml")
       --datastore-id uuid               Datastore Id (required)
-      --exchange string                 Exchange (default "dbaas-internal")
       --flavor-id uuid                  Flavor Id (required)
   -h, --help                            help for create
-      --name string                     Name (max character count: 100) (required)
+      --name string                     Name (max character count: 255) (required)
       --password string                 Password (max character count: 50) (required)
       --user string                     User (max character count: 25) (required)
   -v, --version                         version for create
-      --volume object                   InstanceVolumeRequest (properties: size and type)
+      --volume object                   Instance Volume Request (properties: size and type)
                                         Use --volume=help for more details (required)
-      --volume.size integer             InstanceVolumeRequest: Size (range: 10 - 50000)
-                                        This is the same as '--volume=size:integer'.
-      --volume.type enum                InstanceVolumeRequest: An enumeration. (one of "CLOUD_HDD", "CLOUD_NVME" or "CLOUD_NVME_15K")
-                                        This is the same as '--volume=type:enum'. (default "CLOUD_NVME_15K")
+      --volume.size number              Instance Volume Request: The size of the volume (in GiB). (range: 10 - 50000)
+                                        This is the same as '--volume=size:number'.
+      --volume.type enum                Instance Volume Request: The type of the volume. (one of "CLOUD_HDD" or "CLOUD_NVME")
+                                        This is the same as '--volume=type:enum'. (default "CLOUD_NVME")
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

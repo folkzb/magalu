@@ -39,35 +39,7 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.read
-        delete:
-            security:
-            -   OAuth2:
-                - dbaas.write
-    /v1/datastores:
-        get:
-            security:
-            -   OAuth2:
-                - dbaas.read
-    /v1/datastores/{datastore_id}:
-        get:
-            security:
-            -   OAuth2:
-                - dbaas.read
-    /v1/flavors:
-        get:
-            security:
-            -   OAuth2:
-                - dbaas.read
-    /v1/flavors/{flavor_id}:
-        get:
-            security:
-            -   OAuth2:
-                - dbaas.read
     /v1/instances:
-        get:
-            security:
-            -   OAuth2:
-                - dbaas.read
         post:
             responses:
               '202':
@@ -130,36 +102,6 @@ paths:
                 maxRetries: 100
                 interval: 20s
                 jsonPathQuery: (hasKey($.result, "status")) && ($.result.status == "ACTIVE" || $.result.status == "STOPPED" || $.result.status == "ERROR")
-        delete:
-            security:
-            -   OAuth2:
-                - dbaas.write
-        patch:
-            responses:
-              '200':
-                  links:
-                      get:
-                          operationId: instances_v1_get_by_id
-                          description: Read Database instance
-                          parameters:
-                              id: $request.path.id
-                          x-mgc-wait-termination:
-                              maxRetries: 20
-                              interval: 10s
-                              jsonPathQuery: (hasKey($.owner.parameters, "status")
-                                  && $.result["status"] == $.owner.parameters["status"])
-                                  || (hasKey($.owner.parameters, "backup_retention_days")
-                                  && $.result["backup_retention_days"] == $.owner.parameters["backup_retention_days"])
-                                  || (hasKey($.owner.parameters, "backup_starts_at")
-                                  && $.result["backup_start_at"] == $.owner.parameters["backup_start_at"])
-                      delete:
-                          operationId: instances_v1_delete
-                          description: Delete Database instance
-                          parameters:
-                              id: $request.path.id
-            security:
-            -   OAuth2:
-                - dbaas.write
     /v1/instances/{instance_id}/resize:
         post:
             responses:
@@ -174,9 +116,7 @@ paths:
                               maxRetries: 20
                               interval: 10s
                               jsonPathQuery: $.result.flavor_id == $.owner.parameters.flavor_id
-            security:
-            -   OAuth2:
-                - dbaas.write
+            x-mgc-name: resize
     /v1/instances/{instance_id}/start:
         post:
             responses:
@@ -191,9 +131,7 @@ paths:
                               maxRetries: 20
                               interval: 10s
                               jsonPathQuery: $.result.status == "ACTIVE"
-            security:
-            -   OAuth2:
-                - dbaas.write
+            x-mgc-name: start
     /v1/instances/{instance_id}/stop:
         post:
             responses:
@@ -208,14 +146,8 @@ paths:
                               maxRetries: 20
                               interval: 10s
                               jsonPathQuery: $.result.status == "STOPPED"
-            security:
-            -   OAuth2:
-                - dbaas.write
+            x-mgc-name: stop
     /v1/replicas:
-        get:
-            security:
-            -   OAuth2:
-                - dbaas.read
         post:
             responses:
               '202':
@@ -249,13 +181,13 @@ paths:
                           parameters:
                               replica_id: $request.path.replica_id
                       update/status/ACTIVE:
-                          operationId: replica_start_v1_replicas__replica_id__start_post
+                          operationId: replica_start_v1_replicas_post
                           description: Start an instance replica.
                           parameters:
                               id: $request.path.id
                           x-mgc-hidden: true
                       update/status/STOPPED:
-                          operationId: replica_stop_v1_replicas__replica_id__stop_post
+                          operationId: replica_stop_v1_replicas_post
                           description: Stop an instance replica.
                           parameters:
                               id: $request.path.id
@@ -263,35 +195,37 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.read
-    /v1/replicas/{replica_id}/resize:
-        post:
-            security:
-            -   OAuth2:
-                - dbaas.write
-    /v1/replicas/{replica_id}/start:
-        post:
-            security:
-            -   OAuth2:
-                - dbaas.write
-    /v1/replicas/{replica_id}/stop:
-        post:
-            security:
-            -   OAuth2:
-                - dbaas.write
 
-tags:
--   name: healthcheck
-    x-mgc-hidden: true
--   name: backups
--   name: datastores
--   name: instances
--   name: flavors
--   name: replicas
--   name: restores
-    x-mgc-hidden: true
-
+# ExclusiveMinimum must be replaced from number to boolean. JSON Schema new draft
+# proposes as a number, but this is only available in OpenAPI 3.1.0. Since kin-openapi
+# only supports up to 3.0.0, we need to patch to be a boolean
 components:
+    parameters:
+        instance_expand:
+            x-mgc-name: expand
+        offset:
+            x-mgc-name: offset
+        limit:
+            x-mgc-name: limit
     schemas:
+        BackupDetailResponse:
+            properties:
+                db_size:
+                    minimum: 0.0
+                    exclusiveMinimum: true
+                size:
+                    minimum: 0.0
+                    exclusiveMinimum: true
+        DatabaseInstance:
+            properties:
+                backup_retention_days:
+                    minimum: 0.0
+                    exclusiveMinimum: true
+        DatabaseInstanceUpdateRequest:
+            properties:
+                backup_retention_days:
+                    minimum: 0.0
+                    exclusiveMinimum: true
         InstanceCreateRequest:
             properties:
                 name:
@@ -304,12 +238,15 @@ components:
                     example: dbaas-user
                 password:
                     example: dbaas-password
+                backup_retention_days:
+                    minimum: 0.0
+                    exclusiveMinimum: true
         InstanceVolumeRequest:
             properties:
                 size:
-                    example: 12
+                    example: 30
                 type:
-                    example: CLOUD_NVME_15K
+                    example: CLOUD_NVME
 
 servers:
 -   url: https://{env}/{region}/database

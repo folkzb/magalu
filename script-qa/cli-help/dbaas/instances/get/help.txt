@@ -5,10 +5,9 @@ Usage:
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
-      --control.expand string         Expand
-      --exchange string               Exchange (default "dbaas-internal")
+      --expand enum                   Instance extra attributes or relations to show with the main query. When available, more than one value can be informed using commas. e.g: '_expand=value1,value2' (must be "replicas")
   -h, --help                          help for get
-      --instance-id uuid              Instance Id: Database Instance Unique Id. (required)
+      --instance-id uuid              Database Instance Id: Database Instance Unique Id. (required)
   -v, --version                       version for get
 
 Global Flags:

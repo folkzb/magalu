@@ -22,17 +22,16 @@ Database replicas management.
 
 ### Optional
 
-- `exchange` (String)
 - `flavor_id` (String)
-- `status` (String) An enumeration.
+- `status` (String)
 
 ### Read-Only
 
 - `addresses` (Attributes List) (see [below for nested schema](#nestedatt--addresses))
 - `created_at` (String)
-- `datastore_id` (String)
+- `datastore_id` (String) Datastore unique identifier. Engine and version of datastore.
 - `finished_at` (String)
-- `id` (String) The ID of this resource.
+- `id` (String) Database Replica Unique Id
 - `started_at` (String)
 - `updated_at` (String)
 - `volume` (Attributes) (see [below for nested schema](#nestedatt--volume))
@@ -42,9 +41,9 @@ Database replicas management.
 
 Read-Only:
 
-- `access` (String) An enumeration.
+- `access` (String)
 - `address` (String)
-- `type` (String) An enumeration.
+- `type` (String)
 
 
 <a id="nestedatt--volume"></a>
@@ -52,5 +51,5 @@ Read-Only:
 
 Read-Only:
 
-- `size` (Number)
-- `type` (String) An enumeration.
+- `size` (Number) The size of the volume (in GiB).
+- `type` (String) The type of the volume.

@@ -4,9 +4,10 @@ Usage:
   ./cli dbaas flavors get [flavor-id] [flags]
 
 Flags:
-      --flavor-id uuid   Flavor Id: Flavor Unique Id. (required)
-  -h, --help             help for get
-  -v, --version          version for get
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --flavor-id uuid                Flavor Id: Flavor Unique Id. (required)
+  -h, --help                          help for get
+  -v, --version                       version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

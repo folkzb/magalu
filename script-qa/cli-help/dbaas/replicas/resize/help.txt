@@ -4,11 +4,11 @@ Usage:
   ./cli dbaas replicas resize [replica-id] [flags]
 
 Flags:
-      --exchange string   Exchange (default "dbaas-internal")
-      --flavor-id uuid    Flavor Id (required)
-  -h, --help              help for resize
-      --replica-id uuid   Replica Id (required)
-  -v, --version           version for resize
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --flavor-id uuid                Flavor Id (required)
+  -h, --help                          help for resize
+      --replica-id uuid               Value referring to replica Id. (required)
+  -v, --version                       version for resize
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
