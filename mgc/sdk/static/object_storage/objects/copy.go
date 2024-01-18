@@ -60,11 +60,11 @@ func copy(ctx context.Context, p copyObjectParams, cfg common.Config) (result co
 	progress := uint64(0)
 	total := uint64(1)
 
-	reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
+	reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, nil)
 
 	err = copySingleFile(ctx, cfg, p.Source, p.Destination)
 	if err != nil {
-		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, err)
+		reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, err)
 		return nil, err
 	}
 
