@@ -2,11 +2,6 @@ Virtual Private Cloud (VPC) | security-groups
 
 Usage:
   ./cli network vpc security-groups [flags]
-  ./cli network vpc security-groups [command]
-
-Commands:
-  create      Create Security Group
-  list        List Security Groups
 
 Flags:
   -h, --help      help for security-groups
@@ -14,6 +9,4 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli network vpc security-groups [command] --help" for more information about a command.
 

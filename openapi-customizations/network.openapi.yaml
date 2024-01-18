@@ -30,6 +30,8 @@ servers:
 paths:
   /v0/vpcs/{vpc_id}/ports:
     get:
+      tags:
+        - port
       x-mgc-description: List VPC ports
       parameters:
         - name: vpc_id
@@ -39,6 +41,8 @@ paths:
         - OAuth2:
             - network.read
     post:
+      tags:
+        - port
       parameters:
         - name: vpc_id
           schema:
@@ -86,6 +90,8 @@ paths:
             - network.write
   /v0/vpcs/{vpc_id}/public_ips:
     post:
+      tags:
+        - public-ip
       x-mgc-hidden: true
       parameters:
         - name: vpc_id
@@ -108,6 +114,8 @@ paths:
         - OAuth2:
             - network.write
     get:
+      tags:
+        - public-ip
       security:
         - OAuth2:
             - network.read
@@ -130,6 +138,8 @@ paths:
             - network.write
   /v0/vpcs/{vpc_id}/security_groups:
     post:
+      tags:
+        - vpc
       responses:
         '200':
           links:
@@ -147,6 +157,8 @@ paths:
         - OAuth2:
             - network.write
     get:
+      tags:
+        - vpc
       parameters:
         - name: vpc_id
           schema:
@@ -181,6 +193,8 @@ paths:
             - network.write
   /v0/security_groups/{security_group_id}/rules:
     post:
+      tags:
+        - security-group
       x-mgc-hidden: true
       parameters:
         - name: security_group_id
@@ -203,6 +217,8 @@ paths:
         - OAuth2:
             - network.write
     get:
+      tags:
+        - security-group
       x-mgc-hidden: true
       parameters:
         - name: security_group_id
@@ -262,17 +278,19 @@ paths:
           links:
             get: # Connection resources
               description: Check if a Security Group is attached to this Port
-              operationId: securityGroupDetails
+              operationId: portDetails
+              parameters:
+                  port_id: $request.path.port_id
               x-mgc-wait-termination:
                   maxRetries: 2
                   interval: 5s
-                  jsonPathQuery: $.owner.result.security_groups[?(@ == $.parameters.security_group_id)]
+                  jsonPathQuery: $.result.security_groups[?(@.id == $.owner.parameters.security_group_id)]
             delete:
-                description: Detach this BS Volume to a VM instance
+                description: Detach this Security Group from this Port
                 operationId: detachSecurityGroup
                 parameters:
                     port_id: $request.path.port_id
-                    security_group_i: $request.path.security_group_id
+                    security_group_id: $request.path.security_group_id
       security:
         - OAuth2:
             - network.write
@@ -302,16 +320,17 @@ paths:
           links:
             get: # Connection Resource
               description: Check if this Public IP is attached to this Port
-              operationRef: '#/paths/~1v0~1ports~1{port_id}/get'
+              operationId: publicIpDetails
               parameters:
+                public_ip_id: $request.path.public_ip_id
                 port_id: $request.path.port_id
               x-mgc-wait-termination:
                 maxRetries: 2
                 interval: 5s
-                jsonPathQuery: $.result.public_ip[?(@.public_ip_id == $.owner.parameters.public_ip_id)]
+                jsonPathQuery: hasKey($.result, "port_id") && $.result.port_id == $.owner.parameters.port_id
             delete:
-                description: Detach this BS Volume to a VM instance
-                operationRef: '#/paths/~1v0~1public_ips~1{public_ip_id}~1detach~1{port_id}/post'
+                description: Detach this Public IP from this Port
+                operationId: detachPublicIp
                 parameters:
                   public_ip_id: $request.path.public_ip_id
                   port_id: $request.path.port_id
@@ -457,3 +476,4 @@ tags:
     x-mgc-hidden: true
 -   name: quotas
     x-mgc-description: VPC Quotas
+    x-mgc-hidden: true

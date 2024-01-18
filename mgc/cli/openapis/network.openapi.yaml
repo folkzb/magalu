@@ -6,7 +6,7 @@ info:
         name: Tribo IAAS Cloud
         url: https://github.com/luizalabs
         email: thullyo.cunha@luizalabs.com
-    version: 1.99.5
+    version: 1.101.2
 paths:
     /v0/healthcheck:
         get:
@@ -51,7 +51,8 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
-            x-viveiro: true
+            x-viveiro: false
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.write
@@ -119,14 +120,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/PortCreateResponse'
                     links:
-                        delete:
-                            operationId: deletePort
-                            description: Delete Port
-                            parameters:
-                                port_id: $response.body#/id
                         get:
                             operationId: portDetails
                             description: Read Port
+                            parameters:
+                                port_id: $response.body#/id
+                        delete:
+                            operationId: deletePort
+                            description: Delete Port
                             parameters:
                                 port_id: $response.body#/id
                 '422':
@@ -288,6 +289,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: false
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.write
@@ -318,21 +320,23 @@ paths:
                         application/json:
                             schema: {}
                     links:
-                        delete:
-                            description: Detach this BS Volume to a VM instance
-                            operationId: detachSecurityGroup
-                            parameters:
-                                port_id: $request.path.port_id
-                                security_group_i: $request.path.security_group_id
                         get:
                             description: Check if a Security Group is attached to
                                 this Port
-                            operationId: securityGroupDetails
+                            operationId: portDetails
+                            parameters:
+                                port_id: $request.path.port_id
                             x-mgc-wait-termination:
                                 maxRetries: 2
                                 interval: 5s
-                                jsonPathQuery: $.owner.result.security_groups[?(@
-                                    == $.parameters.security_group_id)]
+                                jsonPathQuery: $.result.security_groups[?(@.id ==
+                                    $.owner.parameters.security_group_id)]
+                        delete:
+                            description: Detach this Security Group from this Port
+                            operationId: detachSecurityGroup
+                            parameters:
+                                port_id: $request.path.port_id
+                                security_group_id: $request.path.security_group_id
                 '422':
                     description: Validation Error
                     content:
@@ -434,14 +438,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/PublicIpCreateResponse'
                     links:
-                        delete:
-                            operationId: deletePublicIp
-                            description: Delete Public IP
-                            parameters:
-                                public_ip_id: $response.body#/id
                         get:
                             operationId: publicIpDetails
                             description: Read Public IP
+                            parameters:
+                                public_ip_id: $response.body#/id
+                        delete:
+                            operationId: deletePublicIp
+                            description: Delete Public IP
                             parameters:
                                 public_ip_id: $response.body#/id
                 '422':
@@ -575,23 +579,24 @@ paths:
                         application/json:
                             schema: {}
                     links:
-                        delete:
-                            description: Detach this BS Volume to a VM instance
-                            operationRef: '#/paths/~1v0~1public_ips~1{public_ip_id}~1detach~1{port_id}/post'
-                            parameters:
-                                public_ip_id: $request.path.public_ip_id
-                                port_id: $request.path.port_id
                         get:
                             description: Check if this Public IP is attached to this
                                 Port
-                            operationRef: '#/paths/~1v0~1ports~1{port_id}/get'
+                            operationId: publicIpDetails
                             parameters:
+                                public_ip_id: $request.path.public_ip_id
                                 port_id: $request.path.port_id
                             x-mgc-wait-termination:
                                 maxRetries: 2
                                 interval: 5s
-                                jsonPathQuery: $.result.public_ip[?(@.public_ip_id
-                                    == $.owner.parameters.public_ip_id)]
+                                jsonPathQuery: hasKey($.result, "port_id") && $.result.port_id
+                                    == $.owner.parameters.port_id
+                        delete:
+                            description: Detach this Public IP from this Port
+                            operationId: detachPublicIp
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+                                port_id: $request.path.port_id
                 '422':
                     description: Validation Error
                     content:
@@ -689,6 +694,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: false
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.read
@@ -748,14 +754,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/RuleCreateResponse'
                     links:
-                        delete:
-                            operationId: deleteRule
-                            description: Delete Rule
-                            parameters:
-                                rule_id: $response.body#/id
                         get:
                             operationId: ruleDetails
                             description: Read Rule
+                            parameters:
+                                rule_id: $response.body#/id
+                        delete:
+                            operationId: deleteRule
+                            description: Delete Rule
                             parameters:
                                 rule_id: $response.body#/id
                 '422':
@@ -884,6 +890,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: false
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.write
@@ -1006,14 +1013,14 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/SecurityGroupCreateResponse'
                     links:
-                        delete:
-                            operationId: deleteSecurityGroup
-                            description: Delete Security Group
-                            parameters:
-                                security_group_id: $response.body#/id
                         get:
                             operationId: securityGroupDetails
                             description: Read Security Group
+                            parameters:
+                                security_group_id: $response.body#/id
+                        delete:
+                            operationId: deleteSecurityGroup
+                            description: Delete Security Group
                             parameters:
                                 security_group_id: $response.body#/id
                 '422':
@@ -1023,6 +1030,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: true
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.write
@@ -1053,6 +1061,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: true
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.read
@@ -1140,6 +1149,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: false
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.write
@@ -1325,6 +1335,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: false
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.write
@@ -1458,6 +1469,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: false
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.write
@@ -1495,6 +1507,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: false
+            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - network.write
@@ -3369,3 +3382,4 @@ tags:
     x-mgc-hidden: true
 -   name: quotas
     x-mgc-description: VPC Quotas
+    x-mgc-hidden: true

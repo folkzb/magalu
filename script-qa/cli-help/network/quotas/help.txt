@@ -2,10 +2,6 @@ VPC Quotas
 
 Usage:
   ./cli network quotas [flags]
-  ./cli network quotas [command]
-
-Commands:
-  list        List usage quotas
 
 Flags:
   -h, --help      help for quotas
@@ -13,6 +9,4 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./cli network quotas [command] --help" for more information about a command.
 

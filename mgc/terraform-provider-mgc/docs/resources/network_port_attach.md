@@ -24,32 +24,29 @@ Attach a Security Group to a Port
 
 - `created_at` (String)
 - `description` (String)
-- `error` (String)
-- `external_id` (String)
 - `id` (String) The ID of this resource.
-- `is_default` (Boolean)
+- `ip_address` (Attributes List) (see [below for nested schema](#nestedatt--ip_address))
+- `is_admin_state_up` (Boolean)
+- `is_port_security_enabled` (Boolean)
 - `name` (String)
-- `project_type` (String)
-- `rules` (Attributes List) (see [below for nested schema](#nestedatt--rules))
-- `status` (String)
-- `tenant_id` (String)
+- `public_ip` (Attributes List) (see [below for nested schema](#nestedatt--public_ip))
+- `security_groups` (List of String)
 - `updated` (String)
 - `vpc_id` (String)
 
-<a id="nestedatt--rules"></a>
-### Nested Schema for `rules`
+<a id="nestedatt--ip_address"></a>
+### Nested Schema for `ip_address`
 
 Read-Only:
 
-- `created_at` (String)
-- `direction` (String)
-- `error` (String)
-- `ethertype` (String)
-- `id` (String)
-- `port_range_max` (Number)
-- `port_range_min` (Number)
-- `protocol` (String)
-- `remote_group_id` (String)
-- `remote_ip_prefix` (String)
-- `security_group_id` (String)
-- `status` (String)
+- `ip_address` (String)
+- `subnet_id` (String)
+
+
+<a id="nestedatt--public_ip"></a>
+### Nested Schema for `public_ip`
+
+Read-Only:
+
+- `public_ip` (String)
+- `public_ip_id` (String)

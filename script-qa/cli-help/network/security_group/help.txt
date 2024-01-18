@@ -8,13 +8,11 @@ Aliases:
   security-group, security_group
 
 Commands:
-  create         Create Security Group
-  create-default Create Security Group Default
-  delete         Delete a security group
-  delete-all     Delete all security groups
-  get            Security Group Details
-  list           List Security Groups by Tenant
-  rules          rules
+  create      Create Security Group
+  delete      Delete a security group
+  get         Security Group Details
+  list        List Security Groups by Tenant
+  rules       rules
 
 Flags:
   -h, --help      help for security-group

@@ -6,9 +6,7 @@ Usage:
 
 Commands:
   create          Create VPC
-  create-default  Create Vpc Default
   delete          Delete VPC
-  delete-all      Delete Vpc All
   get             VPC Details
   list            List VPC
   ports           ports

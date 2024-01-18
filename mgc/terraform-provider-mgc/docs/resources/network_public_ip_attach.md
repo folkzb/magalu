@@ -23,30 +23,12 @@ Attach a Public IP to a Port
 ### Read-Only
 
 - `created_at` (String)
+- `current_port_id` (String)
 - `description` (String)
+- `error` (String)
+- `external_id` (String)
 - `id` (String) The ID of this resource.
-- `ip_address` (Attributes List) (see [below for nested schema](#nestedatt--ip_address))
-- `is_admin_state_up` (Boolean)
-- `is_port_security_enabled` (Boolean)
-- `name` (String)
-- `public_ip` (Attributes List) (see [below for nested schema](#nestedatt--public_ip))
-- `security_groups` (List of String)
+- `public_ip` (String)
+- `status` (String)
 - `updated` (String)
 - `vpc_id` (String)
-
-<a id="nestedatt--ip_address"></a>
-### Nested Schema for `ip_address`
-
-Read-Only:
-
-- `ip_address` (String)
-- `subnet_id` (String)
-
-
-<a id="nestedatt--public_ip"></a>
-### Nested Schema for `public_ip`
-
-Read-Only:
-
-- `public_ip` (String)
-- `public_ip_id` (String)

@@ -416,9 +416,6 @@ network.openapi:
               - name
               - validate_quota
   missing-crud:
-    - quotas:
-        - post
-        - delete
     - rule:
         - post
     - subnets:

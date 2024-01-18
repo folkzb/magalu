@@ -7,7 +7,6 @@ Usage:
 Commands:
   port           VPC Port
   public-ip      VPC Public IPs
-  quotas         VPC Quotas
   rule           VPC Rules
   security-group VPC Security Groups
   subnets        VPC Subnets
