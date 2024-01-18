@@ -22,15 +22,15 @@ servers:
             - br-se-1
         env:
             description: Environment to use
-            default: api2.magalu.cloud
+            default: api.magalu.cloud
             enum:
-            - api2.magalu.cloud
+            - api.magalu.cloud
             - api.pre-prod.jaxyendy.com
             x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod
-                    to: api2.magalu.cloud
+                    to: api.magalu.cloud
                 -   from: pre-prod
                     to: api.pre-prod.jaxyendy.com
 -   url: https://api-mke.team-integration.br-ne-1.jaxyendy.com

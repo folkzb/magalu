@@ -38,13 +38,13 @@ servers:
             description: Environment to use
             default: ''
             enum:
-            - api2.magalu.cloud
+            - api.magalu.cloud
             - api.pre-prod.jaxyendy.com
             x-mgc-transforms:
             -   type: translate
                 translations:
                 -   from: prod
-                    to: api2.magalu.cloud
+                    to: api.magalu.cloud
                 -   from: pre-prod
                     to: api.pre-prod.jaxyendy.com
 
