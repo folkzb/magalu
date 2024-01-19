@@ -52,7 +52,12 @@ func create(ctx context.Context, params createParams, cfg common.Config) (core.V
 		return nil, err
 	}
 
-	_, err = common.SendRequest(ctx, req)
+	resp, err := common.SendRequest(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	err = common.ExtractErr(resp)
 	if err != nil {
 		return nil, err
 	}

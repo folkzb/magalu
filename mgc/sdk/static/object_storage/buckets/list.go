@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"magalu.cloud/core"
-	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
 )
@@ -51,5 +50,5 @@ func list(ctx context.Context, _ struct{}, cfg common.Config) (result ListRespon
 		return
 	}
 
-	return mgcHttpPkg.UnwrapResponse[ListResponse](resp)
+	return common.UnwrapResponse[ListResponse](resp)
 }

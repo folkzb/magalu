@@ -37,6 +37,11 @@ func downloadSingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg
 		return err
 	}
 
+	err = common.ExtractErr(resp)
+	if err != nil {
+		return err
+	}
+
 	dir := path.Dir(dst.String())
 	if len(dir) != 0 {
 		if err := os.MkdirAll(dir, utils.DIR_PERMISSION); err != nil {

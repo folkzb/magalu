@@ -97,7 +97,12 @@ type BaseApiError struct {
 }
 
 func (e *HttpError) Error() string {
-	return e.Message
+	msg := e.Message
+	if e.Slug != "" {
+		msg = "(" + e.Slug + ")" + " " + e.Message
+	}
+
+	return msg
 }
 
 func (e *HttpError) String() string {
@@ -191,6 +196,14 @@ func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
 	}
 
 	return
+}
+
+// Checks if the response's StatusCode is less than 200 or greater equal than 300. If so, returns an error of type *HttpError
+func ExtractErr(resp *http.Response) error {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return NewHttpErrorFromResponse(resp)
+	}
+	return nil
 }
 
 var defaultTransport *http.Transport

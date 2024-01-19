@@ -53,12 +53,12 @@ func copySingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI
 
 	req.Header.Set("x-amz-copy-source", copySource)
 
-	_, err = common.SendRequest(ctx, req)
+	resp, err := common.SendRequest(ctx, req)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return common.ExtractErr(resp)
 }
 
 func copy(ctx context.Context, p copyObjectParams, cfg common.Config) (result core.Value, err error) {

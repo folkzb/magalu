@@ -82,6 +82,12 @@ func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsP
 			return err, pipeline.ProcessSkip
 		}
 
+		err = common.ExtractErr(resp)
+		if err != nil {
+			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
+			return err, pipeline.ProcessSkip
+		}
+
 		dir := path.Dir(dirEntry.Path())
 		if err = os.MkdirAll(path.Join(params.Destination.String(), dir), utils.DIR_PERMISSION); err != nil {
 			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}

@@ -39,6 +39,10 @@ func (u *smallFileUploader) Upload(ctx context.Context) error {
 
 	req.Header.Set("Content-Type", u.mimeType)
 
-	_, err = SendRequest(ctx, req)
-	return err
+	resp, err := SendRequest(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	return ExtractErr(resp)
 }

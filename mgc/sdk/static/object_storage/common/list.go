@@ -205,7 +205,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config, on
 			}
 
 			if err == nil {
-				result, err = mgcHttpPkg.UnwrapResponse[listObjectsRequestResponse](resp)
+				result, err = UnwrapResponse[listObjectsRequestResponse](resp)
 			}
 
 			if err != nil {

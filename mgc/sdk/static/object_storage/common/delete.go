@@ -10,7 +10,6 @@ import (
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
-	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/pipeline"
 	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
@@ -102,12 +101,17 @@ func createObjectDeletionProcessor(cfg Config, bucketName BucketName, reportChan
 			return &ObjectError{Err: err}, pipeline.ProcessAbort
 		}
 
-		_, err = SendRequest(ctx, req)
+		resp, err := SendRequest(ctx, req)
 
 		reportChan <- deleteProgressReport{uint64(len(dirEntries)), 0, err}
 
 		if err != nil {
 			return &ObjectError{Url: mgcSchemaPkg.URI(bucketName), Err: err}, pipeline.ProcessOutput
+		}
+
+		err = ExtractErr(resp)
+		if err != nil {
+			return &ObjectError{Err: err}, pipeline.ProcessAbort
 		}
 
 		deleteLogger().Infow("Deleted objects", "uri", URIPrefix+bucketName)
@@ -209,7 +213,7 @@ func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err err
 		return
 	}
 
-	_, err = mgcHttpPkg.UnwrapResponse[core.Value](resp)
+	_, err = UnwrapResponse[core.Value](resp)
 	if err != nil {
 		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, err)
 		return
