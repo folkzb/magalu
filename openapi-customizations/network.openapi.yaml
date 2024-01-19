@@ -276,7 +276,7 @@ paths:
       responses:
         '200':
           links:
-            get: # Connection resources
+            get-connection: # Connection resources
               description: Check if a Security Group is attached to this Port
               operationId: portDetails
               parameters:
@@ -285,7 +285,7 @@ paths:
                   maxRetries: 2
                   interval: 5s
                   jsonPathQuery: $.result.security_groups[?(@.id == $.owner.parameters.security_group_id)]
-            delete:
+            delete-connection:
                 description: Detach this Security Group from this Port
                 operationId: detachSecurityGroup
                 parameters:
@@ -318,7 +318,7 @@ paths:
       responses:
         '200':
           links:
-            get: # Connection Resource
+            get-connection: # Connection Resource
               description: Check if this Public IP is attached to this Port
               operationId: publicIpDetails
               parameters:
@@ -328,7 +328,7 @@ paths:
                 maxRetries: 2
                 interval: 5s
                 jsonPathQuery: hasKey($.result, "port_id") && $.result.port_id == $.owner.parameters.port_id
-            delete:
+            delete-connection:
                 description: Detach this Public IP from this Port
                 operationId: detachPublicIp
                 parameters:
