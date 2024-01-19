@@ -31,7 +31,7 @@ paths:
   /v0/vpcs/{vpc_id}/ports:
     get:
       tags:
-        - port
+        - vpc
       x-mgc-description: List VPC ports
       parameters:
         - name: vpc_id
@@ -42,7 +42,7 @@ paths:
             - network.read
     post:
       tags:
-        - port
+        - vpc
       parameters:
         - name: vpc_id
           schema:
@@ -91,7 +91,7 @@ paths:
   /v0/vpcs/{vpc_id}/public_ips:
     post:
       tags:
-        - public-ip
+        - vpc
       x-mgc-hidden: true
       parameters:
         - name: vpc_id
@@ -115,7 +115,7 @@ paths:
             - network.write
     get:
       tags:
-        - public-ip
+        - vpc
       security:
         - OAuth2:
             - network.read

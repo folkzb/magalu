@@ -421,6 +421,14 @@ def check_is_security_list(v: Any, b: Any) -> None:
     )
 
 
+def check_is_path_method_tag_list(v: Any, base: Any) -> None:
+    check_is_list(
+        v,
+        base,
+        check_is_string,
+    )
+
+
 SUPPORTED_PATH_METHOD_CUSTOMIZATIONS = {
     "x-mgc-name": check_is_string,
     "x-mgc-description": check_is_string,
@@ -431,6 +439,7 @@ SUPPORTED_PATH_METHOD_CUSTOMIZATIONS = {
     "parameters": check_is_path_parameters,
     "responses": check_is_responses,
     "security": check_is_security_list,
+    "tags": check_is_path_method_tag_list,
 }
 
 
