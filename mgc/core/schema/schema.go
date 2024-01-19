@@ -27,6 +27,10 @@ func (s *Schema) Equals(other *Schema) bool {
 	return reflect.DeepEqual(s, other)
 }
 
+func (s *Schema) IsEmpty() bool {
+	return (*openapi3.Schema)(s).IsEmpty()
+}
+
 // UnmarshalJSON sets Schema to a copy of data.
 func (schema *Schema) UnmarshalJSON(data []byte) error {
 	return (*openapi3.Schema)(schema).UnmarshalJSON(data)

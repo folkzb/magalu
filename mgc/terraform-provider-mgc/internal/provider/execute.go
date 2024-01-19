@@ -50,11 +50,15 @@ func execute(
 
 	resultWithValue, ok := core.ResultAs[core.ResultWithValue](result)
 	if !ok {
-		diag.AddError(
-			"Operation output mismatch",
-			fmt.Sprintf("result has no value %#v", result),
-		)
-		return nil
+		if resultSchema := exec.ResultSchema(); resultSchema.Nullable || resultSchema.IsEmpty() {
+			resultWithValue = core.NewSimpleResult(result.Source(), exec.ResultSchema(), nil)
+		} else {
+			diag.AddError(
+				"Operation output mismatch",
+				fmt.Sprintf("result has no value %#v", result),
+			)
+			return nil
+		}
 	}
 
 	/* TODO:
