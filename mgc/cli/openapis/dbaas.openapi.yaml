@@ -269,11 +269,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/DatabaseInstance'
                     links:
-                        get:
-                            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
-                            description: Get a backup detail.
-                            parameters:
-                                instance_id: $request.path.instance_id
                         update:
                             operationId: instances_v1_patch
                             description: Update Database instance
