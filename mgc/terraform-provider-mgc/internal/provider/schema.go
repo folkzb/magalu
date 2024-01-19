@@ -46,9 +46,28 @@ type resAttrInfo struct {
 
 type resAttrInfoMap map[mgcName]*resAttrInfo
 
+func (m resAttrInfoMap) get(name tfName) (*resAttrInfo, bool) {
+	for _, attr := range m {
+		if attr.tfName == name {
+			return attr, true
+		}
+	}
+	return nil, false
+}
+
 type resAttrInfoTree struct {
 	input  resAttrInfoMap
 	output resAttrInfoMap
+}
+
+func (t resAttrInfoTree) getTFInputFirst(name tfName) (*resAttrInfo, bool) {
+	if i, ok := t.input.get(name); ok {
+		return i, ok
+	}
+	if o, ok := t.output.get(name); ok {
+		return o, ok
+	}
+	return nil, false
 }
 
 type resAttrInfoGenMetadata struct {

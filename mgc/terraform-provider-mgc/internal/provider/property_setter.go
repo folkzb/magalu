@@ -9,16 +9,22 @@ import (
 )
 
 type propertySetter interface {
+	propertyName() mgcName
 	getTarget(currentValue, targetValue core.Value) (core.Linker, error)
 }
 
 // update:field
 type defaultPropertySetter struct {
-	target core.Linker
+	propName mgcName
+	target   core.Linker
 }
 
-func newDefaultPropertySetter(target core.Linker) *defaultPropertySetter {
-	return &defaultPropertySetter{target}
+func newDefaultPropertySetter(propName mgcName, target core.Linker) *defaultPropertySetter {
+	return &defaultPropertySetter{propName, target}
+}
+
+func (o *defaultPropertySetter) propertyName() mgcName {
+	return o.propName
 }
 
 func (a *defaultPropertySetter) getTarget(currentValue, targetValue core.Value) (core.Linker, error) {
@@ -33,15 +39,20 @@ var _ propertySetter = (*defaultPropertySetter)(nil)
 // update:field:value
 // update:field:other
 type enumPropertySetter struct {
+	propName      mgcName
 	targetByValue map[any]core.Linker
 }
 
-func newEnumPropertySetter(containerEntries []*propertySetterContainerEntry) *enumPropertySetter {
+func newEnumPropertySetter(propName mgcName, containerEntries []*propertySetterContainerEntry) *enumPropertySetter {
 	targetsByValue := make(map[any]core.Linker, len(containerEntries))
 	for _, entry := range containerEntries {
 		targetsByValue[entry.args[0]] = entry.target
 	}
-	return &enumPropertySetter{targetsByValue}
+	return &enumPropertySetter{propName, targetsByValue}
+}
+
+func (o *enumPropertySetter) propertyName() mgcName {
+	return o.propName
 }
 
 func (a *enumPropertySetter) getTarget(currentValue, targetValue core.Value) (core.Linker, error) {
@@ -75,15 +86,20 @@ func (t *valueTransition) String() string {
 // update:field:from:to
 // update:field:from_other:to_other
 type strTransitionPropertySetter struct {
+	propName            mgcName
 	targetsByTransition map[valueTransition]core.Linker
 }
 
-func newStrTransitionPropertySetter(containerEntries []*propertySetterContainerEntry) *strTransitionPropertySetter {
+func newStrTransitionPropertySetter(propName mgcName, containerEntries []*propertySetterContainerEntry) *strTransitionPropertySetter {
 	targetsByTransition := make(map[valueTransition]core.Linker, len(containerEntries))
 	for _, entry := range containerEntries {
 		targetsByTransition[valueTransition{entry.args[0], entry.args[1]}] = entry.target
 	}
-	return &strTransitionPropertySetter{targetsByTransition}
+	return &strTransitionPropertySetter{propName, targetsByTransition}
+}
+
+func (o *strTransitionPropertySetter) propertyName() mgcName {
+	return o.propName
 }
 
 func (a *strTransitionPropertySetter) getTarget(currentValue, targetValue core.Value) (core.Linker, error) {

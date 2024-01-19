@@ -12,8 +12,8 @@ import (
 
 func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, attrInfoMap resAttrInfoMap, tfState *tfsdk.State) Diagnostics {
 	resInfo := &resAttrInfo{
-		tfName: "tfState",
-		mgcName: "tfState",
+		tfName:          "tfState",
+		mgcName:         "tfState",
 		childAttributes: attrInfoMap,
 	}
 	return applyMgcMap(ctx, mgcMap, resInfo, tfState, path.Empty())

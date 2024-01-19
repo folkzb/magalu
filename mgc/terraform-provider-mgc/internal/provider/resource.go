@@ -3,8 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"strings"
 
 	"slices"
 
@@ -13,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
@@ -85,11 +82,11 @@ func newMgcResource(
 
 		switch container.argCount {
 		case 0:
-			propertySetters[key] = newDefaultPropertySetter(container.entries[0].target)
+			propertySetters[key] = newDefaultPropertySetter(key, container.entries[0].target)
 		case 1:
-			propertySetters[key] = newEnumPropertySetter(container.entries)
+			propertySetters[key] = newEnumPropertySetter(key, container.entries)
 		case 2:
-			propertySetters[key] = newStrTransitionPropertySetter(container.entries)
+			propertySetters[key] = newStrTransitionPropertySetter(key, container.entries)
 		default:
 			// TODO: Handle more action types?
 			continue
@@ -272,316 +269,40 @@ func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 	resp.Schema = *r.tfschema
 }
 
-func (r *MgcResource) performOperation(
-	ctx context.Context,
-	exec core.Executor,
-	inState tfsdk.State,
-) (core.ResultWithValue, Diagnostics) {
-	diagnostics := Diagnostics{}
-
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return nil, d
-	}
-
-	configs := getConfigs(ctx, exec.ConfigsSchema())
-	params, d := readMgcMapSchemaFromTFState(ctx, attrTree, exec.ParametersSchema(), inState)
-	if diagnostics.AppendCheckError(d...) {
-		return nil, d
-	}
-
-	result, d := execute(ctx, r.resTfName, exec, params, configs)
-	if diagnostics.AppendCheckError(d...) {
-		return nil, d
-	}
-
-	return result, diagnostics
-}
-
-func (r *MgcResource) findAttrWithTFName(ctx context.Context, name tfName) (*resAttrInfo, bool, Diagnostics) {
-	diagnostics := Diagnostics{}
-
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return nil, false, diagnostics
-	}
-
-	for _, inputAttr := range attrTree.input {
-		if inputAttr.tfName == name {
-			return inputAttr, true, diagnostics
-		}
-	}
-
-	for _, outputAttr := range attrTree.output {
-		if outputAttr.tfName == name {
-			return outputAttr, true, diagnostics
-		}
-	}
-
-	return nil, false, diagnostics
-}
-
-func (r *MgcResource) callPostOpPropertySetters(
-	ctx context.Context,
-	inState tfsdk.State,
-	outState *tfsdk.State,
-	readResult core.ResultWithValue,
-	readResultMap map[string]any,
-) Diagnostics {
-	var diagnostics = Diagnostics{}
-	var curStateAsMap map[string]tftypes.Value
-
-	err := inState.Raw.As(&curStateAsMap)
-	if err != nil {
-		tflog.Warn(
-			ctx,
-			fmt.Sprintf("[resource] unable to get current state as map: %v. Won't look for property setters", err),
-			map[string]any{"resource": r.resTfName},
-		)
-		return diagnostics
-	}
-
-	tflog.Debug(
-		ctx,
-		"[resource] will look for property setters to perform",
-		map[string]any{"resource": r.resTfName},
-	)
-	var calledSetterExecs []core.Executor
-	for stateValKey, stateVal := range curStateAsMap {
-		tflog.Debug(
-			ctx,
-			fmt.Sprintf("[resource] looking for property setter for %q", stateValKey),
-			map[string]any{"resource": r.resTfName},
-		)
-
-		var currentVal any
-		for k, v := range readResultMap {
-			if mgcName(k).asTFName() == tfName(stateValKey) {
-				currentVal = v
-				break
-			}
-		}
-		if currentVal == nil {
-			tflog.Debug(
-				ctx,
-				"[resource] unable to find matching key in read result",
-				map[string]any{"resource": r.resTfName, "read result": readResultMap},
-			)
-			continue
-		}
-
-		attr, ok, d := r.findAttrWithTFName(ctx, tfName(stateValKey))
-		if diagnostics.AppendCheckError(d...) || !ok {
-			tflog.Debug(
-				ctx,
-				"[resource] unable to find attribute corresponding to TF prop key",
-				map[string]any{"resource": r.resTfName, "propTFName": stateValKey, "inputAttributes": r.InputAttrInfoMap(ctx, &d), "outputAttr": r.OutputAttrInfoMap(ctx, &d)},
-			)
-			continue
-		}
-
-		targetVal, wasSpecified, d := loadMgcSchemaValue(ctx, attr, stateVal, false, false)
-		if d.HasError() { // Don't append the error
-			tflog.Debug(
-				ctx,
-				"[resource] unable to convert TF value to MGC value to update prop, ignoring set",
-				map[string]any{"resource": r.resTfName, "propTFName": attr.tfName, "tfValue": stateVal, "convErrors": d.Errors()},
-			)
-			continue
-		}
-
-		if !wasSpecified {
-			tflog.Debug(
-				ctx,
-				"[resource] value was not specified, will not call property setter",
-				map[string]any{"resource": r.resTfName, "propTFName": attr.tfName, "tfValue": stateVal},
-			)
-			continue
-		}
-
-		if reflect.DeepEqual(currentVal, targetVal) {
-			tflog.Debug(
-				ctx,
-				"[resource] no need, current state matches desired state",
-				map[string]any{"resource": r.resTfName},
-			)
-			continue
-		}
-
-		setter, ok := r.propertySetters[attr.mgcName]
-		if !ok {
-			tflog.Warn(
-				ctx,
-				"[resource] unable to find property setter to update prop, will result in error",
-				map[string]any{"resource": r.resTfName, "propTFName": attr.tfName, "propMGCName": attr.mgcName},
-			)
-			continue
-		}
-
-		setterExec, run, d := r.callPropertySetter(ctx, inState, outState, attr.tfName, setter, calledSetterExecs, currentVal, targetVal, readResult)
-		if diagnostics.AppendCheckError(d...) || !run {
-			return diagnostics
-		}
-
-		if setterExec != nil {
-			calledSetterExecs = append(calledSetterExecs, setterExec)
-		}
-	}
-	return diagnostics
-}
-
-func (r *MgcResource) callPropertySetter(
-	ctx context.Context,
-	inState tfsdk.State,
-	outState *tfsdk.State,
-	propTFName tfName,
-	setter propertySetter,
-	alreadyCalled []core.Executor,
-	currentVal, targetVal core.Value,
-	readResult core.ResultWithValue,
-) (exec core.Executor, run bool, diagnostics Diagnostics) {
-	diagnostics = Diagnostics{}
-	tflog.Debug(
-		ctx,
-		fmt.Sprintf("[resource] will update param %q with property setter", propTFName),
-		map[string]any{"resource": r.resTfName, "currentValue": currentVal, "targetValue": targetVal},
-	)
-	target, err := setter.getTarget(currentVal, targetVal)
-	if err != nil {
-		return nil, false, diagnostics.AppendErrorReturn(
-			"[resource] property setter fail",
-			fmt.Sprintf("unable to call property setter to update parameter %q: %v", propTFName, err),
-		)
-	}
-
-	setterExec, err := target.CreateExecutor(readResult)
-	if err != nil {
-		return nil, false, diagnostics.AppendErrorReturn(
-			"[resource] property setter fail",
-			fmt.Sprintf("unable to call property setter to update parameter %q: %v", propTFName, err),
-		)
-	}
-
-	// Here, we compare each entry manually (check the name, parameter and result equality) to know if
-	// the executor has already been called. Unfortunately we can't simply use reflect.DeepEqual because
-	// it returns 'false' immediately if the underlying types have function fields which are not nil.
-	// https://pkg.go.dev/reflect#DeepEqual
-	for _, calledSetterExec := range alreadyCalled {
-		if setterExec.Name() != calledSetterExec.Name() {
-			continue
-		}
-
-		if !mgcSchemaPkg.CheckSimilarJsonSchemas(setterExec.ParametersSchema(), calledSetterExec.ParametersSchema()) {
-			continue
-		}
-
-		if !mgcSchemaPkg.CheckSimilarJsonSchemas(setterExec.ResultSchema(), calledSetterExec.ResultSchema()) {
-			continue
-		}
-
-		tflog.Debug(
-			ctx,
-			fmt.Sprintf("[resource] skipping %q property setter because it has already been called by another prop", propTFName),
-			map[string]any{"resource": r.resTfName},
-		)
-		return nil, true, diagnostics
-	}
-
-	propSetResult, d := r.performOperation(ctx, setterExec, inState)
-	if d.HasError() {
-		tflog.Debug(
-			ctx,
-			"[resource] property setter fail",
-			map[string]any{"resource": r.resTfName, "prop": propTFName, "error": d.Errors()},
-		)
-		diagnostics.AddWarning(
-			fmt.Sprintf("Error while updating property %q", propTFName),
-			fmt.Sprintf(
-				"Error while updating property %q: %v. If there were previous updates to other properties, they will be saved, but further updates will be aborted",
-				d.Errors(),
-				propTFName,
-			),
-		)
-		return nil, false, diagnostics
-	}
-
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return nil, false, diagnostics
-	}
-
-	_, _, d = applyStateAfter(ctx, r.resTfName, attrTree, propSetResult, r.read, outState)
-	diagnostics.Append(d...)
-
-	return setterExec, true, diagnostics
-}
-
 func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "create")
-	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
-	ctx = r.sdk.WrapContext(ctx)
-
 	diagnostics := Diagnostics{}
 	defer func() {
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	createResult, d := r.performOperation(ctx, r.create, tfsdk.State(req.Plan))
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
 	attrTree, d := r.attrTree(ctx)
 	if diagnostics.AppendCheckError(d...) {
 		return
 	}
 
-	readResult, readResultMap, d := applyStateAfter(ctx, r.resTfName, attrTree, createResult, r.read, &resp.State)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	d = r.callPostOpPropertySetters(ctx, tfsdk.State(req.Plan), &resp.State, readResult, readResultMap)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	tflog.Info(ctx, "resource created")
+	createOp := newMgcResourceCreate(r.resTfName, attrTree, r.create, r.read, r.propertySetters)
+	readOp := newMgcResourceRead(r.resTfName, attrTree, r.read)
+	operationRunner := newMgcOperationRunner(r.sdk, createOp, readOp, tfsdk.State(req.Plan), req.Plan, &resp.State)
+	diagnostics = operationRunner.Run(ctx)
 }
 
 func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "read")
-	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
-	ctx = r.sdk.WrapContext(ctx)
-
 	diagnostics := Diagnostics{}
 	defer func() {
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
-
-	readResult, d := r.performOperation(ctx, r.read, req.State)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
 
 	attrTree, d := r.attrTree(ctx)
 	if diagnostics.AppendCheckError(d...) {
 		return
 	}
 
-	_, _, d = applyStateAfter(ctx, r.resTfName, attrTree, readResult, r.read, &resp.State)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	tflog.Info(ctx, "resource read")
+	operation := newMgcResourceRead(r.resTfName, attrTree, r.read)
+	runner := newMgcOperationRunner(r.sdk, operation, operation, req.State, tfsdk.Plan(req.State), &resp.State)
+	diagnostics = runner.Run(ctx)
 }
 
 func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "update")
-	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
-	ctx = r.sdk.WrapContext(ctx)
-
 	diagnostics := Diagnostics{}
 	defer func() {
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
@@ -592,93 +313,26 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	params := map[string]any{}
-	configs := getConfigs(ctx, r.update.ConfigsSchema())
-	required := r.update.ParametersSchema().Required
-
-	planned, d := readMgcMapSchemaFromTFState(ctx, attrTree, r.update.ParametersSchema(), tfsdk.State(req.Plan))
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	state, d := readMgcMapSchemaFromTFState(ctx, attrTree, r.update.ParametersSchema(), tfsdk.State(req.State))
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	idParamCount := 0
-	for prop := range r.update.ParametersSchema().Properties {
-		if _, ok := planned[prop]; !ok {
-			continue
-		}
-
-		if _, ok := r.read.ParametersSchema().Properties[prop]; ok || planned[prop] != state[prop] {
-			params[prop] = planned[prop]
-			if prop == "id" || strings.HasSuffix(prop, "_id") {
-				idParamCount += 1
-			}
-			continue
-		}
-
-		if !slices.Contains(required, prop) {
-			continue
-		}
-
-		tflog.Warn(
-			ctx,
-			"update request has unchanged parameters values from current state. This may cause an error",
-			map[string]any{
-				"parameter": prop,
-				"value":     planned[prop],
-			},
-		)
-
-		params[prop] = planned[prop]
-		if prop == "id" || strings.HasSuffix(prop, "_id") {
-			idParamCount += 1
-		}
-	}
-
-	var updateResult core.ResultWithValue
-	if len(params) <= idParamCount {
-		updateResult, d = r.performOperation(ctx, r.read, tfsdk.State(resp.State))
-	} else {
-		updateResult, d = execute(ctx, r.resTfName, r.update, params, configs)
-	}
-
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	readResult, readResultMap, d := applyStateAfter(ctx, r.resTfName, attrTree, updateResult, r.read, &resp.State)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	d = r.callPostOpPropertySetters(ctx, tfsdk.State(req.Plan), &resp.State, readResult, readResultMap)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	tflog.Info(ctx, "resource updated")
+	operation := newMgcResourceUpdate(r.resTfName, attrTree, r.update, r.read, r.propertySetters)
+	readOp := newMgcResourceRead(r.resTfName, attrTree, r.read)
+	runner := newMgcOperationRunner(r.sdk, operation, readOp, req.State, req.Plan, &resp.State)
+	diagnostics = runner.Run(ctx)
 }
 
 func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "delete")
-	ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
-	ctx = r.sdk.WrapContext(ctx)
-
 	diagnostics := Diagnostics{}
 	defer func() {
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	_, d := r.performOperation(ctx, r.delete, req.State)
+	attrTree, d := r.attrTree(ctx)
 	if diagnostics.AppendCheckError(d...) {
 		return
 	}
 
-	tflog.Info(ctx, "resource deleted")
+	deleteOp := newMgcResourceDelete(r.resTfName, attrTree, r.delete)
+	runner := newMgcOperationRunner(r.sdk, deleteOp, nil, req.State, tfsdk.Plan(req.State), &resp.State)
+	diagnostics = runner.Run(ctx)
 }
 
 func (r *MgcResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

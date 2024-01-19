@@ -161,85 +161,32 @@ func (r *MgcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 	resp.Schema = *r.tfschema
 }
 
-func (r *MgcConnectionResource) performLinkOperation(
-	ctx context.Context,
-	link mgcSdk.Linker,
-	originalResult mgcSdk.Result,
-	inState tfsdk.State,
-	outState *tfsdk.State,
-) Diagnostics {
-	ctx = r.sdk.WrapContext(ctx)
-	diagnostics := Diagnostics{}
-
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return diagnostics
-	}
-
-	configs := getConfigs(ctx, link.AdditionalConfigsSchema())
-	params, d := readMgcMapSchemaFromTFState(ctx, attrTree, link.AdditionalParametersSchema(), inState)
-	if diagnostics.AppendCheckError(d...) {
-		return diagnostics
-	}
-
-	linkExec, err := link.CreateExecutor(originalResult)
-	if err != nil {
-		return diagnostics.AppendErrorReturn("error when creating link executor", err.Error())
-	}
-
-	result, d := execute(ctx, r.name, linkExec, params, configs)
-	if diagnostics.AppendCheckError(d...) {
-		return diagnostics
-	}
-
-	_, _, d = applyStateAfter(ctx, r.name, attrTree, result, nil, outState)
-	if diagnostics.AppendCheckError(d...) {
-		return diagnostics
-	}
-
-	return diagnostics
-}
-
-func (r *MgcConnectionResource) performLinkOperationFromScratch(
-	ctx context.Context,
-	link mgcSdk.Linker,
+func (r *MgcConnectionResource) newLinkOperation(
+	link core.Linker,
+	attrTree resAttrInfoTree,
 	getPrivateStateKey func(context.Context, string) ([]byte, diag.Diagnostics),
 	setPrivateStateKey func(context.Context, string, []byte) diag.Diagnostics,
-	inState tfsdk.State,
-	outState *tfsdk.State,
-) Diagnostics {
-	diagnostics := Diagnostics{}
+	constructor func(tfName, resAttrInfoTree, core.Executor) MgcOperation,
+) MgcOperation {
+	return newMgcConnectionLink(r.name, attrTree, getPrivateStateKey, setPrivateStateKey, r.create, func(result core.Result) MgcOperation {
+		exec, err := link.CreateExecutor(result)
+		if err != nil {
+			return nil
+		}
+		return newMgcConnectionRead(r.name, attrTree, exec)
+	})
+}
 
-	createResultData, d := getPrivateStateKey(ctx, createResultKey)
-	if diagnostics.AppendCheckError(d...) {
-		return diagnostics.AppendErrorReturn("unable to read creation result from Terraform state", "")
-	}
-
-	tflog.Debug(ctx, "[connection-resource] about to decode creation result", map[string]any{"encoded result": string(createResultData)})
-	createResult := r.create.EmptyResult()
-	err := createResult.Decode(createResultData)
-	if err != nil {
-		return diagnostics.AppendErrorReturn("Failed to decode creation result", fmt.Sprintf("%v", err))
-	}
-
-	d = setPrivateStateKey(ctx, createResultKey, createResultData)
-	if diagnostics.AppendCheckError(d...) {
-		return diagnostics
-	}
-
-	linkDiag := r.performLinkOperation(ctx, link, createResult, inState, outState)
-	if diagnostics.AppendCheckError(linkDiag...) {
-		return diagnostics
-	}
-
-	return diagnostics
+func (r *MgcConnectionResource) newReadOperation(
+	attrTree resAttrInfoTree,
+	getPrivateStateKey func(context.Context, string) ([]byte, diag.Diagnostics),
+	setPrivateStateKey func(context.Context, string, []byte) diag.Diagnostics,
+) MgcReadOperation {
+	readOp := r.newLinkOperation(r.read, attrTree, getPrivateStateKey, setPrivateStateKey, newMgcConnectionRead)
+	return (wrapReadOperation(readOp, r.read.ResultSchema()))
 }
 
 func (r *MgcConnectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "create")
-	ctx = tflog.SetField(ctx, connectionResourceNameField, r.name)
-	ctx = r.sdk.WrapContext(ctx)
-
 	diagnostics := Diagnostics{}
 	defer func() {
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
@@ -250,92 +197,50 @@ func (r *MgcConnectionResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	configs := getConfigs(ctx, r.create.ConfigsSchema())
-	params, d := readMgcMapSchemaFromTFState(ctx, attrTree, r.create.ParametersSchema(), tfsdk.State(req.Plan))
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	result, d := execute(ctx, r.name, r.create, params, configs)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	_, _, d = applyStateAfter(ctx, r.name, attrTree, result, nil, &resp.State)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	tflog.Info(ctx, "resource updated")
-
-	resultEncoded, err := result.Encode()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"failure to encode connection resource creation result",
-			"Terraform wasn't able to encode the result of the creation process to save in its state. Creation was successful, but resource will be deleted, try again.",
-		)
-		d := r.performLinkOperation(ctx, r.delete, result, resp.State, &resp.State)
-		resp.Diagnostics.Append(d...)
-		return
-	}
-
-	tflog.Debug(ctx, "about to store private creation result", map[string]any{"encoded result": resultEncoded})
-	diag := resp.Private.SetKey(ctx, createResultKey, resultEncoded)
-	resp.Diagnostics.Append(diag...)
+	createOp := newMgcConnectionCreate(r.name, attrTree, resp.Private.GetKey, resp.Private.SetKey, r.create, r.delete)
+	readOp := r.newReadOperation(attrTree, resp.Private.GetKey, resp.Private.SetKey)
+	runner := newMgcOperationRunner(r.sdk, createOp, readOp, tfsdk.State(req.Plan), req.Plan, &resp.State)
+	d = runner.Run(ctx)
+	diagnostics.Append(d...)
 }
 
 func (r *MgcConnectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "read")
-	ctx = tflog.SetField(ctx, connectionResourceNameField, r.name)
-
 	diagnostics := Diagnostics{}
 	defer func() {
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	d := r.performLinkOperationFromScratch(ctx, r.read, req.Private.GetKey, resp.Private.SetKey, req.State, &resp.State)
+	attrTree, d := r.attrTree(ctx)
 	if diagnostics.AppendCheckError(d...) {
-		// When reading fails, that means that the resource was most likely altered outside of terraform.
-		resp.Diagnostics.AddError("reading the resource failed", "was the resource altered outside of terraform?")
 		return
 	}
 
-	tflog.Info(ctx, "resource read")
+	readOp := r.newReadOperation(attrTree, req.Private.GetKey, resp.Private.SetKey)
+	runner := newMgcOperationRunner(r.sdk, readOp, readOp, req.State, tfsdk.Plan(req.State), &resp.State)
+	d = runner.Run(ctx)
+	diagnostics.Append(d...)
 }
 
 // Update will most likely never be called, as we always require replace when changed
 func (r *MgcConnectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "update")
-	ctx = tflog.SetField(ctx, connectionResourceNameField, r.name)
-
-	diagnostics := Diagnostics{}
-	defer func() {
-		resp.Diagnostics = diag.Diagnostics(diagnostics)
-	}()
-
-	d := r.performLinkOperationFromScratch(ctx, r.update, req.Private.GetKey, resp.Private.SetKey, tfsdk.State(req.Plan), &resp.State)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	tflog.Info(ctx, "resource updated")
+	// no-op
 }
 
 func (r *MgcConnectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	ctx = tflog.SetField(ctx, rpcField, "delete")
-	ctx = tflog.SetField(ctx, connectionResourceNameField, r.name)
-
 	diagnostics := Diagnostics{}
 	defer func() {
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	d := r.performLinkOperationFromScratch(ctx, r.delete, req.Private.GetKey, req.Private.SetKey, req.State, &resp.State)
+	attrTree, d := r.attrTree(ctx)
 	if diagnostics.AppendCheckError(d...) {
 		return
 	}
 
-	tflog.Info(ctx, "resource deleted")
+	deleteOp := r.newLinkOperation(r.delete, attrTree, req.Private.GetKey, req.Private.SetKey, newMgcConnectionDelete)
+	runner := newMgcOperationRunner(r.sdk, deleteOp, nil, req.State, tfsdk.Plan(req.State), &resp.State)
+	d = runner.Run(ctx)
+	diagnostics.Append(d...)
 }
 
 func (r *MgcConnectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
