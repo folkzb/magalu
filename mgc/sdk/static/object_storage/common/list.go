@@ -170,7 +170,6 @@ func buildListRequestURL(cfg Config, bucketURI mgcSchemaPkg.URI) (*url.URL, erro
 		}
 		q.Set("prefix", path)
 	}
-	q.Set("encoding-type", "url")
 	u.RawQuery = q.Encode()
 	return u, nil
 }
