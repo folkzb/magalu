@@ -79,6 +79,14 @@ func (u URI) IsRoot() bool {
 	return u.String() == u.Hostname()
 }
 
+func (u URI) Filename() string {
+	filename := path.Base(u.Path())
+	if filename == "/" || filename == "." {
+		return ""
+	}
+	return filename
+}
+
 type FilePath string
 
 func (p FilePath) JSONSchemaExtend(s *jsonschema.Schema) {
