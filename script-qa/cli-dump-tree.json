@@ -18373,6 +18373,79 @@
        },
        "type": "object"
       },
+      "description": "Get object metadata",
+      "isInternal": false,
+      "name": "head",
+      "parameters": {
+       "properties": {
+        "dst": {
+         "description": "Path of the object to be get metadata from",
+         "example": "s3://bucket1/file.txt",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "required": [
+        "dst"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "anyOf": [
+        {
+         "nullable": true,
+         "type": "null"
+        },
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "array"
+        },
+        {
+         "additionalProperties": true,
+         "type": "object"
+        }
+       ],
+       "nullable": true
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "properties": {
+        "region": {
+         "default": "br-ne-1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne-1",
+          "br-se-1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        },
+        "workers": {
+         "default": 5,
+         "description": "Number of routines that spawn to do parallel operations within object_storage",
+         "minimum": 1,
+         "type": "integer"
+        }
+       },
+       "type": "object"
+      },
       "description": "List all objects from a bucket",
       "isInternal": false,
       "name": "list",

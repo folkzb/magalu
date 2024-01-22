@@ -18,6 +18,7 @@ var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
 				getDeleteAll(),   // object-storage objects delete-all
 				getDownload(),    // object-storage objects download
 				getDownloadAll(), // object-storage objects download-all
+				getHead(),        // object-storage objects head
 				getList(),        // object-storage objects list
 				getUpload(),      // object-storage objects upload
 				getUploadDir(),   // object-storage objects upload-dir

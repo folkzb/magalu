@@ -47,4 +47,8 @@ const (
 	MinBatchSize = 1
 
 	delimiter = "/"
+
+	HeadContentLengthBase = 10
+
+	HeadContentLengthBitSize = 64
 )
