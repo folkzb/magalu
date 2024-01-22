@@ -9,11 +9,11 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
-	"reflect"
 	"strings"
 	"time"
 
 	"magalu.cloud/core"
+	"magalu.cloud/core/utils"
 	"magalu.cloud/core/xml"
 )
 
@@ -44,7 +44,7 @@ func ClientFromContext(context context.Context) *Client {
 	return client
 }
 
-func bodyReaderSafe(resp *http.Response) (io.ReadCloser, error) {
+func BodyReaderSafe(resp *http.Response) (io.ReadCloser, error) {
 	bodyContents, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func bodyReaderSafe(resp *http.Response) (io.ReadCloser, error) {
 }
 
 func DecodeJSON[T core.Value](resp *http.Response, data *T) error {
-	body, err := bodyReaderSafe(resp)
+	body, err := BodyReaderSafe(resp)
 	if err != nil {
 		return fmt.Errorf("error when reading response body: %w", err)
 	}
@@ -69,7 +69,7 @@ func DecodeJSON[T core.Value](resp *http.Response, data *T) error {
 }
 
 func DecodeXML[T core.Value](resp *http.Response, data *T) error {
-	body, err := bodyReaderSafe(resp)
+	body, err := BodyReaderSafe(resp)
 	if err != nil {
 		return fmt.Errorf("error when reading response body: %w", err)
 	}
@@ -137,22 +137,6 @@ func NewHttpErrorFromResponse(resp *http.Response) *HttpError {
 	}
 }
 
-func assignToT[T any, U any](t *T, u U) error {
-	if uAsT, ok := any(u).(T); ok {
-		*t = uAsT
-		return nil
-	}
-
-	tVal := reflect.ValueOf(t).Elem()
-	// Empty name means `any`
-	if tVal.Type().Name() != "" {
-		return fmt.Errorf("request response of type %T is not convertible to %T", *t, u)
-	}
-
-	tVal.Set(reflect.ValueOf(u))
-	return nil
-}
-
 // Handles the response, and tries to convert the data to T
 //
 // If the Content-Type header starts with "multipart/", then a pointer to multipart.Part
@@ -181,10 +165,10 @@ func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
 
 	switch {
 	default:
-		err = assignToT(&result, resp.Body)
+		err = utils.AssignToT(&result, resp.Body)
 		return
 	case strings.HasPrefix(contentType, "multipart/"):
-		body, bodyErr := bodyReaderSafe(resp)
+		body, bodyErr := BodyReaderSafe(resp)
 		if bodyErr != nil {
 			err = fmt.Errorf("error when reading response body: %w", bodyErr)
 			return
@@ -198,7 +182,7 @@ func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
 		if err != nil {
 			return
 		}
-		err = assignToT(&result, nextPart)
+		err = utils.AssignToT(&result, nextPart)
 		return
 	case contentType == "application/json":
 		err = DecodeJSON(resp, &result)
