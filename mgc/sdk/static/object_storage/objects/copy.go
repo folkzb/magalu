@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/progress_report"
@@ -62,14 +63,34 @@ func copySingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI
 }
 
 func copy(ctx context.Context, p copyObjectParams, cfg common.Config) (result core.Value, err error) {
+	_, err = headFile(ctx, cfg, p.Source)
+	if err != nil {
+		return nil, fmt.Errorf("error validating source: %w", err)
+	}
+
+	fileName := p.Source.Filename()
+	if fileName == "" {
+		return nil, core.UsageError{Err: fmt.Errorf("source must be a URI to an object")}
+	}
+
+	fullDstPath := p.Destination
+	if fullDstPath == "" {
+		return nil, core.UsageError{Err: fmt.Errorf("destination cannot be empty")}
+	}
+
+	if strings.HasSuffix(fullDstPath.String(), "/") || p.Destination.IsRoot() {
+		// If it isn't a file path, don't rename, just append source with bucket URI
+		fullDstPath = fullDstPath.JoinPath(fileName)
+	}
+
 	reportProgress := progress_report.FromContext(ctx)
-	reportMsg := "Copying object from " + p.Source.String() + " to " + p.Destination.String()
+	reportMsg := "Copying object from " + p.Source.String() + " to " + fullDstPath.String()
 	progress := uint64(0)
 	total := uint64(1)
 
 	reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, nil)
 
-	err = copySingleFile(ctx, cfg, p.Source, p.Destination)
+	err = copySingleFile(ctx, cfg, p.Source, fullDstPath)
 	if err != nil {
 		reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, err)
 		return nil, err
@@ -77,5 +98,5 @@ func copy(ctx context.Context, p copyObjectParams, cfg common.Config) (result co
 
 	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
-	return copyObjectParams{Source: p.Source, Destination: p.Destination}, err
+	return copyObjectParams{Source: p.Source, Destination: fullDstPath}, err
 }
