@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
-	"path"
 
 	"go.uber.org/zap"
 	"magalu.cloud/core"
@@ -70,31 +68,8 @@ func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsP
 		}
 
 		downloadAllLogger().Infow("Downloading object", "uri", objURI)
-		req, err := common.NewDownloadRequest(ctx, cfg, mgcSchemaPkg.URI(objURI))
+		err = downloadSingleFile(ctx, cfg, objURI, params.Destination.Join(dirEntry.Path()))
 		if err != nil {
-			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
-			return err, pipeline.ProcessSkip
-		}
-
-		resp, err := common.SendRequest(ctx, req)
-		if err != nil {
-			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
-			return err, pipeline.ProcessSkip
-		}
-
-		err = common.ExtractErr(resp)
-		if err != nil {
-			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
-			return err, pipeline.ProcessSkip
-		}
-
-		dir := path.Dir(dirEntry.Path())
-		if err = os.MkdirAll(path.Join(params.Destination.String(), dir), utils.DIR_PERMISSION); err != nil {
-			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
-			return err, pipeline.ProcessSkip
-		}
-
-		if err = common.WriteToFile(ctx, resp.Body, resp.ContentLength, params.Destination.Join(dirEntry.Path())); err != nil {
 			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
 			return err, pipeline.ProcessSkip
 		}
