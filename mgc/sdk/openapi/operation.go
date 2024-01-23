@@ -14,6 +14,7 @@ import (
 	mgcAuthPkg "magalu.cloud/core/auth"
 	mgcHttpPkg "magalu.cloud/core/http"
 	mgcSchemaPkg "magalu.cloud/core/schema"
+	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/openapi/transform"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -67,7 +68,7 @@ func newOperation(
 			Description: getDescriptionExtension(extensionPrefix, desc.op.Extensions, desc.op.Description),
 			Version:     version,
 			Summary:     desc.op.Summary,
-			IsInternal:  getHiddenExtension(extensionPrefix, desc.op.Extensions),
+			IsInternal:  utils.BoolPtr(getHiddenExtension(extensionPrefix, desc.op.Extensions)),
 		}},
 		key:             desc.pathKey,
 		method:          method,

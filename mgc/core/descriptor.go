@@ -10,7 +10,7 @@ type DescriptorSpec struct {
 	Version     string   `json:"version"`
 	Description string   `json:"description"`
 	Summary     string   `json:"summary"`
-	IsInternal  bool     `json:"isInternal,omitempty"`
+	IsInternal  *bool    `json:"isInternal,omitempty"`
 	Scopes      []string `json:"scopes"`
 }
 
@@ -53,7 +53,10 @@ func (d *SimpleDescriptor) Description() string {
 }
 
 func (d *SimpleDescriptor) IsInternal() bool {
-	return d.Spec.IsInternal
+	if d.Spec.IsInternal == nil {
+		return false
+	}
+	return *d.Spec.IsInternal
 }
 
 func (d *SimpleDescriptor) Scopes() []string {

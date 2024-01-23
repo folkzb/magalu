@@ -10,7 +10,7 @@ var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 		core.DescriptorSpec{
 			Name:        "http",
 			Description: "HTTP access",
-			IsInternal:  true,
+			IsInternal:  utils.BoolPtr(true),
 		},
 		func() []core.Descriptor {
 			return []core.Descriptor{

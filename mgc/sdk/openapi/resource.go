@@ -137,7 +137,7 @@ func collectResourceChildren(
 			return child.IsInternal(), nil
 		})
 		if allChildrenInternal {
-			subResource.Spec.IsInternal = true
+			subResource.Spec.IsInternal = utils.BoolPtr(true)
 		}
 		children = append(children, subResource)
 		childrenByName[childTable.name] = subResource
@@ -161,7 +161,7 @@ func newResource(
 			Name:        name,
 			Description: description,
 			Version:     doc.Info.Version,
-			IsInternal:  getHiddenExtension(extensionPrefix, tag.Extensions),
+			IsInternal:  utils.BoolPtr(getHiddenExtension(extensionPrefix, tag.Extensions)),
 		},
 		func() ([]core.Descriptor, error) {
 			opTable := collectOperations(tag, doc, extensionPrefix, logger)
