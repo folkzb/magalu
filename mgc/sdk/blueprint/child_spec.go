@@ -11,14 +11,10 @@ type childSpec struct {
 	core.DescriptorSpec
 	grouperSpec
 	executorSpec
+	Ref string `json:"$ref" yaml:"$ref"`
 }
 
 func (c *childSpec) validate() (err error) {
-	err = c.DescriptorSpec.Validate()
-	if err != nil {
-		return err
-	}
-
 	isGrouper := !c.grouperSpec.isEmpty()
 	isExecutor := !c.executorSpec.isEmpty()
 
@@ -27,6 +23,15 @@ func (c *childSpec) validate() (err error) {
 			Name: c.DescriptorSpec.Name,
 			Err:  errors.New("cannot be both group and executor"),
 		}
+	}
+
+	if c.Ref != "" {
+		return nil
+	}
+
+	err = c.DescriptorSpec.Validate()
+	if err != nil {
+		return err
 	}
 
 	if isGrouper {

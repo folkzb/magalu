@@ -138,25 +138,31 @@ func (e *executorSpec) validate() (err error) {
 }
 
 func (e *executorSpec) resolve(refResolver *core.BoundRefPathResolver, exec core.Executor) (err error) {
-	e.parametersSchema, err = getSchema(refResolver, e.ParametersSchema, e.Parameters)
-	if err != nil {
-		return fmt.Errorf("parametersSchema: %w", err)
-	}
-	if !checkObjectSchema(e.parametersSchema) {
-		return errors.New("parametersSchema is not an object")
-	}
-
-	e.configsSchema, err = getSchema(refResolver, e.ConfigsSchema, e.Configs)
-	if err != nil {
-		return fmt.Errorf("configsSchema: %w", err)
-	}
-	if !checkObjectSchema(e.configsSchema) {
-		return errors.New("configsSchema is not an object")
+	if e.parametersSchema == nil {
+		e.parametersSchema, err = getSchema(refResolver, e.ParametersSchema, e.Parameters)
+		if err != nil {
+			return fmt.Errorf("parametersSchema: %w", err)
+		}
+		if !checkObjectSchema(e.parametersSchema) {
+			return errors.New("parametersSchema is not an object")
+		}
 	}
 
-	e.resultSchema, err = getSchema(refResolver, e.ResultSchema, nil)
-	if err != nil {
-		return fmt.Errorf("resultSchema: %w", err)
+	if e.configsSchema == nil {
+		e.configsSchema, err = getSchema(refResolver, e.ConfigsSchema, e.Configs)
+		if err != nil {
+			return fmt.Errorf("configsSchema: %w", err)
+		}
+		if !checkObjectSchema(e.configsSchema) {
+			return errors.New("configsSchema is not an object")
+		}
+	}
+
+	if e.resultSchema == nil {
+		e.resultSchema, err = getSchema(refResolver, e.ResultSchema, nil)
+		if err != nil {
+			return fmt.Errorf("resultSchema: %w", err)
+		}
 	}
 
 	for i, step := range e.Steps {
@@ -169,21 +175,25 @@ func (e *executorSpec) resolve(refResolver *core.BoundRefPathResolver, exec core
 		}
 	}
 
-	e.relatedExecutors = map[string]core.Executor{}
-	for k, p := range e.Related {
-		e.relatedExecutors[k], err = core.ResolveExecutorPath(refResolver, p)
-		if err != nil {
-			return fmt.Errorf("related %q: %w", k, err)
+	if e.relatedExecutors == nil {
+		e.relatedExecutors = map[string]core.Executor{}
+		for k, p := range e.Related {
+			e.relatedExecutors[k], err = core.ResolveExecutorPath(refResolver, p)
+			if err != nil {
+				return fmt.Errorf("related %q: %w", k, err)
+			}
 		}
 	}
 
-	e.linkers = map[string]core.Linker{}
-	for k, v := range e.Links {
-		err = v.resolve(refResolver)
-		if err != nil {
-			return fmt.Errorf("invalid link %q: %w", k, err)
+	if e.linkers == nil {
+		e.linkers = map[string]core.Linker{}
+		for k, v := range e.Links {
+			err = v.resolve(refResolver)
+			if err != nil {
+				return fmt.Errorf("invalid link %q: %w", k, err)
+			}
+			e.linkers[k] = &linker{spec: v, owner: exec}
 		}
-		e.linkers[k] = &linker{spec: v, owner: exec}
 	}
 
 	return nil
