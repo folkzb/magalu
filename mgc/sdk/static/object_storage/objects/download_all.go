@@ -58,20 +58,20 @@ func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsP
 
 		if dirEntry.Err() != nil {
 			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: dirEntry.Err()}
-			return err, pipeline.ProcessSkip
+			return err, pipeline.ProcessOutput
 		}
 
 		_, ok := dirEntry.DirEntry().(*common.BucketContent)
 		if !ok {
 			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: fmt.Errorf("expected object, got directory")}
-			return err, pipeline.ProcessSkip
+			return err, pipeline.ProcessOutput
 		}
 
 		downloadAllLogger().Infow("Downloading object", "uri", objURI)
 		err = downloadSingleFile(ctx, cfg, objURI, params.Destination.Join(dirEntry.Path()))
 		if err != nil {
 			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
-			return err, pipeline.ProcessSkip
+			return err, pipeline.ProcessOutput
 		}
 
 		return nil, pipeline.ProcessOutput
