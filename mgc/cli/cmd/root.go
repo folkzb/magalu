@@ -50,6 +50,7 @@ can generate a command line on-demand for Rest manipulation`,
 	configureOutputColor(rootCmd, nil)
 	addOutputFlag(rootCmd)
 	addLogFilterFlag(rootCmd, getLogFilterConfig(sdk))
+	addLogDebugFlag(rootCmd)
 	addTimeoutFlag(rootCmd)
 	addWaitTerminationFlag(rootCmd)
 	addRetryUntilFlag(rootCmd)

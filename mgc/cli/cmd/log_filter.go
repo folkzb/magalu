@@ -21,6 +21,11 @@ See more details about the filter syntax at https://github.com/moul/zapfilter`,
 }
 
 func getLogFilterFlag(cmd *cobra.Command) string {
+	// debug take precedence over cli.logs
+	dbgFlagResult := getLogDebugFlag(cmd)
+	if dbgFlagResult != "" {
+		return dbgFlagResult
+	}
 	return cmd.Root().PersistentFlags().Lookup(logFilterFlag).Value.String()
 }
 
