@@ -20,12 +20,12 @@ func loadMgcSchemaValue(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 
 	mgcSchema := atinfo.mgcSchema
 	if mgcSchema == nil {
-		return nil, false, NewErrorDiagnostics("Invalid schema", "null schema provided to load state to go values")
+		return nil, false, NewLocalErrorDiagnostics("Invalid schema", "null schema provided to load state to go values")
 	}
 
 	if !tfValue.IsKnown() {
 		if !ignoreUnknown {
-			return nil, false, NewErrorDiagnostics(
+			return nil, false, NewLocalErrorDiagnostics(
 				"Unable to load unknown value",
 				fmt.Sprintf("[loader] unable to load %q since value is unknown: value %+v - schema: %+v", atinfo.mgcName, tfValue, mgcSchema),
 			)
@@ -60,7 +60,7 @@ func loadMgcSchemaValue(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 		}
 
 		if !mgcSchema.Nullable {
-			return nil, true, NewErrorDiagnostics(
+			return nil, true, NewLocalErrorDiagnostics(
 				"Unable to load non nullable value",
 				fmt.Sprintf("[loader] unable to load %q since value is null and not nullable by the schema: value %+v - schema: %+v", atinfo.mgcName, tfValue, mgcSchema),
 			)
@@ -83,7 +83,7 @@ func loadMgcSchemaValue(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 	case "object":
 		return loadMgcSchemaMap(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	default:
-		return nil, false, NewErrorDiagnostics("Unknown value", fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v", atinfo.mgcName, tfValue, mgcSchema))
+		return nil, false, NewLocalErrorDiagnostics("Unknown value", fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v", atinfo.mgcName, tfValue, mgcSchema))
 	}
 }
 
@@ -98,7 +98,7 @@ func loadMgcSchemaString(ctx context.Context, atinfo *resAttrInfo, tfValue tftyp
 	var state string
 	err := tfValue.As(&state)
 	if err != nil {
-		return nil, true, NewErrorDiagnostics(
+		return nil, true, NewLocalErrorDiagnostics(
 			"Unable to load value to string",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
@@ -118,7 +118,7 @@ func loadMgcSchemaNumber(ctx context.Context, atinfo *resAttrInfo, tfValue tftyp
 	var state big.Float
 	err := tfValue.As(&state)
 	if err != nil {
-		return nil, true, NewErrorDiagnostics(
+		return nil, true, NewLocalErrorDiagnostics(
 			"Unable to load value to number",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
@@ -126,7 +126,7 @@ func loadMgcSchemaNumber(ctx context.Context, atinfo *resAttrInfo, tfValue tftyp
 
 	result, accuracy := state.Float64()
 	if accuracy != big.Exact {
-		return nil, true, NewErrorDiagnostics(
+		return nil, true, NewLocalErrorDiagnostics(
 			"Unable to load value to float",
 			fmt.Sprintf("[loader] %q with value %+v lost accuracy in conversion to %+v", atinfo.mgcName, state, result),
 		)
@@ -146,7 +146,7 @@ func loadMgcSchemaInt(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.
 	var state big.Float
 	err := tfValue.As(&state)
 	if err != nil {
-		return nil, true, NewErrorDiagnostics(
+		return nil, true, NewLocalErrorDiagnostics(
 			"Unable to load value to integer",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
@@ -154,7 +154,7 @@ func loadMgcSchemaInt(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.
 
 	result, accuracy := state.Int64()
 	if accuracy != big.Exact {
-		return nil, true, NewErrorDiagnostics(
+		return nil, true, NewLocalErrorDiagnostics(
 			"Unable to load value to integer",
 			fmt.Sprintf("[loader] %q with value %+v lost accuracy in conversion to %+v", atinfo.mgcName, state, result),
 		)
@@ -174,7 +174,7 @@ func loadMgcSchemaBool(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes
 	var state bool
 	err := tfValue.As(&state)
 	if err != nil {
-		return nil, false, NewErrorDiagnostics(
+		return nil, false, NewLocalErrorDiagnostics(
 			"Unable to load value to boolean",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
@@ -195,7 +195,7 @@ func loadMgcSchemaArray(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 	var tfArray []tftypes.Value
 	err := tfValue.As(&tfArray)
 	if err != nil {
-		return nil, false, diagnostics.AppendErrorReturn(
+		return nil, false, diagnostics.AppendLocalErrorReturn(
 			"Unable to load value to list",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, mgcSchema, err.Error()),
 		)
@@ -207,14 +207,15 @@ func loadMgcSchemaArray(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 	for i, tfItem := range tfArray {
 		mgcItem, isItemKnown, d := loadMgcSchemaValue(ctx, itemAttr, tfItem, ignoreUnknown, filterUnset)
 		if diagnostics.AppendCheckError(d...) {
-			diagnostics.AddError("Unable to load array", fmt.Sprintf("unknown value inside %q array at %v", atinfo.mgcName, i))
-			return nil, isItemKnown, diagnostics
+			return nil, isItemKnown, diagnostics.AppendLocalErrorReturn(
+				"Unable to load array", fmt.Sprintf("unknown value inside %q array at %v", atinfo.mgcName, i),
+			)
 		}
 		if !isItemKnown {
 			// TODO: confirm this logic, should we just keep going?
-			diagnostics.AddWarning("Unknown list item", fmt.Sprintf("Item %d in %q is unknown: %+v", i, atinfo.mgcName, tfItem))
-			isKnown = false
-			return mgcArray, isKnown, diagnostics
+			return mgcArray, false, diagnostics.AppendWarningReturn(
+				"Unknown list item", fmt.Sprintf("Item %d in %q is unknown: %+v", i, atinfo.mgcName, tfItem),
+			)
 		}
 		mgcArray[i] = mgcItem
 	}
@@ -234,7 +235,7 @@ func loadMgcSchemaMap(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.
 	var tfMap map[string]tftypes.Value
 	err := tfValue.As(&tfMap)
 	if err != nil {
-		return nil, false, diagnostics.AppendErrorReturn(
+		return nil, false, diagnostics.AppendLocalErrorReturn(
 			"Unable to load value to map",
 			fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v - error: %s", atinfo.mgcName, tfValue, atinfo.mgcSchema, err.Error()),
 		)
@@ -268,7 +269,7 @@ func loadMgcSchemaMap(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.
 		propTFItem, ok := tfMap[string(propAttr.tfName)]
 		if !ok {
 			if propAttr.tfSchema.IsRequired() {
-				return mgcMap, false, diagnostics.AppendErrorReturn(
+				return mgcMap, false, diagnostics.AppendLocalErrorReturn(
 					"Schema attribute missing from state value",
 					fmt.Sprintf("[loader] schema attribute %q with info `%+v` missing from state %+v", propMgcName, atinfo, tfMap),
 				)
@@ -309,7 +310,7 @@ func loadMgcSchemaMap(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.
 				xOfKey = propXOfKey
 				xOfPromotedValues = append(xOfPromotedValues, propName)
 			} else if xOfKey != propXOfKey {
-				return mgcMap, false, diagnostics.AppendErrorReturn(
+				return mgcMap, false, diagnostics.AppendLocalErrorReturn(
 					"mutually exclusive attributes specified",
 					fmt.Sprintf("attribute %q cannot be specified if attribute(s) %v have already been specified and vice-versa", propName, xOfPromotedValues),
 				)

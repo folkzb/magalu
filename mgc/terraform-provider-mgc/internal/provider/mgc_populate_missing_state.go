@@ -86,7 +86,7 @@ func (o *MgcPopulateUnknownState) PostRun(
 		attrValue, err := attr.GetType().ValueFromTerraform(ctx, paramTFValue)
 
 		if err != nil {
-			return nil, false, diagnostics.AppendErrorReturn(
+			return nil, false, diagnostics.AppendLocalErrorReturn(
 				"Unable to pre-populate Response State with Plan",
 				fmt.Sprintf("Attribute %q returned error %v", paramTFName, err),
 			)

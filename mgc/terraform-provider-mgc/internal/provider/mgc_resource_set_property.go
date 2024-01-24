@@ -134,7 +134,7 @@ func newMgcResourceSetProperty(
 ) (MgcOperation, Diagnostics) {
 	operationLink, err := setter.getTarget(currentVal, plannedVal)
 	if err != nil {
-		return nil, NewErrorDiagnostics(
+		return nil, NewLocalErrorDiagnostics(
 			"unable to call property setter",
 			fmt.Sprintf("unable to create executor: %v", err),
 		)

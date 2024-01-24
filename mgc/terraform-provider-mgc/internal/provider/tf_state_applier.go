@@ -45,7 +45,7 @@ func applyMgcMap(ctx context.Context, mgcMap map[string]any, attr *resAttrInfo, 
 
 		if diagnostics.AppendCheckError(d...) {
 			attrSchema, _ := tfState.Schema.AttributeAtPath(ctx, attrPath)
-			diagnostics.AddAttributeError(
+			diagnostics.AddLocalAttributeError(
 				attrPath,
 				"unable to load value",
 				fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema),
@@ -63,12 +63,12 @@ func applyMgcList(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState 
 	// This shouldn't happen, probably, but sometimes the Services return null values for non-nullable values
 	if mgcValue == nil {
 		d := tfState.SetAttribute(ctx, path, []any{})
-		return diagnostics.AppendReturn(d...)
+		return diagnostics.AppendReturn(Diagnostics(d).DemoteErrorsToWarnings()...)
 	}
 
 	mgcList, ok := mgcValue.([]any)
 	if !ok {
-		diagnostics.AppendReturn(NewErrorDiagnostic(
+		diagnostics.AppendReturn(NewLocalErrorDiagnostic(
 			fmt.Sprintf("Unable to apply list property %q to State, value is not list", attr.tfName),
 			fmt.Sprintf("Property value received from service was not a list: %#v", mgcValue),
 		))
@@ -76,7 +76,7 @@ func applyMgcList(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState 
 
 	if len(mgcList) == 0 {
 		d := tfState.SetAttribute(ctx, path, []any{})
-		return diagnostics.AppendReturn(d...)
+		return diagnostics.AppendReturn(Diagnostics(d).DemoteErrorsToWarnings()...)
 	}
 
 	for i, mgcValue := range mgcList {
@@ -84,7 +84,7 @@ func applyMgcList(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState 
 		d := applyValueToState(ctx, mgcValue, attr, tfState, attrPath)
 		if diagnostics.AppendCheckError(d...) {
 			attrSchema, _ := tfState.Schema.AttributeAtPath(ctx, attrPath)
-			diagnostics.AddAttributeError(attrPath, "unable to load value", fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema))
+			diagnostics.AddLocalAttributeError(attrPath, "unable to load value", fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema))
 			return diagnostics
 		}
 	}
@@ -124,6 +124,7 @@ func applyValueToState(ctx context.Context, mgcValue any, attr *resAttrInfo, tfS
 		return applyMgcMap(ctx, mgcValue.(map[string]any), attr, tfState, path)
 
 	default:
+		// Should this be a local error? Does TF know it already, since it's their function?
 		d := tfState.SetAttribute(ctx, path, rv.Interface())
 		return Diagnostics(d)
 	}

@@ -105,7 +105,7 @@ func resultAsMap(result core.ResultWithValue) (map[string]any, Diagnostics) {
 	}
 	resultMap, ok := result.Value().(map[string]any)
 	if !ok {
-		return nil, NewErrorDiagnostics(
+		return nil, NewLocalErrorDiagnostics(
 			"Operation output mismatch",
 			fmt.Sprintf("Unable to convert %v to map.", result),
 		)
@@ -130,7 +130,7 @@ func getReadForApplyStateAfter(
 		var err error
 		resourceRead, err = readLink.CreateExecutor(result)
 		if err != nil {
-			return nil, NewErrorDiagnostics(
+			return nil, NewLocalErrorDiagnostics(
 				"Read link failed",
 				fmt.Sprintf("Unable to create Read link executor for applying new state on resource %q: %s", resourceName, err),
 			)
@@ -143,7 +143,7 @@ func getReadForApplyStateAfter(
 
 	// Should not happen, but check just in case, to avoid potential crashes
 	if resourceRead == nil {
-		return nil, NewErrorDiagnostics(
+		return nil, NewLocalErrorDiagnostics(
 			"applying state after failed",
 			fmt.Sprintf("operation has no 'read' link and resource has no 'read' call. Reading is impossible for %q'.", resourceName),
 		)
@@ -202,15 +202,14 @@ func applyStateAfter(
 	}
 
 	if err := paramsSchema.VisitJSON(params); err != nil {
-		diagnostics.AddError(
+		return nil, nil, diagnostics.AppendLocalErrorReturn(
 			"applying state after failed",
 			fmt.Sprintf("unable to read resource due to insufficient state information. %s", err),
 		)
-		return nil, nil, diagnostics
 	}
 
 	readResult, ed := execute(ctx, resourceName, read, params, core.Configs{})
-	if diagnostics.AppendCheckError(ed...) {
+	if diagnostics.AppendCheckError(ed.DemoteErrorsToWarnings()...) {
 		return nil, nil, diagnostics
 	}
 
@@ -219,7 +218,11 @@ func applyStateAfter(
 		return nil, nil, diagnostics
 	}
 
-	applyMgcMapToTFState(ctx, readResultMap, attrTree.output, tfState)
+	d = applyMgcMapToTFState(ctx, readResultMap, attrTree.output, tfState)
+	if diagnostics.AppendCheckError(d...) {
+		return nil, nil, diagnostics
+	}
+
 	d = verifyCurrentDesiredMismatch(attrTree.input, result.Source().Parameters, readResultMap)
 	diagnostics.Append(d...)
 

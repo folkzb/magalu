@@ -59,7 +59,7 @@ func loadMgcParamsFromState(
 				continue
 			}
 
-			return params, diagnostics.AppendErrorReturn(
+			return params, diagnostics.AppendLocalErrorReturn(
 				fmt.Sprintf("[loader] Tried to load parameter %q from state, but couldn't", paramName),
 				fmt.Sprintf(
 					"Tried to load parameter %q from state, but couldn't, as there was no attribute in the schema that matches it",
@@ -74,7 +74,7 @@ func loadMgcParamsFromState(
 				continue
 			}
 
-			return params, diagnostics.AppendErrorReturn(
+			return params, diagnostics.AppendLocalErrorReturn(
 				fmt.Sprintf("[loader] Tried to load parameter %q from state, but couldn't", paramName),
 				fmt.Sprintf(
 					"Tried to load parameter %q from state, but couldn't, as there was no value in the state. This probably means that a default value isn't being sent by Terraform",
