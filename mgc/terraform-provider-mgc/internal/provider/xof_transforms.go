@@ -153,7 +153,7 @@ func getXOfObjectSchemaTransformed(s *mgcSdk.Schema) (*mgcSdk.Schema, error) {
 
 	for propName, propSchemaRef := range resultCOW.Properties() {
 		propSchema := (*mgcSchemaPkg.Schema)(propSchemaRef.Value)
-		propTransformed, err := promoteXOfsToProps(propSchema, "")
+		propTransformed, err := getXOfObjectSchemaTransformed(propSchema)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +162,7 @@ func getXOfObjectSchemaTransformed(s *mgcSdk.Schema) (*mgcSdk.Schema, error) {
 
 	if notRef := resultCOW.Not(); notRef != nil {
 		not := (*mgcSchemaPkg.Schema)(notRef.Value)
-		notTransformed, err := promoteXOfsToProps(not, "")
+		notTransformed, err := getXOfObjectSchemaTransformed(not)
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +171,7 @@ func getXOfObjectSchemaTransformed(s *mgcSdk.Schema) (*mgcSdk.Schema, error) {
 
 	if itemsRef := resultCOW.Items(); itemsRef != nil {
 		items := (*mgcSchemaPkg.Schema)(itemsRef.Value)
-		itemsTransformed, err := promoteXOfsToProps(items, "")
+		itemsTransformed, err := getXOfObjectSchemaTransformed(items)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +181,7 @@ func getXOfObjectSchemaTransformed(s *mgcSdk.Schema) (*mgcSdk.Schema, error) {
 	if additionalPropsData := resultCOW.AdditionalProperties(); additionalPropsData.Schema != nil {
 		additionalPropsRef := additionalPropsData.Schema
 		additionalProps := (*mgcSchemaPkg.Schema)(additionalPropsRef.Value)
-		additionalPropsTransformed, err := promoteXOfsToProps(additionalProps, "")
+		additionalPropsTransformed, err := getXOfObjectSchemaTransformed(additionalProps)
 		if err != nil {
 			return nil, err
 		}

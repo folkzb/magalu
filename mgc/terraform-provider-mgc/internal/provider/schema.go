@@ -91,12 +91,12 @@ func addMgcSchemaAttributes(
 	getModifiers func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers,
 	ctx context.Context,
 ) error {
-	mgcSchemaTransformed, err := getXOfObjectSchemaTransformed(mgcSchema)
+	mgcSchema, err := getXOfObjectSchemaTransformed(mgcSchema)
 	if err != nil {
 		return err
 	}
 
-	for propName, propSchemaRef := range mgcSchemaTransformed.Properties {
+	for propName, propSchemaRef := range mgcSchema.Properties {
 		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("adding attribute %q", propName))
 		mgcName := mgcName(propName)
 		propSchema := (*mgcSchemaPkg.Schema)(propSchemaRef.Value)
