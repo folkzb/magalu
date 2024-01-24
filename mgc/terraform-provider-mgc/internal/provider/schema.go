@@ -175,34 +175,46 @@ func getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName m
 	}
 }
 
-func generateResAttrInfoMap(ctx context.Context, resName tfName, metadatas []resAttrInfoGenMetadata, d *Diagnostics) resAttrInfoMap {
+func generateResAttrInfoTree(ctx context.Context, resName tfName, inputMetadatas, outputMetadatas []resAttrInfoGenMetadata) (resAttrInfoTree, error) {
+	input, d := generateResAttrInfoMap(ctx, resName, inputMetadatas)
+	if d.HasError() {
+		return resAttrInfoTree{}, fmt.Errorf("errors when generating resource input attributes: %#v", d.Errors())
+	}
+	output, d := generateResAttrInfoMap(ctx, resName, outputMetadatas)
+	if d.HasError() {
+		return resAttrInfoTree{}, fmt.Errorf("errors when generating resource output attributes: %#v", d.Errors())
+	}
+
+	return resAttrInfoTree{input: input, output: output}, nil
+}
+
+func generateResAttrInfoMap(ctx context.Context, resName tfName, metadatas []resAttrInfoGenMetadata) (resAttrInfoMap, Diagnostics) {
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, resName)
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "reading input attributes")
+	diagnostics := Diagnostics{}
 
 	attrInfoMap := resAttrInfoMap{}
 	for _, metadata := range metadatas {
 		err := addMgcSchemaAttributes(attrInfoMap, metadata.schema, metadata.modifiers, ctx)
 		if err != nil {
-			d.AddError("could not create TF input attributes", err.Error())
-			return nil
+			return nil, diagnostics.AppendErrorReturn(
+				"could not create TF input attributes",
+				err.Error(),
+			)
 		}
 	}
 
-	return attrInfoMap
+	return attrInfoMap, diagnostics
 }
 
-func generateTFSchema(ctx context.Context, name tfName, description string, attrInfoTree resAttrInfoTree, d *Diagnostics) (tfSchema schema.Schema) {
+func generateTFSchema(ctx context.Context, name tfName, description string, attrInfoTree resAttrInfoTree) schema.Schema {
 	tflog.Debug(ctx, "generating schema")
 
 	ctx = tflog.NewSubsystem(ctx, schemaGenSubsystem)
 	ctx = tflog.SubsystemSetField(ctx, schemaGenSubsystem, resourceNameField, name)
 
-	tfAttributes := generateTFAttributes(ctx, attrInfoTree, d)
-	if d.HasError() {
-		return
-	}
-
-	tfSchema = schema.Schema{Attributes: map[string]schema.Attribute{}}
+	tfAttributes := generateTFAttributes(ctx, attrInfoTree)
+	tfSchema := schema.Schema{Attributes: map[string]schema.Attribute{}}
 	tfSchema.MarkdownDescription = description
 	for tfName, tfAttr := range tfAttributes {
 		tfSchema.Attributes[string(tfName)] = tfAttr
@@ -218,7 +230,7 @@ func generateTFSchema(ctx context.Context, name tfName, description string, attr
 	return tfSchema
 }
 
-func generateTFAttributes(ctx context.Context, attrInfoTree resAttrInfoTree, d *Diagnostics) map[tfName]schema.Attribute {
+func generateTFAttributes(ctx context.Context, attrInfoTree resAttrInfoTree) map[tfName]schema.Attribute {
 	tflog.SubsystemInfo(ctx, schemaGenSubsystem, "reading input attributes")
 
 	tfAttributes := map[tfName]schema.Attribute{}

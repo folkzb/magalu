@@ -23,18 +23,17 @@ var _ resource.ResourceWithImportState = &MgcResource{}
 
 // MgcResource defines the resource implementation.
 type MgcResource struct {
-	sdk               *mgcSdk.Sdk
-	resTfName         tfName
-	resMgcName        mgcName
-	description       string
-	create            mgcSdk.Executor
-	read              mgcSdk.Executor
-	update            mgcSdk.Executor
-	delete            mgcSdk.Executor
-	inputAttrInfoMap  resAttrInfoMap
-	outputAttrInfoMap resAttrInfoMap
-	tfschema          *schema.Schema
-	propertySetters   map[mgcName]propertySetter
+	sdk             *mgcSdk.Sdk
+	resTfName       tfName
+	resMgcName      mgcName
+	description     string
+	create          mgcSdk.Executor
+	read            mgcSdk.Executor
+	update          mgcSdk.Executor
+	delete          mgcSdk.Executor
+	attrTree        resAttrInfoTree
+	tfschema        *schema.Schema
+	propertySetters map[mgcName]propertySetter
 }
 
 func newMgcResource(
@@ -93,7 +92,7 @@ func newMgcResource(
 		}
 	}
 
-	return &MgcResource{
+	r := &MgcResource{
 		sdk:             sdk,
 		resTfName:       resTfName,
 		resMgcName:      resMgcName,
@@ -103,7 +102,24 @@ func newMgcResource(
 		update:          update,
 		delete:          delete,
 		propertySetters: propertySetters,
-	}, nil
+	}
+
+	attrTree, err := generateResAttrInfoTree(ctx, r.resTfName,
+		[]resAttrInfoGenMetadata{
+			{r.create.ParametersSchema(), r.getCreateParamsModifiers},
+			{r.update.ParametersSchema(), r.getUpdateParamsModifiers},
+			{r.delete.ParametersSchema(), r.getDeleteParamsModifiers},
+		}, []resAttrInfoGenMetadata{
+			{r.create.ResultSchema(), r.getResultModifiers},
+			{r.read.ResultSchema(), r.getResultModifiers},
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	r.attrTree = attrTree
+	return r, nil
 }
 
 func (r *MgcResource) doesPropHaveSetter(name mgcName) bool {
@@ -223,35 +239,6 @@ func (r *MgcResource) getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.
 	}
 }
 
-func (r *MgcResource) InputAttrInfoMap(ctx context.Context, d *Diagnostics) resAttrInfoMap {
-	if r.inputAttrInfoMap == nil {
-		r.inputAttrInfoMap = generateResAttrInfoMap(ctx, r.resTfName,
-			[]resAttrInfoGenMetadata{
-				{r.create.ParametersSchema(), r.getCreateParamsModifiers},
-				{r.update.ParametersSchema(), r.getUpdateParamsModifiers},
-				{r.delete.ParametersSchema(), r.getDeleteParamsModifiers},
-			}, d,
-		)
-	}
-	return r.inputAttrInfoMap
-}
-
-func (r *MgcResource) OutputAttrInfoMap(ctx context.Context, d *Diagnostics) resAttrInfoMap {
-	if r.outputAttrInfoMap == nil {
-		r.outputAttrInfoMap = generateResAttrInfoMap(ctx, r.resTfName,
-			[]resAttrInfoGenMetadata{
-				{r.create.ResultSchema(), r.getResultModifiers},
-				{r.read.ResultSchema(), r.getResultModifiers},
-			}, d,
-		)
-	}
-	return r.outputAttrInfoMap
-}
-
-func (r *MgcResource) attrTree(ctx context.Context) (tree resAttrInfoTree, d Diagnostics) {
-	return resAttrInfoTree{input: r.InputAttrInfoMap(ctx, &d), output: r.OutputAttrInfoMap(ctx, &d)}, d
-}
-
 // BEGIN: Resource implemenation
 
 func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -261,13 +248,7 @@ func (r *MgcResource) Metadata(ctx context.Context, req resource.MetadataRequest
 func (r *MgcResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	if r.tfschema == nil {
 		ctx = tflog.SetField(ctx, resourceNameField, r.resTfName)
-		attrTree, d := r.attrTree(ctx)
-		resp.Diagnostics.Append(d...)
-		if d.HasError() {
-			return
-		}
-
-		tfs := generateTFSchema(ctx, r.resTfName, r.description, attrTree, (*Diagnostics)(&resp.Diagnostics))
+		tfs := generateTFSchema(ctx, r.resTfName, r.description, r.attrTree)
 		r.tfschema = &tfs
 	}
 	resp.Schema = *r.tfschema
@@ -279,13 +260,8 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	createOp := newMgcResourceCreate(r.resTfName, attrTree, r.create, r.read, r.propertySetters)
-	readOp := newMgcResourceRead(r.resTfName, attrTree, r.read)
+	createOp := newMgcResourceCreate(r.resTfName, r.attrTree, r.create, r.read, r.propertySetters)
+	readOp := newMgcResourceRead(r.resTfName, r.attrTree, r.read)
 	operationRunner := newMgcOperationRunner(r.sdk, createOp, readOp, tfsdk.State(req.Plan), req.Plan, &resp.State)
 	diagnostics = operationRunner.Run(ctx)
 }
@@ -296,12 +272,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	operation := newMgcResourceRead(r.resTfName, attrTree, r.read)
+	operation := newMgcResourceRead(r.resTfName, r.attrTree, r.read)
 	runner := newMgcOperationRunner(r.sdk, operation, operation, req.State, tfsdk.Plan(req.State), &resp.State)
 	diagnostics = runner.Run(ctx)
 }
@@ -312,13 +283,8 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	operation := newMgcResourceUpdate(r.resTfName, attrTree, r.update, r.read, r.propertySetters)
-	readOp := newMgcResourceRead(r.resTfName, attrTree, r.read)
+	operation := newMgcResourceUpdate(r.resTfName, r.attrTree, r.update, r.read, r.propertySetters)
+	readOp := newMgcResourceRead(r.resTfName, r.attrTree, r.read)
 	runner := newMgcOperationRunner(r.sdk, operation, readOp, req.State, req.Plan, &resp.State)
 	diagnostics = runner.Run(ctx)
 }
@@ -329,12 +295,7 @@ func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	deleteOp := newMgcResourceDelete(r.resTfName, attrTree, r.delete)
+	deleteOp := newMgcResourceDelete(r.resTfName, r.attrTree, r.delete)
 	runner := newMgcOperationRunner(r.sdk, deleteOp, nil, req.State, tfsdk.Plan(req.State), &resp.State)
 	diagnostics = runner.Run(ctx)
 }

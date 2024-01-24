@@ -34,8 +34,7 @@ type MgcConnectionResource struct {
 	read        mgcSdk.Linker
 	update      mgcSdk.Linker // TODO: Will conenction resources need/have updates?
 	delete      mgcSdk.Linker
-	inputAttr   resAttrInfoMap
-	outputAttr  resAttrInfoMap
+	attrTree    resAttrInfoTree
 	tfschema    *schema.Schema
 }
 
@@ -75,7 +74,7 @@ func newMgcConnectionResource(
 			Target: core.NoOpExecutor(),
 		})
 	}
-	return &MgcConnectionResource{
+	r := &MgcConnectionResource{
 		sdk:         sdk,
 		name:        name,
 		description: description,
@@ -83,7 +82,24 @@ func newMgcConnectionResource(
 		read:        read,
 		update:      update,
 		delete:      delete,
-	}, nil
+	}
+
+	attrTree, err := generateResAttrInfoTree(ctx, r.name,
+		[]resAttrInfoGenMetadata{
+			{r.create.ParametersSchema(), r.getReadParamsModifiers},
+			{r.read.AdditionalParametersSchema(), r.getReadParamsModifiers},
+			{r.delete.AdditionalParametersSchema(), r.getDeleteParamsModifiers},
+		}, []resAttrInfoGenMetadata{
+			{r.create.ResultSchema(), getResultModifiers},
+			{r.read.ResultSchema(), getResultModifiers},
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	r.attrTree = attrTree
+	return r, nil
 }
 
 func (r *MgcConnectionResource) getReadParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
@@ -111,35 +127,6 @@ func (r *MgcConnectionResource) getDeleteParamsModifiers(ctx context.Context, mg
 	}
 }
 
-func (r *MgcConnectionResource) InputAttrInfoMap(ctx context.Context, d *Diagnostics) resAttrInfoMap {
-	if r.inputAttr == nil {
-		r.inputAttr = generateResAttrInfoMap(ctx, r.name,
-			[]resAttrInfoGenMetadata{
-				{r.create.ParametersSchema(), r.getReadParamsModifiers},
-				{r.read.AdditionalParametersSchema(), r.getReadParamsModifiers},
-				{r.delete.AdditionalParametersSchema(), r.getDeleteParamsModifiers},
-			}, d,
-		)
-	}
-	return r.inputAttr
-}
-
-func (r *MgcConnectionResource) OutputAttrInfoMap(ctx context.Context, d *Diagnostics) resAttrInfoMap {
-	if r.outputAttr == nil {
-		r.outputAttr = generateResAttrInfoMap(ctx, r.name,
-			[]resAttrInfoGenMetadata{
-				{r.create.ResultSchema(), getResultModifiers},
-				{r.read.ResultSchema(), getResultModifiers},
-			}, d,
-		)
-	}
-	return r.outputAttr
-}
-
-func (r *MgcConnectionResource) attrTree(ctx context.Context) (tree resAttrInfoTree, d Diagnostics) {
-	return resAttrInfoTree{input: r.InputAttrInfoMap(ctx, &d), output: r.OutputAttrInfoMap(ctx, &d)}, d
-}
-
 // BEGIN: Resource implementation
 
 func (r *MgcConnectionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -149,13 +136,7 @@ func (r *MgcConnectionResource) Metadata(ctx context.Context, req resource.Metad
 func (r *MgcConnectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	if r.tfschema == nil {
 		ctx = tflog.SetField(ctx, resourceNameField, r.name)
-		attrTree, d := r.attrTree(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		tfs := generateTFSchema(ctx, r.name, r.description, attrTree, (*Diagnostics)(&resp.Diagnostics))
+		tfs := generateTFSchema(ctx, r.name, r.description, r.attrTree)
 		r.tfschema = &tfs
 	}
 	resp.Schema = *r.tfschema
@@ -163,26 +144,24 @@ func (r *MgcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 
 func (r *MgcConnectionResource) newLinkOperation(
 	link core.Linker,
-	attrTree resAttrInfoTree,
 	getPrivateStateKey func(context.Context, string) ([]byte, diag.Diagnostics),
 	setPrivateStateKey func(context.Context, string, []byte) diag.Diagnostics,
 	constructor func(tfName, resAttrInfoTree, core.Executor) MgcOperation,
 ) MgcOperation {
-	return newMgcConnectionLink(r.name, attrTree, getPrivateStateKey, setPrivateStateKey, r.create, func(result core.Result) MgcOperation {
+	return newMgcConnectionLink(r.name, r.attrTree, getPrivateStateKey, setPrivateStateKey, r.create, func(result core.Result) MgcOperation {
 		exec, err := link.CreateExecutor(result)
 		if err != nil {
 			return nil
 		}
-		return newMgcConnectionRead(r.name, attrTree, exec)
+		return newMgcConnectionRead(r.name, r.attrTree, exec)
 	})
 }
 
 func (r *MgcConnectionResource) newReadOperation(
-	attrTree resAttrInfoTree,
 	getPrivateStateKey func(context.Context, string) ([]byte, diag.Diagnostics),
 	setPrivateStateKey func(context.Context, string, []byte) diag.Diagnostics,
 ) MgcReadOperation {
-	readOp := r.newLinkOperation(r.read, attrTree, getPrivateStateKey, setPrivateStateKey, newMgcConnectionRead)
+	readOp := r.newLinkOperation(r.read, getPrivateStateKey, setPrivateStateKey, newMgcConnectionRead)
 	return (wrapReadOperation(readOp, r.read.ResultSchema()))
 }
 
@@ -192,15 +171,10 @@ func (r *MgcConnectionResource) Create(ctx context.Context, req resource.CreateR
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	createOp := newMgcConnectionCreate(r.name, attrTree, resp.Private.GetKey, resp.Private.SetKey, r.create, r.delete)
-	readOp := r.newReadOperation(attrTree, resp.Private.GetKey, resp.Private.SetKey)
+	createOp := newMgcConnectionCreate(r.name, r.attrTree, resp.Private.GetKey, resp.Private.SetKey, r.create, r.delete)
+	readOp := r.newReadOperation(resp.Private.GetKey, resp.Private.SetKey)
 	runner := newMgcOperationRunner(r.sdk, createOp, readOp, tfsdk.State(req.Plan), req.Plan, &resp.State)
-	d = runner.Run(ctx)
+	d := runner.Run(ctx)
 	diagnostics.Append(d...)
 }
 
@@ -210,14 +184,9 @@ func (r *MgcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	readOp := r.newReadOperation(attrTree, req.Private.GetKey, resp.Private.SetKey)
+	readOp := r.newReadOperation(req.Private.GetKey, resp.Private.SetKey)
 	runner := newMgcOperationRunner(r.sdk, readOp, readOp, req.State, tfsdk.Plan(req.State), &resp.State)
-	d = runner.Run(ctx)
+	d := runner.Run(ctx)
 	diagnostics.Append(d...)
 }
 
@@ -232,14 +201,9 @@ func (r *MgcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	attrTree, d := r.attrTree(ctx)
-	if diagnostics.AppendCheckError(d...) {
-		return
-	}
-
-	deleteOp := r.newLinkOperation(r.delete, attrTree, req.Private.GetKey, req.Private.SetKey, newMgcConnectionDelete)
+	deleteOp := r.newLinkOperation(r.delete, req.Private.GetKey, req.Private.SetKey, newMgcConnectionDelete)
 	runner := newMgcOperationRunner(r.sdk, deleteOp, nil, req.State, tfsdk.Plan(req.State), &resp.State)
-	d = runner.Run(ctx)
+	d := runner.Run(ctx)
 	diagnostics.Append(d...)
 }
 

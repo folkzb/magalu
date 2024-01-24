@@ -453,16 +453,24 @@ func TestGenerateTFAttributes(t *testing.T) {
 	// comparisons (unless both functions are nil)
 	// TODO: investigate lib reporting false negatives/positives on deep comparisons...
 	for _, testCase := range testCases {
-		d := Diagnostics{}
-		inputAttr := testCase.res.InputAttrInfoMap(ctx, &d)
-		if diff := deep.Equal(inputAttr, testCase.expectedInput); diff != nil {
+		res, err := newMgcResource(
+			ctx,
+			testCase.res.sdk,
+			"resource", "resource",
+			"",
+			testCase.res.create, testCase.res.read, testCase.res.update, testCase.res.delete,
+			nil,
+		)
+		if err != nil {
+			t.Errorf("unable to instantiate resource for test case: %v", err)
+		}
+		if diff := deep.Equal(res.attrTree.input, testCase.expectedInput); diff != nil {
 			t.Errorf("MgcResource.readInputAttributes failed. Diff list: %v", diff)
 		}
-		outputAttr := testCase.res.OutputAttrInfoMap(ctx, &d)
-		if diff := deep.Equal(outputAttr, testCase.expectedOutput); diff != nil {
+		if diff := deep.Equal(res.attrTree.output, testCase.expectedOutput); diff != nil {
 			t.Errorf("MgcResource.readOutputAttributes failed. Diff list: %v", diff)
 		}
-		finalAttr := generateTFAttributes(ctx, resAttrInfoTree{input: inputAttr, output: outputAttr}, &d)
+		finalAttr := generateTFAttributes(ctx, res.attrTree)
 		if diff := deep.Equal(finalAttr, testCase.expectedFinal); diff != nil {
 			t.Errorf("MgcResource.generateTFAttributes failed. Diff list: %v", diff)
 		}
