@@ -12,11 +12,20 @@ import (
 const (
 	xOfAlternativeAsProp = "x-mgc-xOfAlternativeAsProp"
 	xOfPromotionKey      = "x-mgc-xOfPromotionKey"
+	xOfObject            = "x-mgc-xOfObject"
 )
 
 type xOfChild struct {
 	s   *mgcSchemaPkg.Schema
 	key string
+}
+
+// TODO: Find better clearer names for xOfObject vs xOfAlternative
+func isSchemaXOfObject(s *mgcSchemaPkg.Schema) bool {
+	if s == nil {
+		return false
+	}
+	return s.Extensions[xOfObject] == true
 }
 
 func isSchemaXOfAlternative(s *mgcSchemaPkg.Schema) bool {
@@ -99,6 +108,7 @@ func promoteXOfChildrenAsNewParentProps(parentCOW *mgcSchemaPkg.COWSchema, xOfCh
 		promotedPropName := xOfCOW.Type() + strconv.Itoa(typeCount+1)
 		parentCOW.PropertiesCOW().Set(promotedPropName, openapi3.NewSchemaRef("", (*openapi3.Schema)(xOfCOW.Peek())))
 	}
+	parentCOW.ExtensionsCOW().Set(xOfObject, true)
 }
 
 func promoteXOfChildren(parentCOW *mgcSchemaPkg.COWSchema, xOfChildren []xOfChild) error {

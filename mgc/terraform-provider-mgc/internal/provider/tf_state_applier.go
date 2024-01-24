@@ -19,13 +19,44 @@ func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, attrInfoMa
 	return applyMgcMap(ctx, mgcMap, resInfo, tfState, path.Empty())
 }
 
-func applyMgcMap(ctx context.Context, mgcMap map[string]any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
+func applyMgcMap(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
 	diagnostics := Diagnostics{}
 	tflog.Debug(
 		ctx,
 		"[applier] will apply as map",
-		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcMap},
+		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcValue},
 	)
+
+	if isSchemaXOfObject(attr.mgcSchema) {
+		for propName, propSchemaRef := range attr.mgcSchema.Properties {
+			propSchema := propSchemaRef.Value
+			if propSchema.VisitJSON(mgcValue) == nil {
+				propAttr, ok := attr.childAttributes[mgcName(propName)]
+				if !ok {
+					return diagnostics.AppendLocalErrorReturn(
+						fmt.Sprintf("Unable to set property %q to state", propName),
+						"Couldn't find schema definition for property. This probably means that the property isn't expected at all in this resource",
+					)
+				}
+				attrPath := path.AtName(string(propName))
+				d := applyValueToState(ctx, mgcValue, propAttr, tfState, attrPath)
+				return diagnostics.AppendReturn(d...)
+			}
+		}
+		return diagnostics.AppendLocalErrorReturn(
+			"value does not fit any xof alternatives",
+			fmt.Sprintf("value does not fit any xof alternatives: %#v", mgcValue),
+		)
+	}
+
+	mgcMap, ok := mgcValue.(map[string]any)
+	if !ok {
+		return diagnostics.AppendLocalErrorReturn(
+			"value is not a map",
+			fmt.Sprintf("value is not a map: %#v", mgcValue),
+		)
+	}
+
 	for mgcName, attr := range attr.childAttributes {
 		mgcValue, ok := mgcMap[string(mgcName)]
 		if !ok {
@@ -121,7 +152,7 @@ func applyValueToState(ctx context.Context, mgcValue any, attr *resAttrInfo, tfS
 
 	case "object":
 		tflog.Debug(ctx, fmt.Sprintf("populating nested object in state at path %#v", path))
-		return applyMgcMap(ctx, mgcValue.(map[string]any), attr, tfState, path)
+		return applyMgcMap(ctx, mgcValue, attr, tfState, path)
 
 	default:
 		// Should this be a local error? Does TF know it already, since it's their function?
