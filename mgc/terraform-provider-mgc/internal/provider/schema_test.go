@@ -468,10 +468,10 @@ func TestGenerateTFAttributes(t *testing.T) {
 }
 
 func TestMgcToTfSchemaDefaultValues(t *testing.T) {
-	t.Run("non computed attriubte", func(t *testing.T) {
+	t.Run("required attributes", func(t *testing.T) {
 		s := mgcSchemaPkg.NewStringSchema()
 		s.Default = "default"
-		m := attributeModifiers{}
+		m := attributeModifiers{isRequired: true}
 		ctx := context.Background()
 
 		var expected defaults.String = nil

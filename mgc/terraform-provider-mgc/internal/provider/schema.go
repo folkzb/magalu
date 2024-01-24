@@ -82,6 +82,7 @@ type attributeModifiers struct {
 	useStateForUnknown         bool
 	requiresReplaceWhenChanged bool
 	nameOverride               tfName
+	ignoreDefault              bool
 	getChildModifiers          func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers
 }
 
@@ -169,6 +170,7 @@ func getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName m
 		isComputed:                 true,
 		useStateForUnknown:         false,
 		requiresReplaceWhenChanged: false,
+		ignoreDefault:              true,
 		getChildModifiers:          getResultModifiers,
 	}
 }
@@ -288,16 +290,18 @@ func mgcStringSchemaToTFAttribute(ctx context.Context, description string, mgcSc
 		mod = append(mod, stringplanmodifier.RequiresReplace())
 	}
 
+	isComputed := m.isComputed
 	var d defaults.String
-	if v, ok := mgcSchema.Default.(string); ok && m.isComputed {
+	if v, ok := mgcSchema.Default.(string); ok && !m.isRequired && !m.ignoreDefault {
 		d = stringdefault.StaticString(v)
+		isComputed = true
 	}
 
 	return schema.StringAttribute{
 		Description:   description,
 		Required:      m.isRequired,
 		Optional:      m.isOptional,
-		Computed:      m.isComputed,
+		Computed:      isComputed,
 		PlanModifiers: mod,
 		Default:       d,
 	}, nil, nil
@@ -313,16 +317,18 @@ func mgcNumberSchemaToTFAttribute(ctx context.Context, description string, mgcSc
 		mod = append(mod, numberplanmodifier.RequiresReplace())
 	}
 
+	isComputed := m.isComputed
 	var d defaults.Number
-	if v, ok := mgcSchema.Default.(float64); ok && m.isComputed {
+	if v, ok := mgcSchema.Default.(float64); ok && !m.isRequired && !m.ignoreDefault {
 		d = numberdefault.StaticBigFloat(big.NewFloat(v))
+		isComputed = true
 	}
 
 	return schema.NumberAttribute{
 		Description:   description,
 		Required:      m.isRequired,
 		Optional:      m.isOptional,
-		Computed:      m.isComputed,
+		Computed:      isComputed,
 		PlanModifiers: mod,
 		Default:       d,
 	}, nil, nil
@@ -338,16 +344,18 @@ func mgcIntSchemaToTFAttribute(ctx context.Context, description string, mgcSchem
 		mod = append(mod, int64planmodifier.RequiresReplace())
 	}
 
+	isComputed := m.isComputed
 	var d defaults.Int64
-	if v, ok := mgcSchema.Default.(int64); ok && m.isComputed {
+	if v, ok := mgcSchema.Default.(int64); ok && !m.isRequired && !m.ignoreDefault {
 		d = int64default.StaticInt64(v)
+		isComputed = true
 	}
 
 	return schema.Int64Attribute{
 		Description:   description,
 		Required:      m.isRequired,
 		Optional:      m.isOptional,
-		Computed:      m.isComputed,
+		Computed:      isComputed,
 		PlanModifiers: mod,
 		Default:       d,
 	}, nil, nil
@@ -363,16 +371,18 @@ func mgcBoolSchemaToTFAttribute(ctx context.Context, description string, mgcSche
 		mod = append(mod, boolplanmodifier.RequiresReplace())
 	}
 
+	isComputed := m.isComputed
 	var d defaults.Bool
-	if v, ok := mgcSchema.Default.(bool); ok && m.isComputed {
+	if v, ok := mgcSchema.Default.(bool); ok && !m.isRequired && !m.ignoreDefault {
 		d = booldefault.StaticBool(v)
+		isComputed = true
 	}
 
 	return schema.BoolAttribute{
 		Description:   description,
 		Required:      m.isRequired,
 		Optional:      m.isOptional,
-		Computed:      m.isComputed,
+		Computed:      isComputed,
 		PlanModifiers: mod,
 		Default:       d,
 	}, nil, nil
@@ -403,8 +413,9 @@ func mgcArraySchemaToTFAttribute(ctx context.Context, description string, mgcSch
 		mod = append(mod, listplanmodifier.UseStateForUnknown())
 	}
 
+	isComputed := m.isComputed
 	var d defaults.List
-	if v, ok := mgcSchema.Default.([]any); ok && m.isComputed {
+	if v, ok := mgcSchema.Default.([]any); ok && !m.isRequired && !m.ignoreDefault {
 		lst, err := tfAttrListValueFromMgcSchema(ctx, mgcSchema, *childAttrs["0"], v)
 		if err != nil {
 			return nil, nil, err
@@ -412,6 +423,7 @@ func mgcArraySchemaToTFAttribute(ctx context.Context, description string, mgcSch
 
 		if l, ok := lst.(types.List); ok {
 			d = listdefault.StaticValue(l)
+			isComputed = true
 		}
 	}
 
@@ -428,7 +440,7 @@ func mgcArraySchemaToTFAttribute(ctx context.Context, description string, mgcSch
 			Description:   description,
 			Required:      m.isRequired,
 			Optional:      m.isOptional,
-			Computed:      m.isComputed,
+			Computed:      isComputed,
 			PlanModifiers: mod,
 			Default:       d,
 		}, childAttrs, nil
@@ -438,7 +450,7 @@ func mgcArraySchemaToTFAttribute(ctx context.Context, description string, mgcSch
 			Description:   description,
 			Required:      m.isRequired,
 			Optional:      m.isOptional,
-			Computed:      m.isComputed,
+			Computed:      isComputed,
 			PlanModifiers: mod,
 			Default:       d,
 		}, childAttrs, nil
@@ -465,8 +477,10 @@ func mgcObjectSchemaToTFAttribute(ctx context.Context, description string, mgcSc
 		mod = append(mod, objectplanmodifier.UseStateForUnknown())
 	}
 
+	isComputed := m.isComputed
+
 	var d defaults.Object
-	if v, ok := mgcSchema.Default.(map[string]any); ok && m.isComputed {
+	if v, ok := mgcSchema.Default.(map[string]any); ok && !m.isRequired && !m.ignoreDefault {
 		obj, err := tfAttrObjectValueFromMgcSchema(ctx, mgcSchema, childAttrs, v)
 		if err != nil {
 			return nil, nil, err
@@ -474,6 +488,7 @@ func mgcObjectSchemaToTFAttribute(ctx context.Context, description string, mgcSc
 
 		if o, ok := obj.(types.Object); ok {
 			d = objectdefault.StaticValue(o)
+			isComputed = true
 		}
 	}
 
@@ -482,7 +497,7 @@ func mgcObjectSchemaToTFAttribute(ctx context.Context, description string, mgcSc
 		Description:   description,
 		Required:      m.isRequired,
 		Optional:      m.isOptional,
-		Computed:      m.isComputed,
+		Computed:      isComputed,
 		PlanModifiers: mod,
 		Default:       d,
 	}, childAttrs, nil

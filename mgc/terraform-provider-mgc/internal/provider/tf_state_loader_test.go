@@ -300,6 +300,7 @@ func tstCreateAttribute(mgcName mgcName, attrTfName tfName, mgcSchema *mgcSchema
 			useStateForUnknown,
 			requiresReplaceWhenChanged,
 			tfName(""),
+			false,
 			getInputChildModifiers,
 		},
 		context.Background(),

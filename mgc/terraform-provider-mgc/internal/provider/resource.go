@@ -215,6 +215,7 @@ func (r *MgcResource) getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.
 		isComputed:                 true,
 		useStateForUnknown:         false,
 		requiresReplaceWhenChanged: false,
+		ignoreDefault:              true,
 		getChildModifiers:          getResultModifiers,
 	}
 }
