@@ -60,10 +60,5 @@ func execute(
 		}
 	}
 
-	d := validateResult(resultWithValue)
-	if diagnostics.AppendCheckError(d...) {
-		return nil, diagnostics
-	}
-
 	return resultWithValue, diagnostics
 }

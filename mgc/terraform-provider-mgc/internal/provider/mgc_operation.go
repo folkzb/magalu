@@ -167,6 +167,11 @@ func (r *MgcOperationRunner) runOperation(ctx context.Context, operation MgcOper
 		return runResult, nil, true, diagnostics
 	}
 
+	d = validateResult(runResult)
+	if diagnostics.AppendCheckError(d...) {
+		return runResult, nil, false, diagnostics
+	}
+
 	postResult, runChain, d = operation.PostRun(ctx, runResult, state, plan, r.targetState)
 	if diagnostics.AppendCheckError(d...) {
 		return runResult, postResult, false, diagnostics
