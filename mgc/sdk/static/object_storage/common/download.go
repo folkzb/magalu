@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path"
@@ -55,11 +56,27 @@ func WriteToFile(ctx context.Context, reader io.ReadCloser, fileSize int64, outF
 }
 
 func NewDownloader(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath) (downloader, error) {
-	return &smallFileDownloader{
-		cfg: cfg,
-		src: src,
-		dst: dst,
-	}, nil
+	metadata, err := HeadFile(ctx, cfg, src)
+	if err != nil {
+		return nil, err
+	}
+
+	totalDownloadParts := int(math.Ceil(float64(metadata.ContentLength) / float64(CHUNK_SIZE)))
+
+	if totalDownloadParts > 1 {
+		return &bigFileDownloader{
+			cfg:      cfg,
+			src:      src,
+			dst:      dst,
+			fileSize: metadata.ContentLength,
+		}, nil
+	} else {
+		return &smallFileDownloader{
+			cfg: cfg,
+			src: src,
+			dst: dst,
+		}, nil
+	}
 }
 
 func GetDestination(dst mgcSchemaPkg.FilePath, src mgcSchemaPkg.URI) (mgcSchemaPkg.FilePath, error) {
