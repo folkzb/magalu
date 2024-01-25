@@ -42,8 +42,11 @@ The Volume attachment will be completed when the volume status returns to
 
 ### Required
 
-- `expand` (List of String) You can get more detailed info about: ['volume_type']
 - `virtual_machine_id` (String)
+
+### Optional
+
+- `expand` (List of String) You can get more detailed info about: ['volume_type']
 
 ### Read-Only
 

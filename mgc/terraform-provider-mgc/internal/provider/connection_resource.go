@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -97,9 +98,10 @@ func (r *MgcConnectionResource) Description() string {
 }
 
 func (r *MgcConnectionResource) getReadParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	isRequired := slices.Contains(mgcSchema.Required, string(mgcName))
 	return attributeModifiers{
-		isRequired:                 true,
-		isOptional:                 false,
+		isRequired:                 isRequired,
+		isOptional:                 !isRequired,
 		isComputed:                 false,
 		useStateForUnknown:         true,
 		requiresReplaceWhenChanged: true,
