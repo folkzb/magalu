@@ -121,7 +121,12 @@ func getReadForApplyStateAfter(
 	result core.ResultWithValue,
 	resourceRead core.Executor,
 ) (core.Executor, Diagnostics) {
-	if readLink, ok := result.Source().Executor.Links()["get"]; ok {
+	readLink, ok := result.Source().Executor.Links()["get-connection"]
+	if !ok {
+		readLink, ok = result.Source().Executor.Links()["get"]
+	}
+
+	if ok {
 		var err error
 		resourceRead, err = readLink.CreateExecutor(result)
 		if err != nil {
