@@ -63,7 +63,7 @@ func copySingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI
 }
 
 func copy(ctx context.Context, p copyObjectParams, cfg common.Config) (result core.Value, err error) {
-	_, err = headFile(ctx, cfg, p.Source)
+	_, err = common.HeadFile(ctx, cfg, p.Source)
 	if err != nil {
 		return nil, fmt.Errorf("error validating source: %w", err)
 	}
