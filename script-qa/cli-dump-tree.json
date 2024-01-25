@@ -490,76 +490,14 @@
        },
        "type": "object"
       },
-      "description": "Check api status",
-      "isInternal": false,
-      "name": "list",
-      "parameters": {
-       "additionalProperties": false,
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "status": "OK"
-       },
-       "properties": {
-        "status": {
-         "title": "Status",
-         "type": "string"
-        }
-       },
-       "required": [
-        "status"
-       ],
-       "title": "Healthcheck",
-       "type": "object"
-      },
-      "version": "1.52.0"
-     }
-    ],
-    "description": "healthchecks",
-    "isInternal": true,
-    "name": "healthchecks",
-    "version": "1.52.0"
-   },
-   {
-    "children": [
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Create snapshot",
+      "description": "Asynchronously create a Snapshot for the currently authenticated tenant.\n\nThe Snapshot can be used when it reaches the \"available\" state and the\n \"completed\" status.\n\n#### Rules\n- The Snapshot name must be unique; otherwise, the creation will be disallowed.\n- Creating Snapshots from restored Volumes may lead to future conflicts as\n you can't delete a volume with an snapshot and can't delete a snapshot with a\n restored volume, so we recommend avoiding it.\n\n#### Notes\n- Use the **block-storage volume list** command to retrieve a list of all\n Volumes and obtain the ID of the volume that will be used to create the\n Snapshot.",
       "isInternal": false,
       "name": "create",
       "parameters": {
        "additionalProperties": false,
        "properties": {
         "description": {
+         "nullable": true,
          "title": "Description",
          "type": "string"
         },
@@ -567,654 +505,62 @@
          "title": "Name",
          "type": "string"
         },
-        "volume_id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "description",
-        "name",
-        "volume_id"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-       },
-       "properties": {
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id"
-       ],
-       "title": "VolumeCreateResponse",
-       "type": "object"
-      },
-      "version": "1.52.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Delete a snapshot from the provided tenant_id",
-      "isInternal": false,
-      "name": "delete",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "snapshot_id": {
-         "description": "snapshot_id",
-         "format": "uuid",
-         "title": "Snapshot Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "snapshot_id"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "nullable": true,
-       "type": "null"
-      },
-      "version": "1.52.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "List snapshots",
-      "isInternal": false,
-      "name": "list",
-      "parameters": {
-       "additionalProperties": false,
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "results": [
-         {
-          "created_at": "2022-01-01T00:00:00Z",
-          "description": "some_description",
-          "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-          "name": "some_name",
-          "progress": "100%",
-          "size": 10,
-          "status": "available",
-          "volume_id": "00000000-0000-0000-0000-000000000000"
-         }
-        ]
-       },
-       "properties": {
-        "results": {
-         "items": {
-          "example": {
-           "created_at": "2022-01-01T00:00:00Z",
-           "description": "some_description",
-           "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-           "name": "some_name",
-           "progress": "100%",
-           "size": 10,
-           "status": "available",
-           "volume_id": "00000000-0000-0000-0000-000000000000"
+        "volume": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "IdRequest",
+           "type": "object"
           },
-          "properties": {
-           "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
+          {
+           "example": {
+            "name": "some_resource_name"
            },
-           "description": {
-            "title": "Description",
-            "type": "string"
+           "properties": {
+            "name": {
+             "maxLength": 255,
+             "minLength": 1,
+             "title": "Name",
+             "type": "string"
+            }
            },
-           "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-           },
-           "name": {
-            "title": "Name",
-            "type": "string"
-           },
-           "progress": {
-            "description": "Porcentagem",
-            "title": "Progress",
-            "type": "string"
-           },
-           "size": {
-            "description": "Gibibytes (GiB)",
-            "title": "Size",
-            "type": "integer"
-           },
-           "status": {
-            "title": "Status",
-            "type": "string"
-           },
-           "volume_id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-           }
-          },
-          "required": [
-           "id",
-           "created_at",
-           "name",
-           "description",
-           "volume_id",
-           "status",
-           "size",
-           "progress"
-          ],
-          "title": "SnapshotResponse",
-          "type": "object"
-         },
-         "title": "snapshots",
-         "type": "array"
-        }
-       },
-       "required": [
-        "results"
-       ],
-       "title": "ListSnapshotResponse",
-       "type": "object"
-      },
-      "version": "1.52.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Restore a snapshot",
-      "isInternal": false,
-      "name": "restore",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "description": {
-         "title": "Description",
-         "type": "string"
-        },
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "snapshot_id": {
-         "description": "snapshot_id",
-         "format": "uuid",
-         "title": "Snapshot Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "description",
-        "name",
-        "snapshot_id"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-       },
-       "properties": {
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id"
-       ],
-       "title": "VolumeCreateResponse",
-       "type": "object"
-      },
-      "version": "1.52.0"
-     }
-    ],
-    "description": "snapshots",
-    "isInternal": false,
-    "name": "snapshots",
-    "version": "1.52.0"
-   },
-   {
-    "children": [
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Retrieve usage for specific quota_slug (disk & volumes)",
-      "isInternal": false,
-      "name": "list",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "quota_slug": {
-         "description": "quota_slug",
-         "format": "string",
-         "title": "Quota Slug",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "results": [
-         {
-          "quota_slug": "disk",
-          "used": 10
-         }
-        ]
-       },
-       "properties": {
-        "results": {
-         "items": {
-          "example": {
-           "quota_slug": "disk",
-           "used": 10
-          },
-          "properties": {
-           "quota_slug": {
-            "title": "Quota Slug",
-            "type": "string"
-           },
-           "used": {
-            "title": "Used",
-            "type": "integer"
-           }
-          },
-          "required": [
-           "quota_slug",
-           "used"
-          ],
-          "title": "RestoreSnapshotRequest",
-          "type": "object"
-         },
-         "title": "results",
-         "type": "array"
-        }
-       },
-       "required": [
-        "results"
-       ],
-       "title": "ListUsageResponse",
-       "type": "object"
-      },
-      "version": "1.52.0"
-     }
-    ],
-    "description": "usage",
-    "isInternal": false,
-    "name": "usage",
-    "version": "1.52.0"
-   },
-   {
-    "children": [
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Attach a volume into an instance, both from the provided tenant_id",
-      "isInternal": false,
-      "name": "attach",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "id": {
-         "description": "id",
-         "format": "uuid",
-         "title": "Volume Id",
-         "type": "string"
-        },
-        "virtual_machine_id": {
-         "description": "virtual_machine_id",
-         "format": "uuid",
-         "title": "Virtual Machine Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id",
-        "virtual_machine_id"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "attachments": [
-         {
-          "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-         }
-        ],
-        "created_at": "2022-01-01T00:00:00Z",
-        "description": "volume description",
-        "error": "some error description or null",
-        "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-        "name": "volume name",
-        "size": 10,
-        "status": "in-use",
-        "updated_at": "2022-01-01T00:00:00Z",
-        "volume_id": "9f2310ac-1944-41e8-85ff-b5671b00c820",
-        "volume_type": {
-         "name": "rbd",
-         "sku": "sku1234"
-        }
-       },
-       "properties": {
-        "attachments": {
-         "items": {
-          "example": {
-           "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-          },
-          "properties": {
-           "virtual_machine_id": {
-            "format": "uuid",
-            "magalu.cloud/core/resolved": "true",
-            "title": "Virtual Machine Id",
-            "type": "string"
-           }
-          },
-          "required": [
-           "virtual_machine_id"
-          ],
-          "title": "AttachmentResponse",
-          "type": "object"
-         },
-         "title": "Attachments",
-         "type": "array"
-        },
-        "created_at": {
-         "format": "date-time",
-         "title": "Created At",
-         "type": "string"
-        },
-        "description": {
-         "title": "Description",
-         "type": "string"
-        },
-        "error": {
-         "title": "Error",
-         "type": "string"
-        },
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "size": {
-         "description": "Gibibytes (GiB)",
-         "title": "Size",
-         "type": "integer"
-        },
-        "status": {
-         "title": "Status",
-         "type": "string"
-        },
-        "updated_at": {
-         "format": "date-time",
-         "title": "Updated At",
-         "type": "string"
-        },
-        "volume_id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "volume_type": {
-         "example": {
-          "description": "volume type description",
-          "name": "rbd",
-          "sku": "sku1234"
-         },
-         "properties": {
-          "name": {
+           "required": [
+            "name"
+           ],
            "title": "Name",
-           "type": "string"
-          },
-          "sku": {
-           "title": "Sku",
-           "type": "string"
+           "type": "object"
           }
-         },
-         "required": [
-          "name",
-          "sku"
          ],
-         "title": "VolumeTypeResponseForVolume",
+         "title": "Volume",
          "type": "object"
         }
        },
        "required": [
-        "id",
-        "volume_id",
-        "status",
-        "error",
-        "size",
-        "name",
-        "volume_type",
-        "description",
-        "created_at",
-        "updated_at"
-       ],
-       "title": "VolumeResponse",
-       "type": "object"
-      },
-      "version": "1.52.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Create a Block Storage volume",
-      "isInternal": false,
-      "name": "create",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "description": {
-         "title": "Description",
-         "type": "string"
-        },
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "size": {
-         "description": "Gibibytes (GiB)",
-         "title": "Size",
-         "type": "integer"
-        },
-        "volume_type": {
-         "title": "Volume Type",
-         "type": "string"
-        }
-       },
-       "required": [
         "description",
         "name",
-        "size",
-        "volume_type"
+        "volume"
        ],
        "type": "object"
       },
       "result": {
        "example": {
-        "id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
        },
        "properties": {
         "id": {
-         "format": "uuid",
+         "minLength": 1,
          "title": "Id",
          "type": "string"
         }
@@ -1222,10 +568,10 @@
        "required": [
         "id"
        ],
-       "title": "VolumeCreateResponse",
+       "title": "IdResponse",
        "type": "object"
       },
-      "version": "1.52.0"
+      "version": "v1"
      },
      {
       "configs": {
@@ -1257,22 +603,15 @@
        },
        "type": "object"
       },
-      "description": "Delete a Block Storage volume",
+      "description": "Asynchronously delete a Snapshot for the currently authenticated tenant.\n\n#### Rules\n- The Snapshot's status must be \"completed\".\n- The Snapshot's state must be \"available\".\n- Deleting a Snapshot that has been restored is not possible. If necessary,\n delete the restored Volume first and then proceed to delete the Snapshot.\n\n#### Notes\n- Utilize the **block-storage snapshots** list command to retrieve a list of\n all Snapshots and obtain the ID of the Snapshot you wish to delete.\n- If needed, you can use the **block-storage volume list** command to retrieve\n a list of all Volumes and obtain the ID of the restored Volume.",
       "isInternal": false,
       "name": "delete",
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "force": {
-         "default": false,
-         "description": "Enforces detachment during the deletion process, allowing the volume to be forcefully\ndetached even if it is currently in use.",
-         "title": "Force",
-         "type": "boolean"
-        },
         "id": {
-         "description": "id",
          "format": "uuid",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         }
        },
@@ -1285,7 +624,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.52.0"
+      "version": "v1"
      },
      {
       "configs": {
@@ -1317,205 +656,27 @@
        },
        "type": "object"
       },
-      "description": "Detaches a volume from an instance. Make sure to unmount\nany file systems on the device within your operating system before\ndetaching the volume. Failure to do so can result in the volume\nbecoming stuck in the busy state while detaching. If this happens,\ndetachment can be delayed indefinitely until you unmount the volume,\nforce detachment, reboot the instance, or all three.",
-      "isInternal": false,
-      "name": "detach",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "force": {
-         "default": false,
-         "description": "Enforces detachment during the deletion process, allowing the volume to be forcefully\ndetached even if it is currently in use.",
-         "title": "Force",
-         "type": "boolean"
-        },
-        "id": {
-         "description": "id",
-         "format": "uuid",
-         "title": "Volume Id",
-         "type": "string"
-        },
-        "virtual_machine_id": {
-         "description": "virtual_machine_id",
-         "format": "uuid",
-         "title": "Virtual Machine Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id",
-        "virtual_machine_id"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "attachments": [
-         {
-          "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-         }
-        ],
-        "created_at": "2022-01-01T00:00:00Z",
-        "description": "volume description",
-        "error": "some error description or null",
-        "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-        "name": "volume name",
-        "size": 10,
-        "status": "in-use",
-        "updated_at": "2022-01-01T00:00:00Z",
-        "volume_id": "9f2310ac-1944-41e8-85ff-b5671b00c820",
-        "volume_type": {
-         "name": "rbd",
-         "sku": "sku1234"
-        }
-       },
-       "properties": {
-        "attachments": {
-         "items": {
-          "example": {
-           "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-          },
-          "properties": {
-           "virtual_machine_id": {
-            "format": "uuid",
-            "magalu.cloud/core/resolved": "true",
-            "title": "Virtual Machine Id",
-            "type": "string"
-           }
-          },
-          "required": [
-           "virtual_machine_id"
-          ],
-          "title": "AttachmentResponse",
-          "type": "object"
-         },
-         "title": "Attachments",
-         "type": "array"
-        },
-        "created_at": {
-         "format": "date-time",
-         "title": "Created At",
-         "type": "string"
-        },
-        "description": {
-         "title": "Description",
-         "type": "string"
-        },
-        "error": {
-         "title": "Error",
-         "type": "string"
-        },
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "size": {
-         "description": "Gibibytes (GiB)",
-         "title": "Size",
-         "type": "integer"
-        },
-        "status": {
-         "title": "Status",
-         "type": "string"
-        },
-        "updated_at": {
-         "format": "date-time",
-         "title": "Updated At",
-         "type": "string"
-        },
-        "volume_id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "volume_type": {
-         "example": {
-          "description": "volume type description",
-          "name": "rbd",
-          "sku": "sku1234"
-         },
-         "properties": {
-          "name": {
-           "title": "Name",
-           "type": "string"
-          },
-          "sku": {
-           "title": "Sku",
-           "type": "string"
-          }
-         },
-         "required": [
-          "name",
-          "sku"
-         ],
-         "title": "VolumeTypeResponseForVolume",
-         "type": "object"
-        }
-       },
-       "required": [
-        "id",
-        "volume_id",
-        "status",
-        "error",
-        "size",
-        "name",
-        "volume_type",
-        "description",
-        "created_at",
-        "updated_at"
-       ],
-       "title": "VolumeResponse",
-       "type": "object"
-      },
-      "version": "1.52.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "magalu.cloud/core/resolved": "true",
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Get a Block Storage volume details",
+      "description": "Retrieve details of a Snapshot for the currently authenticated tenant.\n\n#### Notes\n- Use the **expand** argument to obtain additional details about the Volume\n used to create the Snapshot.\n- Utilize the **block-storage snapshots list** command to retrieve a list of\n all Snapshots and obtain the ID of the Snapshot for which you want to retrieve\n details.",
       "isInternal": false,
       "name": "get",
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "expand": {
+         "default": [],
+         "items": {
+          "enum": [
+           "volume"
+          ],
+          "title": "ExpandSnapshots",
+          "type": "string"
+         },
+         "title": "Expand",
+         "type": "array"
+        },
         "id": {
-         "description": "id",
          "format": "uuid",
-         "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         }
        },
@@ -1526,63 +687,39 @@
       },
       "result": {
        "example": {
-        "attachments": [
-         {
-          "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-         }
-        ],
-        "created_at": "2022-01-01T00:00:00Z",
-        "description": "volume description",
-        "error": "some error description or null",
-        "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-        "name": "volume name",
+        "created_at": "2022-01-01T00:00:10Z",
+        "description": "my snapshot for testing",
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        "name": "My snapshot",
         "size": 10,
-        "status": "in-use",
-        "updated_at": "2022-01-01T00:00:00Z",
-        "volume_id": "9f2310ac-1944-41e8-85ff-b5671b00c820",
-        "volume_type": {
-         "name": "rbd",
-         "sku": "sku1234"
+        "state": "available",
+        "status": "completed",
+        "updated_at": "2022-01-01T00:00:10Z",
+        "volume": {
+         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
         }
        },
        "properties": {
-        "attachments": {
-         "items": {
-          "example": {
-           "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-          },
-          "properties": {
-           "virtual_machine_id": {
-            "format": "uuid",
-            "magalu.cloud/core/resolved": "true",
-            "title": "Virtual Machine Id",
-            "type": "string"
-           }
-          },
-          "required": [
-           "virtual_machine_id"
-          ],
-          "title": "AttachmentResponse",
-          "type": "object"
-         },
-         "title": "Attachments",
-         "type": "array"
-        },
         "created_at": {
-         "format": "date-time",
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "format": "date-time",
+           "type": "string"
+          }
+         ],
+         "example": "2022-01-01T00:00:10Z",
          "title": "Created At",
          "type": "string"
         },
         "description": {
+         "nullable": true,
          "title": "Description",
          "type": "string"
         },
-        "error": {
-         "title": "Error",
-         "type": "string"
-        },
         "id": {
-         "format": "uuid",
          "title": "Id",
          "type": "string"
         },
@@ -1591,64 +728,140 @@
          "type": "string"
         },
         "size": {
-         "description": "Gibibytes (GiB)",
          "title": "Size",
          "type": "integer"
         },
+        "state": {
+         "enum": [
+          "new",
+          "available",
+          "deleted"
+         ],
+         "title": "SnapshotStateV1",
+         "type": "string"
+        },
         "status": {
-         "title": "Status",
+         "enum": [
+          "provisioning",
+          "creating",
+          "creating_error",
+          "creating_error_quota",
+          "completed",
+          "deleting",
+          "deleted",
+          "deleted_error"
+         ],
+         "title": "SnapshotStatusV1",
          "type": "string"
         },
         "updated_at": {
-         "format": "date-time",
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "format": "date-time",
+           "type": "string"
+          }
+         ],
+         "example": "2022-01-01T00:00:10Z",
          "title": "Updated At",
          "type": "string"
         },
-        "volume_id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
-        "volume_type": {
-         "example": {
-          "description": "volume type description",
-          "name": "rbd",
-          "sku": "sku1234"
-         },
-         "properties": {
-          "name": {
-           "title": "Name",
-           "type": "string"
+        "volume": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "IdResponse",
+           "type": "object"
           },
-          "sku": {
-           "title": "Sku",
-           "type": "string"
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "name": "My volume",
+            "size": 10,
+            "type": {
+             "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+             "name": "My volume type"
+            }
+           },
+           "properties": {
+            "id": {
+             "title": "Id",
+             "type": "string"
+            },
+            "name": {
+             "title": "Name",
+             "type": "string"
+            },
+            "size": {
+             "title": "Size",
+             "type": "integer"
+            },
+            "type": {
+             "example": {
+              "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+              "name": "My volume type"
+             },
+             "properties": {
+              "id": {
+               "title": "Id",
+               "type": "string"
+              },
+              "name": {
+               "title": "Name",
+               "type": "string"
+              }
+             },
+             "required": [
+              "id",
+              "name"
+             ],
+             "title": "SnapshotVolumeType",
+             "type": "object"
+            }
+           },
+           "required": [
+            "id",
+            "name",
+            "size",
+            "type"
+           ],
+           "title": "SnapshotVolume",
+           "type": "object"
           }
-         },
-         "required": [
-          "name",
-          "sku"
          ],
-         "title": "VolumeTypeResponseForVolume",
+         "title": "Volume",
          "type": "object"
         }
        },
        "required": [
         "id",
-        "volume_id",
-        "status",
-        "error",
-        "size",
         "name",
-        "volume_type",
+        "size",
         "description",
+        "state",
+        "status",
         "created_at",
-        "updated_at"
+        "updated_at",
+        "volume"
        ],
-       "title": "VolumeResponse",
+       "title": "SnapshotResponse",
        "type": "object"
       },
-      "version": "1.52.0"
+      "version": "v1"
      },
      {
       "configs": {
@@ -1680,99 +893,101 @@
        },
        "type": "object"
       },
-      "description": "List all Block Storage volumes",
+      "description": "Retrieve a list of Snapshots for the currently authenticated tenant.\n\n#### Notes\n- Use the expand argument to obtain additional details about the Volume used to\n create each Snapshot.",
       "isInternal": false,
       "name": "list",
       "parameters": {
        "additionalProperties": false,
+       "properties": {
+        "_limit": {
+         "default": 50,
+         "exclusiveMinimum": true,
+         "minimum": 0,
+         "title": " Limit",
+         "type": "integer"
+        },
+        "_offset": {
+         "default": 0,
+         "minimum": 0,
+         "title": " Offset",
+         "type": "integer"
+        },
+        "_sort": {
+         "default": "created_at:asc",
+         "pattern": "^(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
+         "title": " Sort",
+         "type": "string"
+        },
+        "expand": {
+         "default": [],
+         "items": {
+          "enum": [
+           "volume"
+          ],
+          "title": "ExpandSnapshots",
+          "type": "string"
+         },
+         "title": "Expand",
+         "type": "array"
+        }
+       },
        "type": "object"
       },
       "result": {
        "example": {
-        "volumes": [
+        "snapshots": [
          {
-          "attachments": [
-           {
-            "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-           }
-          ],
-          "created_at": "2022-01-01T00:00:00Z",
-          "description": "volume description",
-          "error": "some error description or null",
-          "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-          "name": "volume name",
+          "created_at": "2022-01-01T00:00:10Z",
+          "description": "my snapshot for testing",
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "name": "My snapshot",
           "size": 10,
-          "status": "in-use",
-          "updated_at": "2022-01-01T00:00:00Z",
-          "volume_id": "9f2310ac-1944-41e8-85ff-b5671b00c820",
-          "volume_type": {
-           "name": "rbd",
-           "sku": "sku1234"
+          "state": "available",
+          "status": "completed",
+          "updated_at": "2022-01-01T00:00:10Z",
+          "volume": {
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
           }
          }
         ]
        },
        "properties": {
-        "volumes": {
+        "snapshots": {
          "items": {
           "example": {
-           "attachments": [
-            {
-             "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-            }
-           ],
-           "created_at": "2022-01-01T00:00:00Z",
-           "description": "volume description",
-           "error": "some error description or null",
-           "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-           "name": "volume name",
+           "created_at": "2022-01-01T00:00:10Z",
+           "description": "my snapshot for testing",
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "name": "My snapshot",
            "size": 10,
-           "status": "in-use",
-           "updated_at": "2022-01-01T00:00:00Z",
-           "volume_id": "9f2310ac-1944-41e8-85ff-b5671b00c820",
-           "volume_type": {
-            "name": "rbd",
-            "sku": "sku1234"
+           "state": "available",
+           "status": "completed",
+           "updated_at": "2022-01-01T00:00:10Z",
+           "volume": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
            }
           },
           "properties": {
-           "attachments": {
-            "items": {
-             "example": {
-              "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-             },
-             "properties": {
-              "virtual_machine_id": {
-               "format": "uuid",
-               "magalu.cloud/core/resolved": "true",
-               "title": "Virtual Machine Id",
-               "type": "string"
-              }
-             },
-             "required": [
-              "virtual_machine_id"
-             ],
-             "title": "AttachmentResponse",
-             "type": "object"
-            },
-            "title": "Attachments",
-            "type": "array"
-           },
            "created_at": {
-            "format": "date-time",
+            "anyOf": [
+             {
+              "type": "string"
+             },
+             {
+              "format": "date-time",
+              "type": "string"
+             }
+            ],
+            "example": "2022-01-01T00:00:10Z",
             "title": "Created At",
             "type": "string"
            },
            "description": {
+            "nullable": true,
             "title": "Description",
             "type": "string"
            },
-           "error": {
-            "title": "Error",
-            "type": "string"
-           },
            "id": {
-            "format": "uuid",
             "title": "Id",
             "type": "string"
            },
@@ -1781,74 +996,150 @@
             "type": "string"
            },
            "size": {
-            "description": "Gibibytes (GiB)",
             "title": "Size",
             "type": "integer"
            },
+           "state": {
+            "enum": [
+             "new",
+             "available",
+             "deleted"
+            ],
+            "title": "SnapshotStateV1",
+            "type": "string"
+           },
            "status": {
-            "title": "Status",
+            "enum": [
+             "provisioning",
+             "creating",
+             "creating_error",
+             "creating_error_quota",
+             "completed",
+             "deleting",
+             "deleted",
+             "deleted_error"
+            ],
+            "title": "SnapshotStatusV1",
             "type": "string"
            },
            "updated_at": {
-            "format": "date-time",
+            "anyOf": [
+             {
+              "type": "string"
+             },
+             {
+              "format": "date-time",
+              "type": "string"
+             }
+            ],
+            "example": "2022-01-01T00:00:10Z",
             "title": "Updated At",
             "type": "string"
            },
-           "volume_id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-           },
-           "volume_type": {
-            "example": {
-             "description": "volume type description",
-             "name": "rbd",
-             "sku": "sku1234"
-            },
-            "properties": {
-             "name": {
-              "title": "Name",
-              "type": "string"
+           "volume": {
+            "anyOf": [
+             {
+              "example": {
+               "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              },
+              "properties": {
+               "id": {
+                "minLength": 1,
+                "title": "Id",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id"
+              ],
+              "title": "IdResponse",
+              "type": "object"
              },
-             "sku": {
-              "title": "Sku",
-              "type": "string"
+             {
+              "example": {
+               "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+               "name": "My volume",
+               "size": 10,
+               "type": {
+                "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                "name": "My volume type"
+               }
+              },
+              "properties": {
+               "id": {
+                "title": "Id",
+                "type": "string"
+               },
+               "name": {
+                "title": "Name",
+                "type": "string"
+               },
+               "size": {
+                "title": "Size",
+                "type": "integer"
+               },
+               "type": {
+                "example": {
+                 "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                 "name": "My volume type"
+                },
+                "properties": {
+                 "id": {
+                  "title": "Id",
+                  "type": "string"
+                 },
+                 "name": {
+                  "title": "Name",
+                  "type": "string"
+                 }
+                },
+                "required": [
+                 "id",
+                 "name"
+                ],
+                "title": "SnapshotVolumeType",
+                "type": "object"
+               }
+              },
+              "required": [
+               "id",
+               "name",
+               "size",
+               "type"
+              ],
+              "title": "SnapshotVolume",
+              "type": "object"
              }
-            },
-            "required": [
-             "name",
-             "sku"
             ],
-            "title": "VolumeTypeResponseForVolume",
+            "title": "Volume",
             "type": "object"
            }
           },
           "required": [
            "id",
-           "volume_id",
-           "status",
-           "error",
-           "size",
            "name",
-           "volume_type",
+           "size",
            "description",
+           "state",
+           "status",
            "created_at",
-           "updated_at"
+           "updated_at",
+           "volume"
           ],
-          "title": "VolumeResponse",
+          "title": "SnapshotResponse",
           "type": "object"
          },
-         "title": "Volumes",
+         "title": "Snapshots",
          "type": "array"
         }
        },
        "required": [
-        "volumes"
+        "snapshots"
        ],
-       "title": "VolumeListResponse",
+       "title": "SnapshotListResponse",
        "type": "object"
       },
-      "version": "1.52.0"
+      "version": "v1"
      },
      {
       "configs": {
@@ -1880,19 +1171,20 @@
        },
        "type": "object"
       },
-      "description": "Update a Block Storage volume",
+      "description": "Rename a Snapshot for the currently authenticated tenant.\n\n#### Rules\n- The Snapshot name must be unique; otherwise, renaming will not be allowed.\n\n#### Notes\n- Utilize the **block-storage snapshots list** command to retrieve a list of\n all Snapshots and obtain the ID of the Snapshot you wish to rename.",
       "isInternal": false,
-      "name": "update",
+      "name": "rename",
       "parameters": {
        "additionalProperties": false,
        "properties": {
         "id": {
-         "description": "id",
          "format": "uuid",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "name": {
+         "maxLength": 255,
+         "minLength": 1,
          "title": "Name",
          "type": "string"
         }
@@ -1904,136 +1196,87 @@
        "type": "object"
       },
       "result": {
-       "example": {
-        "attachments": [
-         {
-          "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-         }
-        ],
-        "created_at": "2022-01-01T00:00:00Z",
-        "description": "volume description",
-        "error": "some error description or null",
-        "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-        "name": "volume name",
-        "size": 10,
-        "status": "in-use",
-        "updated_at": "2022-01-01T00:00:00Z",
-        "volume_id": "9f2310ac-1944-41e8-85ff-b5671b00c820",
-        "volume_type": {
-         "name": "rbd",
-         "sku": "sku1234"
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "v1"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
         }
        },
+       "type": "object"
+      },
+      "description": "Asynchronously restore a Snapshot on a new Volume to the currently\n authenticated tenant.\n\nThe restored Volume can be used when it reaches the \"available\" state and the\n \"completed\" status.\n\n#### Notes\n- To obtain the ID of the Snapshot you wish to restore, you can use the\n **block-storage snapshots list** command to list all Snapshots.\n- Check the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.",
+      "isInternal": false,
+      "name": "restore",
+      "parameters": {
+       "additionalProperties": false,
        "properties": {
-        "attachments": {
-         "items": {
-          "example": {
-           "virtual_machine_id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-          },
-          "properties": {
-           "virtual_machine_id": {
-            "format": "uuid",
-            "magalu.cloud/core/resolved": "true",
-            "title": "Virtual Machine Id",
-            "type": "string"
-           }
-          },
-          "required": [
-           "virtual_machine_id"
-          ],
-          "title": "AttachmentResponse",
-          "type": "object"
-         },
-         "title": "Attachments",
-         "type": "array"
-        },
-        "created_at": {
-         "format": "date-time",
-         "title": "Created At",
-         "type": "string"
-        },
-        "description": {
-         "title": "Description",
-         "type": "string"
-        },
-        "error": {
-         "title": "Error",
-         "type": "string"
-        },
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        },
         "name": {
          "title": "Name",
          "type": "string"
         },
-        "size": {
-         "description": "Gibibytes (GiB)",
-         "title": "Size",
-         "type": "integer"
-        },
-        "status": {
-         "title": "Status",
-         "type": "string"
-        },
-        "updated_at": {
-         "format": "date-time",
-         "title": "Updated At",
-         "type": "string"
-        },
-        "volume_id": {
+        "snapshot_id": {
          "format": "uuid",
-         "title": "Id",
+         "title": "Snapshot Id",
          "type": "string"
-        },
-        "volume_type": {
-         "example": {
-          "description": "volume type description",
-          "name": "rbd",
-          "sku": "sku1234"
-         },
-         "properties": {
-          "name": {
-           "title": "Name",
-           "type": "string"
-          },
-          "sku": {
-           "title": "Sku",
-           "type": "string"
-          }
-         },
-         "required": [
-          "name",
-          "sku"
-         ],
-         "title": "VolumeTypeResponseForVolume",
-         "type": "object"
         }
        },
        "required": [
-        "id",
-        "volume_id",
-        "status",
-        "error",
-        "size",
         "name",
-        "volume_type",
-        "description",
-        "created_at",
-        "updated_at"
+        "snapshot_id"
        ],
-       "title": "VolumeResponse",
        "type": "object"
       },
-      "version": "1.52.0"
+      "result": {
+       "example": {
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+       },
+       "properties": {
+        "id": {
+         "minLength": 1,
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "title": "IdResponse",
+       "type": "object"
+      },
+      "version": "v1"
      }
     ],
-    "description": "Block Storage Volume Resources",
+    "description": "Operations with snapshots for volumes.",
     "isInternal": false,
-    "name": "volume",
-    "version": "1.52.0"
+    "name": "snapshots",
+    "version": "v1"
    },
    {
     "children": [
@@ -2075,10 +1318,9 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "block_storage_id": {
-         "description": "id",
          "format": "uuid",
          "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "virtual_machine_id": {
@@ -2094,10 +1336,9 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "block_storage_id": {
-         "description": "id",
          "format": "uuid",
          "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "virtual_machine_id": {
@@ -2149,10 +1390,9 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "block_storage_id": {
-         "description": "id",
          "format": "uuid",
          "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "virtual_machine_id": {
@@ -2168,10 +1408,9 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "block_storage_id": {
-         "description": "id",
          "format": "uuid",
          "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "virtual_machine_id": {
@@ -2223,10 +1462,9 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "block_storage_id": {
-         "description": "id",
          "format": "uuid",
          "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "virtual_machine_id": {
@@ -2242,10 +1480,9 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "block_storage_id": {
-         "description": "id",
          "format": "uuid",
          "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "virtual_machine_id": {
@@ -2297,10 +1534,9 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "block_storage_id": {
-         "description": "id",
          "format": "uuid",
          "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "virtual_machine_id": {
@@ -2316,10 +1552,9 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "block_storage_id": {
-         "description": "id",
          "format": "uuid",
          "magalu.cloud/core/resolved": "true",
-         "title": "Volume Id",
+         "title": "Id",
          "type": "string"
         },
         "virtual_machine_id": {
@@ -2371,82 +1606,7 @@
        },
        "type": "object"
       },
-      "description": "Create volume type only in DB",
-      "isInternal": false,
-      "name": "create",
-      "parameters": {
-       "additionalProperties": false,
-       "properties": {
-        "internal": {
-         "title": "Internal",
-         "type": "boolean"
-        },
-        "name": {
-         "title": "Name",
-         "type": "string"
-        },
-        "sku": {
-         "title": "Sku",
-         "type": "string"
-        }
-       },
-       "required": [
-        "internal",
-        "name",
-        "sku"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "example": {
-        "id": "9f1732cc-a2c9-4471-af68-479adf91e49b"
-       },
-       "properties": {
-        "id": {
-         "format": "uuid",
-         "title": "Id",
-         "type": "string"
-        }
-       },
-       "required": [
-        "id"
-       ],
-       "title": "IdResponse",
-       "type": "object"
-      },
-      "version": "1.52.0"
-     },
-     {
-      "configs": {
-       "additionalProperties": false,
-       "properties": {
-        "env": {
-         "default": "prod",
-         "description": "Environment to use",
-         "enum": [
-          "prod",
-          "pre-prod"
-         ],
-         "type": "string"
-        },
-        "region": {
-         "default": "br-ne1",
-         "description": "Region to reach the service",
-         "enum": [
-          "br-ne1",
-          "br-se1"
-         ],
-         "type": "string"
-        },
-        "serverUrl": {
-         "description": "Manually specify the server to use",
-         "format": "uri",
-         "type": "string"
-        }
-       },
-       "type": "object"
-      },
-      "description": "Returns a list of volume types",
+      "description": "List Volume Types allowed in the current region.\n\n#### Notes\n\n- Volume types are managed internally. If you wish to use a Volume Type that\n is not yet available, please contact our support team for assistance.",
       "isInternal": false,
       "name": "list",
       "parameters": {
@@ -2457,17 +1617,14 @@
        "example": {
         "types": [
          {
-          "description": "volume type description",
-          "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-          "name": "rbd",
-          "qos_specs": {
-           "consumer": "front-end",
-           "name": "teste-qos-high-iops",
-           "specs": {
-            "total_iops_sec": "1000"
-           }
+          "disk_type": "nvme",
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "iops": {
+           "read": 1000,
+           "write": 1000
           },
-          "sku": "sku1234"
+          "name": "my_volume_type",
+          "status": "active"
          }
         ]
        },
@@ -2475,62 +1632,66 @@
         "types": {
          "items": {
           "example": {
-           "description": "volume type description",
-           "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-           "name": "rbd",
-           "qos_specs": {
-            "consumer": "front-end",
-            "name": "teste-qos-high-iops",
-            "specs": {
-             "total_iops_sec": "1000"
-            }
+           "disk_type": "nvme",
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "iops": {
+            "read": 1000,
+            "write": 1000
            },
-           "sku": "sku1234"
+           "name": "my_volume_type",
+           "status": "active"
           },
           "properties": {
-           "description": {
-            "title": "Description",
+           "disk_type": {
+            "enum": [
+             "nvme",
+             "hdd"
+            ],
+            "title": "DiskType",
             "type": "string"
            },
            "id": {
-            "format": "uuid",
             "title": "Id",
             "type": "string"
+           },
+           "iops": {
+            "properties": {
+             "read": {
+              "title": "Read",
+              "type": "integer"
+             },
+             "write": {
+              "title": "Write",
+              "type": "integer"
+             }
+            },
+            "required": [
+             "read",
+             "write"
+            ],
+            "title": "VolumeTypeSpec",
+            "type": "object"
            },
            "name": {
             "title": "Name",
             "type": "string"
            },
-           "qos_specs": {
-            "properties": {
-             "consumer": {
-              "title": "Consumer",
-              "type": "string"
-             },
-             "name": {
-              "title": "Name",
-              "type": "string"
-             },
-             "specs": {
-              "title": "Specs"
-             }
-            },
-            "required": [
-             "name",
-             "consumer"
+           "status": {
+            "enum": [
+             "active",
+             "deprecated",
+             "deleted"
             ],
-            "title": "QosSpecs",
-            "type": "object"
-           },
-           "sku": {
-            "title": "Sku",
+            "title": "VolumeTypeStatus",
             "type": "string"
            }
           },
           "required": [
+           "iops",
            "id",
            "name",
-           "sku"
+           "disk_type",
+           "status"
           ],
           "title": "VolumeTypeResponse",
           "type": "object"
@@ -2542,10 +1703,79 @@
        "required": [
         "types"
        ],
-       "title": "VolumeTypeList",
+       "title": "GenericVolumeTypeList[VolumeTypeResponse]",
        "type": "object"
       },
-      "version": "1.52.0"
+      "version": "v1"
+     }
+    ],
+    "description": "Operations with volume types for volumes.",
+    "isInternal": false,
+    "name": "volume-types",
+    "version": "v1"
+   },
+   {
+    "children": [
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Asynchronously attach a Volume to a Virtual Machine instance for the currently\n authenticated tenant.\n\nThe Volume attachment will be completed when the volume status returns to\n\"completed\", and the state becomes \"in-use\".\n\n#### Rules\n- The Volume and the Virtual Machine must belong to the same tenant.\n- Both the Volume and Virtual Machine must have the status \"completed\".\n- The Volume's state must be \"available\".\n- The Virtual Machine's state must be \"stopped\" or \"running\".\n\n#### Notes\n- Verify the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.\n- Verify the state and status of your Virtual Machine using the\n**virtual-machine instances get --id [uuid]** command\".",
+      "isInternal": false,
+      "name": "attach",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "magalu.cloud/core/resolved": "true",
+         "title": "Id",
+         "type": "string"
+        },
+        "virtual_machine_id": {
+         "format": "uuid",
+         "magalu.cloud/core/resolved": "true",
+         "title": "Virtual Machine Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "virtual_machine_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "v1"
      },
      {
       "configs": {
@@ -2577,78 +1807,1097 @@
        },
        "type": "object"
       },
-      "description": "Returns a list of all volume types from db",
-      "isInternal": true,
-      "name": "list-all",
+      "description": "Asynchronously create a Volume for the currently authenticated tenant.\n\nThe Volume can be used when it reaches the \"available\" state and \"completed\"\n status.\n\n#### Rules\n- The Volume name must be unique; otherwise, the creation will be disallowed.\n- The Volume type must be available to use.\n\n#### Notes\n- Utilize the **block-storage volume-types list** command to retrieve a list\n of all available Volume Types.\n- Verify the state and status of your Volume using the\n**block-storage volume get --id [uuid]** command\".",
+      "isInternal": false,
+      "name": "create",
       "parameters": {
        "additionalProperties": false,
+       "properties": {
+        "name": {
+         "maxLength": 255,
+         "minLength": 1,
+         "title": "Name",
+         "type": "string"
+        },
+        "size": {
+         "description": "Gibibytes (GiB)",
+         "maximum": 2147483648,
+         "minimum": 1,
+         "title": "Size",
+         "type": "integer"
+        },
+        "type": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "IdRequest",
+           "type": "object"
+          },
+          {
+           "example": {
+            "name": "some_resource_name"
+           },
+           "properties": {
+            "name": {
+             "maxLength": 255,
+             "minLength": 1,
+             "title": "Name",
+             "type": "string"
+            }
+           },
+           "required": [
+            "name"
+           ],
+           "title": "Name",
+           "type": "object"
+          }
+         ],
+         "title": "Type",
+         "type": "object"
+        }
+       },
+       "required": [
+        "name",
+        "size",
+        "type"
+       ],
        "type": "object"
       },
       "result": {
        "example": {
-        "types": [
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+       },
+       "properties": {
+        "id": {
+         "minLength": 1,
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "title": "IdResponse",
+       "type": "object"
+      },
+      "version": "v1"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Asynchronously delete a Volume for the currently authenticated tenant.\n\n#### Rules\n- The Volume cannot be attached to a Virtual Machine, i.e., its state cannot\n be \"in-use\". If necessary, detach the Volume from the Virtual Machine before\n proceeding with deletion.\n- The Volume must not have any snapshots. If necessary, delete the Volume's\n  snapshots before proceeding with deletion.\n- The volume must have the status \"completed\", i.e., must not have any\n  actions in progress.\n\n\n#### Notes\n- Check the state and status of your Volume using the\n**block-storage volume get --id [uuid]** command\".",
+      "isInternal": false,
+      "name": "delete",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "v1"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Asynchronously detach a Volume from a Virtual Machine instance for the\n currently authenticated tenant.\n\nThe Volume detachment will be completed when the volume state returns to\n \"available,\" and the status becomes \"completed\".\n\n#### Rules\n- The Volume and the Virtual Machine must belong to the same tenant.\n- Both the Volume and Virtual Machine must have the status \"completed\".\n- The Volume's state must be \"in-use\".\n- The Virtual Machine's state must be \"stopped\".\n\n#### Notes\n- Verify the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.\n- Verify the state and status of your Virtual Machine using the\n **virtual-machine instances get --id [uuid]** command.\n- Ensure that any file systems on the device within your operating system are\n unmounted before detaching the volume.\n\n#### Troubleshooting\n- A failure during detachment can result in the volume becoming stuck in the\n busy state. If this occurs, detachment may be delayed indefinitely until you\n unmount the volume, force detachment, reboot the instance, or perform all\n three.",
+      "isInternal": false,
+      "name": "detach",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        },
+        "virtual_machine_id": {
+         "format": "uuid",
+         "title": "Virtual Machine Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "virtual_machine_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "v1"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Asynchronously extend the size of an existing Volume for the currently\n authenticated tenant.\n\nThe Volume extension will be completed when the Volume status returns to\n \"completed\".\n\n#### Rules\n- The Volume status must be \"available\".\n- The Volume status must be \"completed\" or \"extend_error\".\n- The new Volume size must be larger than the current size.\n\n#### Notes\n- Utilize the block-storage volume list command to retrieve a list of all\n Volumes and obtain the ID of the volume you want to extend.\n- Storage quotas are managed internally. If the operation fails due to quota\n restrictions, please contact our support team for assistance.",
+      "isInternal": false,
+      "name": "extend",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        },
+        "size": {
+         "description": "New volume size in GB",
+         "exclusiveMinimum": true,
+         "minimum": 0,
+         "title": "Size",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "id",
+        "size"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "v1"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Retrieve details of a Volume for the currently authenticated tenant.\n\n#### Notes\n- Use the **expand** argument to obtain additional details about the Volume\n Type.\n- Utilize the **block-storage volume list** command to retrieve a list of all\n Volumes and obtain the ID of the Volume for which you want to retrieve\n details.",
+      "isInternal": false,
+      "name": "get",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "expand": {
+         "default": [],
+         "description": "You can get more detailed info about: ['volume_type']",
+         "items": {
+          "type": "string"
+         },
+         "title": "Expand",
+         "type": "array"
+        },
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "created_at": "2022-01-01T00:00:10Z",
+        "error": {
+         "message": "You have reached the limit of allowed disks. Please, remove unused disks or contact support to increase your quota.",
+         "slug": "creating_error_quota"
+        },
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        "name": "volume name",
+        "size": 10,
+        "state": "available",
+        "status": "completed",
+        "type": {
+         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        },
+        "updated_at": "2022-01-01T00:00:10Z"
+       },
+       "properties": {
+        "attachment": {
+         "properties": {
+          "attached_at": {
+           "anyOf": [
+            {
+             "type": "string"
+            },
+            {
+             "format": "date-time",
+             "type": "string"
+            }
+           ],
+           "example": "2022-01-01T00:00:10Z",
+           "title": "Attached At",
+           "type": "string"
+          },
+          "machine_id": {
+           "title": "Machine Id",
+           "type": "string"
+          }
+         },
+         "required": [
+          "machine_id",
+          "attached_at"
+         ],
+         "title": "AttachmentResponse",
+         "type": "object"
+        },
+        "created_at": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "format": "date-time",
+           "type": "string"
+          }
+         ],
+         "example": "2022-01-01T00:00:10Z",
+         "title": "Created At",
+         "type": "string"
+        },
+        "error": {
+         "example": {
+          "message": "Unauthorized",
+          "slug": "Unauthorized"
+         },
+         "properties": {
+          "message": {
+           "title": "Message",
+           "type": "string"
+          },
+          "slug": {
+           "title": "Slug",
+           "type": "string"
+          }
+         },
+         "required": [
+          "slug",
+          "message"
+         ],
+         "title": "VolumeResponseError",
+         "type": "object"
+        },
+        "id": {
+         "title": "Id",
+         "type": "string"
+        },
+        "name": {
+         "title": "Name",
+         "type": "string"
+        },
+        "size": {
+         "title": "Size",
+         "type": "integer"
+        },
+        "state": {
+         "enum": [
+          "new",
+          "available",
+          "in-use",
+          "deleted",
+          "legacy"
+         ],
+         "title": "VolumeStateV1",
+         "type": "string"
+        },
+        "status": {
+         "enum": [
+          "provisioning",
+          "creating",
+          "creating_error",
+          "creating_error_quota",
+          "completed",
+          "extend_pending",
+          "extending",
+          "extend_error",
+          "extend_quota",
+          "attaching_pending",
+          "attaching_error",
+          "attaching",
+          "in_use",
+          "detaching_pending",
+          "detaching_error",
+          "detaching",
+          "retype_pending",
+          "retyping",
+          "retype_error",
+          "retype_error_quota",
+          "deleting_pending",
+          "deleting",
+          "deleted",
+          "deleted_error"
+         ],
+         "title": "VolumeStatusV1",
+         "type": "string"
+        },
+        "type": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "IdRequest",
+           "type": "object"
+          },
+          {
+           "example": {
+            "disk_type": "nvme",
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "iops": {
+             "read": 1000,
+             "write": 1000
+            },
+            "name": "my_volume_type",
+            "status": "active"
+           },
+           "properties": {
+            "disk_type": {
+             "enum": [
+              "nvme",
+              "hdd"
+             ],
+             "title": "DiskType",
+             "type": "string"
+            },
+            "id": {
+             "title": "Id",
+             "type": "string"
+            },
+            "iops": {
+             "properties": {
+              "read": {
+               "title": "Read",
+               "type": "integer"
+              },
+              "write": {
+               "title": "Write",
+               "type": "integer"
+              }
+             },
+             "required": [
+              "read",
+              "write"
+             ],
+             "title": "VolumeTypeSpec",
+             "type": "object"
+            },
+            "name": {
+             "title": "Name",
+             "type": "string"
+            },
+            "status": {
+             "enum": [
+              "active",
+              "deprecated",
+              "deleted"
+             ],
+             "title": "VolumeTypeStatus",
+             "type": "string"
+            }
+           },
+           "required": [
+            "iops",
+            "id",
+            "name",
+            "disk_type",
+            "status"
+           ],
+           "title": "VolumeTypeResponse",
+           "type": "object"
+          }
+         ],
+         "title": "Type",
+         "type": "object"
+        },
+        "updated_at": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "format": "date-time",
+           "type": "string"
+          }
+         ],
+         "example": "2022-01-01T00:00:10Z",
+         "title": "Updated At",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "name",
+        "size",
+        "status",
+        "state",
+        "created_at",
+        "updated_at",
+        "type"
+       ],
+       "title": "VolumeResponseV1",
+       "type": "object"
+      },
+      "version": "v1"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Retrieve a list of Volumes for the currently authenticated tenant.\n\n#### Notes\n- Use the expand argument to obtain additional details about the Volume Type.",
+      "isInternal": false,
+      "name": "list",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "_limit": {
+         "default": 50,
+         "exclusiveMinimum": true,
+         "minimum": 0,
+         "title": " Limit",
+         "type": "integer"
+        },
+        "_offset": {
+         "default": 0,
+         "minimum": 0,
+         "title": " Offset",
+         "type": "integer"
+        },
+        "_sort": {
+         "default": "created_at:asc",
+         "pattern": "^(^[\\w-]+:(asc|desc)(,[\\w-]+:(asc|desc))*)?$",
+         "title": " Sort",
+         "type": "string"
+        },
+        "expand": {
+         "default": [],
+         "description": "You can get more detailed info about: ['volume_type']",
+         "items": {
+          "type": "string"
+         },
+         "title": "Expand",
+         "type": "array"
+        }
+       },
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "volumes": [
          {
-          "id": "9f1732cc-a2c9-4471-af68-479adf91e49b",
-          "internal": true,
-          "name": "some_name",
-          "sku": "sku1234"
+          "created_at": "2022-01-01T00:00:10Z",
+          "error": {
+           "message": "You have reached the limit of allowed disks. Please, remove unused disks or contact support to increase your quota.",
+           "slug": "creating_error_quota"
+          },
+          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "name": "volume name",
+          "size": 10,
+          "state": "available",
+          "status": "completed",
+          "type": {
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          },
+          "updated_at": "2022-01-01T00:00:10Z"
          }
         ]
        },
        "properties": {
-        "types": {
+        "volumes": {
          "items": {
+          "example": {
+           "created_at": "2022-01-01T00:00:10Z",
+           "error": {
+            "message": "You have reached the limit of allowed disks. Please, remove unused disks or contact support to increase your quota.",
+            "slug": "creating_error_quota"
+           },
+           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+           "name": "volume name",
+           "size": 10,
+           "state": "available",
+           "status": "completed",
+           "type": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "updated_at": "2022-01-01T00:00:10Z"
+          },
           "properties": {
-           "id": {
-            "format": "uuid",
-            "title": "Id",
+           "attachment": {
+            "properties": {
+             "attached_at": {
+              "anyOf": [
+               {
+                "type": "string"
+               },
+               {
+                "format": "date-time",
+                "type": "string"
+               }
+              ],
+              "example": "2022-01-01T00:00:10Z",
+              "title": "Attached At",
+              "type": "string"
+             },
+             "machine_id": {
+              "title": "Machine Id",
+              "type": "string"
+             }
+            },
+            "required": [
+             "machine_id",
+             "attached_at"
+            ],
+            "title": "AttachmentResponse",
+            "type": "object"
+           },
+           "created_at": {
+            "anyOf": [
+             {
+              "type": "string"
+             },
+             {
+              "format": "date-time",
+              "type": "string"
+             }
+            ],
+            "example": "2022-01-01T00:00:10Z",
+            "title": "Created At",
             "type": "string"
            },
-           "internal": {
-            "title": "Internal",
-            "type": "boolean"
+           "error": {
+            "example": {
+             "message": "Unauthorized",
+             "slug": "Unauthorized"
+            },
+            "properties": {
+             "message": {
+              "title": "Message",
+              "type": "string"
+             },
+             "slug": {
+              "title": "Slug",
+              "type": "string"
+             }
+            },
+            "required": [
+             "slug",
+             "message"
+            ],
+            "title": "VolumeResponseError",
+            "type": "object"
+           },
+           "id": {
+            "title": "Id",
+            "type": "string"
            },
            "name": {
             "title": "Name",
             "type": "string"
            },
-           "sku": {
-            "title": "Sku",
+           "size": {
+            "title": "Size",
+            "type": "integer"
+           },
+           "state": {
+            "enum": [
+             "new",
+             "available",
+             "in-use",
+             "deleted",
+             "legacy"
+            ],
+            "title": "VolumeStateV1",
+            "type": "string"
+           },
+           "status": {
+            "enum": [
+             "provisioning",
+             "creating",
+             "creating_error",
+             "creating_error_quota",
+             "completed",
+             "extend_pending",
+             "extending",
+             "extend_error",
+             "extend_quota",
+             "attaching_pending",
+             "attaching_error",
+             "attaching",
+             "in_use",
+             "detaching_pending",
+             "detaching_error",
+             "detaching",
+             "retype_pending",
+             "retyping",
+             "retype_error",
+             "retype_error_quota",
+             "deleting_pending",
+             "deleting",
+             "deleted",
+             "deleted_error"
+            ],
+            "title": "VolumeStatusV1",
+            "type": "string"
+           },
+           "type": {
+            "anyOf": [
+             {
+              "example": {
+               "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              },
+              "properties": {
+               "id": {
+                "minLength": 1,
+                "title": "Id",
+                "type": "string"
+               }
+              },
+              "required": [
+               "id"
+              ],
+              "title": "IdRequest",
+              "type": "object"
+             },
+             {
+              "example": {
+               "disk_type": "nvme",
+               "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+               "iops": {
+                "read": 1000,
+                "write": 1000
+               },
+               "name": "my_volume_type",
+               "status": "active"
+              },
+              "properties": {
+               "disk_type": {
+                "enum": [
+                 "nvme",
+                 "hdd"
+                ],
+                "title": "DiskType",
+                "type": "string"
+               },
+               "id": {
+                "title": "Id",
+                "type": "string"
+               },
+               "iops": {
+                "properties": {
+                 "read": {
+                  "title": "Read",
+                  "type": "integer"
+                 },
+                 "write": {
+                  "title": "Write",
+                  "type": "integer"
+                 }
+                },
+                "required": [
+                 "read",
+                 "write"
+                ],
+                "title": "VolumeTypeSpec",
+                "type": "object"
+               },
+               "name": {
+                "title": "Name",
+                "type": "string"
+               },
+               "status": {
+                "enum": [
+                 "active",
+                 "deprecated",
+                 "deleted"
+                ],
+                "title": "VolumeTypeStatus",
+                "type": "string"
+               }
+              },
+              "required": [
+               "iops",
+               "id",
+               "name",
+               "disk_type",
+               "status"
+              ],
+              "title": "VolumeTypeResponse",
+              "type": "object"
+             }
+            ],
+            "title": "Type",
+            "type": "object"
+           },
+           "updated_at": {
+            "anyOf": [
+             {
+              "type": "string"
+             },
+             {
+              "format": "date-time",
+              "type": "string"
+             }
+            ],
+            "example": "2022-01-01T00:00:10Z",
+            "title": "Updated At",
             "type": "string"
            }
           },
           "required": [
            "id",
            "name",
-           "sku",
-           "internal"
+           "size",
+           "status",
+           "state",
+           "created_at",
+           "updated_at",
+           "type"
           ],
-          "title": "VolumeTypeDbResponse",
+          "title": "VolumeResponseV1",
           "type": "object"
          },
-         "title": "Types",
+         "title": "Volumes",
          "type": "array"
         }
        },
        "required": [
-        "types"
+        "volumes"
        ],
-       "title": "VolumeTypeDbListResponse",
+       "title": "VolumesResponseV1",
        "type": "object"
       },
-      "version": "1.52.0"
+      "version": "v1"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Rename a Volume for the currently authenticated tenant.\n\n#### Rules\n- The Volume name must be unique; otherwise, renaming will not be allowed.\n\n#### Notes\n- Utilize the **block-storage volume list** command to retrieve a list of all\n Volumes and obtain the ID of the Volume you wish to rename.",
+      "isInternal": false,
+      "name": "rename",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        },
+        "name": {
+         "maxLength": 255,
+         "minLength": 1,
+         "title": "Name",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "name"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "v1"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Asynchronously change the Volume Type of an existing Volume for the currently\n authenticated tenant.\n\nThe Volume retype will be completed when the Volume status returns to\n \"completed\".\n\n#### Rules\n- The Volume state must be \"available\".\n- The Volume status must be \"completed\" or \"retype_error\".\n- The new Volume Type must belong to the same region as the Volume.\n\n#### Notes\n- Utilize the **block-storage volume list** command to retrieve a list of all\n Volumes and obtain the ID of the Volume you want to retype.\n- Utilize the **block-storage volume-types list** command to retrieve a list of\n all Volume Types and obtain the ID of the Volume Type you want to use.",
+      "isInternal": false,
+      "name": "retype",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "id": {
+         "format": "uuid",
+         "title": "Id",
+         "type": "string"
+        },
+        "new_type": {
+         "anyOf": [
+          {
+           "example": {
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "id": {
+             "minLength": 1,
+             "title": "Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "id"
+           ],
+           "title": "IdRequest",
+           "type": "object"
+          },
+          {
+           "example": {
+            "name": "some_resource_name"
+           },
+           "properties": {
+            "name": {
+             "maxLength": 255,
+             "minLength": 1,
+             "title": "Name",
+             "type": "string"
+            }
+           },
+           "required": [
+            "name"
+           ],
+           "title": "Name",
+           "type": "object"
+          }
+         ],
+         "title": "New Type",
+         "type": "object"
+        }
+       },
+       "required": [
+        "id",
+        "new_type"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "nullable": true,
+       "type": "null"
+      },
+      "version": "v1"
      }
     ],
-    "description": "volume types",
+    "description": "Operations with volumes, including create, delete, extend, retype, list and other actions.",
     "isInternal": false,
-    "name": "volume-types",
-    "version": "1.52.0"
+    "name": "volumes",
+    "version": "v1"
    }
   ],
   "description": "Block Storage API Product Documentation",
   "isInternal": false,
   "name": "block-storage",
-  "version": "1.52.0"
+  "version": "v1"
  },
  {
   "children": [

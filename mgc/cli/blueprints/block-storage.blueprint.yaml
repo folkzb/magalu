@@ -9,13 +9,13 @@ components:
       type: object
       properties:
         block_storage_id:
-          $ref: /block-storage/volume/get/parametersSchema/properties/id
+          $ref: /block-storage/volumes/attach/parametersSchema/properties/id
         virtual_machine_id:
-          $ref: /block-storage/volume/get/resultSchema/properties/attachments/items/properties/virtual_machine_id
+          $ref: /block-storage/volumes/attach/parametersSchema/properties/virtual_machine_id
 
   configsSchemas:
     default:
-      $ref: /block-storage/volume/get/configsSchema
+      $ref: /block-storage/volumes/get/configsSchema
 
 children:
 - name: volume-attachment
@@ -35,7 +35,7 @@ children:
       $ref: blueprint#/components/schemas/VolumeAttachObject
 
     steps:
-    - target: /block-storage/volume/attach
+    - target: /block-storage/volumes/attach
       parameters:
         id: $.parameters.block_storage_id
         virtual_machine_id: $.parameters.virtual_machine_id
@@ -44,7 +44,7 @@ children:
         errorMessageTemplate: |
           Virtual machine {{ .parameters.virtual_machine_id }} was not attached to block storage {{ .parameters.block_storage_id }}
         jsonPathQuery: |
-          $.current.result.attachments[?(@.virtual_machine_id == $.parameters.virtual_machine_id)]
+          hasKey($.current.result, "attachment") && $.current.result.attachment[?(@.machine_id == $.parameters.virtual_machine_id)]
 
   - name: get
     description: Check if a volume is attached to a virtual machine instance
@@ -65,14 +65,14 @@ children:
       }
 
     steps:
-    - target: /block-storage/volume/get
+    - target: /block-storage/volumes/get
       parameters:
         id: $.parameters.block_storage_id
       check:
         errorMessageTemplate: |
           Unable to find virtual machine {{ .parameters.virtual_machine_id }} in block storage {{ .parameters.block_storage_id }} attachments
         jsonPathQuery: |
-          $.current.result.attachments[?(@.virtual_machine_id == $.parameters.virtual_machine_id)]
+          hasKey($.current.result, "attachment") && $.current.result.attachment[?(@.machine_id == $.parameters.virtual_machine_id)]
 
   # UPDATE: not available, it's present o cope with TerraForm's constraints until it's fixed
   - name: update
@@ -109,7 +109,7 @@ children:
       }
 
     steps:
-    - target: /block-storage/volume/detach
+    - target: /block-storage/volumes/detach
       parameters:
         id: $.parameters.block_storage_id
         virtual_machine_id: $.parameters.virtual_machine_id
@@ -118,4 +118,4 @@ children:
         errorMessageTemplate: |
           Virtual machine {{ .parameters.virtual_machine_id }} is still attached to block storage {{ .parameters.block_storage_id }}
         jsonPathQuery: |
-          $.current.result.attachments[?(@.virtual_machine_id != $.parameters.virtual_machine_id)] == $.current.result.attachments
+          !hasKey($.current.result, "attachment") || $.current.result.attachment[?(@.machine_id != $.parameters.virtual_machine_id)]

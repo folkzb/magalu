@@ -3,8 +3,8 @@ modules:
     name: block-storage
     path: block-storage.openapi.yaml
     summary: Block Storage API Product Documentation
-    url: https://block-storage.jaxyendy.com/openapi.json
-    version: 1.52.0
+    url: https://block-storage.jaxyendy.com/v1/openapi.json
+    version: v1
 -   description: DBaaS API Product.
     name: dbaas
     path: dbaas.openapi.yaml

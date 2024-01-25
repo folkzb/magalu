@@ -1,17 +1,16 @@
-Retrieve a list of Snapshots for the currently authenticated tenant.
+Retrieve a list of Volumes for the currently authenticated tenant.
 
 #### Notes
-- Use the expand argument to obtain additional details about the Volume used to
- create each Snapshot.
+- Use the expand argument to obtain additional details about the Volume Type.
 
 Usage:
-  ./cli block-storage snapshots list [flags]
+  ./cli block-storage volumes list [flags]
 
 Flags:
       --control.limit integer     Limit (min: 1) (default 50)
       --control.offset integer    Offset (min: 0)
       --control.sort string       Sort (pattern: ^(^[\w-]+:(asc|desc)(,[\w-]+:(asc|desc))*)?$) (default "created_at:asc")
-      --expand array(enum)       Expand (default [])
+      --expand array(string)     Expand: You can get more detailed info about: ['volume_type'] (default [])
   -h, --help                     help for list
   -v, --version                  version for list
 

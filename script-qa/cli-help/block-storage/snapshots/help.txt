@@ -1,14 +1,16 @@
-snapshots
+Operations with snapshots for volumes.
 
 Usage:
   ./cli block-storage snapshots [flags]
   ./cli block-storage snapshots [command]
 
 Commands:
-  create      Create snapshot
-  delete      Delete Snapshot
-  list        List snapshots
-  restore     Restore Snapshot
+  create      Create a snapshot asynchronously
+  delete      Delete a snapshot asynchronously
+  get         Retrieve the details of a snapshot
+  list        List snapshots in the current tenant
+  rename      Rename a snapshot
+  restore     Restore a snapshot asynchronously
 
 Flags:
   -h, --help      help for snapshots

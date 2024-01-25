@@ -1,12 +1,11 @@
-volume types
+Operations with volume types for volumes.
 
 Usage:
   ./cli block-storage volume-types [flags]
   ./cli block-storage volume-types [command]
 
 Commands:
-  create      Create Volume Type
-  list        List Volume Types
+  list        List volume types
 
 Flags:
   -h, --help      help for volume-types

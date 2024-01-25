@@ -5,7 +5,7 @@
 # such as "x-mgc-name" or "x-mgc-description"
 
 servers:
--   url: https://{env}/{region}/volume
+  - url: https://{env}/{region}/volume
     variables:
         region:
             description: Region to reach the service
@@ -24,125 +24,105 @@ servers:
             description: Environment to use
             default: api.magalu.cloud
             enum:
-            - api.magalu.cloud
-            - api.pre-prod.jaxyendy.com
+              - api.magalu.cloud
+              - api.pre-prod.jaxyendy.com
             x-mgc-transforms:
-            -   type: translate
+              - type: translate
                 translations:
-                -   from: prod
+                  - from: prod
                     to: api.magalu.cloud
-                -   from: pre-prod
+                  - from: pre-prod
                     to: api.pre-prod.jaxyendy.com
 
 paths:
-    /v0/volumes:
-        get:
-            x-mgc-description: List all Block Storage volumes
+    /v1/volumes:
         post:
-            x-mgc-description: Create a Block Storage volume
             responses:
-                '201':
+                "202":
                     links:
                         get:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
+                            operationRef: "#/paths/~1v1~1volumes~1{id}/get"
                             description: Read Block Storage volume
                             parameters:
                                 id: $response.body#/id
                         update:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/patch'
-                            description: Update Block Storage volume
+                            operationRef: "#/paths/~1v1~1volumes~1{id}~1rename/patch"
+                            description: Rename Block Storage volume
                             parameters:
                                 id: $response.body#/id
                         delete:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/delete'
+                            operationRef: "#/paths/~1v1~1volumes~1{id}/delete"
                             description: Delete Block Storage volume
                             parameters:
                                 id: $response.body#/id
-    /v0/volumes/{id}:
+    /v1/volumes/{id}:
         get:
-            x-mgc-description: Get a Block Storage volume details
             responses:
-                '200':
+                "200":
                     links:
                         update:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/patch'
+                            operationRef: "#/paths/~1v1~1volumes~1{id}~1rename/patch"
                             description: Update Block Storage volume
                             parameters:
                                 id: $request.path.id
                         delete:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/delete'
+                            operationRef: "#/paths/~1v1~1volumes~1{id}/delete"
                             description: Delete Block Storage volume
                             parameters:
-                                id: $request.path.id
-        delete:
-            x-mgc-description: Delete a Block Storage volume
+                                id: $response.body#/id
+    /v1/volumes/{id}/rename:
         patch:
-            x-mgc-description: Update a Block Storage volume
             responses:
-                '200':
+                "204":
                     links:
                         get:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/get'
+                            operationRef: "#/paths/~1v1~1volumes~1{id}/get"
                             description: Read Block Storage volume
                             parameters:
                                 id: $request.path.id
                         delete:
-                            operationRef: '#/paths/~1v0~1volumes~1{id}/delete'
+                            operationRef: "#/paths/~1v1~1volumes~1{id}/delete"
                             description: Delete Block Storage volume
                             parameters:
                                 id: $request.path.id
-    /v0/volumes/{id}/attach/{virtual_machine_id}:
+    /v1/volumes/{id}/attach/{virtual_machine_id}:
         post:
             x-mgc-name: attach
             responses:
-                '200':
+                "204":
                     links:
                         delete-connection:
                             description: Detach from a Virtual Machine instance
-                            operationRef: '#/paths/~1v0~1volumes~1{id}~1detach~1{virtual_machine_id}/post'
+                            operationRef: "#/paths/~1v1~1volumes~1{id}~1detach~1{virtual_machine_id}/post"
                             parameters:
                                 id: $request.path.id
+                                virtual_machine_id: $.request.path.virtual_machine_id
                         get-connection:
                             description: Check if block storage is attached to Virtual
-                                Machine instance
-                            operationRef: '#/paths/~1v0~1volumes/get'
+                              Machine instance
+                            operationRef: "#/paths/~1v1~1volumes~1{id}/get"
                             parameters:
                                 id: $request.path.id
                             x-mgc-wait-termination:
                                 maxRetries: 1
                                 interval: 5s
-                                jsonPathQuery: $.result.attachments[?(@.virtual_machine_id == $.owner.parameters.virtual_machine_id)]
-    /v0/volumes/{id}/detach/{virtual_machine_id}:
+                                jsonPathQuery: hasKey($.result, "attachment") && $.result.attachment[?(@.machine_id == $.owner.parameters.virtual_machine_id)]
+    /v1/volumes/{id}/detach/{virtual_machine_id}:
         post:
             x-mgc-name: detach
-    /v0/snapshots:
+    /v1/snapshots:
         post:
             responses:
-                '202':
+                "202":
                     links:
                         delete:
-                            operationRef: '#/paths/~1v0~1snapshots~1{snapshot_id}/delete'
+                            operationRef: "#/paths/~1v1~1snapshots~1{id}/delete"
                             description: Delete snapshot
                             parameters:
                                 snapshot_id: $response.body#/id
-    /v0/snapshots/{snapshot_id}:
+    /v1/snapshots/{snapshot_id}:
         post:
             x-mgc-name: restore
-    /v0/volume_types_all:
+    /v1/volume_types:
         get:
-            x-mgc-hidden: true
-
-
-tags:
--   name: healthchecks
-    description: healthchecks
-    x-mgc-hidden: true
--   name: usage
-    description: usage
--   name: snapshots
-    description: snapshots
--   name: volume-types
-    description: volume types
--   name: block-storage
-    x-mgc-description: Block Storage Volume Resources
-    x-mgc-name: volume
+            x-mgc-output-flag: table=ID:$.types[*].id,Name:$.types[*].name,Disk Type:$.types[*].disk_type,STATUS:$.types[*].status,IOPS:$.types[*].iops

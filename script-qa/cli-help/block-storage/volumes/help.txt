@@ -1,0 +1,26 @@
+Operations with volumes, including create, delete, extend, retype, list and other actions.
+
+Usage:
+  ./cli block-storage volumes [flags]
+  ./cli block-storage volumes [command]
+
+Commands:
+  attach      Attach a volume asynchronously
+  create      Create a volume asynchronously
+  delete      Delete a volume asynchronously
+  detach      Detach a volume asynchronously
+  extend      Extend a volume asynchronously
+  get         Retrieve the details of a volume
+  list        List volumes in the current tenant
+  rename      Rename a volume
+  retype      Retype a volume asynchronously
+
+Flags:
+  -h, --help      help for volumes
+  -v, --version   version for volumes
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+
+Use "./cli block-storage volumes [command] --help" for more information about a command.
+

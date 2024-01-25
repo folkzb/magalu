@@ -21,14 +21,15 @@ resource "mgc_virtual-machine_instances" "myvm" {
   availability_zone = "br-ne-1c"
 }
 
-resource "mgc_block-storage_volume" "myvmvolume" {
-  name        = "myvmvolume"
-  description = "myvmvolumedescription"
-  size        = 20
-  volume_type = "cloud_nvme"
+resource "mgc_block-storage_volumes" "myvmvolume" {
+  name = "myvmvolume"
+  size = 20
+  type = {
+    name = "cloud_nvme"
+  }
 }
 
-resource "mgc_block-storage_volume_attach" "myvmvolumeattachment" {
-  id                 = mgc_block-storage_volume.myvmvolume.id
+resource "mgc_block-storage_volumes_attach" "myvmvolumeattachment" {
+  id                 = mgc_block-storage_volumes.myvmvolume.id
   virtual_machine_id = mgc_virtual-machine_instances.myvm.id
 }

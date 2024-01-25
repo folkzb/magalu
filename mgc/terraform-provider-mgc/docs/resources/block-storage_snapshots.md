@@ -3,12 +3,12 @@
 page_title: "mgc_block-storage_snapshots Resource - terraform-provider-mgc"
 subcategory: ""
 description: |-
-  snapshots
+  Operations with snapshots for volumes.
 ---
 
 # mgc_block-storage_snapshots (Resource)
 
-snapshots
+Operations with snapshots for volumes.
 
 
 
@@ -19,15 +19,60 @@ snapshots
 
 - `description` (String)
 - `name` (String)
-- `volume_id` (String)
-
-### Optional
-
-- `id` (String) snapshot_id
+- `volume` (Attributes) (see [below for nested schema](#nestedatt--volume))
 
 ### Read-Only
 
-- `created_at` (String)
-- `progress` (String) Porcentagem
-- `size` (Number) Gibibytes (GiB)
+- `created_at` (Attributes) (see [below for nested schema](#nestedatt--created_at))
+- `current_volume` (Attributes) (see [below for nested schema](#nestedatt--current_volume))
+- `id` (String) The ID of this resource.
+- `size` (Number)
+- `state` (String)
 - `status` (String)
+- `updated_at` (Attributes) (see [below for nested schema](#nestedatt--updated_at))
+
+<a id="nestedatt--volume"></a>
+### Nested Schema for `volume`
+
+Optional:
+
+- `id` (String)
+- `name` (String)
+
+
+<a id="nestedatt--created_at"></a>
+### Nested Schema for `created_at`
+
+Read-Only:
+
+- `string1` (String)
+- `string2` (String)
+
+
+<a id="nestedatt--current_volume"></a>
+### Nested Schema for `current_volume`
+
+Read-Only:
+
+- `id` (String)
+- `name` (String)
+- `size` (Number)
+- `type` (Attributes) (see [below for nested schema](#nestedatt--current_volume--type))
+
+<a id="nestedatt--current_volume--type"></a>
+### Nested Schema for `current_volume.type`
+
+Read-Only:
+
+- `id` (String)
+- `name` (String)
+
+
+
+<a id="nestedatt--updated_at"></a>
+### Nested Schema for `updated_at`
+
+Read-Only:
+
+- `string1` (String)
+- `string2` (String)

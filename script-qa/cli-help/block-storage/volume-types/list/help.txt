@@ -1,4 +1,9 @@
-Returns a list of volume types
+List Volume Types allowed in the current region.
+
+#### Notes
+
+- Volume types are managed internally. If you wish to use a Volume Type that
+ is not yet available, please contact our support team for assistance.
 
 Usage:
   ./cli block-storage volume-types list [flags]

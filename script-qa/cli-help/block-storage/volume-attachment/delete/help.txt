@@ -4,7 +4,7 @@ Usage:
   ./cli block-storage volume-attachment delete [flags]
 
 Flags:
-      --block-storage-id uuid     Volume Id
+      --block-storage-id uuid     Id
   -h, --help                      help for delete
       --virtual-machine-id uuid   Virtual Machine Id
 

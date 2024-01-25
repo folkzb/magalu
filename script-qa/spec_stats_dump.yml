@@ -1,80 +1,34 @@
 block-storage.openapi:
   computed-variables:
-    - POST /v0/volume_types:
-        - '201':
-            computed:
-              - id
-            non-computed:
-              - internal
-              - name
-              - sku
-    - POST /v0/snapshots:
+    - POST /v1/snapshots:
         - '202':
             computed:
               - id
             non-computed:
               - description
               - name
-              - volume_id
-    - POST /v0/snapshots/{snapshot_id}:
+              - volume
+    - POST /v1/snapshots/{snapshot_id}:
         - '202':
             computed:
               - id
             non-computed:
-              - description
               - name
               - snapshot_id
-    - POST /v0/volumes:
-        - '201':
+    - POST /v1/volumes:
+        - '202':
             computed:
               - id
             non-computed:
-              - description
               - name
               - size
-              - volume_type
-    - POST /v0/volumes/{id}/attach/{virtual_machine_id}:
-        - '200':
-            computed:
-              - attachments
-              - created_at
-              - description
-              - error
-              - name
-              - size
-              - sku
-              - status
-              - updated_at
-              - volume_id
-            non-computed:
-              - id
-              - virtual_machine_id
-    - POST /v0/volumes/{id}/detach/{virtual_machine_id}:
-        - '200':
-            computed:
-              - attachments
-              - created_at
-              - description
-              - error
-              - name
-              - size
-              - sku
-              - status
-              - updated_at
-              - volume_id
-            non-computed:
-              - force
-              - id
-              - virtual_machine_id
+              - type
   missing-crud:
     - volume-types:
-        - delete
-    - usage:
         - post
         - delete
-  typeless-schemas:
-    - components.schemas.QosSpecs.specs
   unused-components:
+    - '#/components/schemas/ProjectTypeAll'
     - '#/components/schemas/ValidationError'
 dbaas.openapi:
   computed-variables:

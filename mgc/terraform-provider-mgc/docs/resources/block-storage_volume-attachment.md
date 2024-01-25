@@ -17,5 +17,5 @@ Block Storage Volume Attachment
 
 ### Optional
 
-- `block_storage_id` (String) id
+- `block_storage_id` (String)
 - `virtual_machine_id` (String)
