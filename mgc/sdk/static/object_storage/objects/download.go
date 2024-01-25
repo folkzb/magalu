@@ -3,8 +3,6 @@ package objects
 import (
 	"context"
 	"fmt"
-	"os"
-	"path"
 
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
@@ -26,43 +24,13 @@ var getDownload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func downloadSingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath) error {
-	req, err := common.NewDownloadRequest(ctx, cfg, src)
-	if err != nil {
-		return err
-	}
-
-	resp, err := common.SendRequest(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	err = common.ExtractErr(resp)
-	if err != nil {
-		return err
-	}
-
-	dir := path.Dir(dst.String())
-	if len(dir) != 0 {
-		if err := os.MkdirAll(dir, utils.DIR_PERMISSION); err != nil {
-			return err
-		}
-	}
-
-	if err := common.WriteToFile(ctx, resp.Body, resp.ContentLength, dst); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func download(ctx context.Context, p common.DownloadObjectParams, cfg common.Config) (result core.Value, err error) {
 	dst, err := common.GetDestination(p.Destination, p.Source)
 	if err != nil {
 		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 	}
 
-	err = downloadSingleFile(ctx, cfg, p.Source, dst)
+	err = common.DownloadSingleFile(ctx, cfg, p.Source, dst)
 
 	if err != nil {
 		return nil, err

@@ -50,6 +50,36 @@ func WriteToFile(ctx context.Context, reader io.ReadCloser, fileSize int64, outF
 	return nil
 }
 
+func DownloadSingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath) error {
+	req, err := NewDownloadRequest(ctx, cfg, src)
+	if err != nil {
+		return err
+	}
+
+	resp, err := SendRequest(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	err = ExtractErr(resp)
+	if err != nil {
+		return err
+	}
+
+	dir := path.Dir(dst.String())
+	if len(dir) != 0 {
+		if err := os.MkdirAll(dir, utils.DIR_PERMISSION); err != nil {
+			return err
+		}
+	}
+
+	if err := WriteToFile(ctx, resp.Body, resp.ContentLength, dst); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetDestination(dst mgcSchemaPkg.FilePath, src mgcSchemaPkg.URI) (mgcSchemaPkg.FilePath, error) {
 	if dst == "" {
 		d, err := os.Getwd()

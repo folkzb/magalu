@@ -68,7 +68,7 @@ func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsP
 		}
 
 		downloadAllLogger().Infow("Downloading object", "uri", objURI)
-		err = downloadSingleFile(ctx, cfg, objURI, params.Destination.Join(dirEntry.Path()))
+		err = common.DownloadSingleFile(ctx, cfg, objURI, params.Destination.Join(dirEntry.Path()))
 		if err != nil {
 			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
 			return err, pipeline.ProcessOutput
