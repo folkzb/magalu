@@ -56,9 +56,28 @@ func applyMgcMap(ctx context.Context, mgcMap map[string]any, attr *resAttrInfo, 
 	return diagnostics
 }
 
-func applyMgcList(ctx context.Context, mgcList []any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
+func applyMgcList(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
 	diagnostics := Diagnostics{}
 	attr = attr.childAttributes["0"]
+
+	// This shouldn't happen, probably, but sometimes the Services return null values for non-nullable values
+	if mgcValue == nil {
+		d := tfState.SetAttribute(ctx, path, []any{})
+		return diagnostics.AppendReturn(d...)
+	}
+
+	mgcList, ok := mgcValue.([]any)
+	if !ok {
+		diagnostics.AppendReturn(NewErrorDiagnostic(
+			fmt.Sprintf("Unable to apply list property %q to State, value is not list", attr.tfName),
+			fmt.Sprintf("Property value received from service was not a list: %#v", mgcValue),
+		))
+	}
+
+	if len(mgcList) == 0 {
+		d := tfState.SetAttribute(ctx, path, []any{})
+		return diagnostics.AppendReturn(d...)
+	}
 
 	for i, mgcValue := range mgcList {
 		attrPath := path.AtListIndex(i)
@@ -98,7 +117,7 @@ func applyValueToState(ctx context.Context, mgcValue any, attr *resAttrInfo, tfS
 	switch attr.mgcSchema.Type {
 	case "array":
 		tflog.Debug(ctx, fmt.Sprintf("populating list in state at path %#v", path))
-		return applyMgcList(ctx, mgcValue.([]any), attr, tfState, path)
+		return applyMgcList(ctx, mgcValue, attr, tfState, path)
 
 	case "object":
 		tflog.Debug(ctx, fmt.Sprintf("populating nested object in state at path %#v", path))
