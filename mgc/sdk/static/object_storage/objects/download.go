@@ -30,9 +30,12 @@ func download(ctx context.Context, p common.DownloadObjectParams, cfg common.Con
 		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 	}
 
-	err = common.DownloadSingleFile(ctx, cfg, p.Source, dst)
-
+	downloader, err := common.NewDownloader(ctx, cfg, p.Source, dst)
 	if err != nil {
+		return nil, err
+	}
+
+	if err = downloader.Download(ctx); err != nil {
 		return nil, err
 	}
 

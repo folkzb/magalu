@@ -19,6 +19,10 @@ type DownloadObjectParams struct {
 	Destination mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Name of the file to be saved,example=file.txt" mgc:"positional"`
 }
 
+type downloader interface {
+	Download(context.Context) error
+}
+
 func NewDownloadRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI) (*http.Request, error) {
 	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(src), src.Path())
 	if err != nil {
@@ -50,34 +54,12 @@ func WriteToFile(ctx context.Context, reader io.ReadCloser, fileSize int64, outF
 	return nil
 }
 
-func DownloadSingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath) error {
-	req, err := NewDownloadRequest(ctx, cfg, src)
-	if err != nil {
-		return err
-	}
-
-	resp, err := SendRequest(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	err = ExtractErr(resp)
-	if err != nil {
-		return err
-	}
-
-	dir := path.Dir(dst.String())
-	if len(dir) != 0 {
-		if err := os.MkdirAll(dir, utils.DIR_PERMISSION); err != nil {
-			return err
-		}
-	}
-
-	if err := WriteToFile(ctx, resp.Body, resp.ContentLength, dst); err != nil {
-		return err
-	}
-
-	return nil
+func NewDownloader(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath) (downloader, error) {
+	return &smallFileDownloader{
+		cfg: cfg,
+		src: src,
+		dst: dst,
+	}, nil
 }
 
 func GetDestination(dst mgcSchemaPkg.FilePath, src mgcSchemaPkg.URI) (mgcSchemaPkg.FilePath, error) {
