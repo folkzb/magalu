@@ -15,7 +15,7 @@ base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 OAPI_JSON_SCHEMA_FILE = os.path.join(base_dir, "jsonschemas", "openapis.json")
 
 with open(OAPI_JSON_SCHEMA_FILE) as fd:
-    schema = yaml.load(fd, Loader=yaml.CLoader)
+    schema = yaml.load(fd, Loader=yaml.FullLoader)
 
 # we extend the schema with non-standard "$id",
 # but without an actual "x-" prefix. Declare we know that variable:
@@ -58,7 +58,7 @@ if __name__ == "__main__":
             print(f"{fd.name}: ignored")
             continue
 
-        spec = yaml.load(fd, Loader=yaml.CLoader)
+        spec = yaml.load(fd, Loader=yaml.FullLoader)
         try:
             validate_oapi(spec)
             print(f"{fd.name}: ok")

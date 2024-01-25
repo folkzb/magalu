@@ -500,7 +500,7 @@ filterer = Filterer()
 
 def load_yaml(path: str) -> OAPIObject:
     with open(path, "r") as fd:
-        return yaml.load(fd, Loader=yaml.CLoader)
+        return yaml.load(fd, Loader=yaml.FullLoader)
 
 
 def load_oapi(path: str) -> Optional[OAPI]:

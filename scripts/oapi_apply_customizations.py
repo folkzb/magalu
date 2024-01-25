@@ -23,7 +23,7 @@ class OAPIIndex(TypedDict):
 
 def load_oapi_index(path: str) -> OAPIIndex:
     with open(path, "r") as fd:
-        return yaml.load(fd, Loader=yaml.CLoader)
+        return yaml.load(fd, Loader=yaml.FullLoader)
 
 
 if __name__ == "__main__":

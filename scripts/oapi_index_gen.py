@@ -33,7 +33,7 @@ index_version = "1.0.0"
 
 def load_yaml(path: str) -> OAPISchema:
     with open(path, "r") as fd:
-        return yaml.load(fd, Loader=yaml.CLoader)
+        return yaml.load(fd, Loader=yaml.FullLoader)
 
 
 def save_index(mods: IndexModules, path: str):
