@@ -17680,11 +17680,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -17762,11 +17762,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -17835,11 +17835,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -17919,11 +17919,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -17999,11 +17999,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -18072,11 +18072,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -18169,11 +18169,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -18248,11 +18248,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -18351,11 +18351,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -18424,11 +18424,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -18547,11 +18547,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },
@@ -18614,11 +18614,11 @@
       "configs": {
        "properties": {
         "region": {
-         "default": "br-ne-1",
+         "default": "br-ne1",
          "description": "Region to reach the service",
          "enum": [
-          "br-ne-1",
-          "br-se-1"
+          "br-ne1",
+          "br-se1"
          ],
          "type": "string"
         },

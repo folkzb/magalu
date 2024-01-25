@@ -29,7 +29,7 @@ func BuildHost(cfg Config) HostString {
 	if cfg.ServerUrl != "" {
 		return HostString(cfg.ServerUrl)
 	}
-	return HostString(strings.ReplaceAll(templateUrl, "{{region}}", cfg.Region))
+	return HostString(strings.ReplaceAll(templateUrl, "{{region}}", cfg.translateRegion()))
 }
 
 func BuildHostURL(cfg Config) (*url.URL, error) {
