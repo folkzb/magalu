@@ -19,10 +19,11 @@ Usage:
   ./cli block-storage volumes extend [id] [flags]
 
 Flags:
-  -h, --help           help for extend
-      --id uuid        Id (required)
-      --size integer   New volume size in GB (min: 1) (required)
-  -v, --version        version for extend
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for extend
+      --id uuid                       Id (required)
+      --size integer                  New volume size in GB (min: 1) (required)
+  -v, --version                       version for extend
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

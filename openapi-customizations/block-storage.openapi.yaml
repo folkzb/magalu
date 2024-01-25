@@ -55,6 +55,11 @@ paths:
                             description: Delete Block Storage volume
                             parameters:
                                 id: $response.body#/id
+                        update/name:
+                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
+                            description: Rename a snapshot
+                            parameters:
+                                id: $response.body#/id
     /v1/volumes/{id}:
         get:
             responses:
@@ -70,6 +75,24 @@ paths:
                             description: Delete Block Storage volume
                             parameters:
                                 id: $response.body#/id
+                        update/name:
+                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
+                            description: Rename a snapshot
+                            parameters:
+                                id: $response.body#/id
+                            x-mgc-hidden: true
+                        update/size:
+                            operationId: extend_volume_v1_volumes__id__extend_post
+                            description: Extend a volume asynchronously
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-hidden: true
+                        update/type:
+                            operationId: retype_volume_v1_volumes__id__retype_post
+                            description: Retype a volume asynchronously
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-hidden: true
     /v1/volumes/{id}/rename:
         patch:
             responses:
@@ -80,11 +103,43 @@ paths:
                             description: Read Block Storage volume
                             parameters:
                                 id: $request.path.id
+                            x-mgc-wait-termination:
+                                maxRetries: 5
+                                interval: 5s
+                                jsonPathQuery: $.result.name == $.owner.parameters.name
                         delete:
                             operationRef: "#/paths/~1v1~1volumes~1{id}/delete"
                             description: Delete Block Storage volume
                             parameters:
                                 id: $request.path.id
+    /v1/volumes/{id}/extend:
+        post:
+            responses:
+                "204":
+                    links:
+                        get:
+                            operationRef: "#/paths/~1v1~1volumes~1{id}/get"
+                            description: Read Block Storage volume
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-wait-termination:
+                                maxRetries: 5
+                                interval: 5s
+                                jsonPathQuery: $.result.size == $.owner.parameters.size
+    /v1/volumes/{id}/retype:
+        post:
+            responses:
+                "204":
+                    links:
+                        get:
+                            operationRef: "#/paths/~1v1~1volumes~1{id}/get"
+                            description: Read Block Storage volume
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-wait-termination:
+                                maxRetries: 5
+                                interval: 5s
+                                jsonPathQuery: (hasKey($.owner.parameters.new_type, "id") && $.result.type.id == $.owner.parameters.new_type.id) || (hasKey($.owner.parameters.new_type, "name") && hasKey($.result.type, "name") && $.result.type.name == $.owner.parameters.new_type.name)
     /v1/volumes/{id}/attach/{virtual_machine_id}:
         post:
             x-mgc-name: attach
