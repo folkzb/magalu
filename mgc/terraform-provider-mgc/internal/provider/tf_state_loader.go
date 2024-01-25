@@ -39,10 +39,6 @@ func loadMgcSchemaValue(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 	}
 
 	if tfValue.IsNull() {
-		if filterUnset {
-			return nil, false, nil
-		}
-
 		if atinfo.tfSchema.IsOptional() && !atinfo.tfSchema.IsComputed() {
 			tflog.Debug(
 				ctx,
@@ -52,12 +48,24 @@ func loadMgcSchemaValue(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 			// Optional values that aren't computed will never be unknown
 			// this means they will be null in the state
 			return nil, false, nil
-		} else if !mgcSchema.Nullable {
+		}
+
+		if filterUnset {
+			tflog.Debug(
+				ctx,
+				"[loader] filtering unset value, as it is null in state",
+				map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
+			)
+			return nil, false, nil
+		}
+
+		if !mgcSchema.Nullable {
 			return nil, true, NewErrorDiagnostics(
 				"Unable to load non nullable value",
 				fmt.Sprintf("[loader] unable to load %q since value is null and not nullable by the schema: value %+v - schema: %+v", atinfo.mgcName, tfValue, mgcSchema),
 			)
 		}
+
 		return nil, true, nil
 	}
 
