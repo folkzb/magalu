@@ -247,6 +247,7 @@ var testCases = []testCase{
 				tfSchema: schema.StringAttribute{
 					Required: true,
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
@@ -434,6 +435,7 @@ var testCases = []testCase{
 			"image": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},

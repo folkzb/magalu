@@ -119,6 +119,7 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 		k = string(nameOverride)
 	}
 
+	propSchema := (*core.Schema)(mgcSchema.Properties[k].Value)
 	isRequired := slices.Contains(mgcSchema.Required, k)
 	isComputed := !isRequired
 	if isComputed {
@@ -127,17 +128,19 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 			isComputed = false
 		} else {
 			// If not required and present in read it can be compute
-			isComputed = mgcSchemaPkg.CheckSimilarJsonSchemas((*core.Schema)(readSchema.Value), (*core.Schema)(mgcSchema.Properties[k].Value))
+			isComputed = mgcSchemaPkg.CheckSimilarJsonSchemas((*core.Schema)(readSchema.Value), propSchema)
 		}
 	}
+
+	requiresReplace := r.update.ParametersSchema().Properties[k] == nil && !r.doesPropHaveSetter(mgcName) && propSchema.Default == nil
 
 	return attributeModifiers{
 		isRequired:                 isRequired,
 		isOptional:                 !isRequired,
 		isComputed:                 isComputed,
-		useStateForUnknown:         false,
+		useStateForUnknown:         requiresReplace,
 		nameOverride:               nameOverride,
-		requiresReplaceWhenChanged: r.update.ParametersSchema().Properties[k] == nil && !r.doesPropHaveSetter(mgcName),
+		requiresReplaceWhenChanged: requiresReplace,
 		getChildModifiers:          getInputChildModifiers,
 	}
 }
