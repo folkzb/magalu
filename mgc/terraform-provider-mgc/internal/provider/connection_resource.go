@@ -70,7 +70,10 @@ func newMgcConnectionResource(
 	}
 	if update == nil {
 		tflog.Warn(ctx, fmt.Sprintf("Connection Resource %s misses update operations", name))
-		update = core.NewSimpleLink(connection, core.NoOpExecutor())
+		update = core.NewSimpleLink(core.SimpleLinkSpec{
+			Owner:  connection,
+			Target: core.NoOpExecutor(),
+		})
 	}
 	return &MgcConnectionResource{
 		sdk:         sdk,

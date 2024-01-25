@@ -25,8 +25,19 @@ var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
 			},
 			Links: utils.NewLazyLoaderWithArg(func(e core.Executor) core.Links {
 				return core.Links{
-					"delete": core.NewSimpleLink(e, getDelete()),
-					"list":   core.NewSimpleLink(e, getList()),
+					"delete": core.NewSimpleLink(
+						core.SimpleLinkSpec{
+							Owner:     e,
+							Target:    getDelete(),
+							FromOwner: map[string]string{"name": "bucket"},
+						},
+					),
+					"list": core.NewSimpleLink(
+						core.SimpleLinkSpec{
+							Owner:  e,
+							Target: getList(),
+						},
+					),
 				}
 			}),
 		},

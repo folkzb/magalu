@@ -35,23 +35,36 @@ type simpleLink struct {
 	description                   string
 	owner                         Executor
 	target                        Executor
+	fromOwner                     map[string]string
+	fromResult                    map[string]string
 	getAdditionalParametersSchema func() *Schema
 	getAdditionalConfigsSchema    func() *Schema
 }
 
 var _ Linker = (*simpleLink)(nil)
 
-func NewSimpleLink(owner Executor, target Executor) *simpleLink {
+type SimpleLinkSpec struct {
+	Owner  Executor
+	Target Executor
+	// Maps parameters from Owner into Target
+	FromOwner map[string]string
+	// Maps parameters from Owner result into Target
+	FromResult map[string]string
+}
+
+func NewSimpleLink(s SimpleLinkSpec) *simpleLink {
 	l := &simpleLink{
-		name:        target.Name(),
-		description: target.Description(),
-		owner:       owner,
-		target:      target,
+		name:        s.Target.Name(),
+		description: s.Target.Description(),
+		owner:       s.Owner,
+		target:      s.Target,
+		fromOwner:   s.FromOwner,
+		fromResult:  s.FromResult,
 	}
 
 	l.getAdditionalParametersSchema = utils.NewLazyLoader[*Schema](
 		func() *Schema {
-			return additionalProps(l.target.ParametersSchema(), l.owner.ResultSchema(), l.owner.ParametersSchema())
+			return l.additionalParams()
 		},
 	)
 
@@ -90,6 +103,33 @@ TargetLoop:
 
 		additional[propName] = (*Schema)(propRef.Value)
 		if slices.Contains(target.Required, propName) {
+			required = append(required, propName)
+		}
+	}
+
+	return mgcSchemaPkg.NewObjectSchema(additional, required)
+}
+
+func (l *simpleLink) additionalParams() *Schema {
+	additional := map[string]*Schema{}
+	required := []string{}
+
+TargetLoop:
+	for propName, propRef := range l.target.ParametersSchema().Properties {
+		for _, v := range l.fromResult {
+			if propName == v {
+				continue TargetLoop
+			}
+		}
+
+		for _, v := range l.fromOwner {
+			if propName == v {
+				continue TargetLoop
+			}
+		}
+
+		additional[propName] = (*Schema)(propRef.Value)
+		if slices.Contains(l.target.ParametersSchema().Required, propName) {
 			required = append(required, propName)
 		}
 	}
@@ -138,7 +178,24 @@ func (l *simpleLink) CreateExecutor(originalResult Result) (Executor, error) {
 		resultMap, _ = result.Value().(map[string]any)
 	}
 
-	injectValues(preparedParams, l.target.ParametersSchema(), resultMap, originalResult.Source().Parameters)
+	for sourceName, linkName := range l.fromResult {
+		value, ok := resultMap[sourceName]
+		if !ok {
+			panic("parameter not found in original result")
+		}
+
+		preparedParams[linkName] = value
+	}
+
+	for sourceName, linkName := range l.fromOwner {
+		value, ok := originalResult.Source().Parameters[sourceName]
+		if !ok {
+			panic("parameter not found in original result")
+		}
+
+		preparedParams[linkName] = value
+	}
+
 	injectValues(preparedConfigs, l.target.ConfigsSchema(), resultMap, originalResult.Source().Configs)
 
 	var exec LinkExecutor = NewLinkExecutor(l.target, preparedParams, preparedConfigs, l.AdditionalParametersSchema(), l.AdditionalConfigsSchema())
