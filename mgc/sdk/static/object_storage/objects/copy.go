@@ -33,26 +33,32 @@ var getCopy = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func newCopyRequest(ctx context.Context, cfg common.Config, dst mgcSchemaPkg.URI) (*http.Request, error) {
+func newCopyRequest(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) (*http.Request, error) {
 	host, err := common.BuildBucketHostWithPath(cfg, common.NewBucketNameFromURI(dst), dst.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodPut, string(host), nil)
-}
 
-func copySingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) error {
-	req, err := newCopyRequest(ctx, cfg, dst)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, string(host), nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	copySource, err := url.JoinPath(src.Hostname(), src.Path())
 	if err != nil {
-		return core.UsageError{Err: fmt.Errorf("badly specified source URI: %w", err)}
+		return nil, core.UsageError{Err: fmt.Errorf("badly specified source URI: %w", err)}
 	}
 
 	req.Header.Set("x-amz-copy-source", copySource)
+
+	return req, nil
+}
+
+func copySingleFile(ctx context.Context, cfg common.Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) error {
+	req, err := newCopyRequest(ctx, cfg, src, dst)
+	if err != nil {
+		return err
+	}
 
 	resp, err := common.SendRequest(ctx, req)
 	if err != nil {
