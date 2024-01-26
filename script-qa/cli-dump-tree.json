@@ -18569,6 +18569,98 @@
        },
        "type": "object"
       },
+      "description": "This command uploads any file from the source to the destination if it's not present or has a different size. Additionally any file in the destination not present on the source is deleted.",
+      "isInternal": false,
+      "name": "sync",
+      "parameters": {
+       "properties": {
+        "batch_size": {
+         "default": 1000,
+         "description": "Limit of items per batch to delete",
+         "maximum": 1000,
+         "minimum": 1,
+         "type": "integer"
+        },
+        "delete": {
+         "default": false,
+         "description": "Deletes any item at the destination not present on the source",
+         "type": "boolean"
+        },
+        "dst": {
+         "description": "Full destination path to sync with the source path",
+         "example": "s3://my-bucket/dir/",
+         "format": "uri",
+         "type": "string"
+        },
+        "src": {
+         "description": "Source path to sync the remote with",
+         "example": "./",
+         "type": "string",
+         "x-contentMediaType": "application/octet-stream"
+        }
+       },
+       "required": [
+        "src",
+        "dst"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "anyOf": [
+        {
+         "nullable": true,
+         "type": "null"
+        },
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "array"
+        },
+        {
+         "additionalProperties": true,
+         "type": "object"
+        }
+       ],
+       "nullable": true
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "properties": {
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        },
+        "workers": {
+         "default": 5,
+         "description": "Number of routines that spawn to do parallel operations within object_storage",
+         "minimum": 1,
+         "type": "integer"
+        }
+       },
+       "type": "object"
+      },
       "description": "Upload a file to a bucket",
       "isInternal": false,
       "name": "upload",
