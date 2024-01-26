@@ -243,7 +243,7 @@ dbaas.openapi:
         - delete
     - backups:
         - post
-mke.openapi:
+kubernetes.openapi:
   computed-variables:
     - POST /v0/clusters:
         - '201':

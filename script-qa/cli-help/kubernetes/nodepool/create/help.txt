@@ -1,0 +1,59 @@
+Cria um node pool em um cluster kubernetes
+
+Usage:
+  ./cli kubernetes nodepool create [cluster-id] [flags]
+
+Examples:
+  ./cli kubernetes nodepool create --auto-scale.max-replicas=5 --auto-scale.min-replicas=2 --flavor="cloud-k8s.gp1.small" --name="nodepool-exemplo" --replicas=3 --tags='["tag-value1"]'
+
+Flags:
+      --auto-scale object                 Objeto que especifica as propriedades para atualização de recursos de carga de trabalho no cluster Kubernetes. (properties: max_replicas and min_replicas)
+                                          Use --auto-scale=help for more details
+      --auto-scale.max-replicas integer   Objeto que especifica as propriedades para atualização de recursos de carga de trabalho no cluster Kubernetes: Quantidade máxima de réplicas para o autoscaling. Se não for informado um valor, ou se for igual ou menor que zero, o valor do autoscaler será assumido com base no campo "réplicas". (min: 1)
+                                          This is the same as '--auto-scale=max_replicas:integer'. (default 1)
+      --auto-scale.min-replicas integer   Objeto que especifica as propriedades para atualização de recursos de carga de trabalho no cluster Kubernetes: Quantidade mínima de réplicas para o autoscaling. Se não for informado um valor, ou se for igual ou menor que zero, o valor do autoscaler será assumido com base no campo "réplicas". (min: 1)
+                                          This is the same as '--auto-scale=min_replicas:integer'. (default 1)
+      --cli.list-links enum[=table]       List all available links for this command (one of "json", "table" or "yaml")
+      --cluster-id uuid                   Identificador no padrão uuid para identificar o cluster (required)
+      --flavor enum                       Definição da capacidade de CPU, memória RAM e armazenamento dos nodes
+                                          <table>
+                                            <tr>
+                                              <td>Flavor</td>
+                                              <td>vCPUs</td>
+                                              <td>RAM(Gb)</td>
+                                              <td>Root Disk(GB)</td>
+                                            </tr>
+                                            <tr>
+                                              <td>cloud-k8s.gp1.small</td>
+                                              <td>2</td>
+                                              <td>4</td>
+                                              <td>20</td>
+                                            </tr>
+                                            <tr>
+                                              <td>cloud-k8s.gp1.large</td>
+                                              <td>8</td>
+                                              <td>16</td>
+                                              <td>100</td>
+                                            </tr>
+                                          </table>
+                                           (one of "cloud-k8s.gp1.large" or "cloud-k8s.gp1.small") (required)
+  -h, --help                              help for create
+      --name string                       Nome do node pool. O nome destina-se principalmente à idempotência, e deve ser exclusivo em um namespace. 0 nome não pode ser alterado.
+                                          O nome deve seguir as seguintes regras:
+                                            - deve conter no máximo 63 caracteres
+                                            - deve conter apenas caracteres alfanuméricos minúsculos ou '-'
+                                            - deve começar com um caractere alfabético
+                                            - deve terminar com um caractere alfanumérico
+                                           (required)
+      --replicas integer                  Número de réplicas dos nós do nodepool (required) (default 1)
+      --tags array(string)                Lista de tags aplicadas ao nodepool
+      --taints array(object)              Propriedade de associação de um conjunto se nós
+                                          Use --taints=help for more details
+  -v, --version                           version for create
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne1" or "br-se1") (default "br-ne1")
+      --server-url uri         Manually specify the server to use
+

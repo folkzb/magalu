@@ -12498,7 +12498,7 @@
   ],
   "description": "APIs referentes ao produto de kubernetes",
   "isInternal": false,
-  "name": "mke",
+  "name": "kubernetes",
   "version": "0.1.0"
  },
  {

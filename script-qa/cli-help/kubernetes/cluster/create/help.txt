@@ -1,0 +1,32 @@
+Criação de um cluster kubernetes
+
+Usage:
+  ./cli kubernetes cluster create [flags]
+
+Examples:
+  ./cli kubernetes cluster create --description="Esse é um cluster de exemplo" --enabled-bastion=false --enabled-server-group=false --name="cluster-exemplo" --param.version="v1.26.9"
+
+Flags:
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --description string            Descrição do cluster
+      --enabled-bastion               Habilita bastion host (required)
+      --enabled-server-group          Habilita o uso de server group, com política de anti-affinity, na criação do cluster e dos node pools (default true)
+  -h, --help                          help for create
+      --name string                   Nome do cluster kubernetes. O nome destina-se principalmente à idempotência, e deve ser exclusivo em um namespace. 0 nome não pode ser alterado.
+                                      O nome deve seguir as seguintes regras:
+                                        - deve conter no máximo 63 caracteres
+                                        - deve conter apenas caracteres alfanuméricos minúsculos ou '-'
+                                        - deve começar com um caractere alfabético
+                                        - deve terminar com um caractere alfanumérico
+                                       (required)
+      --node-pools array(object)      Conjunto de nodes em um cluster kubernetes
+                                      Use --node-pools=help for more details
+      --param.version enum            Versão do kubernetes nativa do cluster (one of "v1.26.9" or "v1.28.2") (default "v1.26.9")
+  -v, --version                       version for create
+
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
+      --env enum               Environment to use (one of "pre-prod" or "prod") (default "prod")
+      --region enum            Region to reach the service (one of "br-ne1" or "br-se1") (default "br-ne1")
+      --server-url uri         Manually specify the server to use
+

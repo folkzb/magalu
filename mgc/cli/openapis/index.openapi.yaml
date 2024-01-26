@@ -12,8 +12,8 @@ modules:
     url: https://dbaas.jaxyendy.com/openapi.json
     version: 1.10.1
 -   description: APIs referentes ao produto de kubernetes
-    name: mke
-    path: mke.openapi.yaml
+    name: kubernetes
+    path: kubernetes.openapi.yaml
     summary: APIs referentes ao produto de kubernetes
     url: https://mke.br-ne-1.com/docs/openapi-with-snippets.json
     version: 0.1.0
