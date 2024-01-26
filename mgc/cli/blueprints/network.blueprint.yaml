@@ -8,78 +8,23 @@ children:
   - name: public_ip
     description: VPC Public IPs
     children:
-      - name: create
-        summary: Create Public IP
-        description: Create a Public IP
-        positionalArgs: [vpc_id]
-        parametersSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/public-ips/create/parametersSchema
-        configsSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/public-ips/create/configsSchema
-        resultSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/public-ips/create/resultSchema
-
-        steps:
-          - target: /network/vpc/public-ips/create
+      - $ref: http://magalu.cloud/sdk#/network/vpc/public-ips/create
+        isInternal: false
 
   - name: rule
     description: VPC Rules
     children:
-      - name: create
-        summary: Create Rule
-        description: Create a Rule
-        positionalArgs: [security_group_id]
-        parametersSchema:
-          $ref: http://magalu.cloud/sdk#/network/security_group/rules/create/parametersSchema
-        configsSchema:
-          $ref: http://magalu.cloud/sdk#/network/security_group/rules/create/configsSchema
-        resultSchema:
-          $ref: http://magalu.cloud/sdk#/network/security_group/rules/create/resultSchema
+      - $ref: http://magalu.cloud/sdk#/network/security_group/rules/create
+        isInternal: false
 
-        steps:
-          - target: /network/security_group/rules/create
-
-      - name: list
-        summary: List Rules
-        description: Returns a list of rules for a provided security_group_id
-        positionalArgs: [security_group_id]
-        parametersSchema:
-          $ref: http://magalu.cloud/sdk#/network/security_group/rules/list/parametersSchema
-        configsSchema:
-          $ref: http://magalu.cloud/sdk#/network/security_group/rules/list/configsSchema
-        resultSchema:
-          $ref: http://magalu.cloud/sdk#/network/security_group/rules/list/resultSchema
-
-        steps:
-          - target: /network/security_group/rules/list
+      - $ref: http://magalu.cloud/sdk#/network/security_group/rules/list
+        isInternal: false
 
   - name: subnets
     description: VPC Subnets
     children:
-      - name: create
-        summary: Create Subnet
-        description: Create a Subnet
-        positionalArgs: [vpc_id]
-        parametersSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/subnets/create/parametersSchema
-        configsSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/subnets/create/configsSchema
-        resultSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/subnets/create/resultSchema
+      - $ref: http://magalu.cloud/sdk#/network/vpc/subnets/create
+        isInternal: false
 
-        steps:
-          - target: /network/vpc/subnets/create
-
-      - name: list
-        summary: List Subnets
-        description: Returns a list of subnets for a provided vpc_id
-        positionalArgs: [vpc_id]
-        parametersSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/subnets/list/parametersSchema
-        configsSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/subnets/list/configsSchema
-        resultSchema:
-          $ref: http://magalu.cloud/sdk#/network/vpc/subnets/list/resultSchema
-
-        steps:
-          - target: /network/vpc/subnets/list
+      - $ref: http://magalu.cloud/sdk#/network/vpc/subnets/list
+        isInternal: false

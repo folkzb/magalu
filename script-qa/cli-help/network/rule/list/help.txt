@@ -6,6 +6,7 @@ Usage:
 Flags:
   -h, --help                       help for list
       --security-group-id string   Security Group Id (required)
+  -v, --version                    version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

@@ -10,6 +10,7 @@ Flags:
   -h, --help                                   help for create
       --ip-version integer                     Ip Version (required)
       --name string                            Name (required)
+  -v, --version                                version for create
       --vpc-id string                          Vpc Id (required)
 
 Global Flags:

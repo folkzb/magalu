@@ -13668,7 +13668,7 @@
        "title": "PublicIpCreateResponse",
        "type": "object"
       },
-      "version": ""
+      "version": "1.101.2"
      },
      {
       "configs": {
@@ -14265,7 +14265,7 @@
        "title": "RuleCreateResponse",
        "type": "object"
       },
-      "version": ""
+      "version": "1.101.2"
      },
      {
       "configs": {
@@ -14619,7 +14619,7 @@
        "title": "RulesList",
        "type": "object"
       },
-      "version": ""
+      "version": "1.101.2"
      }
     ],
     "description": "VPC Rules",
@@ -15661,7 +15661,7 @@
        "title": "SubnetCreateResponse",
        "type": "object"
       },
-      "version": ""
+      "version": "1.101.2"
      },
      {
       "configs": {
@@ -16003,7 +16003,7 @@
        "title": "SubnetsResponse",
        "type": "object"
       },
-      "version": ""
+      "version": "1.101.2"
      },
      {
       "configs": {

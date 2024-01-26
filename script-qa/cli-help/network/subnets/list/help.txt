@@ -5,6 +5,7 @@ Usage:
 
 Flags:
   -h, --help            help for list
+  -v, --version         version for list
       --vpc-id string   Vpc Id (required)
 
 Global Flags:
