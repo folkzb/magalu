@@ -72,6 +72,10 @@ func populateExecutor(spec *childSpec, newSpec core.Descriptor, ref core.RefPath
 		spec.ResultSchema = schemaPkg.NewSchemaRef("", executor.ResultSchema())
 	}
 
+	if spec.PositionalArgs == nil {
+		spec.PositionalArgs = executor.PositionalArgs()
+	}
+
 	if spec.Steps == nil {
 		parameters := map[string]string{}
 		for paramName := range executor.ParametersSchema().Properties {
