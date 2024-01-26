@@ -37,6 +37,7 @@ repos:
     -   id: apply-oapi-customizations
         name: apply-oapi-customizations
         language: python
+        types_or: [yaml]
         entry: bash -c './scripts/oapi_apply_customizations.sh'
         additional_dependencies: [PyYAML, typing, argparse]
         stages: [pre-commit]
