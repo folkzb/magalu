@@ -166,7 +166,7 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 }
 
 func ReportDeleteProgress(reportProgress progress_report.ReportProgress, reportChan <-chan DeleteProgressReport, p DeleteAllObjectsParams) {
-	name := p.BucketName.String()
+	name := "Delete from " + p.BucketName.String()
 	total := uint64(0)
 	progress := uint64(0)
 

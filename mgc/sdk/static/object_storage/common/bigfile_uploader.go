@@ -255,7 +255,7 @@ func progressReportSubroutine(
 	fileInfo fs.FileInfo,
 ) {
 	// TODO as some parts may retry, progress maybe overreported
-	name := fileInfo.Name()
+	name := "Upload " + fileInfo.Name()
 	total := uint64(fileInfo.Size())
 	bytesDone := uint64(0)
 

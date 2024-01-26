@@ -21,7 +21,7 @@ var _ uploader = (*smallFileUploader)(nil)
 
 func (u *smallFileUploader) createProgressReporter(ctx context.Context) progress_report.ReportRead {
 	reportProgress := progress_report.FromContext(ctx)
-	fileName := u.fileInfo.Name()
+	fileName := "Upload " + u.fileInfo.Name()
 	total := uint64(u.fileInfo.Size())
 	sentBytes := uint64(0)
 	return func(n int, err error) {
