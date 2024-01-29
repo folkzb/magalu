@@ -20,6 +20,7 @@ import (
 	"magalu.cloud/core/auth"
 	mgcAuthPkg "magalu.cloud/core/auth"
 	"magalu.cloud/core/utils"
+	mgcAuthScope "magalu.cloud/sdk/static/auth/scopes"
 )
 
 type authResult struct {
@@ -32,7 +33,7 @@ type loginParameters struct {
 	// default values aren't being generated correctly in the schema. When this issue is
 	// resolved, 'omitempty' should be removed.
 	// Ref: https://github.com/invopop/jsonschema/issues/127
-	Scopes auth.Scopes `json:"scopes,omitempty" jsonschema:"description=All desired scopes for the resulting access token,default=openid,default=cpo:read,default=cpo:write"`
+	Scopes auth.Scopes `json:"scopes,omitempty" jsonschema:"description=All desired scopes for the resulting access token"`
 	Show   bool        `json:"show,omitempty" jsonschema:"description=Show the access token after the login completes"`
 }
 
@@ -83,6 +84,18 @@ about a successful login, use the '--show' flag when logging in`,
 			scopes := parameters.Scopes
 			for _, builtIn := range auth.BuiltInScopes() {
 				scopes.Add(builtIn)
+			}
+
+			if parameters.Scopes == nil {
+				// Also add all available scopes by default when logging if no scope is explicitly passed in
+				allScopes, err := mgcAuthScope.ListAllAvailable(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, scope := range allScopes {
+					scopes.Add(scope)
+				}
 			}
 
 			codeUrl, err := auth.CodeChallengeToURL(scopes)
