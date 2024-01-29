@@ -21,7 +21,10 @@ func newChild(spec *childSpec, logger *zap.SugaredLogger, refResolver *core.Boun
 		if !ok {
 			return nil, errors.New("ref for child must be a descriptor")
 		}
-		populateEmptyFrom(resolvedDesc, spec, core.RefPath(spec.Ref))
+		err = populateEmptyFrom(resolvedDesc, spec, core.RefPath(spec.Ref))
+		if err != nil {
+			return nil, err
+		}
 	}
 	if !spec.grouperSpec.isEmpty() {
 		return newGrouper(spec, logger, refResolver)
@@ -29,7 +32,7 @@ func newChild(spec *childSpec, logger *zap.SugaredLogger, refResolver *core.Boun
 	return newExecutor(spec, logger, refResolver)
 }
 
-func populateEmptyFrom(newSpec core.Descriptor, spec *childSpec, ref core.RefPath) {
+func populateEmptyFrom(newSpec core.Descriptor, spec *childSpec, ref core.RefPath) error {
 	if spec.Name == "" {
 		spec.Name = newSpec.Name()
 	}
@@ -51,6 +54,13 @@ func populateEmptyFrom(newSpec core.Descriptor, spec *childSpec, ref core.RefPat
 	}
 	populateExecutor(spec, newSpec, ref)
 	populateGrouper(spec, newSpec, ref)
+
+	// Unset ref before validating because otherwise it would return "true" regardless
+	refCache := spec.Ref
+	spec.Ref = ""
+	err := spec.validate()
+	spec.Ref = refCache
+	return err
 }
 
 func populateExecutor(spec *childSpec, newSpec core.Descriptor, ref core.RefPath) {
@@ -110,7 +120,10 @@ func populateGrouper(spec *childSpec, newSpec core.Descriptor, ref core.RefPath)
 		}
 
 		child_spec := &childSpec{}
-		populateEmptyFrom(child, child_spec, ref.Add(child.Name()))
+		err = populateEmptyFrom(child, child_spec, ref.Add(child.Name()))
+		if err != nil {
+			return false, err
+		}
 
 		childrenCopy = append(childrenCopy, child_spec)
 

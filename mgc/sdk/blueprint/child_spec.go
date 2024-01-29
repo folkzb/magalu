@@ -25,6 +25,7 @@ func (c *childSpec) validate() (err error) {
 		}
 	}
 
+	// If Ref is present, validation will occur in 'newChild'
 	if c.Ref != "" {
 		return nil
 	}
