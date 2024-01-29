@@ -200,7 +200,7 @@ func (o *MgcResourceSetProperty) PostRun(ctx context.Context, result core.Result
 		}
 
 		if isKnown {
-			d := applyValueToState(ctx, propVal, prop, targetState, path.Empty())
+			d := applyValueToState(ctx, propVal, prop, targetState, path.Empty().AtName(string(o.setter.propertyName())))
 			if diagnostics.AppendCheckError(d...) {
 				return result, false, diagnostics
 			}
