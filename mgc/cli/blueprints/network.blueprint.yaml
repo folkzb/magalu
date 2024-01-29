@@ -15,6 +15,16 @@ components:
           $ref: /network/public_ip/attach/parametersSchema/properties/public_ip_id
         port_id:
           $ref: /network/public_ip/attach/parametersSchema/properties/port_id
+    PortAttachObject:
+      type: object
+      required:
+        - security_group_id
+        - port_id
+      properties:
+        port_id:
+          $ref: /network/port/attach/parametersSchema/properties/port_id
+        security_group_id:
+          $ref: /network/port/attach/parametersSchema/properties/security_group_id
 
   configsSchemas:
     default:
@@ -26,6 +36,98 @@ children:
     children:
       - $ref: http://magalu.cloud/sdk#/network/vpc/ports/create
         isInternal: false
+
+      - name: security-group-attachment
+        description: Manage the attachment between a Security Group and a Port
+        children:
+          - name: create
+            description: Attach a Security Group to a Port
+            scopes:
+            - "network.write"
+
+            parametersSchema:
+              $ref: blueprint#/components/schemas/PortAttachObject
+            configsSchema:
+              $ref: blueprint#/components/configsSchemas/default
+            resultSchema:
+              $ref: blueprint#/components/schemas/PortAttachObject
+
+            steps:
+            - target: /network/port/attach
+              parameters:
+                security_group_id: $.parameters.security_group_id
+                port_id: $.parameters.port_id
+
+            - target: /network/port/get
+              parameters:
+                port_id: $.parameters.port_id
+              check:
+                errorMessageTemplate: |
+                  Security Group {{ .parameters.security_group_id }} was not attached to Port {{ .parameters.port_id }}
+                jsonPathQuery: |
+                  hasKey($.current.result, "security_groups") && $.current.result.security_groups[?(@ == $.parameters.security_group_id)].length > 0
+            links:
+              get:
+                target: /network/port/security-group-attachment/get
+                description: Check if this Security Group is attached to this Port
+                parameters:
+                  security_group_id: $.parameters.security_group_id
+                  port_id: $.parameters.port_id
+
+          - name: get
+            description: Check if a Public IP is attached to a Port
+            scopes:
+            - "network.read"
+
+            parametersSchema:
+              $ref: blueprint#/components/schemas/PortAttachObject
+            configsSchema:
+              $ref: blueprint#/components/configsSchemas/default
+            resultSchema:
+              $ref: blueprint#/components/schemas/PortAttachObject
+
+            steps:
+            - target: /network/port/get
+              parameters:
+                port_id: $.parameters.port_id
+              retryUntil:
+                maxRetries: 3
+                interval: 5s
+                jsonPathQuery: |
+                  hasKey($.current.result, "security_groups") && $.current.result.security_groups[?(@ == $.parameters.security_group_id)].length > 0
+
+              check:
+                errorMessageTemplate: |
+                  Security Group {{ .parameters.security_group_id }} is not attached to Port {{ .parameters.port_id }}
+                jsonPathQuery: |
+                  hasKey($.current.result, "security_groups") && $.current.result.security_groups[?(@ == $.parameters.security_group_id)].length > 0
+
+          - name: delete
+            description: Detach a Security Group from a Port
+            scopes:
+            - "network.write"
+
+            confirm: |
+              Detaching Security Group {{ .parameters.security_group_id }} from Port {{ .parameters.port_id }}. Confirm?
+
+            parametersSchema:
+              $ref: blueprint#/components/schemas/PortAttachObject
+            configsSchema:
+              $ref: blueprint#/components/configsSchemas/default
+            resultSchema:
+              $ref: blueprint#/components/schemas/PortAttachObject
+
+            result: | # the result values must match the parameters, so use directly:
+              {
+                "security_group_id": $.parameters.security_group_id,
+                "port_id": $.parameters.port_id,
+              }
+
+            steps:
+            - target: /network/port/detach
+              parameters:
+                security_group_id: $.parameters.security_group_id
+                port_id: $.parameters.port_id
 
   - name: public_ip
     description: VPC Public IPs

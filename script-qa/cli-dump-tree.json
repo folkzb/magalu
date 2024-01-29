@@ -12854,10 +12854,12 @@
        "additionalProperties": false,
        "properties": {
         "port_id": {
+         "magalu.cloud/core/resolved": "true",
          "title": "Port Id",
          "type": "string"
         },
         "security_group_id": {
+         "magalu.cloud/core/resolved": "true",
          "title": "Security Group Id",
          "type": "string"
         }
@@ -13623,6 +13625,242 @@
        "type": "array"
       },
       "version": "1.101.2"
+     },
+     {
+      "children": [
+       {
+        "configs": {
+         "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "env": {
+           "default": "prod",
+           "description": "Environment to use",
+           "enum": [
+            "prod",
+            "pre-prod"
+           ],
+           "type": "string"
+          },
+          "region": {
+           "default": "br-ne1",
+           "description": "Region to reach the service",
+           "enum": [
+            "br-ne1",
+            "br-se1"
+           ],
+           "type": "string"
+          },
+          "serverUrl": {
+           "description": "Manually specify the server to use",
+           "format": "uri",
+           "type": "string"
+          }
+         },
+         "type": "object"
+        },
+        "description": "Attach a Security Group to a Port",
+        "isInternal": false,
+        "name": "create",
+        "parameters": {
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "port_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Port Id",
+           "type": "string"
+          },
+          "security_group_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Security Group Id",
+           "type": "string"
+          }
+         },
+         "required": [
+          "security_group_id",
+          "port_id"
+         ],
+         "type": "object"
+        },
+        "result": {
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "port_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Port Id",
+           "type": "string"
+          },
+          "security_group_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Security Group Id",
+           "type": "string"
+          }
+         },
+         "required": [
+          "security_group_id",
+          "port_id"
+         ],
+         "type": "object"
+        },
+        "version": ""
+       },
+       {
+        "configs": {
+         "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "env": {
+           "default": "prod",
+           "description": "Environment to use",
+           "enum": [
+            "prod",
+            "pre-prod"
+           ],
+           "type": "string"
+          },
+          "region": {
+           "default": "br-ne1",
+           "description": "Region to reach the service",
+           "enum": [
+            "br-ne1",
+            "br-se1"
+           ],
+           "type": "string"
+          },
+          "serverUrl": {
+           "description": "Manually specify the server to use",
+           "format": "uri",
+           "type": "string"
+          }
+         },
+         "type": "object"
+        },
+        "description": "Detach a Security Group from a Port",
+        "isInternal": false,
+        "name": "delete",
+        "parameters": {
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "port_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Port Id",
+           "type": "string"
+          },
+          "security_group_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Security Group Id",
+           "type": "string"
+          }
+         },
+         "required": [
+          "security_group_id",
+          "port_id"
+         ],
+         "type": "object"
+        },
+        "result": {
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "port_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Port Id",
+           "type": "string"
+          },
+          "security_group_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Security Group Id",
+           "type": "string"
+          }
+         },
+         "required": [
+          "security_group_id",
+          "port_id"
+         ],
+         "type": "object"
+        },
+        "version": ""
+       },
+       {
+        "configs": {
+         "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "env": {
+           "default": "prod",
+           "description": "Environment to use",
+           "enum": [
+            "prod",
+            "pre-prod"
+           ],
+           "type": "string"
+          },
+          "region": {
+           "default": "br-ne1",
+           "description": "Region to reach the service",
+           "enum": [
+            "br-ne1",
+            "br-se1"
+           ],
+           "type": "string"
+          },
+          "serverUrl": {
+           "description": "Manually specify the server to use",
+           "format": "uri",
+           "type": "string"
+          }
+         },
+         "type": "object"
+        },
+        "description": "Check if a Public IP is attached to a Port",
+        "isInternal": false,
+        "name": "get",
+        "parameters": {
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "port_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Port Id",
+           "type": "string"
+          },
+          "security_group_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Security Group Id",
+           "type": "string"
+          }
+         },
+         "required": [
+          "security_group_id",
+          "port_id"
+         ],
+         "type": "object"
+        },
+        "result": {
+         "magalu.cloud/core/resolved": "true",
+         "properties": {
+          "port_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Port Id",
+           "type": "string"
+          },
+          "security_group_id": {
+           "magalu.cloud/core/resolved": "true",
+           "title": "Security Group Id",
+           "type": "string"
+          }
+         },
+         "required": [
+          "security_group_id",
+          "port_id"
+         ],
+         "type": "object"
+        },
+        "version": ""
+       }
+      ],
+      "description": "Manage the attachment between a Security Group and a Port",
+      "isInternal": false,
+      "name": "security-group-attachment",
+      "version": ""
      }
     ],
     "description": "VPC Port",

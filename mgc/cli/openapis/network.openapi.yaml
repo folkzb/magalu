@@ -320,24 +320,6 @@ paths:
                     content:
                         application/json:
                             schema: {}
-                    links:
-                        get-connection:
-                            description: Check if a Security Group is attached to
-                                this Port
-                            operationId: portDetails
-                            parameters:
-                                port_id: $request.path.port_id
-                            x-mgc-wait-termination:
-                                maxRetries: 2
-                                interval: 5s
-                                jsonPathQuery: $.result.security_groups[?(@.id ==
-                                    $.owner.parameters.security_group_id)]
-                        delete-connection:
-                            description: Detach this Security Group from this Port
-                            operationId: detachSecurityGroup
-                            parameters:
-                                port_id: $request.path.port_id
-                                security_group_id: $request.path.security_group_id
                 '422':
                     description: Validation Error
                     content:

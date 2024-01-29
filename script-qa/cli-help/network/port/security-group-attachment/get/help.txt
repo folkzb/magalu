@@ -1,13 +1,12 @@
-Attach a Security Group to a Port
+Check if a Public IP is attached to a Port
 
 Usage:
-  ./cli network port attach [port-id] [security-group-id] [flags]
+  ./cli network port security-group-attachment get [flags]
 
 Flags:
-  -h, --help                       help for attach
+  -h, --help                       help for get
       --port-id string             Port Id (required)
       --security-group-id string   Security Group Id (required)
-  -v, --version                    version for attach
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
