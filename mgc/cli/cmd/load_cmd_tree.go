@@ -11,7 +11,7 @@ import (
 	mgcSdk "magalu.cloud/sdk"
 )
 
-var descriptorsToIgnore = []string{"volume-attachment"}
+var descriptorsToIgnore = []string{"volume-attachment", "port-attachment"}
 
 func addChildDesc(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, child core.Descriptor) (cmd *cobra.Command, flags *cmdFlags, err error) {
 	if childGroup, ok := child.(mgcSdk.Grouper); ok {

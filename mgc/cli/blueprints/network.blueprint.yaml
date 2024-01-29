@@ -3,6 +3,22 @@ name: network
 url: https://network.magalu.cloud
 version: 1.99.5
 description: Operations for Network API
+components:
+  schemas:
+    PublicIPAttachObject:
+      type: object
+      required:
+        - public_ip_id
+        - port_id
+      properties:
+        public_ip_id:
+          $ref: /network/public_ip/attach/parametersSchema/properties/public_ip_id
+        port_id:
+          $ref: /network/public_ip/attach/parametersSchema/properties/port_id
+
+  configsSchemas:
+    default:
+      $ref: /network/public_ip/get/configsSchema
 
 children:
   - name: port
@@ -16,6 +32,97 @@ children:
     children:
       - $ref: http://magalu.cloud/sdk#/network/vpc/public-ips/create
         isInternal: false
+      - name: port-attachment
+        description: Manage the attachment between a Public IP and a Port
+        children:
+          - name: create
+            description: Attach a Public IP to a Port
+            scopes:
+            - "network.write"
+
+            parametersSchema:
+              $ref: blueprint#/components/schemas/PublicIPAttachObject
+            configsSchema:
+              $ref: blueprint#/components/configsSchemas/default
+            resultSchema:
+              $ref: blueprint#/components/schemas/PublicIPAttachObject
+
+            steps:
+            - target: /network/public_ip/attach
+              parameters:
+                public_ip_id: $.parameters.public_ip_id
+                port_id: $.parameters.port_id
+
+            - target: /network/public_ip/get
+              parameters:
+                public_ip_id: $.parameters.public_ip_id
+              check:
+                errorMessageTemplate: |
+                  PublicIP {{ .parameters.public_ip_id }} was not attached to Port {{ .parameters.port_id }}
+                jsonPathQuery: |
+                  hasKey($.current.result, "port_id") && $.current.result.port_id == $.current.parameters.port_id
+            links:
+              get:
+                target: /network/public_ip/port-attachment/get
+                description: Check if this Public IP is attached to a Port
+                parameters:
+                  public_ip_id: $.parameters.public_ip_id
+                  port_id: $.parameters.port_id
+
+          - name: get
+            description: Check if a Public IP is attached to a Port
+            scopes:
+            - "network.read"
+
+            parametersSchema:
+              $ref: blueprint#/components/schemas/PublicIPAttachObject
+            configsSchema:
+              $ref: blueprint#/components/configsSchemas/default
+            resultSchema:
+              $ref: blueprint#/components/schemas/PublicIPAttachObject
+
+            steps:
+            - target: /network/public_ip/get
+              parameters:
+                public_ip_id: $.parameters.public_ip_id
+              retryUntil:
+                maxRetries: 3
+                interval: 5s
+                jsonPathQuery: |
+                  hasKey($.current.result, "port_id") && $.current.result.port_id == $.current.parameters.port_id
+
+              check:
+                errorMessageTemplate: |
+                  PublicIP {{ .parameters.public_ip_id }} is not attached to Port {{ .parameters.port_id }}
+                jsonPathQuery: |
+                  hasKey($.current.result, "port_id") && $.current.result.port_id == $.current.parameters.port_id
+
+          - name: delete
+            description: Detach a Public IP from a Port
+            scopes:
+            - "network.write"
+
+            confirm: |
+              Detaching PublicIP {{ .parameters.public_ip_id }} from Port {{ .parameters.port_id }}. Confirm?
+
+            parametersSchema:
+              $ref: blueprint#/components/schemas/PublicIPAttachObject
+            configsSchema:
+              $ref: blueprint#/components/configsSchemas/default
+            resultSchema:
+              $ref: blueprint#/components/schemas/PublicIPAttachObject
+
+            result: | # the result values must match the parameters, so use directly:
+              {
+                "public_ip_id": $.parameters.public_ip_id,
+                "port_id": $.parameters.port_id
+              }
+
+            steps:
+            - target: /network/public_ip/detach
+              parameters:
+                public_ip_id: $.parameters.public_ip_id
+                port_id: $.parameters.port_id
 
   - name: rule
     description: VPC Rules
