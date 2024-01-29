@@ -39,7 +39,7 @@ func add(ctx context.Context, params addParameters, _ struct{}) (auth.Scopes, er
 
 	addLogger().Debug("will get all possible scopes for validation")
 
-	allScopes, err := listAllAvailable(ctx)
+	allScopes, err := ListAllAvailable(ctx)
 	if err != nil {
 		addLogger().Warnw("unable to list all possible scopes", "err", err)
 		return nil, fmt.Errorf("unable to list all available scopes: %w", err)

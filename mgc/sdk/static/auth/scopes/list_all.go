@@ -32,7 +32,7 @@ func listAll(ctx context.Context, params listAllParameters, _ struct{}) (auth.Sc
 	if len(params.Targets) > 0 {
 		return listAllFromTargets(ctx, params)
 	} else {
-		return listAllAvailable(ctx)
+		return ListAllAvailable(ctx)
 	}
 }
 
@@ -71,7 +71,7 @@ func listAllFromTargets(ctx context.Context, params listAllParameters) (auth.Sco
 	return allScopes, nil
 }
 
-func listAllAvailable(ctx context.Context) (auth.Scopes, error) {
+func ListAllAvailable(ctx context.Context) (auth.Scopes, error) {
 	root := core.GrouperFromContext(ctx)
 	if root == nil {
 		return nil, fmt.Errorf("programming error: context did not contain SDK Grouper information")
