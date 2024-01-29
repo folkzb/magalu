@@ -29,7 +29,7 @@ resource "mgc_block-storage_volumes" "myvmvolume" {
   }
 }
 
-resource "mgc_block-storage_volumes_attach" "myvmvolumeattachment" {
-  id                 = mgc_block-storage_volumes.myvmvolume.id
+resource "mgc_block-storage_volume-attachment" "myvmvolumeattachment" {
+  block_storage_id   = mgc_block-storage_volumes.myvmvolume.id
   virtual_machine_id = mgc_virtual-machine_instances.myvm.id
 }

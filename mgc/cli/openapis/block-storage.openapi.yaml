@@ -784,24 +784,6 @@ paths:
             responses:
                 '204':
                     description: Successful Response
-                    links:
-                        delete-connection:
-                            description: Detach from a Virtual Machine instance
-                            operationRef: '#/paths/~1v1~1volumes~1{id}~1detach~1{virtual_machine_id}/post'
-                            parameters:
-                                id: $request.path.id
-                                virtual_machine_id: $.request.path.virtual_machine_id
-                        get-connection:
-                            description: Check if block storage is attached to Virtual
-                                Machine instance
-                            operationRef: '#/paths/~1v1~1volumes~1{id}/get'
-                            parameters:
-                                id: $request.path.id
-                            x-mgc-wait-termination:
-                                maxRetries: 1
-                                interval: 5s
-                                jsonPathQuery: hasKey($.result, "attachment") && $.result.attachment[?(@.machine_id
-                                    == $.owner.parameters.virtual_machine_id)]
                 '404':
                     content:
                         application/json:
