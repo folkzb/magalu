@@ -9435,13 +9435,13 @@
          "type": "array"
         },
         "version": {
-         "default": "v1.26.9",
+         "default": "v1.28.5",
          "description": "Versão do kubernetes nativa do cluster",
          "enum": [
-          "v1.26.9",
-          "v1.28.2"
+          "v1.26.12",
+          "v1.28.5"
          ],
-         "example": "v1.26.9",
+         "example": "v1.28.5",
          "type": "string"
         }
        },

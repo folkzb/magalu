@@ -4,7 +4,7 @@ Usage:
   ./cli kubernetes cluster create [flags]
 
 Examples:
-  ./cli kubernetes cluster create --description="Esse é um cluster de exemplo" --enabled-bastion=false --enabled-server-group=false --name="cluster-exemplo" --param.version="v1.26.9"
+  ./cli kubernetes cluster create --description="Esse é um cluster de exemplo" --enabled-bastion=false --enabled-server-group=false --name="cluster-exemplo" --param.version="v1.28.5"
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
@@ -21,7 +21,7 @@ Flags:
                                        (required)
       --node-pools array(object)      Conjunto de nodes em um cluster kubernetes
                                       Use --node-pools=help for more details
-      --param.version enum            Versão do kubernetes nativa do cluster (one of "v1.26.9" or "v1.28.2") (default "v1.26.9")
+      --param.version enum            Versão do kubernetes nativa do cluster (one of "v1.26.12" or "v1.28.5") (default "v1.28.5")
   -v, --version                       version for create
 
 Global Flags:

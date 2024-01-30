@@ -4,9 +4,10 @@ Usage:
   ./cli kubernetes cluster kubeconfig [id] [flags]
 
 Flags:
-  -h, --help      help for kubeconfig
-      --id uuid   Esquema de obter o arquivo do kubeconfig do cluster (required)
-  -v, --version   version for kubeconfig
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for kubeconfig
+      --id uuid                       Esquema de obter o arquivo do kubeconfig do cluster (required)
+  -v, --version                       version for kubeconfig
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

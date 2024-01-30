@@ -42,14 +42,14 @@ paths:
                     links:
                         get:
                             operationId: getClusterById
-                            description: Read cluster
+                            description: Lista as informações de um cluster
                             parameters:
-                                custer_id: $response.body#/id
+                                id: $response.body#/id
                         delete:
                             operationId: deleteCluster
-                            description: Delete cluster
+                            description: Deleta um cluster
                             parameters:
-                                custer_id: $response.body#/id
+                                id: $response.body#/id
     /v0/clusters/{cluster_id}:
         get:
             parameters:
@@ -60,9 +60,9 @@ paths:
                     links:
                         delete:
                             operationId: deleteCluster
-                            description: Delete cluster
+                            description: Deleta um cluster
                             parameters:
-                                custer_id: $response.body#/id
+                                cluster_id: $request.path.cluster_id
         delete:
             parameters:
             -   name: cluster_id
@@ -79,19 +79,19 @@ paths:
                     links:
                         get:
                             operationId: getNodePool
-                            description: Read node pool
+                            description: Lista nodes de um node pool
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $response.body#/id
                         update:
                             operationId: patchNodePool
-                            description: Read node pool
+                            description: Atualiza nodes de um node pool
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $response.body#/id
                         delete:
                             operationId: deleteNodePool
-                            description: Delete node pool
+                            description: Deleta um node pool em um cluster do Kubernetes
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $response.body#/id
@@ -106,13 +106,13 @@ paths:
                     links:
                         update:
                             operationId: patchNodePool
-                            description: Read node pool
+                            description: Atualiza nodes de um node pool
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
                         delete:
                             operationId: deleteNodePool
-                            description: Delete node pool
+                            description: Deleta um node pool em um cluster do Kubernetes
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
@@ -126,13 +126,13 @@ paths:
                     links:
                         get:
                             operationId: getNodePool
-                            description: Read node pool
+                            description: Lista nodes de um node pool
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
                         delete:
                             operationId: deleteNodePool
-                            description: Delete node pool
+                            description: Deleta um node pool em um cluster do Kubernetes
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
