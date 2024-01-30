@@ -25,7 +25,7 @@ var getDeleteAll = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 })
 
-func deleteAll(ctx context.Context, params common.DeleteAllObjectsParams, cfg common.Config) (result core.Value, err error) {
-	err = common.DeleteAllObjects(ctx, params, cfg)
+func deleteAll(ctx context.Context, params common.DeleteAllObjectsInBucketParams, cfg common.Config) (result core.Value, err error) {
+	err = common.DeleteAllObjectsInBucket(ctx, params, cfg)
 	return
 }

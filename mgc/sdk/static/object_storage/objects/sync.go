@@ -192,7 +192,7 @@ func sync(ctx context.Context, params syncParams, cfg common.Config) (result cor
 			return nil, core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", common.MinBatchSize, common.MaxBatchSize, params.BatchSize)}
 		}
 
-		go common.ReportDeleteProgress(reportProgress, reportChan, common.DeleteAllObjectsParams{
+		go common.ReportDeleteProgress(reportProgress, reportChan, common.DeleteAllObjectsInBucketParams{
 			BucketName: bucketName,
 		})
 

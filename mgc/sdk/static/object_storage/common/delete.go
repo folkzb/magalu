@@ -29,7 +29,7 @@ type DeleteObjectParams struct {
 	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file.txt" mgc:"positional"`
 }
 
-type DeleteAllObjectsParams struct {
+type DeleteAllObjectsInBucketParams struct {
 	BucketName BucketName       `json:"bucket" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
 	BatchSize  int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to delete,default=1000,minimum=1,maximum=1000" example:"1000"`
 	Filters    `json:",squash"` // nolint
@@ -125,7 +125,7 @@ type DeleteProgressReport struct {
 	err   error
 }
 
-func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Config) error {
+func DeleteAllObjectsInBucket(ctx context.Context, params DeleteAllObjectsInBucketParams, cfg Config) error {
 	dst := params.BucketName.AsURI()
 	listParams := ListObjectsParams{
 		Destination: dst,
@@ -165,7 +165,7 @@ func DeleteAllObjects(ctx context.Context, params DeleteAllObjectsParams, cfg Co
 	return nil
 }
 
-func ReportDeleteProgress(reportProgress progress_report.ReportProgress, reportChan <-chan DeleteProgressReport, p DeleteAllObjectsParams) {
+func ReportDeleteProgress(reportProgress progress_report.ReportProgress, reportChan <-chan DeleteProgressReport, p DeleteAllObjectsInBucketParams) {
 	name := "Delete from " + p.BucketName.String()
 	total := uint64(0)
 	progress := uint64(0)

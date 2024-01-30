@@ -49,7 +49,7 @@ func delete(ctx context.Context, params deleteParams, cfg common.Config) (result
 		"cfg", cfg,
 	)
 
-	err = common.DeleteAllObjects(ctx, common.DeleteAllObjectsParams{BucketName: params.BucketName, BatchSize: common.MaxBatchSize}, cfg)
+	err = common.DeleteAllObjectsInBucket(ctx, common.DeleteAllObjectsInBucketParams{BucketName: params.BucketName, BatchSize: common.MaxBatchSize}, cfg)
 	if err != nil {
 		return nil, err
 	}
