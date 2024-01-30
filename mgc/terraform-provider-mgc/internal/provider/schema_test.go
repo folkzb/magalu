@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -394,10 +395,12 @@ var testCases = []testCase{
 				PlanModifiers: []planmodifier.Int64{},
 			},
 			"count": schema.NumberAttribute{
-				Optional:      true,
-				Computed:      false,
-				Description:   "count description",
-				PlanModifiers: []planmodifier.Number{},
+				Optional:    true,
+				Computed:    false,
+				Description: "count description",
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"extra_field": schema.ListNestedAttribute{
 				NestedObject: schema.SingleNestedAttribute{
@@ -440,8 +443,10 @@ var testCases = []testCase{
 				},
 			},
 			"name": schema.StringAttribute{
-				Required:      true,
-				PlanModifiers: []planmodifier.String{},
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	},

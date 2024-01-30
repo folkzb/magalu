@@ -154,7 +154,7 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 		isRequired:                 isRequired,
 		isOptional:                 !isRequired,
 		isComputed:                 isComputed,
-		useStateForUnknown:         requiresReplace,
+		useStateForUnknown:         true,
 		nameOverride:               nameOverride,
 		requiresReplaceWhenChanged: requiresReplace,
 		getChildModifiers:          getInputChildModifiers,
@@ -209,8 +209,14 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *m
 	}
 }
 
+var propsUpdatableByServer = []string{"error", "updated_at", "updated"}
+var propsNotUpdatableByServer = []string{"created_at"}
+
 func (r *MgcResource) getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	propSchema := (*mgcSchemaPkg.Schema)(mgcSchema.Properties[string(mgcName)].Value)
+
 	isOptional := r.doesPropHaveSetter(mgcName)
+	useStateForUnknown := (isOptional || slices.Contains(propsNotUpdatableByServer, string(mgcName))) && !slices.Contains(propsUpdatableByServer, string(mgcName))
 	// In the following cases, this Result Attr will have a different structure when compared to its
 	// Input counterpart, and this it will be transformed into 'current_<name>'. These 'current_<name>'
 	// attributes, with mismatches, should NEVER be optional, the User must never deal with them
@@ -222,17 +228,24 @@ func (r *MgcResource) getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.
 	// mismatches, when we transform this into a 'current_<name>' attribute, but we can't modify
 	// the 'isOptional' value to false in that step since it's after everything has already been
 	// created and we only have an interface to deal with the TF Schema :/
-	if createProp, ok := r.create.ParametersSchema().Properties[string(mgcName)]; isOptional && ok {
-		isOptional = mgcSchemaPkg.CheckSimilarJsonSchemas((*mgcSchemaPkg.Schema)(createProp.Value), mgcSchema)
-	} else if updateProp, ok := r.update.ParametersSchema().Properties[string(mgcName)]; isOptional && ok {
-		isOptional = mgcSchemaPkg.CheckSimilarJsonSchemas((*mgcSchemaPkg.Schema)(updateProp.Value), mgcSchema)
+	var inputCounterpart *mgcSchemaPkg.Schema
+	if createProp, ok := r.create.ParametersSchema().Properties[string(mgcName)]; ok {
+		inputCounterpart = (*mgcSchemaPkg.Schema)(createProp.Value)
+	} else if updateProp, ok := r.update.ParametersSchema().Properties[string(mgcName)]; ok {
+		inputCounterpart = (*mgcSchemaPkg.Schema)(updateProp.Value)
+	}
+
+	if inputCounterpart != nil {
+		willSplit := !mgcSchemaPkg.CheckSimilarJsonSchemas(inputCounterpart, propSchema)
+		isOptional = isOptional && !willSplit
+		useStateForUnknown = !willSplit
 	}
 
 	return attributeModifiers{
 		isRequired:                 false,
 		isOptional:                 isOptional,
 		isComputed:                 true,
-		useStateForUnknown:         false,
+		useStateForUnknown:         useStateForUnknown,
 		requiresReplaceWhenChanged: false,
 		ignoreDefault:              true,
 		getChildModifiers:          getResultModifiers,
