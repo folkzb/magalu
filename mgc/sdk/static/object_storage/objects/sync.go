@@ -2,7 +2,6 @@ package objects
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"path/filepath"
 
@@ -183,27 +182,14 @@ func sync(ctx context.Context, params syncParams, cfg common.Config) (result cor
 	}
 
 	if params.Delete && len(toDelete) > 0 {
-		reportProgress := progress_report.FromContext(ctx)
-		bucketName := common.NewBucketNameFromURI(params.Destination)
-		reportChan := make(chan common.DeleteProgressReport)
-		defer close(reportChan)
-
-		if params.BatchSize < common.MinBatchSize || params.BatchSize > common.MaxBatchSize {
-			return nil, core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", common.MinBatchSize, common.MaxBatchSize, params.BatchSize)}
-		}
-
-		go common.ReportDeleteProgress(reportProgress, reportChan, common.DeleteAllObjectsInBucketParams{
-			BucketName: bucketName,
-		})
-
 		deleteChannel := pipeline.SliceItemGenerator[pipeline.WalkDirEntry](ctx, toDelete)
-		objsBatch := pipeline.Batch(ctx, deleteChannel, params.BatchSize)
-		deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objsBatch, common.CreateObjectDeletionProcessor(cfg, bucketName, reportChan), nil)
-		deleteObjectsErrorChan = pipeline.Filter(ctx, deleteObjectsErrorChan, pipeline.FilterNonNil[error]{})
-
-		objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, deleteObjectsErrorChan)
-		if len(objErr) > 0 {
-			return nil, objErr
+		err := common.DeleteObjects(ctx, common.DeleteObjectsParams{
+			Destination: params.Destination,
+			ToDelete:    deleteChannel,
+			BatchSize:   params.BatchSize,
+		}, cfg)
+		if err != nil {
+			return nil, err
 		}
 	}
 

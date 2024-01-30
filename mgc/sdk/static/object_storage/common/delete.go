@@ -29,6 +29,12 @@ type DeleteObjectParams struct {
 	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file.txt" mgc:"positional"`
 }
 
+type DeleteObjectsParams struct {
+	Destination mgcSchemaPkg.URI
+	ToDelete    <-chan pipeline.WalkDirEntry
+	BatchSize   int
+}
+
 type DeleteAllObjectsInBucketParams struct {
 	BucketName BucketName       `json:"bucket" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
 	BatchSize  int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to delete,default=1000,minimum=1,maximum=1000" example:"1000"`
@@ -221,5 +227,30 @@ func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err err
 
 	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
+	return nil
+}
+
+func DeleteObjects(ctx context.Context, params DeleteObjectsParams, cfg Config) error {
+	reportProgress := progress_report.FromContext(ctx)
+	bucketName := NewBucketNameFromURI(params.Destination)
+	reportChan := make(chan DeleteProgressReport)
+	defer close(reportChan)
+
+	if params.BatchSize < MinBatchSize || params.BatchSize > MaxBatchSize {
+		return core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", MinBatchSize, MaxBatchSize, params.BatchSize)}
+	}
+
+	go ReportDeleteProgress(reportProgress, reportChan, DeleteAllObjectsInBucketParams{
+		BucketName: bucketName,
+	})
+
+	objsBatch := pipeline.Batch(ctx, params.ToDelete, params.BatchSize)
+	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objsBatch, CreateObjectDeletionProcessor(cfg, bucketName, reportChan), nil)
+	deleteObjectsErrorChan = pipeline.Filter(ctx, deleteObjectsErrorChan, pipeline.FilterNonNil[error]{})
+
+	objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, deleteObjectsErrorChan)
+	if len(objErr) > 0 {
+		return objErr
+	}
 	return nil
 }
