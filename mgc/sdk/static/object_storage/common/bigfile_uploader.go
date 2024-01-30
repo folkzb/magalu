@@ -176,8 +176,8 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 	return nil
 }
 
-func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFunc, totalParts int, uploadId string) pipeline.Processor[pipeline.Chunk, completionPart] {
-	return func(ctx context.Context, chunk pipeline.Chunk) (part completionPart, status pipeline.ProcessStatus) {
+func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFunc, totalParts int, uploadId string) pipeline.Processor[pipeline.ReadableChunk, completionPart] {
+	return func(ctx context.Context, chunk pipeline.ReadableChunk) (part completionPart, status pipeline.ProcessStatus) {
 		var err error
 		defer func() { u.reportProgress(0, err) }()
 

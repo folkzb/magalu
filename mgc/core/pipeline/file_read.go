@@ -14,7 +14,7 @@ type ChunkReader interface {
 	io.ReaderAt
 }
 
-type Chunk struct {
+type ReadableChunk struct {
 	Reader      ChunkReader
 	StartOffset int64
 	TotalSize   int64
@@ -23,7 +23,7 @@ type Chunk struct {
 // Reads a file into Chunks (Sections), each being its own ChunkReader (io.SectionReader)
 //
 // Wrapper on top of ReadChunks() that queries the f.Stat().Size()
-func ReadFileChunks(ctx context.Context, f *os.File, chunkSize int64) (<-chan Chunk, error) {
+func ReadFileChunks(ctx context.Context, f *os.File, chunkSize int64) (<-chan ReadableChunk, error) {
 	st, err := f.Stat()
 	if err != nil {
 		return nil, err
@@ -43,8 +43,8 @@ func ReadChunks(
 	r io.ReaderAt,
 	size int64,
 	chunkSize int64,
-) (outputChan <-chan Chunk) {
-	ch := make(chan Chunk)
+) (outputChan <-chan ReadableChunk) {
+	ch := make(chan ReadableChunk)
 	outputChan = ch
 
 	logger := FromContext(ctx).Named("ReadChunks").With(
@@ -68,7 +68,7 @@ func ReadChunks(
 				logger.Debugw("context.Done()", "err", ctx.Err())
 				return
 
-			case ch <- Chunk{io.NewSectionReader(r, i, chunkSize), i, size}:
+			case ch <- ReadableChunk{io.NewSectionReader(r, i, chunkSize), i, size}:
 				logger.Debugw("read section", "offset", i)
 			}
 		}
