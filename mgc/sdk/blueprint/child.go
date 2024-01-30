@@ -69,7 +69,9 @@ func populateExecutor(spec *childSpec, newSpec core.Descriptor, ref core.RefPath
 		return
 	}
 
-	spec.linkers = executor.Links()
+	if spec.linkers == nil && spec.Links == nil {
+		spec.linkers = executor.Links()
+	}
 
 	if spec.parametersSchema == nil && spec.ParametersSchema == nil {
 		spec.ParametersSchema = schemaPkg.NewSchemaRef("", executor.ParametersSchema())
@@ -87,21 +89,9 @@ func populateExecutor(spec *childSpec, newSpec core.Descriptor, ref core.RefPath
 	}
 
 	if spec.Steps == nil {
-		parameters := map[string]string{}
-		for paramName := range executor.ParametersSchema().Properties {
-			parameters[paramName] = "$.parameters." + paramName
-		}
-		configs := map[string]string{}
-		for configName := range executor.ConfigsSchema().Properties {
-			configs[configName] = "$.configs." + configName
-		}
-		spec.Steps = []*executeStep{
-			{
-				Target:     ref,
-				Parameters: parameters,
-				Configs:    configs,
-			},
-		}
+		spec.Steps = []*executeStep{{
+			Target: ref,
+		}}
 	}
 }
 
