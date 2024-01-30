@@ -81,7 +81,7 @@ func loadMgcSchemaValue(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 	case "array":
 		return loadMgcSchemaArray(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "object":
-		return loadMgcSchemaMap(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
+		return loadMgcSchemaObject(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	default:
 		return nil, false, NewLocalErrorDiagnostics("Unknown value", fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v", atinfo.mgcName, tfValue, mgcSchema))
 	}
@@ -225,11 +225,11 @@ func loadMgcSchemaArray(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 
 // If 'atinfo' doesn't have a property present in 'atinfo.mgcSchema', it will be ignored. This means that the resulting MgcMap may be incomplete and it is up
 // to the caller to ensure that all properties of 'atinfo.mgcSchema' were fulfilled in the resulting mgcMap
-func loadMgcSchemaMap(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (any, bool, Diagnostics) {
+func loadMgcSchemaObject(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (any, bool, Diagnostics) {
 	diagnostics := Diagnostics{}
 	tflog.Debug(
 		ctx,
-		"[loader] will load as map",
+		"[loader] will load as object",
 		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
 	)
 	var tfMap map[string]tftypes.Value
@@ -338,7 +338,7 @@ func loadMgcSchemaMap(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.
 }
 
 // Read values from tfValue into a map suitable to MGC
-func readMgcMap(ctx context.Context, mgcSchema *mgcSdk.Schema, attributes resAttrInfoMap, tfState tfsdk.State) (map[string]any, Diagnostics) {
+func readMgcObject(ctx context.Context, mgcSchema *mgcSdk.Schema, attributes resAttrInfoMap, tfState tfsdk.State) (map[string]any, Diagnostics) {
 	attr := &resAttrInfo{
 		tfName:          "inputSchemasInfo",
 		mgcName:         "inputSchemasInfo",
@@ -347,7 +347,7 @@ func readMgcMap(ctx context.Context, mgcSchema *mgcSdk.Schema, attributes resAtt
 	}
 
 	diagnostics := Diagnostics{}
-	m, _, d := loadMgcSchemaMap(ctx, attr, tfState.Raw, true, true)
+	m, _, d := loadMgcSchemaObject(ctx, attr, tfState.Raw, true, true)
 	if diagnostics.AppendCheckError(d...) {
 		return nil, diagnostics
 	}

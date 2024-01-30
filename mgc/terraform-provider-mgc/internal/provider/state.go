@@ -42,11 +42,11 @@ func missingSchemaKeysInMap(m map[string]core.Value, s *mgcSchemaPkg.Schema, pre
 func readMgcMapSchemaFromTFState(ctx context.Context, attrTree resAttrInfoTree, mgcSchema *mgcSdk.Schema, tfState tfsdk.State) (map[string]any, Diagnostics) {
 	diagnostics := Diagnostics{}
 
-	result, d := readMgcMap(ctx, mgcSchema, attrTree.input, tfState)
+	result, d := readMgcObject(ctx, mgcSchema, attrTree.input, tfState)
 	if !d.HasError() {
 		return result, diagnostics.AppendReturn(d...)
 	}
-	output, d := readMgcMap(ctx, mgcSchema, attrTree.output, tfState)
+	output, d := readMgcObject(ctx, mgcSchema, attrTree.output, tfState)
 	if !d.HasError() {
 		return result, diagnostics.AppendReturn(d...)
 	}

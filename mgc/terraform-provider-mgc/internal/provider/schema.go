@@ -428,7 +428,7 @@ func mgcArraySchemaToTFAttribute(ctx context.Context, description string, mgcSch
 	isComputed := m.isComputed
 	var d defaults.List
 	if v, ok := mgcSchema.Default.([]any); ok && !m.isRequired && !m.ignoreDefault {
-		lst, err := tfAttrListValueFromMgcSchema(ctx, mgcSchema, *childAttrs["0"], v)
+		lst, err := tfAttrListValueFromMgcSchema(ctx, mgcSchema, childAttrs["0"], v)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -515,7 +515,7 @@ func mgcObjectSchemaToTFAttribute(ctx context.Context, description string, mgcSc
 	}, childAttrs, nil
 }
 
-func tfAttrListValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, listAttr resAttrInfo, v []any) (attr.Value, error) {
+func tfAttrListValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, listAttr *resAttrInfo, v []any) (attr.Value, error) {
 	attrSchema := (*core.Schema)(s.Items.Value)
 	attrType := listAttr.tfSchema.GetType()
 	attrValues := []attr.Value{}
@@ -545,7 +545,7 @@ func tfAttrObjectValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, mapAt
 	for k := range v {
 		attrSchema := (*core.Schema)(s.Properties[k].Value)
 
-		val, ok, err := tfAttrValueFromMgcSchema(ctx, attrSchema, *mapAttr[mgcName(k)], v[k])
+		val, ok, err := tfAttrValueFromMgcSchema(ctx, attrSchema, mapAttr[mgcName(k)], v[k])
 		if err != nil {
 			return nil, err
 		}
@@ -564,7 +564,7 @@ func tfAttrObjectValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, mapAt
 	return obj, nil
 }
 
-func tfAttrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType resAttrInfo, v any) (attr.Value, bool, error) {
+func tfAttrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrInfo *resAttrInfo, v any) (attr.Value, bool, error) {
 	if v == nil {
 		return nil, false, nil
 	}
@@ -596,7 +596,7 @@ func tfAttrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType re
 			return nil, false, fmt.Errorf("unable to create attr.Value of type list")
 		}
 
-		attrValue, err := tfAttrListValueFromMgcSchema(ctx, s, attrType, listVal)
+		attrValue, err := tfAttrListValueFromMgcSchema(ctx, s, attrInfo, listVal)
 		if err != nil {
 			return nil, false, err
 		}
@@ -607,7 +607,7 @@ func tfAttrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrType re
 			return nil, false, fmt.Errorf("unable to create attr.Value of type object")
 		}
 
-		attrValue, err := tfAttrObjectValueFromMgcSchema(ctx, s, attrType.childAttributes, mapVal)
+		attrValue, err := tfAttrObjectValueFromMgcSchema(ctx, s, attrInfo.childAttributes, mapVal)
 		if err != nil {
 			return nil, false, err
 		}

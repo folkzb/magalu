@@ -16,15 +16,15 @@ func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, attrInfoMa
 		mgcName:         "tfState",
 		childAttributes: attrInfoMap,
 	}
-	return applyMgcMap(ctx, mgcMap, resInfo, tfState, path.Empty())
+	return applyMgcObject(ctx, mgcMap, resInfo, tfState, path.Empty())
 }
 
-func applyMgcMap(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
+func applyMgcObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
 	diagnostics := Diagnostics{}
 	tflog.Debug(
 		ctx,
-		"[applier] will apply as map",
-		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcValue},
+		"[applier] will apply as object",
+		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcValue, "mgcSchema": attr.mgcSchema},
 	)
 
 	if isSchemaXOfObject(attr.mgcSchema) {
@@ -152,7 +152,7 @@ func applyValueToState(ctx context.Context, mgcValue any, attr *resAttrInfo, tfS
 
 	case "object":
 		tflog.Debug(ctx, fmt.Sprintf("populating nested object in state at path %#v", path))
-		return applyMgcMap(ctx, mgcValue, attr, tfState, path)
+		return applyMgcObject(ctx, mgcValue, attr, tfState, path)
 
 	default:
 		// Should this be a local error? Does TF know it already, since it's their function?
