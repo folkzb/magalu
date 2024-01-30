@@ -51,14 +51,16 @@ func (o *MgcResourceRead) ReadResultSchema() *mgcSchemaPkg.Schema {
 	return o.operation.ResultSchema()
 }
 
-func (o *MgcResourceRead) ChainOperations(context.Context, core.ResultWithValue, ReadResult, TerraformParams, TerraformParams) ([]MgcOperation, bool, Diagnostics) {
+func (o *MgcResourceRead) ChainOperations(_ context.Context, _ core.ResultWithValue, readResult ReadResult, _, _ TerraformParams) ([]MgcOperation, bool, Diagnostics) {
 	readResultKeys := []tfName{}
-	for propName := range o.ReadResultSchema().Properties {
-		attr, ok := o.attrTree.output[mgcName(propName)]
-		if !ok {
-			continue
+	if readMap, ok := readResult.Value().(map[string]any); ok {
+		for k := range readMap {
+			attr, ok := o.attrTree.output[mgcName(k)]
+			if !ok {
+				continue
+			}
+			readResultKeys = append(readResultKeys, attr.tfName)
 		}
-		readResultKeys = append(readResultKeys, attr.tfName)
 	}
 	return []MgcOperation{newMgcPopulateUnknownState(o.resourceName, readResultKeys)}, true, nil
 }

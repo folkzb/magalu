@@ -34,13 +34,12 @@ func (o *MgcPopulateUnknownState) WrapConext(ctx context.Context) context.Contex
 	return ctx
 }
 
-func (o *MgcPopulateUnknownState) CollectParameters(ctx context.Context, _, plan TerraformParams) (core.Parameters, Diagnostics) {
+func (o *MgcPopulateUnknownState) CollectParameters(ctx context.Context, state, plan TerraformParams) (core.Parameters, Diagnostics) {
 	parameters := core.Parameters{}
-	for plannedKey, plannedVal := range plan {
-		if slices.Contains(o.ignoreKeys, plannedKey) {
+	for plannedKey, plannedVal := range state {
+		if _, ok := plan[plannedKey]; ok || slices.Contains(o.ignoreKeys, plannedKey) {
 			continue
 		}
-
 		parameters[string(plannedKey)] = plannedVal
 	}
 	return parameters, nil
@@ -70,6 +69,8 @@ func (o *MgcPopulateUnknownState) PostRun(
 ) (postResult core.ResultWithValue, runChain bool, diagnostics Diagnostics) {
 	diagnostics = Diagnostics{}
 
+	tflog.Info(ctx, "populating unknown state values")
+
 	for paramTFName, paramValue := range result.Source().Parameters {
 		paramTFValue := paramValue.(tftypes.Value)
 
@@ -92,14 +93,20 @@ func (o *MgcPopulateUnknownState) PostRun(
 			)
 		}
 
+		tflog.Debug(ctx, fmt.Sprintf("populating attribute %q in response state with known value", paramTFName))
+
 		if !attrValue.IsUnknown() {
+			tflog.Debug(ctx, fmt.Sprintf("attribute %q is already known in response state, ignoring", paramTFName))
 			continue
 		}
+
+		tflog.Debug(ctx, fmt.Sprintf("populating attribute %q in response state with known value", paramTFName))
 
 		d = targetState.SetAttribute(ctx, attrPath, attrValue)
 		if diagnostics.AppendCheckError(d...) {
 			return result, false, diagnostics
 		}
+		tflog.Debug(ctx, fmt.Sprintf("populated attribute %q in response state with known value %s", paramTFName, attrValue.String()))
 	}
 
 	tflog.Info(ctx, "populated unknown state values")
