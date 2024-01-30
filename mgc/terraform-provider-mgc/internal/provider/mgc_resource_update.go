@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"reflect"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -64,7 +65,7 @@ func (o *MgcResourceUpdate) CollectParameters(ctx context.Context, state, plan T
 			continue
 		}
 
-		if _, ok := readParamsSchema.Properties[prop]; ok || plannedParams[prop] != stateParams[prop] {
+		if _, ok := readParamsSchema.Properties[prop]; ok || !reflect.DeepEqual(plannedParams[prop], stateParams[prop]) {
 			params[prop] = plannedParams[prop]
 			continue
 		}
