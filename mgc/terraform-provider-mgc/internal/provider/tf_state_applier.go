@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -130,21 +129,6 @@ func applyValueToState(ctx context.Context, mgcValue any, attr *resAttrInfo, tfS
 		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcValue},
 	)
 
-	rv := reflect.ValueOf(mgcValue)
-	if mgcValue == nil {
-		// We must check the nil value type, since SetAttribute method requires a typed nil
-		switch attr.mgcSchema.Type {
-		case "string":
-			rv = reflect.ValueOf((*string)(nil))
-		case "integer":
-			rv = reflect.ValueOf((*int64)(nil))
-		case "number":
-			rv = reflect.ValueOf((*float64)(nil))
-		case "boolean":
-			rv = reflect.ValueOf((*bool)(nil))
-		}
-	}
-
 	switch attr.mgcSchema.Type {
 	case "array":
 		tflog.Debug(ctx, fmt.Sprintf("populating list in state at path %#v", path))
@@ -155,8 +139,22 @@ func applyValueToState(ctx context.Context, mgcValue any, attr *resAttrInfo, tfS
 		return applyMgcObject(ctx, mgcValue, attr, tfState, path)
 
 	default:
+		if mgcValue == nil {
+			// We must check the nil value type, since SetAttribute method requires a typed nil
+			switch attr.mgcSchema.Type {
+			case "string":
+				mgcValue = (*string)(nil)
+			case "integer":
+				mgcValue = (*int64)(nil)
+			case "number":
+				mgcValue = (*float64)(nil)
+			case "boolean":
+				mgcValue = (*bool)(nil)
+			}
+		}
+
 		// Should this be a local error? Does TF know it already, since it's their function?
-		d := tfState.SetAttribute(ctx, path, rv.Interface())
+		d := tfState.SetAttribute(ctx, path, mgcValue)
 		return Diagnostics(d)
 	}
 }
