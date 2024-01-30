@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	mgcSchemaPkg "magalu.cloud/core/schema"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, attrInfoMap resAttrInfoMap, tfState *tfsdk.State) Diagnostics {
+func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, schema *mgcSchemaPkg.Schema, attrInfoMap resAttrInfoMap, tfState *tfsdk.State) Diagnostics {
 	resInfo := &resAttrInfo{
 		tfName:          "tfState",
 		mgcName:         "tfState",
+		mgcSchema:       schema,
 		childAttributes: attrInfoMap,
 	}
 	return applyMgcObject(ctx, mgcMap, resInfo, tfState, path.Empty())

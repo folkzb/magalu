@@ -166,7 +166,7 @@ func applyStateAfter(
 
 	tflog.Debug(ctx, "[resource] applying request parameters in state")
 	// First, apply the values that the user passed as Parameters to the state (assuming success)
-	d := applyMgcMapToTFState(ctx, result.Source().Parameters, attrTree.input, tfState)
+	d := applyMgcMapToTFState(ctx, result.Source().Parameters, result.Source().Executor.ParametersSchema(), attrTree.input, tfState)
 	if diagnostics.AppendCheckError(d...) {
 		return nil, nil, d
 	}
@@ -175,7 +175,7 @@ func applyStateAfter(
 	if !d.HasError() {
 		tflog.Debug(ctx, "[resource] applying request result in state")
 		// Then, apply the result values of the request that was performed
-		d := applyMgcMapToTFState(ctx, resultMap, attrTree.output, tfState)
+		d := applyMgcMapToTFState(ctx, resultMap, result.Schema(), attrTree.output, tfState)
 		if diagnostics.AppendCheckError(d...) {
 			return nil, nil, diagnostics
 		}
@@ -218,7 +218,7 @@ func applyStateAfter(
 		return nil, nil, diagnostics
 	}
 
-	d = applyMgcMapToTFState(ctx, readResultMap, attrTree.output, tfState)
+	d = applyMgcMapToTFState(ctx, readResultMap, readResult.Schema(), attrTree.output, tfState)
 	if diagnostics.AppendCheckError(d...) {
 		return nil, nil, diagnostics
 	}
