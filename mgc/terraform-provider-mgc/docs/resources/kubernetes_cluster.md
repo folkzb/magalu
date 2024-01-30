@@ -129,7 +129,7 @@ Read-Only:
 - `created_at` (String) Data de criação do cluster kubernetes
 - `id` (String) Identificador no padrão uuid para identificar o nodepool
 - `instance_template` (Attributes) Template do objeto de instância usado para criar instâncias de máquina e grupos gerenciados de instâncias. (see [below for nested schema](#nestedatt--controlplane--instance_template))
-- `labels` (Attributes) Pares de chave/valor anexados ao objeto e usados para especificação (see [below for nested schema](#nestedatt--controlplane--labels))
+- `labels` (Map of String) Pares de chave/valor anexados ao objeto e usados para especificação
 - `name` (String) Nome do node pool
 - `replicas` (Number) Quantidade de réplicas dos nós do nodepool
 - `security_groups` (List of String) Nome do grupo de segurança para definir regras que permitem tráfego de rede no node pool de workers
@@ -169,10 +169,6 @@ Read-Only:
 - `size` (Number) Quantidade de disco, medido em GB.
 - `vcpu` (Number) Quantidade de vCPUs disponiveis.
 
-
-
-<a id="nestedatt--controlplane--labels"></a>
-### Nested Schema for `controlplane.labels`
 
 
 <a id="nestedatt--controlplane--status"></a>
@@ -217,7 +213,7 @@ Read-Only:
 - `created_at` (String) Data de criação do cluster kubernetes
 - `id` (String) Identificador no padrão uuid para identificar o nodepool
 - `instance_template` (Attributes) Template do objeto de instância usado para criar instâncias de máquina e grupos gerenciados de instâncias. (see [below for nested schema](#nestedatt--current_node_pools--instance_template))
-- `labels` (Attributes) Pares de chave/valor anexados ao objeto e usados para especificação (see [below for nested schema](#nestedatt--current_node_pools--labels))
+- `labels` (Map of String) Pares de chave/valor anexados ao objeto e usados para especificação
 - `name` (String) Nome do node pool
 - `replicas` (Number) Quantidade de réplicas dos nós do nodepool
 - `security_groups` (List of String) Nome do grupo de segurança para definir regras que permitem tráfego de rede no node pool de workers
@@ -257,10 +253,6 @@ Read-Only:
 - `size` (Number) Quantidade de disco, medido em GB.
 - `vcpu` (Number) Quantidade de vCPUs disponiveis.
 
-
-
-<a id="nestedatt--current_node_pools--labels"></a>
-### Nested Schema for `current_node_pools.labels`
 
 
 <a id="nestedatt--current_node_pools--status"></a>

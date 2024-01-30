@@ -81,6 +81,28 @@ func loadMgcSchemaValue(ctx context.Context, atinfo *resAttrInfo, tfValue tftype
 	case "array":
 		return loadMgcSchemaArray(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	case "object":
+		if mgcSchema.AdditionalProperties.Has != nil && *mgcSchema.AdditionalProperties.Has {
+			return nil, false, NewLocalErrorDiagnostics(
+				"Unable to load map from TF State",
+				fmt.Sprintf("Map Schema for %q must have type information, and not just boolean. State value: %#v", atinfo.tfName, tfValue),
+			)
+		}
+
+		if mgcSchema.AdditionalProperties.Schema != nil {
+			if len(mgcSchema.Properties) > 0 {
+				return nil, false, NewLocalErrorDiagnostics(
+					"Unable to load map from TF State",
+					fmt.Sprintf(
+						"Map Schema for %q must not have both Additional and Standard Properties. State value: %#v. Schema value: %#v",
+						atinfo.tfName,
+						tfValue,
+						mgcSchema,
+					),
+				)
+			}
+
+			return loadMgcSchemaMap(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
+		}
 		return loadMgcSchemaObject(ctx, atinfo, tfValue, ignoreUnknown, filterUnset)
 	default:
 		return nil, false, NewLocalErrorDiagnostics("Unknown value", fmt.Sprintf("[loader] unable to load %q with value %+v to schema %+v", atinfo.mgcName, tfValue, mgcSchema))
@@ -334,6 +356,43 @@ func loadMgcSchemaObject(ctx context.Context, atinfo *resAttrInfo, tfValue tftyp
 		}
 	}
 	tflog.Debug(ctx, "[loader] finished loading map", map[string]any{"tfName": atinfo.tfName, "resulting value": mgcMap})
+	return mgcMap, isKnown, diagnostics
+}
+
+func loadMgcSchemaMap(ctx context.Context, atinfo *resAttrInfo, tfValue tftypes.Value, ignoreUnknown bool, filterUnset bool) (any, bool, Diagnostics) {
+	diagnostics := Diagnostics{}
+	tflog.Debug(
+		ctx,
+		"[loader] will load as object",
+		map[string]any{"mgcName": atinfo.mgcName, "tfName": atinfo.tfName, "value": tfValue},
+	)
+	var tfMap map[string]tftypes.Value
+	err := tfValue.As(&tfMap)
+	if err != nil {
+		return nil, false, diagnostics.AppendLocalErrorReturn(
+			"Unable to load value to map",
+			fmt.Sprintf("[loader] unable to load %q with value %#v to schema %#v - error: %s", atinfo.mgcName, tfValue, atinfo.mgcSchema, err.Error()),
+		)
+	}
+
+	mapElemAtInfo := atinfo.childAttributes["0"]
+
+	mgcMap := make(map[string]any, len(tfMap))
+	isKnown := true
+
+	for k, v := range tfMap {
+		propValue, isKnown, d := loadMgcSchemaValue(ctx, mapElemAtInfo, v, ignoreUnknown, filterUnset)
+		if diagnostics.AppendCheckError(d...) {
+			return nil, false, diagnostics
+		}
+
+		if !isKnown {
+			continue
+		}
+
+		mgcMap[k] = propValue
+	}
+
 	return mgcMap, isKnown, diagnostics
 }
 

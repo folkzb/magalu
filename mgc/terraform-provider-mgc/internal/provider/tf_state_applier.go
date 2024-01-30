@@ -21,6 +21,22 @@ func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, schema *mg
 	return applyMgcObject(ctx, mgcMap, resInfo, tfState, path.Empty())
 }
 
+func applyMgcMap(ctx context.Context, mgcMap map[string]any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
+	diagnostics := Diagnostics{}
+	tflog.Debug(
+		ctx,
+		"[applier] will apply as map",
+		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcMap},
+	)
+
+	d := tfState.SetAttribute(ctx, path, mgcMap)
+	if diagnostics.AppendCheckError(d...) {
+		return diagnostics
+	}
+
+	return diagnostics
+}
+
 func applyMgcObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
 	diagnostics := Diagnostics{}
 	tflog.Debug(
@@ -57,6 +73,22 @@ func applyMgcObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfStat
 			"value is not a map",
 			fmt.Sprintf("value is not a map: %#v", mgcValue),
 		)
+	}
+
+	if attr.mgcSchema.AdditionalProperties.Has != nil && *attr.mgcSchema.AdditionalProperties.Has {
+		return diagnostics.AppendLocalErrorReturn(
+			"Unable to apply map to TF State",
+			fmt.Sprintf(
+				"Schema for %q with AdditionalProperties must have type information, and not just a boolean. Value: %#v Schema: %#v",
+				attr.tfName,
+				mgcMap,
+				attr.mgcSchema,
+			),
+		)
+	}
+
+	if attr.mgcSchema.AdditionalProperties.Schema != nil {
+		return applyMgcMap(ctx, mgcMap, attr, tfState, path)
 	}
 
 	for mgcName, attr := range attr.childAttributes {

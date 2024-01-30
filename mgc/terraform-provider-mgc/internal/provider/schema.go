@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
@@ -283,6 +285,22 @@ func mgcSchemaToTFAttribute(mgcSchema *mgcSdk.Schema, m attributeModifiers, ctx 
 	case "array":
 		return mgcArraySchemaToTFAttribute(ctx, description, mgcSchema, m)
 	case "object":
+		if mgcSchema.AdditionalProperties.Has != nil && *mgcSchema.AdditionalProperties.Has {
+			return nil, nil, fmt.Errorf(
+				"Unable to create Terraform Schema from MGC Schema. Schema with Additional Properties must have type information, and not just boolean: %#v",
+				mgcSchema,
+			)
+		}
+		if mgcSchema.AdditionalProperties.Schema != nil {
+			if len(mgcSchema.Properties) > 0 {
+				return nil, nil, fmt.Errorf(
+					"Unable to create Terraform Schema from MGC Schema. Schema cannot have both Additional Properties and standard Properties: %#v",
+					mgcSchema,
+				)
+			}
+
+			return mgcMapSchemaToTFAttribute(ctx, description, mgcSchema, m)
+		}
 		return mgcObjectSchemaToTFAttribute(ctx, description, mgcSchema, m)
 	default:
 		return nil, nil, fmt.Errorf("type %q not supported", mgcSchema.Type)
@@ -469,6 +487,77 @@ func mgcArraySchemaToTFAttribute(ctx context.Context, description string, mgcSch
 	}
 }
 
+func mgcMapSchemaToTFAttribute(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, resAttrInfoMap, error) {
+	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as map", map[string]any{"mgcSchema": mgcSchema})
+	mapValueMgcSchema := (*mgcSchemaPkg.Schema)(mgcSchema.AdditionalProperties.Schema.Value)
+
+	mapValueTFSchema, mapValueChildAttributes, err := mgcSchemaToTFAttribute(mapValueMgcSchema, m, ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	childAttrs := resAttrInfoMap{}
+	childAttrs["0"] = &resAttrInfo{
+		tfName:          "0",
+		mgcName:         "0",
+		mgcSchema:       mapValueMgcSchema,
+		tfSchema:        mapValueTFSchema,
+		childAttributes: mapValueChildAttributes,
+	}
+
+	mod := []planmodifier.Map{}
+	if m.requiresReplaceWhenChanged {
+		mod = append(mod, mapplanmodifier.RequiresReplace())
+	}
+	if m.useStateForUnknown {
+		mod = append(mod, mapplanmodifier.UseStateForUnknown())
+	}
+
+	isComputed := m.isComputed
+
+	var d defaults.Map
+	if v, ok := mgcSchema.Default.(map[string]any); ok && !m.isRequired && !m.ignoreDefault {
+		m, err := tfAttrMapValueFromMgcSchema(ctx, mgcSchema, childAttrs["0"], v)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if m, ok := m.(types.Map); ok {
+			d = mapdefault.StaticValue(m)
+			isComputed = true
+		}
+	}
+
+	if objAttr, ok := mapValueTFSchema.(schema.SingleNestedAttribute); ok {
+		// This type assertion will/should NEVER fail, according to TF code
+		nestedObj, ok := objAttr.GetNestedObject().(schema.NestedAttributeObject)
+		if !ok {
+			return nil, nil, fmt.Errorf("failed TF GetNestedObject")
+		}
+		return schema.MapNestedAttribute{
+			NestedObject:        nestedObj,
+			Description:         description,
+			MarkdownDescription: description,
+			Required:            m.isRequired,
+			Optional:            m.isOptional,
+			Computed:            isComputed,
+			PlanModifiers:       mod,
+			Default:             d,
+		}, childAttrs, nil
+	} else {
+		return schema.MapAttribute{
+			ElementType:         mapValueTFSchema.GetType(),
+			Description:         description,
+			MarkdownDescription: description,
+			Required:            m.isRequired,
+			Optional:            m.isOptional,
+			Computed:            isComputed,
+			PlanModifiers:       mod,
+			Default:             d,
+		}, childAttrs, nil
+	}
+}
+
 func mgcObjectSchemaToTFAttribute(ctx context.Context, description string, mgcSchema *mgcSdk.Schema, m attributeModifiers) (schema.Attribute, resAttrInfoMap, error) {
 	tflog.SubsystemDebug(ctx, schemaGenSubsystem, "generating attribute as object", map[string]any{"mgcSchema": mgcSchema})
 	childAttrs := resAttrInfoMap{}
@@ -539,6 +628,26 @@ func tfAttrListValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, listAtt
 	return lst, nil
 }
 
+func tfAttrMapValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, mapElemAttr *resAttrInfo, v map[string]any) (attr.Value, error) {
+	mapType := mapElemAttr.tfSchema.GetType()
+	mapElements := make(map[string]attr.Value, len(v))
+	for k, sv := range v {
+		propDefault, ok, err := tfAttrValueFromMgcSchema(ctx, mapElemAttr.mgcSchema, mapElemAttr, sv)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			continue
+		}
+		mapElements[k] = propDefault
+	}
+	mapValue, d := types.MapValue(mapType, mapElements)
+	if d.HasError() {
+		return nil, fmt.Errorf("unable to create default map value: %v", d.Errors())
+	}
+	return mapValue, nil
+}
+
 func tfAttrObjectValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, mapAttr map[mgcName]*resAttrInfo, v map[string]any) (attr.Value, error) {
 	attrTypes := map[string]attr.Type{}
 	attrValues := map[string]attr.Value{}
@@ -605,6 +714,21 @@ func tfAttrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrInfo *r
 		mapVal, ok := v.(map[string]any)
 		if !ok {
 			return nil, false, fmt.Errorf("unable to create attr.Value of type object")
+		}
+
+		if s.AdditionalProperties.Has != nil && *s.AdditionalProperties.Has {
+			return nil, false, fmt.Errorf("unable to create attr.Value of type map when additional properties has no type information")
+		}
+		if s.AdditionalProperties.Schema != nil {
+			if len(s.Properties) > 0 {
+				return nil, false, fmt.Errorf("unable to create attr.Value of type map when MgcSchema has both additional and standard properties")
+			}
+
+			attrValue, err := tfAttrMapValueFromMgcSchema(ctx, s, attrInfo, mapVal)
+			if err != nil {
+				return nil, false, err
+			}
+			return attrValue, true, nil
 		}
 
 		attrValue, err := tfAttrObjectValueFromMgcSchema(ctx, s, attrInfo.childAttributes, mapVal)

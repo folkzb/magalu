@@ -58,7 +58,7 @@ O nome deve seguir as seguintes regras:
 - `created_at` (String) Data de criação do cluster kubernetes
 - `id` (String) Identificador no padrão uuid para identificar o nodepool
 - `instance_template` (Attributes) Template do objeto de instância usado para criar instâncias de máquina e grupos gerenciados de instâncias. (see [below for nested schema](#nestedatt--instance_template))
-- `labels` (Attributes) Pares de chave/valor anexados ao objeto e usados para especificação (see [below for nested schema](#nestedatt--labels))
+- `labels` (Map of String) Pares de chave/valor anexados ao objeto e usados para especificação
 - `security_groups` (List of String) Nome do grupo de segurança para definir regras que permitem tráfego de rede no node pool de workers
 - `status` (Attributes) Detalhes a respeito do status do node pool ou control plane (see [below for nested schema](#nestedatt--status))
 - `updated_at` (String) Data da última alteração do cluster kubernetes
@@ -107,10 +107,6 @@ Read-Only:
 - `size` (Number) Quantidade de disco, medido em GB.
 - `vcpu` (Number) Quantidade de vCPUs disponiveis.
 
-
-
-<a id="nestedatt--labels"></a>
-### Nested Schema for `labels`
 
 
 <a id="nestedatt--status"></a>
