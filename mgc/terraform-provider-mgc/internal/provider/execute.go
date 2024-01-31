@@ -34,7 +34,10 @@ func execute(
 	tflog.Debug(ctx, fmt.Sprintf("[resource] will %s new %s resource - request info with params: %#v and configs: %#v", exec.Name(), resName, params, configs))
 	if tExec, ok := core.ExecutorAs[core.TerminatorExecutor](exec); ok {
 		tflog.Debug(ctx, "[resource] running as TerminatorExecutor")
-		result, err = tExec.ExecuteUntilTermination(ctx, params, configs)
+		// We ignore errors because the error may come from the server as internal server errors and things
+		// like that. Some resources take a long time to be created, and when we poll them with more than 50
+		// requests and 1 of them fails due to a server instability, we don't want to fail completely
+		result, err = tExec.ExecuteUntilTerminationIgnoreErrors(ctx, params, configs)
 	} else {
 		tflog.Debug(ctx, "[resource] running as Executor")
 		result, err = exec.Execute(ctx, params, configs)
