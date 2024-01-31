@@ -107,9 +107,14 @@ func applyMgcList(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState 
 		))
 	}
 
+	// First overwrite the current list values completely, so empty list
+	d := tfState.SetAttribute(ctx, path, []any{})
+	if diagnostics.AppendCheckError(d...) {
+		return diagnostics
+	}
+
 	if len(mgcList) == 0 {
-		d := tfState.SetAttribute(ctx, path, []any{})
-		return diagnostics.AppendReturn(Diagnostics(d).DemoteErrorsToWarnings()...)
+		return diagnostics
 	}
 
 	for i, mgcValue := range mgcList {
