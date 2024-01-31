@@ -47,6 +47,7 @@ Optional:
 Read-Only:
 
 - `attached_at` (Attributes) (see [below for nested schema](#nestedatt--attachment--attached_at))
+- `machine` (Attributes) (see [below for nested schema](#nestedatt--attachment--machine))
 - `machine_id` (String)
 
 <a id="nestedatt--attachment--attached_at"></a>
@@ -56,6 +57,36 @@ Read-Only:
 
 - `string1` (String)
 - `string2` (String)
+
+
+<a id="nestedatt--attachment--machine"></a>
+### Nested Schema for `attachment.machine`
+
+Read-Only:
+
+- `created_at` (Attributes) (see [below for nested schema](#nestedatt--attachment--machine--created_at))
+- `name` (String)
+- `state` (String)
+- `status` (String)
+- `updated_at` (Attributes) (see [below for nested schema](#nestedatt--attachment--machine--updated_at))
+
+<a id="nestedatt--attachment--machine--created_at"></a>
+### Nested Schema for `attachment.machine.created_at`
+
+Read-Only:
+
+- `string1` (String)
+- `string2` (String)
+
+
+<a id="nestedatt--attachment--machine--updated_at"></a>
+### Nested Schema for `attachment.machine.updated_at`
+
+Read-Only:
+
+- `string1` (String)
+- `string2` (String)
+
 
 
 

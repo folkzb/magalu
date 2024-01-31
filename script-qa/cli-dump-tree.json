@@ -2106,7 +2106,7 @@
        "properties": {
         "expand": {
          "default": [],
-         "description": "You can get more detailed info about: ['volume_type']",
+         "description": "You can get more detailed info about: ['volume_type', 'attachment']",
          "items": {
           "type": "string"
          },
@@ -2126,6 +2126,10 @@
       },
       "result": {
        "example": {
+        "attachment": {
+         "attached_at": "2022-01-01T00:00:10Z",
+         "machine_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        },
         "created_at": "2022-01-01T00:00:10Z",
         "error": {
          "message": "You have reached the limit of allowed disks. Please, remove unused disks or contact support to increase your quota.",
@@ -2134,7 +2138,7 @@
         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
         "name": "volume name",
         "size": 10,
-        "state": "available",
+        "state": "in-use",
         "status": "completed",
         "type": {
          "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -2143,31 +2147,171 @@
        },
        "properties": {
         "attachment": {
-         "properties": {
-          "attached_at": {
-           "anyOf": [
-            {
+         "anyOf": [
+          {
+           "example": {
+            "attached_at": "2022-01-01T00:00:10Z",
+            "machine_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
+           "properties": {
+            "attached_at": {
+             "anyOf": [
+              {
+               "type": "string"
+              },
+              {
+               "format": "date-time",
+               "type": "string"
+              }
+             ],
+             "example": "2022-01-01T00:00:10Z",
+             "title": "Attached At",
              "type": "string"
             },
-            {
-             "format": "date-time",
+            "machine_id": {
+             "title": "Machine Id",
              "type": "string"
             }
+           },
+           "required": [
+            "machine_id",
+            "attached_at"
            ],
-           "example": "2022-01-01T00:00:10Z",
-           "title": "Attached At",
-           "type": "string"
+           "title": "AttachmentResponse",
+           "type": "object"
           },
-          "machine_id": {
-           "title": "Machine Id",
-           "type": "string"
+          {
+           "example": {
+            "machine": {
+             "created_at": "2022-01-01T00:00:10Z",
+             "name": "machine name",
+             "state": "running",
+             "status": "completed",
+             "updated_at": "2022-01-01T00:00:10Z"
+            }
+           },
+           "properties": {
+            "attached_at": {
+             "anyOf": [
+              {
+               "type": "string"
+              },
+              {
+               "format": "date-time",
+               "type": "string"
+              }
+             ],
+             "example": "2022-01-01T00:00:10Z",
+             "title": "Attached At",
+             "type": "string"
+            },
+            "machine": {
+             "example": {
+              "created_at": "2022-01-01T00:00:10Z",
+              "name": "machine name",
+              "state": "running",
+              "status": "completed",
+              "updated_at": "2022-01-01T00:00:10Z"
+             },
+             "properties": {
+              "created_at": {
+               "anyOf": [
+                {
+                 "type": "string"
+                },
+                {
+                 "format": "date-time",
+                 "type": "string"
+                }
+               ],
+               "example": "2022-01-01T00:00:10Z",
+               "title": "Created At",
+               "type": "string"
+              },
+              "name": {
+               "title": "Name",
+               "type": "string"
+              },
+              "state": {
+               "enum": [
+                "new",
+                "running",
+                "stopped",
+                "suspended",
+                "deleted"
+               ],
+               "title": "InstanceState",
+               "type": "string"
+              },
+              "status": {
+               "enum": [
+                "provisioning",
+                "creating",
+                "creating_error",
+                "creating_error_quota",
+                "completed",
+                "retyping_pending",
+                "retyping",
+                "retyping_confirmed",
+                "retyping_error",
+                "retyping_error_quota",
+                "stopping_pending",
+                "stopping",
+                "suspending_pending",
+                "suspending",
+                "rebooting_pending",
+                "rebooting",
+                "starting_pending",
+                "starting",
+                "deleting_pending",
+                "deleting",
+                "deleting_error",
+                "deleted"
+               ],
+               "title": "InstanceStatus",
+               "type": "string"
+              },
+              "updated_at": {
+               "anyOf": [
+                {
+                 "type": "string"
+                },
+                {
+                 "format": "date-time",
+                 "type": "string"
+                }
+               ],
+               "example": "2022-01-01T00:00:10Z",
+               "title": "Updated At",
+               "type": "string"
+              }
+             },
+             "required": [
+              "name",
+              "status",
+              "state",
+              "created_at",
+              "updated_at"
+             ],
+             "title": "AttachmentMachine",
+             "type": "object"
+            },
+            "machine_id": {
+             "title": "Machine Id",
+             "type": "string"
+            }
+           },
+           "required": [
+            "machine_id",
+            "attached_at",
+            "machine"
+           ],
+           "title": "AttachmentResponseExpanded",
+           "type": "object"
           }
-         },
-         "required": [
-          "machine_id",
-          "attached_at"
          ],
-         "title": "AttachmentResponse",
+         "nullable": true,
+         "title": "Attachment",
          "type": "object"
         },
         "created_at": {
@@ -2435,7 +2579,7 @@
         },
         "expand": {
          "default": [],
-         "description": "You can get more detailed info about: ['volume_type']",
+         "description": "You can get more detailed info about: ['volume_type', 'attachment']",
          "items": {
           "type": "string"
          },
@@ -2449,6 +2593,10 @@
        "example": {
         "volumes": [
          {
+          "attachment": {
+           "attached_at": "2022-01-01T00:00:10Z",
+           "machine_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          },
           "created_at": "2022-01-01T00:00:10Z",
           "error": {
            "message": "You have reached the limit of allowed disks. Please, remove unused disks or contact support to increase your quota.",
@@ -2457,7 +2605,7 @@
           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
           "name": "volume name",
           "size": 10,
-          "state": "available",
+          "state": "in-use",
           "status": "completed",
           "type": {
            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -2470,6 +2618,10 @@
         "volumes": {
          "items": {
           "example": {
+           "attachment": {
+            "attached_at": "2022-01-01T00:00:10Z",
+            "machine_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+           },
            "created_at": "2022-01-01T00:00:10Z",
            "error": {
             "message": "You have reached the limit of allowed disks. Please, remove unused disks or contact support to increase your quota.",
@@ -2478,7 +2630,7 @@
            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
            "name": "volume name",
            "size": 10,
-           "state": "available",
+           "state": "in-use",
            "status": "completed",
            "type": {
             "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -2487,31 +2639,171 @@
           },
           "properties": {
            "attachment": {
-            "properties": {
-             "attached_at": {
-              "anyOf": [
-               {
+            "anyOf": [
+             {
+              "example": {
+               "attached_at": "2022-01-01T00:00:10Z",
+               "machine_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              },
+              "properties": {
+               "attached_at": {
+                "anyOf": [
+                 {
+                  "type": "string"
+                 },
+                 {
+                  "format": "date-time",
+                  "type": "string"
+                 }
+                ],
+                "example": "2022-01-01T00:00:10Z",
+                "title": "Attached At",
                 "type": "string"
                },
-               {
-                "format": "date-time",
+               "machine_id": {
+                "title": "Machine Id",
                 "type": "string"
                }
+              },
+              "required": [
+               "machine_id",
+               "attached_at"
               ],
-              "example": "2022-01-01T00:00:10Z",
-              "title": "Attached At",
-              "type": "string"
+              "title": "AttachmentResponse",
+              "type": "object"
              },
-             "machine_id": {
-              "title": "Machine Id",
-              "type": "string"
+             {
+              "example": {
+               "machine": {
+                "created_at": "2022-01-01T00:00:10Z",
+                "name": "machine name",
+                "state": "running",
+                "status": "completed",
+                "updated_at": "2022-01-01T00:00:10Z"
+               }
+              },
+              "properties": {
+               "attached_at": {
+                "anyOf": [
+                 {
+                  "type": "string"
+                 },
+                 {
+                  "format": "date-time",
+                  "type": "string"
+                 }
+                ],
+                "example": "2022-01-01T00:00:10Z",
+                "title": "Attached At",
+                "type": "string"
+               },
+               "machine": {
+                "example": {
+                 "created_at": "2022-01-01T00:00:10Z",
+                 "name": "machine name",
+                 "state": "running",
+                 "status": "completed",
+                 "updated_at": "2022-01-01T00:00:10Z"
+                },
+                "properties": {
+                 "created_at": {
+                  "anyOf": [
+                   {
+                    "type": "string"
+                   },
+                   {
+                    "format": "date-time",
+                    "type": "string"
+                   }
+                  ],
+                  "example": "2022-01-01T00:00:10Z",
+                  "title": "Created At",
+                  "type": "string"
+                 },
+                 "name": {
+                  "title": "Name",
+                  "type": "string"
+                 },
+                 "state": {
+                  "enum": [
+                   "new",
+                   "running",
+                   "stopped",
+                   "suspended",
+                   "deleted"
+                  ],
+                  "title": "InstanceState",
+                  "type": "string"
+                 },
+                 "status": {
+                  "enum": [
+                   "provisioning",
+                   "creating",
+                   "creating_error",
+                   "creating_error_quota",
+                   "completed",
+                   "retyping_pending",
+                   "retyping",
+                   "retyping_confirmed",
+                   "retyping_error",
+                   "retyping_error_quota",
+                   "stopping_pending",
+                   "stopping",
+                   "suspending_pending",
+                   "suspending",
+                   "rebooting_pending",
+                   "rebooting",
+                   "starting_pending",
+                   "starting",
+                   "deleting_pending",
+                   "deleting",
+                   "deleting_error",
+                   "deleted"
+                  ],
+                  "title": "InstanceStatus",
+                  "type": "string"
+                 },
+                 "updated_at": {
+                  "anyOf": [
+                   {
+                    "type": "string"
+                   },
+                   {
+                    "format": "date-time",
+                    "type": "string"
+                   }
+                  ],
+                  "example": "2022-01-01T00:00:10Z",
+                  "title": "Updated At",
+                  "type": "string"
+                 }
+                },
+                "required": [
+                 "name",
+                 "status",
+                 "state",
+                 "created_at",
+                 "updated_at"
+                ],
+                "title": "AttachmentMachine",
+                "type": "object"
+               },
+               "machine_id": {
+                "title": "Machine Id",
+                "type": "string"
+               }
+              },
+              "required": [
+               "machine_id",
+               "attached_at",
+               "machine"
+              ],
+              "title": "AttachmentResponseExpanded",
+              "type": "object"
              }
-            },
-            "required": [
-             "machine_id",
-             "attached_at"
             ],
-            "title": "AttachmentResponse",
+            "nullable": true,
+            "title": "Attachment",
             "type": "object"
            },
            "created_at": {
