@@ -1,18 +1,16 @@
-Create a Port
+Create a Port on the default VPC
 
 Usage:
-  ./cli network port create [vpc-id] [flags]
+  ./cli network port create-default-vpc [flags]
 
 Flags:
-      --cli.list-links enum[=table]        List all available links for this command (one of "json", "table" or "yaml")
       --has-pip                            Has Pip (default true)
       --has-sg                             Has Sg (default true)
-  -h, --help                               help for create
+  -h, --help                               help for create-default-vpc
       --name string                        Name (between 5 and 100 characters) (required)
       --security-groups-id array(string)   Security Groups Id (default [])
       --subnets array(string)              Subnets (default [])
-  -v, --version                            version for create
-      --vpc-id string                      Vpc Id (required)
+  -v, --version                            version for create-default-vpc
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

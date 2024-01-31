@@ -18,6 +18,7 @@ VPC Port
 ### Required
 
 - `name` (String)
+- `vpc_id` (String)
 
 ### Optional
 
@@ -30,6 +31,7 @@ VPC Port
 
 - `created_at` (String)
 - `current_name` (String)
+- `current_vpc_id` (String)
 - `description` (String)
 - `id` (String) The ID of this resource.
 - `ip_address` (Attributes List) (see [below for nested schema](#nestedatt--ip_address))
@@ -38,7 +40,6 @@ VPC Port
 - `public_ip` (Attributes List) (see [below for nested schema](#nestedatt--public_ip))
 - `security_groups` (List of String)
 - `updated` (String)
-- `vpc_id` (String)
 
 <a id="nestedatt--ip_address"></a>
 ### Nested Schema for `ip_address`

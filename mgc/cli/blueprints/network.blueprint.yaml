@@ -5,6 +5,12 @@ version: 1.99.5
 description: Operations for Network API
 
 children:
+  - name: port
+    description: VPC Port
+    children:
+      - $ref: http://magalu.cloud/sdk#/network/vpc/ports/create
+        isInternal: false
+
   - name: public_ip
     description: VPC Public IPs
     children:

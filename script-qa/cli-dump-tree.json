@@ -12874,6 +12874,110 @@
      {
       "configs": {
        "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Create a Port",
+      "isInternal": false,
+      "name": "create",
+      "parameters": {
+       "additionalProperties": false,
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "has_pip": {
+         "default": true,
+         "nullable": true,
+         "title": "Has Pip",
+         "type": "boolean"
+        },
+        "has_sg": {
+         "default": true,
+         "nullable": true,
+         "title": "Has Sg",
+         "type": "boolean"
+        },
+        "name": {
+         "maxLength": 100,
+         "minLength": 5,
+         "title": "Name",
+         "type": "string"
+        },
+        "security_groups_id": {
+         "default": [],
+         "items": {
+          "type": "string"
+         },
+         "nullable": true,
+         "title": "Security Groups Id",
+         "type": "array"
+        },
+        "subnets": {
+         "default": [],
+         "items": {
+          "type": "string"
+         },
+         "nullable": true,
+         "title": "Subnets",
+         "type": "array"
+        },
+        "vpc_id": {
+         "title": "Vpc Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "name",
+        "vpc_id"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+       },
+       "magalu.cloud/core/resolved": "true",
+       "properties": {
+        "id": {
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "title": "PortCreateResponse",
+       "type": "object"
+      },
+      "version": "1.101.2"
+     },
+     {
+      "configs": {
+       "additionalProperties": false,
        "properties": {
         "env": {
          "default": "prod",
@@ -12903,7 +13007,7 @@
       },
       "description": "Create a Port on the default VPC",
       "isInternal": true,
-      "name": "create",
+      "name": "create-default-vpc",
       "parameters": {
        "additionalProperties": false,
        "properties": {
@@ -12953,6 +13057,7 @@
        "example": {
         "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
        },
+       "magalu.cloud/core/resolved": "true",
        "properties": {
         "id": {
          "title": "Id",
@@ -16695,6 +16800,7 @@
        {
         "configs": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "env": {
            "default": "prod",
@@ -16727,6 +16833,7 @@
         "name": "create",
         "parameters": {
          "additionalProperties": false,
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "has_pip": {
            "default": true,
@@ -16779,6 +16886,7 @@
          "example": {
           "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
          },
+         "magalu.cloud/core/resolved": "true",
          "properties": {
           "id": {
            "title": "Id",

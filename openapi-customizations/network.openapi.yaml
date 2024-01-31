@@ -263,6 +263,7 @@ paths:
         - OAuth2:
             - network.read
     post:
+      x-mgc-name: create-default-vpc
       security:
         - OAuth2:
             - network.write
