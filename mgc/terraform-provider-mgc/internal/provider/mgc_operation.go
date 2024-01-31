@@ -111,7 +111,10 @@ func (r *MgcOperationRunner) Run(ctx context.Context) Diagnostics {
 		return diagnostics
 	}
 
-	r.runChainedOperations(ctx, chained)
+	d = r.runChainedOperations(ctx, chained)
+	if diagnostics.AppendCheckError(d...) {
+		return diagnostics
+	}
 
 	return diagnostics
 }
