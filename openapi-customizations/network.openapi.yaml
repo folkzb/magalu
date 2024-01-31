@@ -201,7 +201,7 @@ paths:
   /v0/security_groups/{security_group_id}/rules:
     post:
       tags:
-        - security-group
+        - security_group
       x-mgc-hidden: true
       parameters:
         - name: security_group_id
@@ -225,7 +225,7 @@ paths:
             - network.write
     get:
       tags:
-        - security-group
+        - security_group
       x-mgc-hidden: true
       parameters:
         - name: security_group_id

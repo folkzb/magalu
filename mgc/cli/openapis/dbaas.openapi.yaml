@@ -220,17 +220,17 @@ paths:
                             operationId: instances_v1_get_by_id
                             description: Read Database instance
                             parameters:
-                                id: $response.body#/id
+                                instance_id: $response.body#/id
                         update:
                             operationId: instances_v1_patch
                             description: Update Database instance
                             parameters:
-                                id: $response.body#/id
+                                instance_id: $response.body#/id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                id: $response.body#/id
+                                instance_id: $response.body#/id
                 '400':
                     $ref: '#/components/responses/RequiredField'
                 '401':
@@ -273,14 +273,12 @@ paths:
                             operationId: instances_v1_patch
                             description: Update Database instance
                             parameters:
-                                instance_id: $request.path.instance_id
-                                id: $response.body#/id
+                                instance_id: $response.body#/instance_id
                         delete:
                             operationId: instances_v1_delete
                             description: Delete Database instance
                             parameters:
-                                instance_id: $request.path.instance_id
-                                id: $response.body#/id
+                                instance_id: $response.body#/instance_id
                         create:
                             operationId: instances_v1_restore
                             description: Restores a backup for an instance asynchronously.
@@ -290,25 +288,25 @@ paths:
                             operationId: instances_v1_resize
                             description: Resizes a database instance.
                             parameters:
-                                id: $request.path.id
+                                instance_id: $request.path.instance_id
                             x-mgc-hidden: true
                         update/volume:
                             operationId: instances_v1_resize
                             description: Resizes a database instance.
                             parameters:
-                                id: $request.path.id
+                                instance_id: $request.path.id
                             x-mgc-hidden: true
                         update/status/ACTIVE:
                             operationId: instances_v1_start
                             description: Starts a database instance.
                             parameters:
-                                id: $request.path.id
+                                instance_id: $request.path.instance_id
                             x-mgc-hidden: true
                         update/status/STOPPED:
                             operationId: instances_v1_stop
                             description: Stops a database instance.
                             parameters:
-                                id: $request.path.id
+                                instance_id: $request.path.instance_id
                             x-mgc-hidden: true
                 '400':
                     $ref: '#/components/responses/RequiredField'
@@ -463,7 +461,6 @@ paths:
                             description: Read Database instance
                             parameters:
                                 instance_id: $request.path.instance_id
-                                id: $response.body#/id
                             x-mgc-wait-termination:
                                 maxRetries: 20
                                 interval: 10s
@@ -528,7 +525,6 @@ paths:
                             description: Read Database instance
                             parameters:
                                 instance_id: $request.path.instance_id
-                                id: $response.body#/id
                             x-mgc-wait-termination:
                                 maxRetries: 20
                                 interval: 10s
@@ -593,7 +589,6 @@ paths:
                             description: Read Database instance
                             parameters:
                                 instance_id: $request.path.instance_id
-                                id: $response.body#/id
                             x-mgc-wait-termination:
                                 maxRetries: 20
                                 interval: 10s
@@ -711,7 +706,6 @@ paths:
                             description: Read a Backup
                             parameters:
                                 instance_id: $request.path.instance_id
-                                id: $request.path.instance_id
                                 backup_id: $response.body#/id
                         update:
                             operationId: instances_v1_patch
@@ -723,7 +717,6 @@ paths:
                             description: Delete a Backup
                             parameters:
                                 instance_id: $request.path.instance_id
-                                id: $request.path.instance_id
                                 backup_id: $response.body#/id
                         create:
                             operationId: instances_v1_restore
@@ -777,8 +770,7 @@ paths:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                instance_id: $request.path.instance_id
-                                id: $response.body#/id
+                                instance_id: $response.body#/id
                                 backup_id: $request.path.backup_id
                         create:
                             operationId: instances_v1_restore
@@ -1047,13 +1039,19 @@ paths:
                             operationId: replica_start_v1_replicas_post
                             description: Start an instance replica.
                             parameters:
-                                id: $request.path.id
+                                replica_id: $request.path.replica_id
                             x-mgc-hidden: true
                         update/status/STOPPED:
                             operationId: replica_stop_v1_replicas_post
                             description: Stop an instance replica.
                             parameters:
-                                id: $request.path.id
+                                replica_id: $request.path.replica_id
+                            x-mgc-hidden: true
+                        update/volume:
+                            operationId: replica_resize_v1_replicas_post
+                            description: Resizes a database instance.
+                            parameters:
+                                replica_id: $request.path.replica_id
                             x-mgc-hidden: true
                 '400':
                     $ref: '#/components/responses/RequiredField'

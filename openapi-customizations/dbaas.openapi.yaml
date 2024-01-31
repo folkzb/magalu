@@ -14,13 +14,13 @@ paths:
                             operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
                             description: Read a Backup
                             parameters:
-                                id: $request.path.instance_id
+                                instance_id: $request.path.instance_id
                                 backup_id: $response.body#/id
                         delete:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                id: $request.path.instance_id
+                                instance_id: $request.path.instance_id
                                 backup_id: $response.body#/id
             security:
                 -   OAuth2:
@@ -34,7 +34,7 @@ paths:
                             operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
                             description: Delete a Backup
                             parameters:
-                                id: $response.body#/id
+                                instance_id: $response.body#/id
                                 backup_id: $request.path.backup_id
             security:
             -   OAuth2:
@@ -48,17 +48,17 @@ paths:
                           operationId: instances_v1_get_by_id
                           description: Read Database instance
                           parameters:
-                              id: $response.body#/id
+                              instance_id: $response.body#/id
                       update:
                           operationId: instances_v1_patch
                           description: Update Database instance
                           parameters:
-                              id: $response.body#/id
+                              instance_id: $response.body#/id
                       delete:
                           operationId: instances_v1_delete
                           description: Delete Database instance
                           parameters:
-                              id: $response.body#/id
+                              instance_id: $response.body#/id
             security:
             -   OAuth2:
                 - dbaas.write
@@ -71,29 +71,29 @@ paths:
                           operationId: instances_v1_patch
                           description: Update Database instance
                           parameters:
-                              id: $response.body#/id
+                              instance_id: $response.body#/instance_id
                       delete:
                           operationId: instances_v1_delete
                           description: Delete Database instance
                           parameters:
-                              id: $response.body#/id
+                              instance_id: $response.body#/instance_id
                       update/flavor_id:
                           operationId: instances_v1_resize
                           description: Resizes a database instance.
                           parameters:
-                              id: $request.path.id
+                              instance_id: $request.path.instance_id
                           x-mgc-hidden: true
                       update/status/ACTIVE:
                           operationId: instances_v1_start
                           description: Starts a database instance.
                           parameters:
-                              id: $request.path.id
+                              instance_id: $request.path.instance_id
                           x-mgc-hidden: true
                       update/status/STOPPED:
                           operationId: instances_v1_stop
                           description: Stops a database instance.
                           parameters:
-                              id: $request.path.id
+                              instance_id: $request.path.instance_id
                           x-mgc-hidden: true
             security:
             -   OAuth2:
@@ -111,7 +111,7 @@ paths:
                           operationId: instances_v1_get_by_id
                           description: Read Database instance
                           parameters:
-                              id: $request.path.id
+                              instance_id: $request.path.instance_id
                           x-mgc-wait-termination:
                               maxRetries: 20
                               interval: 10s
@@ -126,7 +126,7 @@ paths:
                           operationId: instances_v1_get_by_id
                           description: Read Database instance
                           parameters:
-                              id: $request.path.id
+                              instance_id: $request.path.instance_id
                           x-mgc-wait-termination:
                               maxRetries: 20
                               interval: 10s
@@ -141,7 +141,7 @@ paths:
                           operationId: instances_v1_get_by_id
                           description: Read Database instance
                           parameters:
-                              id: $request.path.id
+                              instance_id: $request.path.instance_id
                           x-mgc-wait-termination:
                               maxRetries: 20
                               interval: 10s
@@ -181,22 +181,22 @@ paths:
                           parameters:
                               replica_id: $request.path.replica_id
                       update/volume:
-                          operationId: instances_v1_resize
+                          operationId: replica_resize_v1_replicas_post
                           description: Resizes a database instance.
                           parameters:
-                              id: $request.path.id
+                              replica_id: $request.path.replica_id
                           x-mgc-hidden: true
                       update/status/ACTIVE:
                           operationId: replica_start_v1_replicas_post
                           description: Start an instance replica.
                           parameters:
-                              id: $request.path.id
+                              replica_id: $request.path.replica_id
                           x-mgc-hidden: true
                       update/status/STOPPED:
                           operationId: replica_stop_v1_replicas_post
                           description: Stop an instance replica.
                           parameters:
-                              id: $request.path.id
+                              replica_id: $request.path.replica_id
                           x-mgc-hidden: true
             security:
             -   OAuth2:

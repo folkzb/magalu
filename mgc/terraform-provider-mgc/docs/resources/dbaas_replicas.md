@@ -24,6 +24,7 @@ Database replicas management.
 
 - `flavor_id` (String)
 - `status` (String)
+- `volume` (Attributes) (see [below for nested schema](#nestedatt--volume))
 
 ### Read-Only
 
@@ -34,7 +35,15 @@ Database replicas management.
 - `id` (String) Database Replica Unique Id
 - `started_at` (String)
 - `updated_at` (String)
-- `volume` (Attributes) (see [below for nested schema](#nestedatt--volume))
+
+<a id="nestedatt--volume"></a>
+### Nested Schema for `volume`
+
+Read-Only:
+
+- `size` (Number) The size of the volume (in GiB).
+- `type` (String) The type of the volume.
+
 
 <a id="nestedatt--addresses"></a>
 ### Nested Schema for `addresses`
@@ -44,12 +53,3 @@ Read-Only:
 - `access` (String)
 - `address` (String)
 - `type` (String)
-
-
-<a id="nestedatt--volume"></a>
-### Nested Schema for `volume`
-
-Read-Only:
-
-- `size` (Number) The size of the volume (in GiB).
-- `type` (String) The type of the volume.
