@@ -35,6 +35,10 @@ type CopyAllObjectsParams struct {
 	Filters     `json:",squash"` // nolint
 }
 
+type copier interface {
+	Copy(context.Context) error
+}
+
 func newCopyRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) (*http.Request, error) {
 	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
 	if err != nil {
@@ -147,4 +151,29 @@ func CopySingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst m
 	}
 
 	return ExtractErr(resp, req)
+}
+
+func NewCopier(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) (copier, error) {
+	metadata, err := HeadFile(ctx, cfg, src)
+	if err != nil {
+		return nil, err
+	}
+
+	totalCopyParts := int(math.Ceil(float64(metadata.ContentLength) / float64(cfg.chunkSizeInBytes())))
+
+	if totalCopyParts > 1 {
+		return &bigFileCopier{
+			cfg:        cfg,
+			src:        src,
+			dst:        dst,
+			fileSize:   metadata.ContentLength,
+			totalParts: totalCopyParts,
+		}, nil
+	} else {
+		return &smallFileCopier{
+			cfg: cfg,
+			src: src,
+			dst: dst,
+		}, nil
+	}
 }

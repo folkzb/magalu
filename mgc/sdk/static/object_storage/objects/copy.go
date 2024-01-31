@@ -46,8 +46,12 @@ func copy(ctx context.Context, p common.CopyObjectParams, cfg common.Config) (re
 		fullDstPath = fullDstPath.JoinPath(fileName)
 	}
 
-	err = common.CopySingleFile(ctx, cfg, p.Source, fullDstPath)
+	copier, err := common.NewCopier(ctx, cfg, p.Source, fullDstPath)
 	if err != nil {
+		return nil, err
+	}
+
+	if err = copier.Copy(ctx); err != nil {
 		return nil, err
 	}
 
