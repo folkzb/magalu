@@ -114,6 +114,13 @@ func (l *linkTerminatorExecutor) ExecuteUntilTermination(ctx context.Context, pa
 	return ExecutorWrapResultSource(originalSource, r, e)
 }
 
+func (l *linkTerminatorExecutor) ExecuteUntilTerminationIgnoreErrors(ctx context.Context, parameters Parameters, configs Configs) (result Result, err error) {
+	p, c := l.extendParametersAndConfigs(parameters, configs)
+	r, e := l.tExec.ExecuteUntilTerminationIgnoreErrors(ctx, p, c)
+	originalSource := ResultSource{l, ctx, parameters, configs}
+	return ExecutorWrapResultSource(originalSource, r, e)
+}
+
 func (l *linkTerminatorExecutor) Unwrap() Executor {
 	return l.LinkExecutor
 }
