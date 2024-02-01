@@ -591,10 +591,10 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TokenExchangeResul
 		return nil, fmt.Errorf("unable to get current scopes: %w", err)
 	}
 
-	return o.runTokenExchange(ctx, at, id, scopes)
+	return o.runTokenExchange(ctx, at, id, scopes, o.httpClient)
 }
 
-func (o *Auth) SetScopes(ctx context.Context, scopes Scopes) (*TokenExchangeResult, error) {
+func (o *Auth) SetScopes(ctx context.Context, scopes Scopes, client http.Client) (*TokenExchangeResult, error) {
 	at, err := o.AccessToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
@@ -604,11 +604,10 @@ func (o *Auth) SetScopes(ctx context.Context, scopes Scopes) (*TokenExchangeResu
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current tenant ID: %w", err)
 	}
-
-	return o.runTokenExchange(ctx, at, currentTenantId, scopes.AsScopesString())
+	return o.runTokenExchange(ctx, at, currentTenantId, scopes.AsScopesString(), &client)
 }
 
-func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes ScopesString) (*TokenExchangeResult, error) {
+func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes ScopesString, client *http.Client) (*TokenExchangeResult, error) {
 	data := map[string]any{
 		"tenant": tenantId,
 		"scopes": scopes,
@@ -627,7 +626,7 @@ func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId 
 		return nil, err
 	}
 
-	resp, err := o.httpClient.Do(r)
+	resp, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	}

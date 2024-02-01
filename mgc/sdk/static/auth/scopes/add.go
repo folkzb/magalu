@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
+	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/utils"
 )
 
@@ -35,6 +36,11 @@ func add(ctx context.Context, params addParameters, _ struct{}) (auth.Scopes, er
 	a := auth.FromContext(ctx)
 	if a == nil {
 		return nil, fmt.Errorf("programming error: context did not contain SDK Auth information")
+	}
+
+	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+	if httpClient == nil {
+		return nil, fmt.Errorf("programming error: context did not contain http client")
 	}
 
 	addLogger().Debug("will get all possible scopes for validation")
@@ -65,7 +71,7 @@ func add(ctx context.Context, params addParameters, _ struct{}) (auth.Scopes, er
 	currentScopes.Add(params.Scopes...)
 
 	addLogger().Debugw("will call token exchange with new scopes", "scopes", currentScopes)
-	_, err = a.SetScopes(ctx, currentScopes)
+	_, err = a.SetScopes(ctx, currentScopes, httpClient.Client)
 	if err != nil {
 		addLogger().Warnw("token exchange failed", "scopes", currentScopes, "err", err)
 		return nil, err
