@@ -19147,6 +19147,113 @@
        },
        "type": "object"
       },
+      "description": "Copy all objects from a bucket",
+      "isInternal": false,
+      "name": "copy-all",
+      "parameters": {
+       "properties": {
+        "dst": {
+         "description": "Full destination path in the bucket",
+         "example": "s3://bucket2/dir/",
+         "format": "uri",
+         "type": "string"
+        },
+        "filter": {
+         "description": "File name pattern to include or exclude",
+         "items": {
+          "properties": {
+           "exclude": {
+            "description": "Filename pattern to exclude",
+            "type": "string"
+           },
+           "include": {
+            "description": "Filename pattern to include",
+            "type": "string"
+           }
+          },
+          "type": "object"
+         },
+         "type": "array"
+        },
+        "src": {
+         "description": "Path of objects to be copied",
+         "example": "s3://bucket1",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "required": [
+        "src",
+        "dst"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "dst": {
+         "description": "Full destination path in the bucket",
+         "example": "s3://bucket2/dir/",
+         "format": "uri",
+         "type": "string"
+        },
+        "filter": {
+         "description": "File name pattern to include or exclude",
+         "items": {
+          "properties": {
+           "exclude": {
+            "description": "Filename pattern to exclude",
+            "type": "string"
+           },
+           "include": {
+            "description": "Filename pattern to include",
+            "type": "string"
+           }
+          },
+          "type": "object"
+         },
+         "type": "array"
+        },
+        "src": {
+         "description": "Path of objects to be copied",
+         "example": "s3://bucket1",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "required": [
+        "src",
+        "dst"
+       ],
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "properties": {
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        },
+        "workers": {
+         "default": 5,
+         "description": "Number of routines that spawn to do parallel operations within object_storage",
+         "minimum": 1,
+         "type": "integer"
+        }
+       },
+       "type": "object"
+      },
       "description": "Delete an object from a bucket",
       "isInternal": false,
       "name": "delete",

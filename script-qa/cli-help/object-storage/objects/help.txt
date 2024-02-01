@@ -6,6 +6,7 @@ Usage:
 
 Commands:
   copy         Copy an object from a bucket to another
+  copy-all     Copy all objects from a bucket
   delete       Delete an object from a bucket
   delete-all   Delete all objects from a bucket
   download     Download an object from a bucket

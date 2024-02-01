@@ -14,6 +14,7 @@ var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
 		func() []core.Descriptor {
 			return []core.Descriptor{
 				getCopy(),        // object-storage objects copy
+				getCopyAll(),     // object-storage objects copy-all
 				getDelete(),      // object-storage objects delete
 				getDeleteAll(),   // object-storage objects delete-all
 				getDownload(),    // object-storage objects download
