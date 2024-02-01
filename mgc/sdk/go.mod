@@ -6,6 +6,7 @@ require (
 	github.com/PaesslerAG/gval v1.2.2
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/go-openapi/jsonpointer v0.20.0
+	github.com/google/uuid v1.4.0
 	github.com/invopop/jsonschema v0.7.0
 	github.com/invopop/yaml v0.1.0
 	github.com/jedib0t/go-pretty/v6 v6.4.8

@@ -1,6 +1,10 @@
 package sdk
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/google/uuid"
+)
 
 var _ http.RoundTripper = (*DefaultSdkTransport)(nil)
 
@@ -18,6 +22,7 @@ func newDefaultSdkTransport(transport http.RoundTripper, userAgent string) *Defa
 
 func (t *DefaultSdkTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set("User-Agent", t.UserAgent)
+	req.Header.Set("X-Request-Id", uuid.New().String())
 
 	transport := t.Transport
 	if transport == nil {
