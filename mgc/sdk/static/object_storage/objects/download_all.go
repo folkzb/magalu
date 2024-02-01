@@ -26,7 +26,6 @@ func downloadAllLogger() *zap.SugaredLogger {
 type downloadAllObjectsParams struct {
 	Source         mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of objects to be downloaded,example=s3://mybucket" mgc:"positional"`
 	Destination    mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Path to save files,example=path/to/folder" mgc:"positional"`
-	BatchSize      int                   `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to download,default=1000,minimum=1,maximum=1000" example:"1000"`
 	common.Filters `json:",squash"`      // nolint
 }
 
@@ -111,10 +110,6 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 
 	objs := common.ListGenerator(ctx, listParams, cfg, onNewPage)
 	objs = common.ApplyFilters(ctx, objs, params.FilterParams, nil)
-
-	if params.BatchSize < common.MinBatchSize || params.BatchSize > common.MaxBatchSize {
-		return core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", common.MinBatchSize, common.MaxBatchSize, params.BatchSize)}
-	}
 
 	go reportDownloadAllProgress(reportProgress, reportChan, params)
 

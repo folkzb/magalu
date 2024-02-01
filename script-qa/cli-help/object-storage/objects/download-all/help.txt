@@ -7,7 +7,6 @@ Examples:
   ./cli object-storage objects download-all --dst="path/to/folder" --src="s3://mybucket"
 
 Flags:
-      --batch-size integer     Limit of items per batch to download (range: 1 - 1000) (default 1000)
       --dst file               Path to save files
       --filter array(object)   File name pattern to include or exclude
                                Use --filter=help for more details
