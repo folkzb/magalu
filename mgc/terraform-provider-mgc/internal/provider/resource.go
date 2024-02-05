@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"slices"
 
@@ -129,15 +130,11 @@ func (r *MgcResource) doesPropHaveSetter(name mgcName) bool {
 
 func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	var k = string(mgcName)
-	var nameOverride = mgcName.tfNameOverride(r, mgcSchema)
-
-	if nameOverride != "" {
-		k = string(nameOverride)
-	}
 
 	propSchema := (*core.Schema)(mgcSchema.Properties[k].Value)
 	isRequired := slices.Contains(mgcSchema.Required, k)
 	isComputed := !isRequired
+
 	if isComputed {
 		readSchema := r.read.ResultSchema().Properties[k]
 		if readSchema == nil {
@@ -155,7 +152,6 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 		isOptional:                 !isRequired,
 		isComputed:                 isComputed,
 		useStateForUnknown:         true,
-		nameOverride:               nameOverride,
 		requiresReplaceWhenChanged: requiresReplace,
 		getChildModifiers:          getInputChildModifiers,
 	}
@@ -163,14 +159,17 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 
 func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	var k = string(mgcName)
-	var nameOverride = mgcName.tfNameOverride(r, mgcSchema)
-
-	if nameOverride != "" {
-		k = string(nameOverride)
-	}
 
 	isComputed := r.create.ResultSchema().Properties[k] != nil
 	required := slices.Contains(mgcSchema.Required, k)
+
+	var nameOverride tfName
+	if withoutResPrefix, hasResPrefix := strings.CutPrefix(k, string(r.resMgcName.singular()+"_")); hasResPrefix && r.create.ResultSchema().Properties[withoutResPrefix] != nil {
+		nameOverride = tfName(withoutResPrefix)
+		isComputed = true
+	} else if withoutNewPrefix, hasNewPrefix := strings.CutPrefix(k, "new_"); hasNewPrefix && r.read.ResultSchema().Properties[withoutNewPrefix] != nil {
+		nameOverride = tfName(withoutNewPrefix)
+	}
 
 	return attributeModifiers{
 		isRequired:                 required && !isComputed,
@@ -184,15 +183,22 @@ func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *m
 }
 
 func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
-	if _, isInRead := r.read.ParametersSchema().Properties[string(mgcName)]; isInRead {
+	k := string(mgcName)
+	if _, isInRead := r.read.ParametersSchema().Properties[k]; isInRead {
 		return r.getUpdateParamsModifiers(ctx, mgcSchema, mgcName)
 	}
 
-	if _, isInUpdate := r.update.ParametersSchema().Properties[string(mgcName)]; isInUpdate {
+	if _, isInUpdate := r.update.ParametersSchema().Properties[k]; isInUpdate {
 		return r.getUpdateParamsModifiers(ctx, mgcSchema, mgcName)
 	}
 
-	isComputed := r.create.ResultSchema().Properties[string(mgcName)] != nil
+	isComputed := r.create.ResultSchema().Properties[k] != nil
+
+	var nameOverride tfName
+	if withoutResPrefix, hasResPrefix := strings.CutPrefix(k, string(r.resMgcName.singular()+"_")); hasResPrefix && r.create.ResultSchema().Properties[withoutResPrefix] != nil {
+		nameOverride = tfName(withoutResPrefix)
+		isComputed = true
+	}
 
 	// All Delete parameters need to be optional, since they're not returned by the server when creating the resources,
 	// and thus would produce "inconsistent results" in Terraform. Since we calculate the 'Update' parameters first,
@@ -203,7 +209,7 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *m
 		isOptional:                 true,
 		isComputed:                 isComputed,
 		useStateForUnknown:         true,
-		nameOverride:               mgcName.tfNameOverride(r, mgcSchema),
+		nameOverride:               nameOverride,
 		requiresReplaceWhenChanged: false,
 		getChildModifiers:          getInputChildModifiers,
 	}

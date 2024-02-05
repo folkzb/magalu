@@ -6,7 +6,6 @@ import (
 	"math/big"
 
 	"slices"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -743,21 +742,6 @@ func tfAttrValueFromMgcSchema(ctx context.Context, s *mgcSdk.Schema, attrInfo *r
 
 func (n mgcName) asTFName() tfName {
 	return tfName(strcase.SnakeCase(string(n)))
-}
-
-func (n mgcName) tfNameOverride(r *MgcResource, s *mgcSdk.Schema) tfName {
-	prefix := r.resMgcName.singular() + "_"
-
-	target, found := strings.CutPrefix(string(n), string(prefix))
-	if !found {
-		return ""
-	}
-
-	if _, ok := r.read.ResultSchema().Properties[string(target)]; ok {
-		return mgcName(target).asTFName()
-	}
-
-	return ""
 }
 
 func (n mgcName) singular() mgcName {
