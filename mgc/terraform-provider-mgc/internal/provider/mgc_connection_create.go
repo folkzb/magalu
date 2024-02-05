@@ -93,7 +93,7 @@ func (o *MgcConnectionCreate) ChainOperations(ctx context.Context, createResult 
 		if err != nil {
 			return nil, false, diagnostics.AppendErrorReturn(
 				"unable to delete broken connection",
-				"unable to delete broken connection, server state will be out of state with Terraform",
+				"unable to delete broken connection, server state will be out of sync with Terraform",
 			)
 		}
 		deleteOperation := newMgcConnectionDelete(
