@@ -105,16 +105,28 @@ func newMgcResource(
 		propertySetters: propertySetters,
 	}
 
-	attrTree, err := generateResAttrInfoTree(ctx, r.resTfName,
-		[]resAttrInfoGenMetadata{
-			{r.create.ParametersSchema(), r.getCreateParamsModifiers},
-			{r.update.ParametersSchema(), r.getUpdateParamsModifiers},
-			{r.delete.ParametersSchema(), r.getDeleteParamsModifiers},
-		}, []resAttrInfoGenMetadata{
-			{r.create.ResultSchema(), r.getResultModifiers},
-			{r.read.ResultSchema(), r.getResultModifiers},
-		},
-	)
+	propertySetterInputs := make(map[mgcName][]resAttrInfoGenMetadata, len(propertySetters))
+	propertySetterOutputs := make(map[mgcName][]resAttrInfoGenMetadata, len(propertySetters))
+	for propName, propSetter := range propertySetters {
+		for _, paramsSchemas := range propSetter.allParametersSchemas() {
+			propertySetterInputs[propName] = append(propertySetterInputs[propName], resAttrInfoGenMetadata{paramsSchemas, r.getUpdateParamsModifiers})
+		}
+		for _, resultSchemas := range propSetter.allResultSchemas() {
+			propertySetterOutputs[propName] = append(propertySetterOutputs[propName], resAttrInfoGenMetadata{resultSchemas, r.getResultModifiers})
+		}
+	}
+
+	attrTree, err := generateResAttrInfoTree(ctx, r.resTfName, resAttrInfoTreeGenMetadata{
+		createInput: resAttrInfoGenMetadata{r.create.ParametersSchema(), r.getCreateParamsModifiers},
+		updateInput: resAttrInfoGenMetadata{r.update.ParametersSchema(), r.getUpdateParamsModifiers},
+		deleteInput: resAttrInfoGenMetadata{r.delete.ParametersSchema(), r.getDeleteParamsModifiers},
+
+		createOutput: resAttrInfoGenMetadata{r.create.ResultSchema(), r.getResultModifiers},
+		readOutput:   resAttrInfoGenMetadata{r.read.ResultSchema(), r.getResultModifiers},
+
+		propertySetterInputs:  propertySetterInputs,
+		propertySetterOutputs: propertySetterOutputs,
+	})
 	if err != nil {
 		return nil, err
 	}

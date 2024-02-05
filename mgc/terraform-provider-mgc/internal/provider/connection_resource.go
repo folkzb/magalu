@@ -84,16 +84,15 @@ func newMgcConnectionResource(
 		delete:      delete,
 	}
 
-	attrTree, err := generateResAttrInfoTree(ctx, r.name,
-		[]resAttrInfoGenMetadata{
-			{r.create.ParametersSchema(), r.getReadParamsModifiers},
-			{r.read.AdditionalParametersSchema(), r.getReadParamsModifiers},
-			{r.delete.AdditionalParametersSchema(), r.getDeleteParamsModifiers},
-		}, []resAttrInfoGenMetadata{
-			{r.create.ResultSchema(), getResultModifiers},
-			{r.read.ResultSchema(), getResultModifiers},
-		},
-	)
+	attrTree, err := generateResAttrInfoTree(ctx, r.name, resAttrInfoTreeGenMetadata{
+		createInput: resAttrInfoGenMetadata{r.create.ParametersSchema(), r.getReadParamsModifiers},
+		updateInput: resAttrInfoGenMetadata{r.update.AdditionalParametersSchema(), r.getReadParamsModifiers},
+		deleteInput: resAttrInfoGenMetadata{r.delete.AdditionalParametersSchema(), r.getDeleteParamsModifiers},
+
+		createOutput: resAttrInfoGenMetadata{r.create.ResultSchema(), getResultModifiers},
+		readOutput:   resAttrInfoGenMetadata{r.read.ResultSchema(), getResultModifiers},
+	})
+
 	if err != nil {
 		return nil, err
 	}
