@@ -105,7 +105,13 @@ about a successful login, use the '--show' flag when logging in`,
 
 			loginLogger().Infow("opening browser", "codeUrl", codeUrl)
 			if err := browser.OpenURL(codeUrl.String()); err != nil {
-				return nil, fmt.Errorf("could not open browser, please open it manually. %w", err)
+				loginLogger().Infow("Cant't open browser. Logging in a headless environment")
+				fmt.Println("Could not open browser, please open it manually: ")
+				fmt.Print(codeUrl.String() + "\n\n")
+				err := headlessLogin(ctx, auth, resultChan)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			loginLogger().Infow("waiting authentication result", "redirectUri", auth.RedirectUri())
@@ -288,4 +294,30 @@ func showErrorPage(w http.ResponseWriter, err error, status int) {
 	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "text/plain")
 	fmt.Fprintf(w, "Error: %s", err.Error())
+}
+
+func headlessLogin(ctx context.Context, auth *auth.Auth, resultChan chan *authResult) error {
+	var responseUrl string
+	fmt.Println("Enter the response URL:")
+	fmt.Scanln(&responseUrl)
+
+	url, err := url.Parse(responseUrl)
+	if err != nil {
+		return err
+	}
+
+	authCode := url.Query().Get("code")
+	if authCode == "" {
+		return fmt.Errorf("Invalid response URL!")
+	}
+
+	err = auth.RequestAuthTokenWithAuthorizationCode(ctx, authCode)
+	if err != nil {
+		return err
+	}
+
+	token, _ := auth.AccessToken(ctx)
+	temp := &authResult{value: token}
+	resultChan <- temp
+	return nil
 }
