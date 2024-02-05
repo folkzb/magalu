@@ -292,8 +292,7 @@ func (r *MgcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}()
 
 	createOp := newMgcResourceCreate(r.resTfName, r.attrTree, r.create, r.read, r.propertySetters)
-	readOp := newMgcResourceRead(r.resTfName, r.attrTree, r.read)
-	operationRunner := newMgcOperationRunner(r.sdk, createOp, readOp, tfsdk.State(req.Plan), req.Plan, &resp.State)
+	operationRunner := newMgcOperationRunner(r.sdk, createOp, tfsdk.State(req.Plan), req.Plan, &resp.State)
 	diagnostics = operationRunner.Run(ctx)
 }
 
@@ -304,7 +303,7 @@ func (r *MgcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}()
 
 	operation := newMgcResourceRead(r.resTfName, r.attrTree, r.read)
-	runner := newMgcOperationRunner(r.sdk, operation, operation, req.State, tfsdk.Plan(req.State), &resp.State)
+	runner := newMgcOperationRunner(r.sdk, operation, req.State, tfsdk.Plan(req.State), &resp.State)
 	diagnostics = runner.Run(ctx)
 }
 
@@ -315,8 +314,7 @@ func (r *MgcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	}()
 
 	operation := newMgcResourceUpdate(r.resTfName, r.attrTree, r.update, r.read, r.propertySetters)
-	readOp := newMgcResourceRead(r.resTfName, r.attrTree, r.read)
-	runner := newMgcOperationRunner(r.sdk, operation, readOp, req.State, req.Plan, &resp.State)
+	runner := newMgcOperationRunner(r.sdk, operation, req.State, req.Plan, &resp.State)
 	diagnostics = runner.Run(ctx)
 }
 
@@ -327,7 +325,7 @@ func (r *MgcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}()
 
 	deleteOp := newMgcResourceDelete(r.resTfName, r.attrTree, r.delete)
-	runner := newMgcOperationRunner(r.sdk, deleteOp, nil, req.State, tfsdk.Plan(req.State), &resp.State)
+	runner := newMgcOperationRunner(r.sdk, deleteOp, req.State, tfsdk.Plan(req.State), &resp.State)
 	diagnostics = runner.Run(ctx)
 }
 

@@ -53,10 +53,16 @@ func (o *MgcResourceCreate) Run(ctx context.Context, params core.Parameters, con
 	return execute(ctx, o.resourceName, o.createResource, params, configs)
 }
 
-func (o *MgcResourceCreate) PostRun(ctx context.Context, createResult core.ResultWithValue, state, plan TerraformParams, targetState *tfsdk.State) (core.ResultWithValue, bool, Diagnostics) {
+func (o *MgcResourceCreate) PostRun(ctx context.Context, createResult core.ResultWithValue, state, plan TerraformParams, targetState *tfsdk.State) (runChain bool, diagnostics Diagnostics) {
 	tflog.Info(ctx, "resource created")
-	readResult, _, d := applyStateAfter(ctx, o.resourceName, o.attrTree, createResult, o.readResource, targetState)
-	return readResult, !d.HasError(), d
+	diagnostics = Diagnostics{}
+
+	d := applyStateAfter(ctx, o.resourceName, o.attrTree, createResult, targetState)
+	if diagnostics.AppendCheckError(d...) {
+		return false, diagnostics
+	}
+
+	return true, diagnostics
 }
 
 var _ MgcOperation = (*MgcResourceCreate)(nil)

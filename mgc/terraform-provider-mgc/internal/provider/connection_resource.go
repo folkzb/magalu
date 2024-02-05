@@ -156,14 +156,6 @@ func (r *MgcConnectionResource) newLinkOperation(
 	})
 }
 
-func (r *MgcConnectionResource) newReadOperation(
-	getPrivateStateKey func(context.Context, string) ([]byte, diag.Diagnostics),
-	setPrivateStateKey func(context.Context, string, []byte) diag.Diagnostics,
-) MgcReadOperation {
-	readOp := r.newLinkOperation(r.read, getPrivateStateKey, setPrivateStateKey, newMgcConnectionRead)
-	return (wrapReadOperation(readOp, r.read.ResultSchema()))
-}
-
 func (r *MgcConnectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	diagnostics := Diagnostics{}
 	defer func() {
@@ -171,8 +163,7 @@ func (r *MgcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	}()
 
 	createOp := newMgcConnectionCreate(r.name, r.attrTree, resp.Private.GetKey, resp.Private.SetKey, r.create, r.delete)
-	readOp := r.newReadOperation(resp.Private.GetKey, resp.Private.SetKey)
-	runner := newMgcOperationRunner(r.sdk, createOp, readOp, tfsdk.State(req.Plan), req.Plan, &resp.State)
+	runner := newMgcOperationRunner(r.sdk, createOp, tfsdk.State(req.Plan), req.Plan, &resp.State)
 	d := runner.Run(ctx)
 	diagnostics.Append(d...)
 }
@@ -183,8 +174,8 @@ func (r *MgcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 		resp.Diagnostics = diag.Diagnostics(diagnostics)
 	}()
 
-	readOp := r.newReadOperation(req.Private.GetKey, resp.Private.SetKey)
-	runner := newMgcOperationRunner(r.sdk, readOp, readOp, req.State, tfsdk.Plan(req.State), &resp.State)
+	readOp := r.newLinkOperation(r.read, req.Private.GetKey, resp.Private.SetKey, newMgcConnectionRead)
+	runner := newMgcOperationRunner(r.sdk, readOp, req.State, tfsdk.Plan(req.State), &resp.State)
 	d := runner.Run(ctx)
 	diagnostics.Append(d...)
 }
@@ -201,7 +192,7 @@ func (r *MgcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 	}()
 
 	deleteOp := r.newLinkOperation(r.delete, req.Private.GetKey, req.Private.SetKey, newMgcConnectionDelete)
-	runner := newMgcOperationRunner(r.sdk, deleteOp, nil, req.State, tfsdk.Plan(req.State), &resp.State)
+	runner := newMgcOperationRunner(r.sdk, deleteOp, req.State, tfsdk.Plan(req.State), &resp.State)
 	d := runner.Run(ctx)
 	diagnostics.Append(d...)
 }

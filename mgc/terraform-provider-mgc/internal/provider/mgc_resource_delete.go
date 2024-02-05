@@ -49,12 +49,12 @@ func (o *MgcResourceDelete) Run(ctx context.Context, params core.Parameters, con
 	return result, d
 }
 
-func (o *MgcResourceDelete) PostRun(ctx context.Context, result core.ResultWithValue, state, plan TerraformParams, targetState *tfsdk.State) (core.ResultWithValue, bool, Diagnostics) {
+func (o *MgcResourceDelete) PostRun(ctx context.Context, result core.ResultWithValue, state, plan TerraformParams, targetState *tfsdk.State) (runChain bool, diagnostics Diagnostics) {
 	tflog.Info(ctx, "resource deleted")
-	return result, false, nil
+	return false, nil
 }
 
-func (o *MgcResourceDelete) ChainOperations(ctx context.Context, _ core.ResultWithValue, readResult ReadResult, state, plan TerraformParams) ([]MgcOperation, bool, Diagnostics) {
+func (o *MgcResourceDelete) ChainOperations(_ context.Context, _ core.ResultWithValue, _, _ TerraformParams) ([]MgcOperation, bool, Diagnostics) {
 	return nil, false, nil
 }
 

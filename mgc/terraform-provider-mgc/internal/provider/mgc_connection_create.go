@@ -58,9 +58,9 @@ func (o *MgcConnectionCreate) Run(ctx context.Context, params core.Parameters, c
 	return execute(ctx, o.resourceName, o.createConnection, params, configs)
 }
 
-func (o *MgcConnectionCreate) PostRun(ctx context.Context, createResult core.ResultWithValue, state, plan TerraformParams, targetState *tfsdk.State) (core.ResultWithValue, bool, Diagnostics) {
+func (o *MgcConnectionCreate) PostRun(ctx context.Context, createResult core.ResultWithValue, state, plan TerraformParams, targetState *tfsdk.State) (runChain bool, diagnostics Diagnostics) {
 	tflog.Info(ctx, "connection created")
-	diagnostics := Diagnostics{}
+	diagnostics = Diagnostics{}
 
 	createResultEncoded, err := createResult.Encode()
 	if err != nil {
@@ -68,7 +68,7 @@ func (o *MgcConnectionCreate) PostRun(ctx context.Context, createResult core.Res
 			"failure to encode connection resource creation result",
 			"Terraform wasn't able to encode the result of the creation process to save in its state. Creation was successful, but resource will be deleted, try again.",
 		)
-		return createResult, false, diagnostics
+		return false, diagnostics
 	}
 
 	tflog.Debug(ctx, "about to store private creation result", map[string]any{"encoded result": createResultEncoded})
@@ -76,15 +76,15 @@ func (o *MgcConnectionCreate) PostRun(ctx context.Context, createResult core.Res
 	diag := o.setPrivateStateKey(ctx, createResultKey, createResultEncoded)
 	diagnostics.Append(diag...)
 
-	readResult, _, d := applyStateAfter(ctx, o.resourceName, o.attrTree, createResult, nil, targetState)
+	d := applyStateAfter(ctx, o.resourceName, o.attrTree, createResult, targetState)
 	if diagnostics.AppendCheckError(d...) {
-		return nil, true, diagnostics
+		return true, diagnostics
 	}
 
-	return readResult, !diagnostics.HasError(), d
+	return !diagnostics.HasError(), d
 }
 
-func (o *MgcConnectionCreate) ChainOperations(ctx context.Context, createResult core.ResultWithValue, _ ReadResult, state, plan TerraformParams) ([]MgcOperation, bool, Diagnostics) {
+func (o *MgcConnectionCreate) ChainOperations(ctx context.Context, createResult core.ResultWithValue, state, plan TerraformParams) ([]MgcOperation, bool, Diagnostics) {
 	diagnostics := Diagnostics{}
 
 	createResultData, d := o.getPrivateStateKey(ctx, createResultKey)

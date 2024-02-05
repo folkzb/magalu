@@ -107,10 +107,16 @@ func (o *MgcResourceUpdate) Run(ctx context.Context, params core.Parameters, con
 	return execute(ctx, o.resourceName, o.updateResource, params, configs)
 }
 
-func (o *MgcResourceUpdate) PostRun(ctx context.Context, readResult core.ResultWithValue, state, plan TerraformParams, targetState *tfsdk.State) (core.ResultWithValue, bool, Diagnostics) {
+func (o *MgcResourceUpdate) PostRun(ctx context.Context, updateResult core.ResultWithValue, state, plan TerraformParams, targetState *tfsdk.State) (runChain bool, diagnostics Diagnostics) {
 	tflog.Info(ctx, "resource updated")
-	readResult, _, d := applyStateAfter(ctx, o.resourceName, o.attrTree, readResult, o.readResource, targetState)
-	return readResult, !d.HasError(), d
+	diagnostics = Diagnostics{}
+
+	d := applyStateAfter(ctx, o.resourceName, o.attrTree, updateResult, targetState)
+	if diagnostics.AppendCheckError(d...) {
+		return false, diagnostics
+	}
+
+	return true, diagnostics
 }
 
 var _ MgcOperation = (*MgcResourceUpdate)(nil)
