@@ -33,7 +33,7 @@ func (o *MgcConnectionDelete) WrapConext(ctx context.Context) context.Context {
 }
 
 func (o *MgcConnectionDelete) CollectParameters(ctx context.Context, _, plan TerraformParams) (core.Parameters, Diagnostics) {
-	return loadMgcParamsFromState(ctx, o.deleteConnection.ParametersSchema(), o.attrTree, plan)
+	return loadMgcParamsFromState(ctx, o.deleteConnection.ParametersSchema(), o.attrTree.deleteInput, plan)
 }
 
 func (o *MgcConnectionDelete) CollectConfigs(ctx context.Context, _, _ TerraformParams) (core.Configs, Diagnostics) {

@@ -159,7 +159,17 @@ func (o *MgcResourceSetProperty) WrapConext(ctx context.Context) context.Context
 }
 
 func (o *MgcResourceSetProperty) CollectParameters(ctx context.Context, _, plan TerraformParams) (core.Parameters, Diagnostics) {
-	return loadMgcParamsFromState(ctx, o.operationLink.AdditionalParametersSchema(), o.attrTree, plan)
+	propAttrMaps, ok := o.attrTree.propertySetterInputs[o.setter.propertyName()]
+	if !ok {
+		return nil, nil
+	}
+
+	attrMap, ok := propAttrMaps[o.operationLink.AdditionalParametersSchema()]
+	if !ok {
+		return nil, nil
+	}
+
+	return loadMgcParamsFromState(ctx, o.operationLink.AdditionalParametersSchema(), attrMap, plan)
 }
 
 func (o *MgcResourceSetProperty) CollectConfigs(ctx context.Context, _, _ TerraformParams) (core.Configs, Diagnostics) {

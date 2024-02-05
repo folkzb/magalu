@@ -33,7 +33,7 @@ func (o *MgcResourceDelete) WrapConext(ctx context.Context) context.Context {
 }
 
 func (o *MgcResourceDelete) CollectParameters(ctx context.Context, _, plan TerraformParams) (core.Parameters, Diagnostics) {
-	return loadMgcParamsFromState(ctx, o.deleteResource.ParametersSchema(), o.attrTree, plan)
+	return loadMgcParamsFromState(ctx, o.deleteResource.ParametersSchema(), o.attrTree.deleteInput, plan)
 }
 
 func (o *MgcResourceDelete) CollectConfigs(ctx context.Context, _, _ TerraformParams) (core.Configs, Diagnostics) {

@@ -43,7 +43,7 @@ func (o *MgcConnectionCreate) WrapConext(ctx context.Context) context.Context {
 }
 
 func (o *MgcConnectionCreate) CollectParameters(ctx context.Context, _, plan TerraformParams) (core.Parameters, Diagnostics) {
-	return loadMgcParamsFromState(ctx, o.createConnection.ParametersSchema(), o.attrTree, plan)
+	return loadMgcParamsFromState(ctx, o.createConnection.ParametersSchema(), o.attrTree.createInput, plan)
 }
 
 func (o *MgcConnectionCreate) CollectConfigs(ctx context.Context, _, _ TerraformParams) (core.Configs, Diagnostics) {

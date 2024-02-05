@@ -38,7 +38,7 @@ func (o *MgcResourceCreate) WrapConext(ctx context.Context) context.Context {
 }
 
 func (o *MgcResourceCreate) CollectParameters(ctx context.Context, _, plan TerraformParams) (core.Parameters, Diagnostics) {
-	return loadMgcParamsFromState(ctx, o.createResource.ParametersSchema(), o.attrTree, plan)
+	return loadMgcParamsFromState(ctx, o.createResource.ParametersSchema(), o.attrTree.createInput, plan)
 }
 
 func (o *MgcResourceCreate) CollectConfigs(ctx context.Context, _, _ TerraformParams) (core.Configs, Diagnostics) {

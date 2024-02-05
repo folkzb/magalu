@@ -26,7 +26,7 @@ func (o *MgcResourceRead) WrapConext(ctx context.Context) context.Context {
 }
 
 func (o *MgcResourceRead) CollectParameters(ctx context.Context, state, _ TerraformParams) (core.Parameters, Diagnostics) {
-	return loadMgcParamsFromState(ctx, o.operation.ParametersSchema(), o.attrTree, state)
+	return loadMgcParamsFromState(ctx, o.operation.ParametersSchema(), o.attrTree.input, state)
 }
 
 func (o *MgcResourceRead) CollectConfigs(ctx context.Context, _, _ TerraformParams) (core.Configs, Diagnostics) {
