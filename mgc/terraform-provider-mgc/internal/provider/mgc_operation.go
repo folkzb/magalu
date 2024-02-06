@@ -126,7 +126,7 @@ func (r *MgcOperationRunner) runOperation(
 
 	runResult, d = operation.Run(ctx, params, configs)
 	if diagnostics.AppendCheckError(d...) {
-		return runResult, true, diagnostics
+		return runResult, false, diagnostics
 	}
 
 	d = validateResult(runResult)
@@ -171,7 +171,10 @@ func (r *MgcOperationRunner) runChainedOperations(ctx context.Context, chained [
 			continue
 		}
 
-		r.runChainedOperations(ctx, chained)
+		d = r.runChainedOperations(ctx, chained)
+		if diagnostics.AppendCheckError(d...) {
+			return diagnostics
+		}
 	}
 
 	return diagnostics
