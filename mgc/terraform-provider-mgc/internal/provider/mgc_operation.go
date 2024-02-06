@@ -53,7 +53,9 @@ func (r *MgcOperationRunner) Run(ctx context.Context) Diagnostics {
 	diagnostics := Diagnostics{}
 
 	opResult, runChain, d := r.runOperation(ctx, r.rootOperation)
-	if diagnostics.AppendCheckError(d...) || !runChain {
+	diagnostics.Append(d...)
+
+	if !runChain {
 		return diagnostics
 	}
 
@@ -63,14 +65,14 @@ func (r *MgcOperationRunner) Run(ctx context.Context) Diagnostics {
 	}
 
 	chained, runChain, d := r.rootOperation.ChainOperations(ctx, opResult, state, plan)
-	if diagnostics.AppendCheckError(d...) || !runChain {
+	diagnostics.Append(d...)
+
+	if !runChain {
 		return diagnostics
 	}
 
 	d = r.runChainedOperations(ctx, chained)
-	if diagnostics.AppendCheckError(d...) {
-		return diagnostics
-	}
+	diagnostics.Append(d...)
 
 	return diagnostics
 }
@@ -80,7 +82,7 @@ func (r *MgcOperationRunner) getCurrentTFParams() (state, plan TerraformParams, 
 
 	state, err := tfStateToParams(r.state)
 	if err != nil {
-		diagnostics.AddError(
+		diagnostics.AddLocalError(
 			"error when reading Terraform state",
 			fmt.Sprintf("Terraform state wasn't able to be read: %s", err.Error()),
 		)
@@ -88,7 +90,7 @@ func (r *MgcOperationRunner) getCurrentTFParams() (state, plan TerraformParams, 
 
 	plan, err = tfStateToParams(tfsdk.State(r.plan))
 	if err != nil {
-		diagnostics.AddError(
+		diagnostics.AddLocalError(
 			"error when reading Terraform state",
 			fmt.Sprintf("Terraform plan wasn't able to be read: %s", err.Error()),
 		)
@@ -136,7 +138,7 @@ func (r *MgcOperationRunner) runOperation(
 
 	runChain, d = operation.PostRun(ctx, runResult, state, plan, r.targetState)
 	if diagnostics.AppendCheckError(d...) {
-		return runResult, false, diagnostics
+		return runResult, runChain, diagnostics
 	}
 
 	r.state = *r.targetState
@@ -149,9 +151,7 @@ func (r *MgcOperationRunner) runChainedOperations(ctx context.Context, chained [
 
 	for _, operation := range chained {
 		opResult, run, d := r.runOperation(ctx, operation)
-		if diagnostics.AppendCheckError(d...) {
-			return diagnostics
-		}
+		diagnostics.Append(d...)
 
 		if !run {
 			continue
@@ -163,9 +163,7 @@ func (r *MgcOperationRunner) runChainedOperations(ctx context.Context, chained [
 		}
 
 		chained, run, d := operation.ChainOperations(ctx, opResult, state, plan)
-		if diagnostics.AppendCheckError(d...) {
-			return diagnostics
-		}
+		diagnostics.Append(d...)
 
 		if !run {
 			continue
