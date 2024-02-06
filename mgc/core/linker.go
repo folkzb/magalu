@@ -26,6 +26,8 @@ type Linker interface {
 	// and ConfigsSchema() matching AdditionalConfigsSchema()
 	CreateExecutor(originalResult Result) (exec Executor, err error)
 	Links() Links
+
+	IsTargetTerminatorExecutor() bool
 }
 
 type Links map[string]Linker
@@ -209,4 +211,9 @@ func (l *simpleLink) CreateExecutor(originalResult Result) (Executor, error) {
 	}
 
 	return exec, nil
+}
+
+func (l *simpleLink) IsTargetTerminatorExecutor() bool {
+	_, isTerminator := ExecutorAs[TerminatorExecutor](l.target)
+	return isTerminator
 }
