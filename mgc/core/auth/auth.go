@@ -201,9 +201,7 @@ func (a *Auth) getConfig() Config {
 
 	c, ok := a.configMap[env]
 	if !ok {
-		logger().Debugw(
-			"getConfig couldn't find a valid config to the env", env,
-		)
+		logger().Debugw("getConfig couldn't find a valid config to the env", "env", env)
 		return a.configMap["default"]
 	}
 	return c
