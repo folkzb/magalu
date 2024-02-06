@@ -64,24 +64,25 @@ func (o *MgcConnectionCreate) PostRun(ctx context.Context, createResult core.Res
 
 	createResultEncoded, err := createResult.Encode()
 	if err != nil {
-		diagnostics.AddError(
+		return true, diagnostics.AppendErrorReturn(
 			"failure to encode connection resource creation result",
 			"Terraform wasn't able to encode the result of the creation process to save in its state. Creation was successful, but resource will be deleted, try again.",
 		)
-		return false, diagnostics
 	}
 
 	tflog.Debug(ctx, "about to store private creation result", map[string]any{"encoded result": createResultEncoded})
 
 	diag := o.setPrivateStateKey(ctx, createResultKey, createResultEncoded)
-	diagnostics.Append(diag...)
+	if diagnostics.AppendCheckError(diag...) {
+		return true, diagnostics
+	}
 
 	d := applyStateAfter(ctx, o.resourceName, o.attrTree, createResult, targetState)
 	if diagnostics.AppendCheckError(d...) {
 		return true, diagnostics
 	}
 
-	return !diagnostics.HasError(), d
+	return true, diagnostics
 }
 
 func (o *MgcConnectionCreate) ChainOperations(ctx context.Context, createResult core.ResultWithValue, state, plan TerraformParams) ([]MgcOperation, bool, Diagnostics) {
