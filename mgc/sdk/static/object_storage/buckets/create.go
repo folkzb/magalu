@@ -68,7 +68,7 @@ func create(ctx context.Context, params createParams, cfg common.Config) (core.V
 		return nil, err
 	}
 
-	err = common.ExtractErr(resp)
+	err = common.ExtractErr(resp, req)
 	if err != nil {
 		return nil, err
 	}

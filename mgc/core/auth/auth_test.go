@@ -57,7 +57,7 @@ func (o mockTransport) RoundTrip(*http.Request) (*http.Response, error) {
 	if o.shouldReturnError {
 		return nil, fmt.Errorf("test error")
 	}
-	return &http.Response{StatusCode: o.statusCode, Body: o.responseBody}, nil
+	return &http.Response{StatusCode: o.statusCode, Body: o.responseBody, Request: &http.Request{Header: http.Header{"X-Request-Id": []string{""}}, Response: &http.Response{}}}, nil
 }
 
 type testCaseAuth struct {

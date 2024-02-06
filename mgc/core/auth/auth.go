@@ -428,7 +428,7 @@ func (o *Auth) ValidateAccessToken(ctx context.Context) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return mgcHttpPkg.NewHttpErrorFromResponse(resp)
+		return mgcHttpPkg.NewHttpErrorFromResponse(resp, r)
 	}
 
 	var result validationResult
@@ -487,7 +487,7 @@ func (o *Auth) doRefreshAccessToken(ctx context.Context) (string, error) {
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			return "", mgcHttpPkg.NewHttpErrorFromResponse(resp)
+			return "", mgcHttpPkg.NewHttpErrorFromResponse(resp, r)
 		}
 
 		var result LoginResult
@@ -568,7 +568,7 @@ func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, mgcHttpPkg.NewHttpErrorFromResponse(resp)
+		return nil, mgcHttpPkg.NewHttpErrorFromResponse(resp, r)
 	}
 
 	defer resp.Body.Close()
@@ -634,7 +634,7 @@ func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId 
 	defer r.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, mgcHttpPkg.NewHttpErrorFromResponse(resp)
+		return nil, mgcHttpPkg.NewHttpErrorFromResponse(resp, r)
 	}
 
 	payload := &tenantResult{}

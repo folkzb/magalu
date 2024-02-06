@@ -109,7 +109,7 @@ func CreateObjectDeletionProcessor(cfg Config, bucketName BucketName, reportChan
 			return &ObjectError{Url: mgcSchemaPkg.URI(bucketName), Err: err}, pipeline.ProcessOutput
 		}
 
-		err = ExtractErr(resp)
+		err = ExtractErr(resp, req)
 		if err != nil {
 			return &ObjectError{Err: err}, pipeline.ProcessAbort
 		}
@@ -213,7 +213,7 @@ func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err err
 		return
 	}
 
-	_, err = UnwrapResponse[core.Value](resp)
+	_, err = UnwrapResponse[core.Value](resp, req)
 	if err != nil {
 		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, err)
 		return

@@ -44,5 +44,5 @@ func (u *smallFileUploader) Upload(ctx context.Context) error {
 		return err
 	}
 
-	return ExtractErr(resp)
+	return ExtractErr(resp, req)
 }

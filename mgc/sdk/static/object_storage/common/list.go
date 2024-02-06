@@ -205,7 +205,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config, on
 			}
 
 			if err == nil {
-				result, err = UnwrapResponse[listObjectsRequestResponse](resp)
+				result, err = UnwrapResponse[listObjectsRequestResponse](resp, req)
 			}
 
 			if err != nil {

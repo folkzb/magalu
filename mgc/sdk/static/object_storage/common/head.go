@@ -36,7 +36,7 @@ func HeadFile(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI) (metadata h
 		return
 	}
 
-	err = ExtractErr(resp)
+	err = ExtractErr(resp, req)
 	if err != nil {
 		return
 	}

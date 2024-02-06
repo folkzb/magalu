@@ -61,16 +61,25 @@ func TestNewHttpErrorFromResponse(t *testing.T) {
 		StatusCode: 123,
 		Status:     "not ok",
 		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Request:    &http.Request{Header: http.Header{"X-Request-Id": []string{"1234"}}, Response: &http.Response{}},
 	}
-	httpErr := NewHttpErrorFromResponse(dummyResponse)
+	dummyRequest := &http.Request{
+		Header: http.Header{"Content-Type": []string{"application/json"}, "X-Request-Id": []string{"1234"}},
+	}
+	httpErr := NewHttpErrorFromResponse(dummyResponse, dummyRequest)
 
-	expected := &HttpError{
+	expectedHttpErrr := &HttpError{
 		Code:    123,
 		Status:  "not ok",
 		Headers: http.Header{"Content-Type": []string{"application/json"}},
 		Payload: bytes.NewBufferString("some value").Bytes(),
 		Message: "not ok",
 		Slug:    "unknown",
+	}
+
+	expected := &IdentifiableHttpError{
+		HttpError: expectedHttpErrr,
+		RequestID: "1234",
 	}
 	if !reflect.DeepEqual(httpErr, expected) {
 		t.Errorf("NewHttpErrorFromResponse returned %+v, but expected %+v", *httpErr, *expected)
@@ -81,7 +90,7 @@ func TestNewHttpErrorFromResponse(t *testing.T) {
 	expected.Slug = "the slug"
 	expected.Payload = bytes.NewBufferString("{\"slug\": \"the slug\",\"message\": \"the message\"}").Bytes()
 
-	httpErr = NewHttpErrorFromResponse(dummyResponse)
+	httpErr = NewHttpErrorFromResponse(dummyResponse, dummyRequest)
 	if !reflect.DeepEqual(httpErr, expected) {
 		t.Errorf("NewHttpErrorFromResponse failed to decode response's 'data' and 'message' fields properly\nInput: %+v\nOutput: %+v\nExpected: %+v", *dummyResponse, *httpErr, *expected)
 	}
@@ -95,14 +104,15 @@ func TestUnwrapResponse(t *testing.T) {
 			}
 
 			resp := &http.Response{StatusCode: i, Body: io.NopCloser(bytes.NewBufferString(""))}
-			_, err := UnwrapResponse[any](resp)
-			httpErr, ok := err.(*HttpError)
+			req := &http.Request{}
+			_, err := UnwrapResponse[any](resp, req)
+			httpErr, ok := err.(*IdentifiableHttpError)
 			if !ok {
-				t.Fatalf("expected HttpError when status code is %v, but was unable to convert %#v to *HttpError", i, err)
+				t.Fatalf("expected IdentifiableHttpError when status code is %v, but was unable to convert %#v to *HttpError", i, err)
 				return
 			}
 
-			expectedErr := NewHttpErrorFromResponse(resp)
+			expectedErr := NewHttpErrorFromResponse(resp, req)
 			if !reflect.DeepEqual(httpErr, expectedErr) {
 				t.Fatalf("expected err == %#v when status code is %v, got %#v instead", expectedErr, i, err)
 			}
@@ -111,27 +121,27 @@ func TestUnwrapResponse(t *testing.T) {
 
 	t.Run("empty body status code", func(t *testing.T) {
 		resp := &http.Response{StatusCode: 204}
-
+		req := &http.Request{}
 		var expectedStr string
-		resultStr, err := UnwrapResponse[string](resp)
+		resultStr, err := UnwrapResponse[string](resp, req)
 		if err != nil || resultStr != expectedStr {
 			t.Fatalf("expected err == nil and zero value return, got instead err == '%v' and result '%v'", err, resultStr)
 		}
 
 		var expectedAny any
-		resultAny, err := UnwrapResponse[any](resp)
+		resultAny, err := UnwrapResponse[any](resp, req)
 		if err != nil || resultAny != expectedAny {
 			t.Fatalf("expected err == nil and zero value return, got instead err == '%v' and result '%v'", err, resultAny)
 		}
 
 		var expectedInt int
-		resultInt, err := UnwrapResponse[int](resp)
+		resultInt, err := UnwrapResponse[int](resp, req)
 		if err != nil || resultInt != expectedInt {
 			t.Fatalf("expected err == nil and zero value return, got instead err == '%v' and result '%v'", err, resultInt)
 		}
 
 		var expectedBool bool
-		resultBool, err := UnwrapResponse[bool](resp)
+		resultBool, err := UnwrapResponse[bool](resp, req)
 		if err != nil || resultBool != expectedBool {
 			t.Fatalf("expected err == nil and zero value return, got instead err == '%v' and result '%v'", err, resultBool)
 		}
@@ -154,8 +164,9 @@ more dummy text
 			Header:     header,
 			Body:       io.NopCloser(bytes.NewBufferString(bodyText)),
 		}
+		req := &http.Request{}
 
-		part, err := UnwrapResponse[*multipart.Part](resp)
+		part, err := UnwrapResponse[*multipart.Part](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping multipart response to *multipart.Part: %v", err)
 		}
@@ -171,28 +182,28 @@ more dummy text
 		}
 
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[any](resp)
+		_, err = UnwrapResponse[any](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping multipart response to any: %v", err)
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[int](resp)
+		_, err = UnwrapResponse[int](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or '*multipart.Part', got nil instead for int")
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[string](resp)
+		_, err = UnwrapResponse[string](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or '*multipart.Part', got nil instead for string")
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[bool](resp)
+		_, err = UnwrapResponse[bool](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or '*multipart.Part', got nil instead for bool")
 		}
 		type dummyStruct struct{}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[dummyStruct](resp)
+		_, err = UnwrapResponse[dummyStruct](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or '*multipart.Part', got nil instead for dummyStruct")
 		}
@@ -208,11 +219,13 @@ more dummy text
 			Body:       io.NopCloser(bytes.NewBufferString(bodyText)),
 		}
 
+		req := &http.Request{}
+
 		type dummyRespStruct struct {
 			Str string `json:"str"`
 		}
 
-		result, err := UnwrapResponse[dummyRespStruct](resp)
+		result, err := UnwrapResponse[dummyRespStruct](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping json response to dummy struct: %v", err)
 		}
@@ -225,12 +238,12 @@ more dummy text
 			Field string
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[invalidDummyRespStruct](resp)
+		_, err = UnwrapResponse[invalidDummyRespStruct](resp, req)
 		if err == nil {
 			t.Fatalf("unwrapping response with text '%s' to invalid struct should fail, error was %v instead", bodyText, err)
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		anyResult, err := UnwrapResponse[any](resp)
+		anyResult, err := UnwrapResponse[any](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping json response to any: %v", err)
 		}
@@ -238,17 +251,17 @@ more dummy text
 			t.Fatalf("decoding to any with body text '%s' should result in a map[string]any, got %T instead", bodyText, anyResult)
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[int](resp)
+		_, err = UnwrapResponse[int](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or a decodable struct, got %v instead for int", err)
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[string](resp)
+		_, err = UnwrapResponse[string](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or a decodable struct, got %v instead for string", err)
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[bool](resp)
+		_, err = UnwrapResponse[bool](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or a decodable struct, got %v instead for bool", err)
 		}
@@ -263,12 +276,12 @@ more dummy text
 			Header:     header,
 			Body:       io.NopCloser(bytes.NewBufferString(bodyText)),
 		}
-
+		req := &http.Request{}
 		type dummyRespStruct struct {
 			Str string `xml:"str"`
 		}
 
-		result, err := UnwrapResponse[dummyRespStruct](resp)
+		result, err := UnwrapResponse[dummyRespStruct](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping xml response to dummy struct: %v", err)
 		}
@@ -286,22 +299,22 @@ more dummy text
 		// 	t.Fatalf("unwrapping response with text '%s' to invalid struct should fail, error was %v instead", bodyText, err)
 		// }
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[any](resp)
+		_, err = UnwrapResponse[any](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping xml response to any: %v", err)
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[string](resp)
+		_, err = UnwrapResponse[string](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping xml response to string: %v", err)
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[int](resp)
+		_, err = UnwrapResponse[int](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any', a decodable struct or a slice got nil instead for int")
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[bool](resp)
+		_, err = UnwrapResponse[bool](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any', a decodable struct or a slice, got nil instead for bool")
 		}
@@ -316,8 +329,9 @@ more dummy text
 			Header:     header,
 			Body:       io.NopCloser(bytes.NewBufferString(bodyText)),
 		}
+		req := &http.Request{}
 
-		result, err := UnwrapResponse[io.ReadCloser](resp)
+		result, err := UnwrapResponse[io.ReadCloser](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping body as ReadCloser: %v", err)
 		}
@@ -333,22 +347,22 @@ more dummy text
 		}
 
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[any](resp)
+		_, err = UnwrapResponse[any](resp, req)
 		if err != nil {
 			t.Fatalf("error when unwrapping default response to any: %v", err)
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[int](resp)
+		_, err = UnwrapResponse[int](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or a decodable struct, got nil instead for int")
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[string](resp)
+		_, err = UnwrapResponse[string](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or a decodable struct, got nil instead for string")
 		}
 		resp.Body = io.NopCloser(bytes.NewBufferString(bodyText))
-		_, err = UnwrapResponse[bool](resp)
+		_, err = UnwrapResponse[bool](resp, req)
 		if err == nil {
 			t.Fatalf("should return error when T is not 'any' or a decodable struct, got nil instead for bool")
 		}

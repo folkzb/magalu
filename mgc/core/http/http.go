@@ -96,6 +96,20 @@ type BaseApiError struct {
 	Slug    string `json:"slug"`
 }
 
+type IdentifiableHttpError struct {
+	*HttpError
+	RequestID string `json:"requestID"`
+}
+
+func (e *IdentifiableHttpError) Unwrap() error {
+	return e.HttpError
+}
+
+func (e *IdentifiableHttpError) Error() string {
+	msg := "Internal Server Error (status: " + e.Status + ", request-id: " + e.RequestID + ")"
+	return msg
+}
+
 func (e *HttpError) Error() string {
 	msg := e.Message
 	if e.Slug != "" {
@@ -109,7 +123,7 @@ func (e *HttpError) String() string {
 	return fmt.Sprintf("%T{Status: %q, Slug: %q, Message: %q}", e, e.Status, e.Slug, e.Message)
 }
 
-func NewHttpErrorFromResponse(resp *http.Response) *HttpError {
+func NewHttpErrorFromResponse(resp *http.Response, req *http.Request) *IdentifiableHttpError {
 	slug := "unknown"
 	message := resp.Status
 
@@ -132,13 +146,33 @@ func NewHttpErrorFromResponse(resp *http.Response) *HttpError {
 		}
 	}
 
-	return &HttpError{
+	httpError := &HttpError{
 		Code:    resp.StatusCode,
 		Status:  resp.Status,
 		Headers: resp.Header,
 		Payload: payload,
 		Message: message,
 		Slug:    slug,
+	}
+
+	return NewIdentifiableHttpError(httpError, req, resp)
+
+}
+
+func NewIdentifiableHttpError(httpError *HttpError, request *http.Request, response *http.Response) *IdentifiableHttpError {
+	requestId := ""
+	if response != nil {
+		if id := response.Header.Get("X-Request-Id"); id != "" {
+			requestId = id
+		}
+	}
+	if id := request.Header.Get("X-Request-Id"); id != "" {
+		requestId = id
+	}
+
+	return &IdentifiableHttpError{
+		HttpError: httpError,
+		RequestID: requestId,
 	}
 }
 
@@ -156,9 +190,9 @@ func NewHttpErrorFromResponse(resp *http.Response) *HttpError {
 // If the Content-Type is none of the above, then io.ReadCloser (resp.Body) is returned.
 //
 // To avoid errors when the result type isn't known, UnwrapResponse[any] can be used.
-func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
+func UnwrapResponse[T any](resp *http.Response, req *http.Request) (result T, err error) {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		err = NewHttpErrorFromResponse(resp)
+		err = NewHttpErrorFromResponse(resp, req)
 		return
 	}
 
@@ -199,9 +233,9 @@ func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
 }
 
 // Checks if the response's StatusCode is less than 200 or greater equal than 300. If so, returns an error of type *HttpError
-func ExtractErr(resp *http.Response) error {
+func ExtractErr(resp *http.Response, req *http.Request) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return NewHttpErrorFromResponse(resp)
+		return NewHttpErrorFromResponse(resp, req)
 	}
 	return nil
 }

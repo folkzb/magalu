@@ -685,7 +685,7 @@ func (o *operation) Execute(
 	logger = logger.With("response", (*mgcHttpPkg.LogResponse)(resp))
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		logger.Debugw("failed to execute HTTP request", "error", err)
-		return nil, mgcHttpPkg.NewHttpErrorFromResponse(resp)
+		return nil, mgcHttpPkg.NewHttpErrorFromResponse(resp, req)
 	}
 
 	schema := o.getResponseSchema(resp)

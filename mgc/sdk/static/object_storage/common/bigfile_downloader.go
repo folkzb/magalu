@@ -42,7 +42,7 @@ func (u *bigFileDownloader) createPartDownloaderProcessor(cancel context.CancelC
 			return err, pipeline.ProcessAbort
 		}
 
-		err = ExtractErr(resp)
+		err = ExtractErr(resp, req)
 		if err != nil {
 			cancel(err)
 			return err, pipeline.ProcessAbort

@@ -28,7 +28,7 @@ func (u *smallFileDownloader) Download(ctx context.Context) error {
 		return err
 	}
 
-	err = ExtractErr(resp)
+	err = ExtractErr(resp, req)
 	if err != nil {
 		return err
 	}

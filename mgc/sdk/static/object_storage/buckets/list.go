@@ -50,5 +50,5 @@ func list(ctx context.Context, _ struct{}, cfg common.Config) (result ListRespon
 		return
 	}
 
-	return common.UnwrapResponse[ListResponse](resp)
+	return common.UnwrapResponse[ListResponse](resp, req)
 }

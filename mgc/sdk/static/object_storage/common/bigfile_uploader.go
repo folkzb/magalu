@@ -99,7 +99,7 @@ func (u *bigFileUploader) getUploadId(ctx context.Context) (string, error) {
 			return "", err
 		}
 
-		pr, err := UnwrapResponse[preparationResponse](resp)
+		pr, err := UnwrapResponse[preparationResponse](resp, req)
 		if err != nil {
 			return "", err
 		}
@@ -168,7 +168,7 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 		return err
 	}
 
-	err = ExtractErr(resp)
+	err = ExtractErr(resp, req)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 			return part, pipeline.ProcessAbort
 		}
 
-		err = ExtractErr(res)
+		err = ExtractErr(res, req)
 		if err != nil {
 			cancel(err)
 			return part, pipeline.ProcessAbort

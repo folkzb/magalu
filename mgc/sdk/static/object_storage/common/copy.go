@@ -155,7 +155,7 @@ func CopySingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst m
 
 	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
-	return ExtractErr(resp)
+	return ExtractErr(resp, req)
 }
 
 func reportCopyAllProgress(reportProgress progress_report.ReportProgress, reportChan <-chan copyAllProgressReport, params CopyAllObjectsParams) {

@@ -19,8 +19,8 @@ type XMLError struct {
 	Code    string `xml:"Code"`
 }
 
-func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
-	if err = ExtractErr(resp); err != nil {
+func UnwrapResponse[T any](resp *http.Response, req *http.Request) (result T, err error) {
+	if err = ExtractErr(resp, req); err != nil {
 		return
 	}
 
@@ -60,14 +60,14 @@ func UnwrapResponse[T any](resp *http.Response) (result T, err error) {
 	return
 }
 
-func ExtractErr(resp *http.Response) error {
+func ExtractErr(resp *http.Response, req *http.Request) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return newHttpError(resp)
+		return newIdentifiableHttpError(resp, req)
 	}
 	return nil
 }
 
-func newHttpError(resp *http.Response) *mgcHttpPkg.HttpError {
+func newIdentifiableHttpError(resp *http.Response, req *http.Request) *mgcHttpPkg.IdentifiableHttpError {
 	slug := "unknown"
 	message := resp.Status
 
@@ -96,7 +96,7 @@ func newHttpError(resp *http.Response) *mgcHttpPkg.HttpError {
 		}
 	}
 
-	return &mgcHttpPkg.HttpError{
+	httpError := &mgcHttpPkg.HttpError{
 		Code:    resp.StatusCode,
 		Status:  resp.Status,
 		Headers: resp.Header,
@@ -104,4 +104,8 @@ func newHttpError(resp *http.Response) *mgcHttpPkg.HttpError {
 		Message: message,
 		Slug:    slug,
 	}
+
+	return mgcHttpPkg.NewIdentifiableHttpError(httpError,
+		req, resp)
+
 }
