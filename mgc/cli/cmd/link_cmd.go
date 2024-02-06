@@ -81,7 +81,7 @@ type cmdLinks struct {
 	links   core.Links
 	cmdPath string
 
-	flag *flag.Flag
+	listLinksFlag *flag.Flag
 
 	root *cobra.Command // set by initCommands()
 
@@ -101,11 +101,11 @@ func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string, chainedArgs 
 	}
 
 	c = &cmdLinks{
-		sdk:         sdk,
-		links:       links,
-		cmdPath:     cmdPath,
-		flag:        newListLinkFlag(),
-		chainedArgs: chainedArgs,
+		sdk:           sdk,
+		links:         links,
+		cmdPath:       cmdPath,
+		listLinksFlag: newListLinkFlag(),
+		chainedArgs:   chainedArgs,
 	}
 	c.initCommands()
 	logger().Debugw("newCmdLinks", "links", links, "cmdPath", cmdPath)
@@ -119,7 +119,7 @@ func (c *cmdLinks) resolve() (err error) {
 		return
 	}
 
-	if err = listLinks(c.flag, c.links); err != nil {
+	if err = listLinks(c.listLinksFlag, c.links); err != nil {
 		logger().Debugw("link list requested", "chainedArgs", c.chainedArgs)
 		return
 	}

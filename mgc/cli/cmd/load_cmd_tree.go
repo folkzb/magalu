@@ -243,7 +243,7 @@ func addAction(
 	linkChainedArgs := argParser.ChainedArgs()[1:]
 	links := newCmdLinks(sdk, exec.Links(), cmdPath, linkChainedArgs)
 	if links != nil {
-		flags.addExtraFlag(links.flag)
+		flags.addExtraFlag(links.listLinksFlag)
 	}
 
 	actionCmd = &cobra.Command{
