@@ -85,17 +85,16 @@ type cmdLinks struct {
 
 	root *cobra.Command // set by initCommands()
 
-	chainedArgs [][]string
-
 	// these are set when resolve() calls root.Execute():
 	resolvedCmd       *cobra.Command
 	resolvedLink      core.Linker
 	resolvedLinkFlags *cmdFlags
+	args              []string
 
 	next *cmdLinks
 }
 
-func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string, chainedArgs [][]string) (c *cmdLinks) {
+func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string) (c *cmdLinks) {
 	if len(links) == 0 {
 		return nil
 	}
@@ -105,7 +104,6 @@ func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string, chainedArgs 
 		links:         links,
 		cmdPath:       cmdPath,
 		listLinksFlag: newListLinkFlag(),
-		chainedArgs:   chainedArgs,
 	}
 	c.initCommands()
 	logger().Debugw("newCmdLinks", "links", links, "cmdPath", cmdPath)
@@ -113,41 +111,42 @@ func newCmdLinks(sdk *mgcSdk.Sdk, links core.Links, cmdPath string, chainedArgs 
 	return
 }
 
-func (c *cmdLinks) resolve() (err error) {
+func (c *cmdLinks) resolve(chainedArgs [][]string) (err error) {
 	if c == nil {
 		logger().Debugw("no more links")
 		return
 	}
 
 	if err = listLinks(c.listLinksFlag, c.links); err != nil {
-		logger().Debugw("link list requested", "chainedArgs", c.chainedArgs)
+		logger().Debugw("link list requested", "chainedArgs", chainedArgs)
 		return
 	}
 
-	if len(c.chainedArgs) == 0 {
+	if len(chainedArgs) == 0 {
 		logger().Debug("no more links requested")
 		return
 	}
 
-	args := c.chainedArgs[0]
-	if len(args) == 0 {
+	c.args = chainedArgs[0]
+	if len(c.args) == 0 {
 		logger().Debug("no link command")
 		return
 	}
 
-	c.root.SetArgs(args)
+	c.root.SetArgs(c.args)
 	err = c.root.Execute() // will set resolved, cmdFlags and nextLinks
 	if err == schema_flags.ErrWantHelp {
 		return
 	} else if c.resolvedCmd == nil {
 		return schema_flags.ErrWantHelp // <link> -h/--help
 	} else if err != nil {
-		err = fmt.Errorf("unknown link %q. Use \"%s ! help\" for more information", args[0], c.cmdPath)
+		err = fmt.Errorf("unknown link %q. Use \"%s ! help\" for more information", c.args[0], c.cmdPath)
 		return
 	}
-	logger().Debugw("resolved executor link", "args", args, "error", err, "links", c.links, "hasNext", c.next != nil, "chainedArgs", c.chainedArgs)
+	logger().Debugw("resolved executor link", "args", c.args, "error", err, "links", c.links, "hasNext", c.next != nil, "chainedArgs", chainedArgs)
 
-	return c.next.resolve()
+	chainedArgs = chainedArgs[1:]
+	return c.next.resolve(chainedArgs)
 }
 
 func (c *cmdLinks) handle(originalResult core.Result, parentOutputFlag string) (err error) {
@@ -155,12 +154,7 @@ func (c *cmdLinks) handle(originalResult core.Result, parentOutputFlag string) (
 		return
 	}
 
-	if len(c.chainedArgs) == 0 {
-		return
-	}
-
-	args := c.chainedArgs[0]
-	if len(args) == 0 {
+	if len(c.args) == 0 {
 		return
 	}
 
@@ -176,16 +170,16 @@ func (c *cmdLinks) handle(originalResult core.Result, parentOutputFlag string) (
 
 	cmd := c.resolvedCmd
 	setOutputFlag(cmd, parentOutputFlag)
-	err = cmd.ParseFlags(args[1:])
+	err = cmd.ParseFlags(c.args[1:])
 	if err != nil {
-		logger().Debugw("could not parse link flags", "args", args, "error", err, "link", link.Name())
+		logger().Debugw("could not parse link flags", "args", c.args, "error", err, "link", link.Name())
 		return
 	}
 
 	sdk := c.sdk
 
 	config := sdk.Config()
-	additionalParameters, additionalConfigs, err := c.resolvedLinkFlags.getValues(config, args)
+	additionalParameters, additionalConfigs, err := c.resolvedLinkFlags.getValues(config, c.args)
 	if err != nil {
 		return
 	}
@@ -193,12 +187,12 @@ func (c *cmdLinks) handle(originalResult core.Result, parentOutputFlag string) (
 	printLinkExecutionTable(link.Name(), link.Description(), additionalParameters, additionalConfigs)
 	result, err := handleExecutor(ctx, sdk, c.resolvedCmd, exec, additionalParameters, additionalConfigs)
 	if err != nil {
-		logger().Debugw("handled handleExecutor link", "exec", exec, "args", args, "error", err)
+		logger().Debugw("handled handleExecutor link", "exec", exec, "args", c.args, "error", err)
 		return
 	}
 
 	err = c.next.handle(result, getOutputFlag(c.resolvedCmd))
-	logger().Debugw("handled next link", "exec", exec, "args", args, "error", err)
+	logger().Debugw("handled next link", "exec", exec, "args", c.args, "error", err)
 	return err
 }
 
@@ -221,7 +215,7 @@ func (c *cmdLinks) addLinkCommand(link core.Linker) {
 			c.resolvedCmd = cmd
 			c.resolvedLink = link
 			c.resolvedLinkFlags = linkFlags
-			c.next = newCmdLinks(c.sdk, link.Links(), fmt.Sprintf("%s ! %s", c.cmdPath, linkName), c.chainedArgs[1:])
+			c.next = newCmdLinks(c.sdk, link.Links(), fmt.Sprintf("%s ! %s", c.cmdPath, linkName))
 
 			logger().Debugw("resolved link", "link", link.Name(), "cmd", cmd.CommandPath(), "hasNext", c.next != nil)
 		},

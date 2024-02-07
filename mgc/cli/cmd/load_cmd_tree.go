@@ -239,9 +239,7 @@ func addAction(
 	name, aliases := getCommandNameAndAliases(exec.Name())
 	cmdPath := fmt.Sprintf("%s %s", parentCmd.CommandPath(), name)
 
-	// First chained args structure is MainArgs
-	linkChainedArgs := argParser.ChainedArgs()[1:]
-	links := newCmdLinks(sdk, exec.Links(), cmdPath, linkChainedArgs)
+	links := newCmdLinks(sdk, exec.Links(), cmdPath)
 	if links != nil {
 		flags.addExtraFlag(links.listLinksFlag)
 	}
@@ -258,7 +256,9 @@ func addAction(
 		GroupID:           "catalog",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := links.resolve(); err != nil {
+			// First chained args structure is MainArgs
+			linkChainedArgs := argParser.ChainedArgs()[1:]
+			if err := links.resolve(linkChainedArgs); err != nil {
 				return err
 			}
 
