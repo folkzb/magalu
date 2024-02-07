@@ -61,7 +61,10 @@ or
      ```hcl
      terraform {
         required_providers {
-            mgc = {}
+            mgc = {
+               version = "0.1"
+               source = "magalucloud/mgc"
+            }
         }
      }
 
