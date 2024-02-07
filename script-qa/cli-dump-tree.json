@@ -3302,6 +3302,276 @@
     "configs": {
      "type": "object"
     },
+    "description": "Get the JSON Schema for the specified Config. The Schema has\ninformation about the accepted values for the Config, constraints, type, description, etc.",
+    "isInternal": false,
+    "name": "get-schema",
+    "parameters": {
+     "properties": {
+      "key": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "key"
+     ],
+     "type": "object"
+    },
+    "result": {
+     "nullable": true,
+     "properties": {
+      "additionalProperties": {
+       "properties": {
+        "has": {
+         "nullable": true,
+         "type": "boolean"
+        },
+        "schema": {
+         "$ref": "#/$defs/SchemaRef"
+        }
+       },
+       "type": "object"
+      },
+      "allOf": {
+       "$ref": "#/$defs/SchemaRefs"
+      },
+      "allowEmptyValue": {
+       "type": "boolean"
+      },
+      "anyOf": {
+       "$ref": "#/$defs/SchemaRefs"
+      },
+      "default": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "array"
+        },
+        {
+         "additionalProperties": true,
+         "type": "object"
+        }
+       ],
+       "nullable": true
+      },
+      "deprecated": {
+       "type": "boolean"
+      },
+      "description": {
+       "type": "string"
+      },
+      "discriminator": {
+       "properties": {
+        "extensions": {
+         "additionalProperties": true,
+         "type": "object"
+        },
+        "mapping": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "type": "object"
+        },
+        "propertyName": {
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "enum": {
+       "items": {
+        "anyOf": [
+         {
+          "type": "boolean"
+         },
+         {
+          "type": "string"
+         },
+         {
+          "type": "number"
+         },
+         {
+          "type": "integer"
+         },
+         {
+          "type": "array"
+         },
+         {
+          "additionalProperties": true,
+          "type": "object"
+         }
+        ],
+        "nullable": true
+       },
+       "type": "array"
+      },
+      "example": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "array"
+        },
+        {
+         "additionalProperties": true,
+         "type": "object"
+        }
+       ],
+       "nullable": true
+      },
+      "exclusiveMax": {
+       "type": "boolean"
+      },
+      "exclusiveMin": {
+       "type": "boolean"
+      },
+      "extensions": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "externalDocs": {
+       "properties": {
+        "description": {
+         "type": "string"
+        },
+        "extensions": {
+         "additionalProperties": true,
+         "type": "object"
+        },
+        "url": {
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "format": {
+       "type": "string"
+      },
+      "items": {
+       "$ref": "#/$defs/SchemaRef"
+      },
+      "max": {
+       "type": "number"
+      },
+      "maxItems": {
+       "format": "int64",
+       "type": "integer"
+      },
+      "maxLength": {
+       "format": "int64",
+       "type": "integer"
+      },
+      "maxProps": {
+       "format": "int64",
+       "type": "integer"
+      },
+      "min": {
+       "type": "number"
+      },
+      "minItems": {
+       "format": "int64",
+       "type": "integer"
+      },
+      "minLength": {
+       "format": "int64",
+       "type": "integer"
+      },
+      "minProps": {
+       "format": "int64",
+       "type": "integer"
+      },
+      "multipleOf": {
+       "type": "number"
+      },
+      "not": {
+       "$ref": "#/$defs/SchemaRef"
+      },
+      "nullable": {
+       "type": "boolean"
+      },
+      "oneOf": {
+       "$ref": "#/$defs/SchemaRefs"
+      },
+      "pattern": {
+       "type": "string"
+      },
+      "properties": {
+       "$ref": "#/$defs/Schemas"
+      },
+      "readOnly": {
+       "type": "boolean"
+      },
+      "required": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "title": {
+       "type": "string"
+      },
+      "type": {
+       "type": "string"
+      },
+      "uniqueItems": {
+       "type": "boolean"
+      },
+      "writeOnly": {
+       "type": "boolean"
+      },
+      "xml": {
+       "properties": {
+        "attribute": {
+         "type": "boolean"
+        },
+        "extensions": {
+         "additionalProperties": true,
+         "type": "object"
+        },
+        "name": {
+         "type": "string"
+        },
+        "namespace": {
+         "type": "string"
+        },
+        "prefix": {
+         "type": "string"
+        },
+        "wrapped": {
+         "type": "boolean"
+        }
+       },
+       "type": "object"
+      }
+     },
+     "type": "object"
+    },
+    "version": ""
+   },
+   {
+    "configs": {
+     "type": "object"
+    },
     "description": "List all available Configs",
     "isInternal": false,
     "name": "list",
