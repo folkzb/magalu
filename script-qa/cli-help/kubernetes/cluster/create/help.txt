@@ -8,6 +8,7 @@ Examples:
 
 Flags:
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --cli.watch                     Wait until the operation is completed by calling the 'get' link and waiting until termination. Akin to '! get -w'
       --description string            Descrição do cluster
       --enabled-bastion               Habilita bastion host (required)
       --enabled-server-group          Habilita o uso de server group, com política de anti-affinity, na criação do cluster e dos node pools (default true)

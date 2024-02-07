@@ -258,6 +258,10 @@ func addAction(
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// First chained args structure is MainArgs
 			linkChainedArgs := argParser.ChainedArgs()[1:]
+			if getWatchFlag(cmd) {
+				linkChainedArgs = append([][]string{{"get", "-w"}}, linkChainedArgs...)
+			}
+
 			if err := links.resolve(linkChainedArgs); err != nil {
 				return err
 			}
@@ -276,6 +280,10 @@ func addAction(
 
 			return links.handle(result, getOutputFlag(cmd))
 		},
+	}
+
+	if getLink, ok := exec.Links()["get"]; ok && getLink.IsTargetTerminatorExecutor() {
+		addWatchFlag(actionCmd)
 	}
 
 	parentCmd.AddCommand(actionCmd)

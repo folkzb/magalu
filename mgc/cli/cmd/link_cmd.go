@@ -146,6 +146,10 @@ func (c *cmdLinks) resolve(chainedArgs [][]string) (err error) {
 	logger().Debugw("resolved executor link", "args", c.args, "error", err, "links", c.links, "hasNext", c.next != nil, "chainedArgs", chainedArgs)
 
 	chainedArgs = chainedArgs[1:]
+	if getWatchFlag(c.resolvedCmd) {
+		chainedArgs = append([][]string{{"get", "-w"}}, chainedArgs...)
+	}
+
 	return c.next.resolve(chainedArgs)
 }
 
@@ -219,6 +223,10 @@ func (c *cmdLinks) addLinkCommand(link core.Linker) {
 
 			logger().Debugw("resolved link", "link", link.Name(), "cmd", cmd.CommandPath(), "hasNext", c.next != nil)
 		},
+	}
+
+	if getLink, ok := link.Links()["get"]; ok && getLink.IsTargetTerminatorExecutor() {
+		addWatchFlag(linkCmd)
 	}
 
 	linkFlags.addFlags(linkCmd)
