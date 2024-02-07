@@ -208,6 +208,10 @@ func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err err
 	reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, nil)
 
 	resp, err := SendRequest(ctx, req)
+	if resp.StatusCode == 204 {
+		return fmt.Errorf("Couldn't find the referred item. Please provide a valid path!")
+	}
+
 	if err != nil {
 		reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, err)
 		return
