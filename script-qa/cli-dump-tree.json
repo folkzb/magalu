@@ -36,6 +36,11 @@
     "name": "login",
     "parameters": {
      "properties": {
+      "qrcode": {
+       "default": false,
+       "description": "Generate a qrcode for the login URL",
+       "type": "boolean"
+      },
       "scopes": {
        "description": "All desired scopes for the resulting access token",
        "items": {

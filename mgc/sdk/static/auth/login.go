@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
+	"github.com/skip2/go-qrcode"
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
@@ -35,6 +36,7 @@ type loginParameters struct {
 	// Ref: https://github.com/invopop/jsonschema/issues/127
 	Scopes auth.Scopes `json:"scopes,omitempty" jsonschema:"description=All desired scopes for the resulting access token"`
 	Show   bool        `json:"show,omitempty" jsonschema:"description=Show the access token after the login completes"`
+	QRcode bool        `json:"qrcode,omitempty" jsonschema:"description=Generate a qrcode for the login URL,default=false"`
 }
 
 type loginResult struct {
@@ -107,7 +109,17 @@ about a successful login, use the '--show' flag when logging in`,
 			if err := browser.OpenURL(codeUrl.String()); err != nil {
 				loginLogger().Infow("Cant't open browser. Logging in a headless environment")
 				fmt.Println("Could not open browser, please open it manually: ")
-				fmt.Print(codeUrl.String() + "\n\n")
+				if parameters.QRcode {
+					qrCode, err := qrcode.New(codeUrl.String(), qrcode.Low)
+					if err != nil {
+						return nil, err
+					}
+					qrCodeString := qrCode.ToSmallString(false)
+					fmt.Println(qrCodeString)
+
+				} else {
+					fmt.Print(codeUrl.String() + "\n\n")
+				}
 				err := headlessLogin(ctx, auth, resultChan)
 				if err != nil {
 					return nil, err
