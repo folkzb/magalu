@@ -317,7 +317,7 @@ func formatMapTable(m map[string]any) string {
 		t.AppendRow(table.Row{k, v})
 	}
 	t.SortBy([]table.SortBy{{Number: 0}})
-	t.SetStyle(table.StyleRounded)
+	t.SetStyle(table.StyleDefault)
 	return t.Render()
 }
 
@@ -333,8 +333,6 @@ func printLinkExecutionTable(name, description string, parameters, configs map[s
 		t.AppendRow(table.Row{"Configs", formatMapTable(configs)})
 	}
 
-	t.SetStyle(table.StyleRounded)
-	fmt.Println()
+	t.SetStyle(table.StyleDefault)
 	fmt.Println(t.Render())
-	fmt.Println()
 }
