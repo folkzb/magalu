@@ -65,6 +65,9 @@ func createObjectUploadProcessor(cfg common.Config, destination mgcSchemaPkg.URI
 }
 
 func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (*uploadDirResult, error) {
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
 	if params.Source.String() == "" {
 		return nil, core.UsageError{Err: fmt.Errorf("source cannot be empty")}
 	}
@@ -73,11 +76,14 @@ func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (
 		return err
 	})
 
-	entries = common.ApplyFilters(ctx, entries, params.FilterParams, nil)
+	entries = common.ApplyFilters(ctx, entries, params.FilterParams, cancel)
 	uploadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, entries, createObjectUploadProcessor(cfg, params.Destination), nil)
 	uploadObjectsErrorChan = pipeline.Filter(ctx, uploadObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
-	objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, uploadObjectsErrorChan)
+	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, uploadObjectsErrorChan)
+	if err != nil {
+		return nil, err
+	}
 	if len(objErr) > 0 {
 		return nil, objErr
 	}

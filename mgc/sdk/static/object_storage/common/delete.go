@@ -136,6 +136,9 @@ type DeleteProgressReport struct {
 }
 
 func DeleteAllObjectsInBucket(ctx context.Context, params DeleteAllObjectsInBucketParams, cfg Config) error {
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
 	dst := params.BucketName.AsURI()
 	listParams := ListObjectsParams{
 		Destination: dst,
@@ -154,7 +157,7 @@ func DeleteAllObjectsInBucket(ctx context.Context, params DeleteAllObjectsInBuck
 	}
 
 	objs := ListGenerator(ctx, listParams, cfg, onNewPage)
-	objs = ApplyFilters(ctx, objs, params.FilterParams, nil)
+	objs = ApplyFilters(ctx, objs, params.FilterParams, cancel)
 
 	if params.BatchSize < MinBatchSize || params.BatchSize > MaxBatchSize {
 		return core.UsageError{Err: fmt.Errorf("invalid item limit per request BatchSize, must not be lower than %d and must not be higher than %d: %d", MinBatchSize, MaxBatchSize, params.BatchSize)}
@@ -166,8 +169,10 @@ func DeleteAllObjectsInBucket(ctx context.Context, params DeleteAllObjectsInBuck
 	deleteObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objsBatch, CreateObjectDeletionProcessor(cfg, params.BucketName, reportChan), nil)
 	deleteObjectsErrorChan = pipeline.Filter(ctx, deleteObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
-	// This cannot error, there is no cancel call in processor
-	objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, deleteObjectsErrorChan)
+	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, deleteObjectsErrorChan)
+	if err != nil {
+		return err
+	}
 	if len(objErr) > 0 {
 		return objErr
 	}

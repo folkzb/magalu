@@ -92,6 +92,9 @@ type downloadAllProgressReport struct {
 }
 
 func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downloadAllObjectsParams) error {
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
 	listParams := common.ListObjectsParams{
 		Destination: params.Source,
 		Recursive:   true,
@@ -109,14 +112,17 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 	}
 
 	objs := common.ListGenerator(ctx, listParams, cfg, onNewPage)
-	objs = common.ApplyFilters(ctx, objs, params.FilterParams, nil)
+	objs = common.ApplyFilters(ctx, objs, params.FilterParams, cancel)
 
 	go reportDownloadAllProgress(reportProgress, reportChan, params)
 
 	downloadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectDownloadProcessor(cfg, params, reportChan), nil)
 	downloadObjectsErrorChan = pipeline.Filter(ctx, downloadObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
-	objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, downloadObjectsErrorChan)
+	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, downloadObjectsErrorChan)
+	if err != nil {
+		return err
+	}
 	if len(objErr) > 0 {
 		return objErr
 	}

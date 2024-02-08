@@ -79,9 +79,9 @@ func createObjectSyncProcessor(cfg common.Config, destination mgcSchemaPkg.URI, 
 }
 
 func sync(ctx context.Context, params syncParams, cfg common.Config) (result core.Value, err error) {
-	if err != nil {
-		return nil, err
-	}
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
 	srcObjects := pipeline.WalkDirEntries(ctx, params.Source.String(), func(path string, d fs.DirEntry, err error) error {
 		return err
 	})

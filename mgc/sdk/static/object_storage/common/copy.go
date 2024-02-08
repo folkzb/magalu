@@ -101,6 +101,9 @@ func createObjectCopyProcessor(cfg Config, params CopyAllObjectsParams, reportCh
 }
 
 func CopyMultipleFiles(ctx context.Context, cfg Config, params CopyAllObjectsParams) error {
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
 	listParams := ListObjectsParams{
 		Destination: params.Source,
 		Recursive:   true,
@@ -118,14 +121,17 @@ func CopyMultipleFiles(ctx context.Context, cfg Config, params CopyAllObjectsPar
 	}
 
 	objs := ListGenerator(ctx, listParams, cfg, onNewPage)
-	objs = ApplyFilters(ctx, objs, params.FilterParams, nil)
+	objs = ApplyFilters(ctx, objs, params.FilterParams, cancel)
 
 	go reportCopyAllProgress(reportProgress, reportChan, params)
 
 	copyObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectCopyProcessor(cfg, params, reportChan), nil)
 	copyObjectsErrorChan = pipeline.Filter(ctx, copyObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
-	objErr, _ := pipeline.SliceItemConsumer[utils.MultiError](ctx, copyObjectsErrorChan)
+	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, copyObjectsErrorChan)
+	if err != nil {
+		return err
+	}
 	if len(objErr) > 0 {
 		return objErr
 	}
