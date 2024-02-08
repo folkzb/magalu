@@ -1050,7 +1050,7 @@ paths:
             security:
             -   OAuth2:
                 - virtual-machine.write
-    /v1/machine_types:
+    /v1/machine-types:
         get:
             tags:
             - machine-types
