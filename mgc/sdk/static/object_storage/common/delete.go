@@ -29,6 +29,10 @@ type DeleteObjectParams struct {
 	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be deleted,example=s3://bucket1/file.txt" mgc:"positional"`
 }
 
+type DeleteBucketParams struct {
+	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the bucket to be deleted,example=s3://bucket1" mgc:"positional"`
+}
+
 type DeleteObjectsParams struct {
 	Destination mgcSchemaPkg.URI
 	ToDelete    <-chan pipeline.WalkDirEntry
@@ -39,6 +43,14 @@ type DeleteAllObjectsInBucketParams struct {
 	BucketName BucketName       `json:"bucket" jsonschema:"description=Name of the bucket to delete objects from" mgc:"positional"`
 	BatchSize  int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to delete,default=1000,minimum=1,maximum=1000" example:"1000"`
 	Filters    `json:",squash"` // nolint
+}
+
+func newDeleteRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI) (*http.Request, error) {
+	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
+	if err != nil {
+		return nil, core.UsageError{Err: err}
+	}
+	return http.NewRequestWithContext(ctx, http.MethodDelete, string(host), nil)
 }
 
 type objectIdentifier struct {
@@ -190,6 +202,20 @@ func ReportDeleteProgress(reportProgress progress_report.ReportProgress, reportC
 	}
 
 	reportProgress(name, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
+}
+
+func DeleteBucket(ctx context.Context, params DeleteBucketParams, cfg Config) error {
+	req, err := newDeleteRequest(ctx, cfg, params.Destination)
+	if err != nil {
+		return err
+	}
+
+	resp, err := SendRequest(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	return ExtractErr(resp, req)
 }
 
 func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err error) {

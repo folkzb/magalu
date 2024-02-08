@@ -19222,33 +19222,7 @@
        "type": "object"
       },
       "result": {
-       "anyOf": [
-        {
-         "nullable": true,
-         "type": "null"
-        },
-        {
-         "type": "boolean"
-        },
-        {
-         "type": "string"
-        },
-        {
-         "type": "number"
-        },
-        {
-         "type": "integer"
-        },
-        {
-         "items": {},
-         "type": "array"
-        },
-        {
-         "additionalProperties": true,
-         "type": "object"
-        }
-       ],
-       "nullable": true
+       "type": "boolean"
       },
       "version": ""
      },
@@ -19568,33 +19542,7 @@
        "type": "object"
       },
       "result": {
-       "anyOf": [
-        {
-         "nullable": true,
-         "type": "null"
-        },
-        {
-         "type": "boolean"
-        },
-        {
-         "type": "string"
-        },
-        {
-         "type": "number"
-        },
-        {
-         "type": "integer"
-        },
-        {
-         "items": {},
-         "type": "array"
-        },
-        {
-         "additionalProperties": true,
-         "type": "object"
-        }
-       ],
-       "nullable": true
+       "type": "boolean"
       },
       "version": ""
      },
