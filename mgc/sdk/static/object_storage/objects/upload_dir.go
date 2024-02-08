@@ -7,6 +7,7 @@ import (
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/pipeline"
+	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/sdk/static/object_storage/common"
@@ -72,6 +73,10 @@ func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (
 		return nil, core.UsageError{Err: fmt.Errorf("source cannot be empty")}
 	}
 
+	reportProgress := progress_report.FromContext(ctx)
+	reportMsg := "Uploading directory: " + params.Source.String()
+
+	reportProgress(reportMsg, 0, 0, progress_report.UnitsNone, nil)
 	entries := pipeline.WalkDirEntries(ctx, params.Source.String(), func(path string, d fs.DirEntry, err error) error {
 		return err
 	})
@@ -82,11 +87,15 @@ func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (
 
 	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, uploadObjectsErrorChan)
 	if err != nil {
+		reportProgress(reportMsg, 0, 0, progress_report.UnitsNone, err)
 		return nil, err
 	}
 	if len(objErr) > 0 {
+		reportProgress(reportMsg, 0, 0, progress_report.UnitsNone, objErr)
 		return nil, objErr
 	}
+
+	reportProgress(reportMsg, 1, 1, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
 	return &uploadDirResult{
 		URI: params.Destination.String(),
