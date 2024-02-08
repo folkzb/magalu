@@ -19722,13 +19722,13 @@
        },
        "type": "object"
       },
-      "description": "Download an object from a bucket",
+      "description": "Download an object from a bucket. If no destination is specified, the default is the current working directory",
       "isInternal": false,
       "name": "download",
       "parameters": {
        "properties": {
         "dst": {
-         "description": "Name of the file to be saved",
+         "description": "Path and file name to be saved (relative or absolute).If not specified it defaults to the current working directory",
          "example": "file.txt",
          "type": "string",
          "x-contentMediaType": "application/octet-stream"
