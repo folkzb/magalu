@@ -50,14 +50,6 @@ type deleteBatchRequestBody struct {
 	Objects []objectIdentifier `xml:"Object"`
 }
 
-func newDeleteRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI) (*http.Request, error) {
-	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
-	if err != nil {
-		return nil, core.UsageError{Err: err}
-	}
-	return http.NewRequestWithContext(ctx, http.MethodDelete, string(host), nil)
-}
-
 func newDeleteBatchRequest(ctx context.Context, cfg Config, bucketName BucketName, objKeys []objectIdentifier) (*http.Request, error) {
 	host, err := BuildBucketHost(cfg, bucketName)
 	if err != nil {
@@ -201,31 +193,22 @@ func ReportDeleteProgress(reportProgress progress_report.ReportProgress, reportC
 }
 
 func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err error) {
-	req, err := newDeleteRequest(ctx, cfg, params.Destination)
+	objKeys := []objectIdentifier{{Key: params.Destination.AsFilePath().String()}}
+
+	req, err := newDeleteBatchRequest(ctx, cfg, NewBucketNameFromURI(params.Destination), objKeys)
 	if err != nil {
 		return
 	}
-
-	reportProgress := progress_report.FromContext(ctx)
-	reportMsg := "Deleting object from bucket: " + params.Destination.String()
-	progress := uint64(0)
-	total := uint64(1)
-
-	reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, nil)
 
 	resp, err := SendRequest(ctx, req)
 	if err != nil {
-		reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, err)
-		return
+		return err
 	}
 
-	_, err = UnwrapResponse[core.Value](resp, req)
+	err = ExtractErr(resp, req)
 	if err != nil {
-		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, err)
-		return
+		return err
 	}
-
-	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
 	return nil
 }
