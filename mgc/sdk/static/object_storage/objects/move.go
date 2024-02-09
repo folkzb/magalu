@@ -15,8 +15,8 @@ import (
 )
 
 type moveParams struct {
-	Source      mgcSchemaPkg.URI `json:"src" jsonschema:"description=Source path or uri to move files from" mgc:"positional"`
-	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Destination to put files into" mgc:"positional"`
+	Source      mgcSchemaPkg.URI `json:"src" jsonschema:"description=Source path or uri to move files from,example=./file.txt" mgc:"positional"`
+	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Destination to put files into,example=s3://my-bucket/dir/file" mgc:"positional"`
 	BatchSize   int              `json:"batch_size,omitempty" jsonschema:"description=Limit of items per batch to process,default=1000,minimum=1,maximum=1000" example:"1000"`
 }
 

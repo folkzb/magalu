@@ -4,6 +4,9 @@ They can be either local or remote but not both local (Local -> Remote, Remote -
 Usage:
   ./cli object-storage objects move [src] [dst] [flags]
 
+Examples:
+  ./cli object-storage objects move --dst="s3://my-bucket/dir/file" --src="./file.txt"
+
 Flags:
       --batch-size integer   Limit of items per batch to process (range: 1 - 1000) (default 1000)
       --dst uri              Destination to put files into (required)

@@ -20110,11 +20110,13 @@
         },
         "dst": {
          "description": "Destination to put files into",
+         "example": "s3://my-bucket/dir/file",
          "format": "uri",
          "type": "string"
         },
         "src": {
          "description": "Source path or uri to move files from",
+         "example": "./file.txt",
          "format": "uri",
          "type": "string"
         }
@@ -20136,11 +20138,13 @@
         },
         "dst": {
          "description": "Destination to put files into",
+         "example": "s3://my-bucket/dir/file",
          "format": "uri",
          "type": "string"
         },
         "src": {
          "description": "Source path or uri to move files from",
+         "example": "./file.txt",
          "format": "uri",
          "type": "string"
         }
