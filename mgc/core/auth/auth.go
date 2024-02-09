@@ -267,13 +267,13 @@ func (o *Auth) CurrentTenantID() (string, error) {
 	return tenantId, nil
 }
 
-func (o *Auth) CurrentTenant(ctx context.Context) (*Tenant, error) {
+func (o *Auth) CurrentTenant(ctx context.Context, httpClient *http.Client) (*Tenant, error) {
 	currentTenantId, err := o.CurrentTenantID()
 	if err != nil {
 		return nil, err
 	}
 
-	tenants, err := o.ListTenants(ctx)
+	tenants, err := o.ListTenants(ctx, httpClient)
 	if err != nil || len(tenants) == 0 {
 		return nil, fmt.Errorf("error when trying to list tenants for selection: %w", err)
 	}
@@ -548,7 +548,7 @@ func (o *Auth) writeConfigFile(result *ConfigResult) error {
 	return o.profileManager.Current().Write(authFilename, yamlData)
 }
 
-func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
+func (o *Auth) ListTenants(ctx context.Context, httpClient *http.Client) ([]*Tenant, error) {
 	at, err := o.AccessToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
@@ -561,7 +561,7 @@ func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
 	r.Header.Set("Authorization", "Bearer "+at)
 	r.Header.Set("Content-Type", "application/json")
 
-	resp, err := o.httpClient.Do(r)
+	resp, err := httpClient.Do(r)
 	if err != nil {
 		return nil, err
 	}
