@@ -3355,6 +3355,7 @@
          "type": "integer"
         },
         {
+         "items": {},
          "type": "array"
         },
         {
@@ -3404,6 +3405,7 @@
           "type": "integer"
          },
          {
+          "items": {},
           "type": "array"
          },
          {
@@ -3430,6 +3432,7 @@
          "type": "integer"
         },
         {
+         "items": {},
          "type": "array"
         },
         {
