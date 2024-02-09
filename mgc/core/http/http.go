@@ -114,7 +114,10 @@ func (e *IdentifiableHttpError) Error() string {
 }
 
 func (e *HttpError) Error() string {
-	msg := e.Status + " - " + e.Message
+	msg := e.Message
+	if e.Status != msg {
+		msg = e.Status + " - " + msg
+	}
 	if e.Slug != "" {
 		msg = "(" + e.Slug + ")" + " " + msg
 	}
