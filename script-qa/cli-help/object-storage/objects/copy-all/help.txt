@@ -4,7 +4,7 @@ Usage:
   ./cli object-storage objects copy-all [src] [dst] [flags]
 
 Examples:
-  ./cli object-storage objects copy-all --dst="s3://bucket2/dir/" --src="s3://bucket1"
+  ./cli object-storage objects copy-all --dst="bucket2/dir/" --src="bucket1"
 
 Flags:
       --dst uri                Full destination path in the bucket (required)

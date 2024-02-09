@@ -11,7 +11,7 @@ import (
 )
 
 type headObjectParams struct {
-	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be get metadata from,example=s3://bucket1/file.txt" mgc:"positional"`
+	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be get metadata from,example=bucket1/file.txt" mgc:"positional"`
 }
 
 var getHead = utils.NewLazyLoader[core.Executor](func() core.Executor {

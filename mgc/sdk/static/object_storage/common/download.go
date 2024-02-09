@@ -16,7 +16,7 @@ import (
 )
 
 type DownloadObjectParams struct {
-	Source      mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of the object to be downloaded,example=s3://bucket1/file.txt" mgc:"positional"`
+	Source      mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of the object to be downloaded,example=bucket1/file.txt" mgc:"positional"`
 	Destination mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Path and file name to be saved (relative or absolute).If not specified it defaults to the current working directory,example=file.txt" mgc:"positional"`
 }
 

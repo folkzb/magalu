@@ -19369,13 +19369,13 @@
        "properties": {
         "dst": {
          "description": "Full destination path in the bucket with desired filename",
-         "example": "s3://bucket2/dir/file.txt",
+         "example": "bucket2/dir/file.txt",
          "format": "uri",
          "type": "string"
         },
         "src": {
          "description": "Path of the object to be copied",
-         "example": "s3://bucket1/file.txt",
+         "example": "bucket1/file.txt",
          "format": "uri",
          "type": "string"
         }
@@ -19450,7 +19450,7 @@
        "properties": {
         "dst": {
          "description": "Full destination path in the bucket",
-         "example": "s3://bucket2/dir/",
+         "example": "bucket2/dir/",
          "format": "uri",
          "type": "string"
         },
@@ -19473,7 +19473,7 @@
         },
         "src": {
          "description": "Path of objects to be copied",
-         "example": "s3://bucket1",
+         "example": "bucket1",
          "format": "uri",
          "type": "string"
         }
@@ -19488,7 +19488,7 @@
        "properties": {
         "dst": {
          "description": "Full destination path in the bucket",
-         "example": "s3://bucket2/dir/",
+         "example": "bucket2/dir/",
          "format": "uri",
          "type": "string"
         },
@@ -19511,7 +19511,7 @@
         },
         "src": {
          "description": "Path of objects to be copied",
-         "example": "s3://bucket1",
+         "example": "bucket1",
          "format": "uri",
          "type": "string"
         }
@@ -19557,7 +19557,7 @@
        "properties": {
         "dst": {
          "description": "Path of the object to be deleted",
-         "example": "s3://bucket1/file.txt",
+         "example": "bucket1/file.txt",
          "format": "uri",
          "type": "string"
         }
@@ -19735,7 +19735,7 @@
         },
         "src": {
          "description": "Path of the object to be downloaded",
-         "example": "s3://bucket1/file.txt",
+         "example": "bucket1/file.txt",
          "format": "uri",
          "type": "string"
         }
@@ -19832,7 +19832,7 @@
         },
         "src": {
          "description": "Path of objects to be downloaded",
-         "example": "s3://mybucket",
+         "example": "mybucket",
          "format": "uri",
          "type": "string"
         }
@@ -19906,7 +19906,7 @@
        "properties": {
         "dst": {
          "description": "Path of the object to be get metadata from",
-         "example": "s3://bucket1/file.txt",
+         "example": "bucket1/file.txt",
          "format": "uri",
          "type": "string"
         }
@@ -19984,7 +19984,7 @@
         },
         "dst": {
          "description": "Path of the bucket to list objects from",
-         "example": "s3://bucket1",
+         "example": "bucket1",
          "format": "uri",
          "type": "string"
         },
@@ -20279,7 +20279,7 @@
        "properties": {
         "dst": {
          "description": "Full destination path in the bucket with desired filename",
-         "example": "s3://my-bucket/dir/file.txt",
+         "example": "my-bucket/dir/file.txt",
          "format": "uri",
          "type": "string"
         },
@@ -20346,7 +20346,7 @@
        "properties": {
         "dst": {
          "description": "Full destination path in the bucket",
-         "example": "s3://my-bucket/dir/",
+         "example": "my-bucket/dir/",
          "format": "uri",
          "type": "string"
         },
