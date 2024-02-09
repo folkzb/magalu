@@ -592,7 +592,7 @@ func (o *Auth) SelectTenant(ctx context.Context, id string) (*TokenExchangeResul
 	return o.runTokenExchange(ctx, at, id, scopes, o.httpClient)
 }
 
-func (o *Auth) SetScopes(ctx context.Context, scopes Scopes, client http.Client) (*TokenExchangeResult, error) {
+func (o *Auth) SetScopes(ctx context.Context, scopes Scopes, client *http.Client) (*TokenExchangeResult, error) {
 	at, err := o.AccessToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
@@ -602,7 +602,7 @@ func (o *Auth) SetScopes(ctx context.Context, scopes Scopes, client http.Client)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current tenant ID: %w", err)
 	}
-	return o.runTokenExchange(ctx, at, currentTenantId, scopes.AsScopesString(), &client)
+	return o.runTokenExchange(ctx, at, currentTenantId, scopes.AsScopesString(), client)
 }
 
 func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes ScopesString, client *http.Client) (*TokenExchangeResult, error) {
