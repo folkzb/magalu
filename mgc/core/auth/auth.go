@@ -154,8 +154,8 @@ func (s ScopesString) AsScopes() Scopes {
 
 type accessTokenClaims struct {
 	jwt.RegisteredClaims
-	TenantIDGenPub string       `json:"tenant"`
-	ScopesStr      ScopesString `json:"scope"`
+	TenantIDWithType string       `json:"tenant"`
+	ScopesStr        ScopesString `json:"scope"`
 }
 
 type FailedRefreshAccessToken struct {
@@ -263,7 +263,11 @@ func (o *Auth) CurrentTenantID() (string, error) {
 		return "", err
 	}
 
-	tenantId := strings.TrimPrefix(claims.TenantIDGenPub, "GENPUB.")
+	tenantId := claims.TenantIDWithType
+	// Dot is a separator, Tenant will be <TenantType>.<ID>. We only want the ID
+	if dotIndex := strings.Index(tenantId, "."); dotIndex != -1 {
+		tenantId = tenantId[dotIndex+1:]
+	}
 	return tenantId, nil
 }
 
