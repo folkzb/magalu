@@ -106,14 +106,17 @@ func (e *IdentifiableHttpError) Unwrap() error {
 }
 
 func (e *IdentifiableHttpError) Error() string {
-	msg := "Internal Server Error (status: " + e.Status + ", request-id: " + e.RequestID + ")"
+	msg := e.HttpError.Error()
+	if e.RequestID != "" {
+		msg += " (request-id: " + e.RequestID + ")"
+	}
 	return msg
 }
 
 func (e *HttpError) Error() string {
-	msg := e.Message
+	msg := e.Status + " - " + e.Message
 	if e.Slug != "" {
-		msg = "(" + e.Slug + ")" + " " + e.Message
+		msg = "(" + e.Slug + ")" + " " + msg
 	}
 
 	return msg
