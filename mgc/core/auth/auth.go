@@ -275,7 +275,8 @@ func (o *Auth) CurrentTenant(ctx context.Context, httpClient *http.Client) (*Ten
 
 	tenants, err := o.ListTenants(ctx, httpClient)
 	if err != nil || len(tenants) == 0 {
-		return nil, fmt.Errorf("error when trying to list tenants for selection: %w", err)
+		logger().Warnw("Failed to get detailed info about Tenant, returning only ID", "err", err)
+		return &Tenant{UUID: currentTenantId}, nil
 	}
 
 	for _, tenant := range tenants {
@@ -284,7 +285,12 @@ func (o *Auth) CurrentTenant(ctx context.Context, httpClient *http.Client) (*Ten
 		}
 	}
 
-	return nil, fmt.Errorf("unable to find Tenant in Tenant list that matches the current Tenant ID")
+	logger().Warnw(
+		"Tenant ID present in Access Token is not present in the list of Tenants",
+		"id", currentTenantId,
+		"allTenants", tenants,
+	)
+	return nil, fmt.Errorf("unable to find Tenant in Tenant list that matches the current Tenant ID - %s", currentTenantId)
 }
 
 func (o *Auth) CurrentScopesString() (ScopesString, error) {
