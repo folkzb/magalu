@@ -206,6 +206,10 @@ func (l *simpleLink) CreateExecutor(originalResult Result) (Executor, error) {
 		exec = NewLinkConfirmableExecutor(exec)
 	}
 
+	if _, ok := ExecutorAs[PromptInputExecutor](l.target); ok {
+		exec = NewLinkPromptInputExecutor(exec)
+	}
+
 	if _, ok := ExecutorAs[TerminatorExecutor](l.target); ok {
 		exec = NewLinkTerminatorExecutor(exec)
 	}
