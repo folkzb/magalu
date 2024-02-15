@@ -145,6 +145,10 @@ func CopySingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst m
 	progress := uint64(0)
 	total := uint64(1)
 
+	if dst.IsRoot() {
+		dst = dst.JoinPath(src.Filename())
+	}
+
 	reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, nil)
 
 	req, err := newCopyRequest(ctx, cfg, src, dst)
