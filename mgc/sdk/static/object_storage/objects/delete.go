@@ -20,10 +20,11 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	exec = core.NewExecuteFormat(exec, func(exec core.Executor, result core.Result) string {
 		return fmt.Sprintf("Deleted object %q", result.Source().Parameters["dst"])
 	})
-	exec = core.NewConfirmableExecutor(
+	exec = core.NewPromptInputExecutor(
 		exec,
-		core.ConfirmPromptWithTemplate(
-			"This command will delete the object at {{.parameters.dst}}, and its result is NOT reversible.",
+		core.NewPromptInput(
+			"This command will delete the object at {{.confirmationValue}}, and its result is NOT reversible. Please confirm by retyping: {{.confirmationValue}}",
+			"{{.parameters.dst}}",
 		),
 	)
 

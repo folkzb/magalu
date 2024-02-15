@@ -32,10 +32,11 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 		deleteBucket,
 	)
 
-	executor = core.NewConfirmableExecutor(
+	executor = core.NewPromptInputExecutor(
 		executor,
-		core.ConfirmPromptWithTemplate(
-			"This command will delete bucket {{.parameters.bucket}}, and its result is NOT reversible.",
+		core.NewPromptInput(
+			"This command will delete bucket {{.confirmationValue}}, and its result is NOT reversible. Please confirm by retyping: {{.confirmationValue}}",
+			"{{.parameters.bucket}}",
 		),
 	)
 
