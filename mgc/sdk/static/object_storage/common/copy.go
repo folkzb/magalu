@@ -35,12 +35,6 @@ type CopyAllObjectsParams struct {
 	Filters     `json:",squash"` // nolint
 }
 
-type copyAllProgressReport struct {
-	files uint64
-	total uint64
-	err   error
-}
-
 func newCopyRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) (*http.Request, error) {
 	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
 	if err != nil {
@@ -62,15 +56,13 @@ func newCopyRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst m
 	return req, nil
 }
 
-func createObjectCopyProcessor(cfg Config, params CopyAllObjectsParams, reportChan chan<- copyAllProgressReport) pipeline.Processor[pipeline.WalkDirEntry, error] {
+func createObjectCopyProcessor(cfg Config, params CopyAllObjectsParams, progressReporter *progress_report.UnitsReporter) pipeline.Processor[pipeline.WalkDirEntry, error] {
 	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
 		bucketName := NewBucketNameFromURI(params.Source)
 		rootURI := bucketName.AsURI()
 		var err error
 
-		defer func() {
-			reportChan <- copyAllProgressReport{uint64(1), 0, err}
-		}()
+		defer progressReporter.Report(1, 0, err)
 
 		objURI := rootURI.JoinPath(dirEntry.Path())
 
@@ -111,28 +103,28 @@ func CopyMultipleFiles(ctx context.Context, cfg Config, params CopyAllObjectsPar
 			MaxItems: math.MaxInt64,
 		},
 	}
-
-	reportProgress := progress_report.FromContext(ctx)
-	reportChan := make(chan copyAllProgressReport)
-	defer close(reportChan)
+	progressReportMsg := fmt.Sprintf("Copying objects from %q to %q", params.Source, params.Destination)
+	progressReporter := progress_report.NewUnitsReporter(ctx, progressReportMsg, 0)
+	progressReporter.Start()
+	defer progressReporter.End()
 
 	onNewPage := func(objCount uint64) {
-		reportChan <- copyAllProgressReport{0, objCount, nil}
+		progressReporter.Report(0, objCount, nil)
 	}
 
 	objs := ListGenerator(ctx, listParams, cfg, onNewPage)
 	objs = ApplyFilters(ctx, objs, params.FilterParams, cancel)
 
-	go reportCopyAllProgress(reportProgress, reportChan, params)
-
-	copyObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectCopyProcessor(cfg, params, reportChan), nil)
+	copyObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectCopyProcessor(cfg, params, progressReporter), nil)
 	copyObjectsErrorChan = pipeline.Filter(ctx, copyObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
 	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, copyObjectsErrorChan)
 	if err != nil {
+		progressReporter.Report(0, 0, err)
 		return err
 	}
 	if len(objErr) > 0 {
+		progressReporter.Report(0, 0, objErr)
 		return objErr
 	}
 
@@ -166,33 +158,4 @@ func CopySingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst m
 	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
 	return ExtractErr(resp, req)
-}
-
-func reportCopyAllProgress(reportProgress progress_report.ReportProgress, reportChan <-chan copyAllProgressReport, params CopyAllObjectsParams) {
-	reportMsg := "copying objects from bucket: " + params.Source.String()
-	total := uint64(1)
-	progress := uint64(0)
-
-	// total here must be reported as one, otherwise the progress-bar shows
-	// an animation we do not wish the user to see
-	reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
-
-	var errors utils.MultiError
-	for report := range reportChan {
-		progress += report.files
-		total += report.total
-
-		if report.err != nil {
-			errors = append(errors, report.err)
-		}
-
-		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
-	}
-
-	if len(errors) > 0 {
-		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, errors)
-		return
-	}
-
-	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 }
