@@ -77,7 +77,7 @@ func (u URI) IsRoot() bool {
 }
 
 func (u URI) Filename() string {
-	filename := path.Base(u.Path())
+	filename := path.Base(u.String())
 	if filename == "/" || filename == "." {
 		return ""
 	}
