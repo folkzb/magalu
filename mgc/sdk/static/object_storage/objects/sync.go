@@ -127,7 +127,7 @@ func sync(ctx context.Context, params syncParams, cfg common.Config) (result cor
 	}
 
 	for entry := range dstObjects {
-		if entry.Err() != nil {
+		if err := entry.Err(); err != nil {
 			objErr = append(objErr, err)
 			continue
 		}
