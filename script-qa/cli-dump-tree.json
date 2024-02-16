@@ -404,16 +404,16 @@
       },
       "description": "Set the active Tenant to be used for all subsequential requests",
       "isInternal": false,
-      "name": "select",
+      "name": "set",
       "parameters": {
        "properties": {
-        "id": {
+        "uuid": {
          "description": "The UUID of the desired Tenant. To list all possible IDs, run auth tenant list",
          "type": "string"
         }
        },
        "required": [
-        "id"
+        "uuid"
        ],
        "type": "object"
       },

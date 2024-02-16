@@ -17,7 +17,7 @@ under the same account`,
 		func() []core.Descriptor {
 			return []core.Descriptor{
 				getList(),
-				getSelect(),
+				getSet(),
 				getCurrent(),
 			}
 		},

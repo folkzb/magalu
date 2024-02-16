@@ -9,7 +9,10 @@ Usage:
 Commands:
   current     Get the currently active Tenant
   list        List all available tenants for current login
-  select      Set the active Tenant to be used for all subsequential requests
+  set         Set the active Tenant to be used for all subsequential requests
+
+Additional Commands:
+  select      call "list", prompt selection and then "set"
 
 Flags:
   -h, --help   help for tenant
