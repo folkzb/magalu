@@ -19947,33 +19947,31 @@
        "type": "object"
       },
       "result": {
-       "anyOf": [
-        {
-         "nullable": true,
-         "type": "null"
-        },
-        {
-         "type": "boolean"
-        },
-        {
+       "properties": {
+        "AcceptRanges": {
          "type": "string"
         },
-        {
-         "type": "number"
-        },
-        {
+        "ContentLength": {
          "type": "integer"
         },
-        {
-         "items": {},
-         "type": "array"
+        "ContentType": {
+         "type": "string"
         },
-        {
-         "additionalProperties": true,
-         "type": "object"
+        "ETag": {
+         "type": "string"
+        },
+        "LastModified": {
+         "type": "string"
         }
+       },
+       "required": [
+        "AcceptRanges",
+        "LastModified",
+        "ContentLength",
+        "ETag",
+        "ContentType"
        ],
-       "nullable": true
+       "type": "object"
       },
       "version": ""
      },

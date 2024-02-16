@@ -23,6 +23,6 @@ var getHead = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 })
 
-func headObject(ctx context.Context, p headObjectParams, cfg common.Config) (result core.Value, err error) {
+func headObject(ctx context.Context, p headObjectParams, cfg common.Config) (common.HeadObjectResponse, error) {
 	return common.HeadFile(ctx, cfg, p.Destination)
 }
