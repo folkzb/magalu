@@ -87,6 +87,10 @@ func loadAllGrouperChildren(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core
 
 		return true, err
 	})
+	if err == nil {
+		err = loadSelectHelperCommand(sdk, cmd, cmdGrouper)
+	}
+
 	return err
 }
 
@@ -180,6 +184,18 @@ func loadCommandTree(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdDesc core.Descripto
 		if keepLoadingChildren {
 			logger().Debugw(
 				"childName wasn't found, loaded all children.",
+				"childName", *childName,
+				"descriptor", cmdDesc,
+				"childArgs", childArgs,
+				"loadChildError", err,
+			)
+			return nil
+		}
+
+		if isExistingCommand(cmd, *childName) {
+			// for instance: loadSelectHelperCommand()
+			logger().Debugw(
+				"childName was created after loading all children.",
 				"childName", *childName,
 				"descriptor", cmdDesc,
 				"childArgs", childArgs,
