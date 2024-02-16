@@ -51,7 +51,7 @@ func checkScopes(sdk *mgcSdk.Sdk, exec core.Executor) error {
 	return nil
 }
 
-func handleExecutor(
+func handleExecutorPre(
 	ctx context.Context,
 	sdk *mgcSdk.Sdk,
 	cmd *cobra.Command,
@@ -129,6 +129,18 @@ func handleExecutor(
 		pb.Flush()
 	}
 
+	return result, err
+}
+
+func handleExecutor(
+	ctx context.Context,
+	sdk *mgcSdk.Sdk,
+	cmd *cobra.Command,
+	exec core.Executor,
+	parameters core.Parameters,
+	configs core.Configs,
+) (core.Result, error) {
+	result, err := handleExecutorPre(ctx, sdk, cmd, exec, parameters, configs)
 	err = handleExecutorResult(ctx, sdk, cmd, result, err)
 	if err != nil {
 		return nil, err
