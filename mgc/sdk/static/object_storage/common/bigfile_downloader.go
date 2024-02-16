@@ -48,7 +48,7 @@ func (u *bigFileDownloader) createPartDownloaderProcessor(cancel context.CancelC
 			return err, pipeline.ProcessAbort
 		}
 
-		reporterWriter := progress_report.NewReporterWriter(chunk.Writer, func(n int, err error) {
+		reporterWriter := progress_report.NewReporterWriter(chunk.Writer, func(n uint64, err error) {
 			u.reportChan <- downloadPartsProgressReport{bytes: uint64(n), err: err}
 		})
 
