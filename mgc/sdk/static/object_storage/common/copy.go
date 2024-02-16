@@ -132,30 +132,19 @@ func CopyMultipleFiles(ctx context.Context, cfg Config, params CopyAllObjectsPar
 }
 
 func CopySingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) error {
-	reportProgress := progress_report.FromContext(ctx)
-	reportMsg := "Copying object from " + src.String() + " to " + dst.String()
-	progress := uint64(0)
-	total := uint64(1)
-
 	if dst.IsRoot() {
 		dst = dst.JoinPath(src.Filename())
 	}
 
-	reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, nil)
-
 	req, err := newCopyRequest(ctx, cfg, src, dst)
 	if err != nil {
-		reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, err)
 		return err
 	}
 
 	resp, err := SendRequest(ctx, req)
 	if err != nil {
-		reportProgress(reportMsg, progress, progress, progress_report.UnitsNone, err)
 		return err
 	}
-
-	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 
 	return ExtractErr(resp, req)
 }
