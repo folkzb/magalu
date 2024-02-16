@@ -12,5 +12,5 @@ func (e ProfileError) Unwrap() error {
 }
 
 func (e ProfileError) Error() string {
-	return fmt.Sprintf("profle %s: %s", e.Name, e.Err.Error())
+	return fmt.Sprintf("profile %s: %s", e.Name, e.Err.Error())
 }

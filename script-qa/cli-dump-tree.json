@@ -20453,7 +20453,7 @@
     "parameters": {
      "properties": {
       "copy": {
-       "description": "Name of the profile to copy content from. If this paramater is passed, the new Profile will be pre-populated with the contents of the Profile with the specified name",
+       "description": "Name of the profile to copy content from. If this parameter is passed, the new Profile will be pre-populated with the contents of the Profile with the specified name",
        "type": "string"
       },
       "name": {
