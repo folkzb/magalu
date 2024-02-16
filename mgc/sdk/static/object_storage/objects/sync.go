@@ -44,7 +44,12 @@ var getSync = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func createObjectSyncProcessor(cfg common.Config, destination mgcSchemaPkg.URI, srcAbs string, reportChan chan uint64) pipeline.Processor[pipeline.WalkDirEntry, error] {
+func createObjectSyncProcessor(
+	cfg common.Config,
+	destination mgcSchemaPkg.URI,
+	srcAbs string,
+	progressReporter *progress_report.UnitsReporter,
+) pipeline.Processor[pipeline.WalkDirEntry, error] {
 	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
 		if err := dirEntry.Err(); err != nil {
 			return &common.ObjectError{Err: err}, pipeline.ProcessAbort
@@ -53,6 +58,9 @@ func createObjectSyncProcessor(cfg common.Config, destination mgcSchemaPkg.URI, 
 		if dirEntry.DirEntry().IsDir() {
 			return nil, pipeline.ProcessOutput
 		}
+
+		var err error
+		defer progressReporter.Report(1, 0, err)
 
 		absEntry, err := filepath.Abs(dirEntry.Path())
 		if err != nil {
@@ -73,8 +81,6 @@ func createObjectSyncProcessor(cfg common.Config, destination mgcSchemaPkg.URI, 
 		if err != nil {
 			return &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}, pipeline.ProcessOutput
 		}
-
-		reportChan <- 1
 
 		return nil, pipeline.ProcessOutput
 	}
@@ -168,34 +174,26 @@ func sync(ctx context.Context, params syncParams, cfg common.Config) (result cor
 	}
 
 	if len(toUpload) > 0 {
-		reportProgress := progress_report.FromContext(ctx)
-		current := uint64(0)
-		total := uint64(len(toUpload))
+		progressReporter := progress_report.NewUnitsReporter(ctx, "Sync Upload", uint64(len(toUpload)))
+		progressReporter.Start()
+		defer progressReporter.End()
 
-		reportProgress("Sync Upload", current, total, progress_report.UnitsNone, nil)
-		reportChan := make(chan uint64)
-		defer close(reportChan)
-		go func() {
-			for v := range reportChan {
-				current += v
-				reportProgress("Sync Upload", current, total, progress_report.UnitsNone, nil)
-			}
-		}()
 		uploadChannel := pipeline.SliceItemGenerator[pipeline.WalkDirEntry](ctx, toUpload)
-		uploadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, uploadChannel, createObjectSyncProcessor(cfg, params.Destination, srcAbs, reportChan), nil)
+		uploadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, uploadChannel, createObjectSyncProcessor(cfg, params.Destination, srcAbs, progressReporter), nil)
 		uploadObjectsErrorChan = pipeline.Filter(ctx, uploadObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
 		objErr, err = pipeline.SliceItemConsumer[utils.MultiError](ctx, uploadObjectsErrorChan)
 		if err != nil {
+			progressReporter.Report(0, 0, err)
 			return nil, err
 		}
 
 		if len(objErr) > 0 {
-			reportProgress("Sync Upload", current, total, progress_report.UnitsNone, objErr)
+			progressReporter.Report(0, 0, objErr)
 			return nil, objErr
 		}
 
-		reportProgress("Sync Upload", total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
+		progressReporter.End()
 	}
 
 	if params.Delete && len(toDelete) > 0 {
