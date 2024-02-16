@@ -42,11 +42,7 @@ func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploa
 	}
 
 	fileName := params.Source.String()
-	if strings.HasSuffix(fullDstPath.String(), "/") {
-		// If it isn't a file path, don't rename, just append source with bucket URI
-		fullDstPath = fullDstPath.JoinPath(fileName)
-	}
-	if params.Destination.IsRoot() {
+	if params.Destination.IsRoot() || strings.HasSuffix(fullDstPath.String(), "/") {
 		fullDstPath = fullDstPath.JoinPath(fileName)
 	}
 
