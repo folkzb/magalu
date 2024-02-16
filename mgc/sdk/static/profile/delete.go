@@ -37,7 +37,7 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 func delete(ctx context.Context, params deleteParams, _ struct{}) (*profile_manager.Profile, error) {
 	m := profile_manager.FromContext(ctx)
 	if m == nil {
-		return nil, ProfileError{Name: "", Err: errors.New("Couldn't get ProfileManager from context")}
+		return nil, ProfileError{Name: "", Err: errors.New("couldn't get ProfileManager from context")}
 	}
 
 	p, err := m.Get(params.Name)

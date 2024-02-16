@@ -26,7 +26,7 @@ var getCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 func current(ctx context.Context) (*profile_manager.Profile, error) {
 	m := profile_manager.FromContext(ctx)
 	if m == nil {
-		return nil, ProfileError{Name: "", Err: errors.New("Couldn't get ProfileManager from context")}
+		return nil, ProfileError{Name: "", Err: errors.New("couldn't get ProfileManager from context")}
 	}
 
 	return m.Current(), nil

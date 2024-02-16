@@ -30,7 +30,7 @@ var getSetCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 func setCurrent(ctx context.Context, params setCurrentParams, _ struct{}) (*profile_manager.Profile, error) {
 	m := profile_manager.FromContext(ctx)
 	if m == nil {
-		return nil, ProfileError{Name: "", Err: errors.New("Couldn't get ProfileManager from context")}
+		return nil, ProfileError{Name: "", Err: errors.New("couldn't get ProfileManager from context")}
 	}
 
 	p, err := m.Get(params.Name)
