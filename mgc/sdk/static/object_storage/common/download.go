@@ -10,7 +10,6 @@ import (
 	"path"
 
 	"magalu.cloud/core"
-	"magalu.cloud/core/progress_report"
 	mgcSchemaPkg "magalu.cloud/core/schema"
 	"magalu.cloud/core/utils"
 )
@@ -40,14 +39,7 @@ func WriteToFile(ctx context.Context, reader io.ReadCloser, fileSize int64, outF
 		return err
 	}
 
-	reportProgress := progress_report.FromContext(ctx)
-	downloadedBytes := uint64(0)
-	progressReader := progress_report.NewReporterReader(reader, func(n uint64, err error) {
-		downloadedBytes += n
-		reportProgress(outFile.String(), downloadedBytes, uint64(fileSize), progress_report.UnitsBytes, err)
-	})
-
-	n, err := io.Copy(writer, progressReader)
+	n, err := io.Copy(writer, reader)
 	defer writer.Close()
 	if err != nil {
 		return fmt.Errorf("error writing to file (wrote %d bytes): %w", n, err)
