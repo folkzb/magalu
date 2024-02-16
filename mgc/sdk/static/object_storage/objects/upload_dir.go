@@ -73,10 +73,11 @@ func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (
 		return nil, core.UsageError{Err: fmt.Errorf("source cannot be empty")}
 	}
 
-	reportProgress := progress_report.FromContext(ctx)
-	reportMsg := "Uploading directory: " + params.Source.String()
+	progressReportMsg := "Uploading directory: " + params.Source.String()
+	progressReporter := progress_report.NewUnitsReporter(ctx, progressReportMsg, 1)
+	progressReporter.Start()
+	defer progressReporter.End()
 
-	reportProgress(reportMsg, 0, 0, progress_report.UnitsNone, nil)
 	entries := pipeline.WalkDirEntries(ctx, params.Source.String(), func(path string, d fs.DirEntry, err error) error {
 		return err
 	})
@@ -87,15 +88,15 @@ func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (
 
 	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, uploadObjectsErrorChan)
 	if err != nil {
-		reportProgress(reportMsg, 0, 0, progress_report.UnitsNone, err)
+		progressReporter.Report(0, 0, err)
 		return nil, err
 	}
 	if len(objErr) > 0 {
-		reportProgress(reportMsg, 0, 0, progress_report.UnitsNone, objErr)
+		progressReporter.Report(0, 0, objErr)
 		return nil, objErr
 	}
 
-	reportProgress(reportMsg, 1, 1, progress_report.UnitsNone, progress_report.ErrorProgressDone)
+	progressReporter.Report(1, 1, nil)
 
 	return &uploadDirResult{
 		URI: params.Destination.String(),
