@@ -43,15 +43,17 @@ var getDownloadAll = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsParams, reportChan chan<- downloadAllProgressReport) pipeline.Processor[pipeline.WalkDirEntry, error] {
+func createObjectDownloadProcessor(
+	cfg common.Config,
+	params downloadAllObjectsParams,
+	progressReporter *progress_report.UnitsReporter,
+) pipeline.Processor[pipeline.WalkDirEntry, error] {
 	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
 		bucketName := common.NewBucketNameFromURI(params.Source)
 		rootURI := bucketName.AsURI()
 		var err error
 
-		defer func() {
-			reportChan <- downloadAllProgressReport{uint64(1), 0, err}
-		}()
+		defer progressReporter.Report(1, 0, err)
 
 		objURI := rootURI.JoinPath(dirEntry.Path())
 
@@ -85,12 +87,6 @@ func createObjectDownloadProcessor(cfg common.Config, params downloadAllObjectsP
 	}
 }
 
-type downloadAllProgressReport struct {
-	files uint64
-	total uint64
-	err   error
-}
-
 func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downloadAllObjectsParams) error {
 	ctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
@@ -103,20 +99,19 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 		},
 	}
 
-	reportProgress := progress_report.FromContext(ctx)
-	reportChan := make(chan downloadAllProgressReport)
-	defer close(reportChan)
+	progressReportMsg := "Downloading objects from: " + params.Source.String()
+	progressReporter := progress_report.NewUnitsReporter(ctx, progressReportMsg, 0)
+	progressReporter.Start()
+	defer progressReporter.End()
 
 	onNewPage := func(objCount uint64) {
-		reportChan <- downloadAllProgressReport{0, objCount, nil}
+		progressReporter.Report(0, objCount, nil)
 	}
 
 	objs := common.ListGenerator(ctx, listParams, cfg, onNewPage)
 	objs = common.ApplyFilters(ctx, objs, params.FilterParams, cancel)
 
-	go reportDownloadAllProgress(reportProgress, reportChan, params)
-
-	downloadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectDownloadProcessor(cfg, params, reportChan), nil)
+	downloadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, objs, createObjectDownloadProcessor(cfg, params, progressReporter), nil)
 	downloadObjectsErrorChan = pipeline.Filter(ctx, downloadObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
 	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, downloadObjectsErrorChan)
@@ -128,35 +123,6 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 	}
 
 	return nil
-}
-
-func reportDownloadAllProgress(reportProgress progress_report.ReportProgress, reportChan <-chan downloadAllProgressReport, params downloadAllObjectsParams) {
-	reportMsg := "downloading objects from bucket: " + params.Source.String()
-	total := uint64(1)
-	progress := uint64(0)
-
-	// total here must be reported as one, otherwise the progress-bar shows
-	// an animation we do not wish the user to see
-	reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
-
-	var errors utils.MultiError
-	for report := range reportChan {
-		progress += report.files
-		total += report.total
-
-		if report.err != nil {
-			errors = append(errors, report.err)
-		}
-
-		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, nil)
-	}
-
-	if len(errors) > 0 {
-		reportProgress(reportMsg, progress, total, progress_report.UnitsNone, errors)
-		return
-	}
-
-	reportProgress(reportMsg, total, total, progress_report.UnitsNone, progress_report.ErrorProgressDone)
 }
 
 func downloadAll(ctx context.Context, p downloadAllObjectsParams, cfg common.Config) (result core.Value, err error) {
