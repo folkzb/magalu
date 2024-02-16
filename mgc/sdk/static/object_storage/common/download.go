@@ -42,8 +42,8 @@ func WriteToFile(ctx context.Context, reader io.ReadCloser, fileSize int64, outF
 
 	reportProgress := progress_report.FromContext(ctx)
 	downloadedBytes := uint64(0)
-	progressReader := progress_report.NewReporterReader(reader, func(n int, err error) {
-		downloadedBytes += uint64(n)
+	progressReader := progress_report.NewReporterReader(reader, func(n uint64, err error) {
+		downloadedBytes += n
 		reportProgress(outFile.String(), downloadedBytes, uint64(fileSize), progress_report.UnitsBytes, err)
 	})
 

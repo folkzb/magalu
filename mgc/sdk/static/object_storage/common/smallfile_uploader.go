@@ -24,8 +24,8 @@ func (u *smallFileUploader) createProgressReporter(ctx context.Context) progress
 	fileName := "Upload " + u.fileInfo.Name()
 	total := uint64(u.fileInfo.Size())
 	sentBytes := uint64(0)
-	return func(n int, err error) {
-		sentBytes += uint64(n)
+	return func(n uint64, err error) {
+		sentBytes += n
 		reportProgress(fileName, sentBytes, total, progress_report.UnitsBytes, err)
 	}
 }

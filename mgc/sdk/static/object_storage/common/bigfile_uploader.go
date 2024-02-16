@@ -241,12 +241,12 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 	return u.sendCompletionRequest(ctx, parts, uploadId)
 }
 
-func (u *bigFileUploader) reportProgress(n int, err error) {
+func (u *bigFileUploader) reportProgress(n uint64, err error) {
 	if u.reportChan == nil {
 		return
 	}
 
-	u.reportChan <- progressReport{bytes: uint64(n), err: err}
+	u.reportChan <- progressReport{bytes: n, err: err}
 }
 
 func progressReportSubroutine(
