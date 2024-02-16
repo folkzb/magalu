@@ -20128,7 +20128,7 @@
       },
       "description": "Moves objects from a source to a destination.\nThey can be either local or remote but not both local (Local -> Remote, Remote -> Local, Remote -> Remote)",
       "isInternal": false,
-      "name": "move",
+      "name": "move-dir",
       "parameters": {
        "properties": {
         "batch_size": {
@@ -20140,13 +20140,13 @@
         },
         "dst": {
          "description": "Destination to put files into",
-         "example": "s3://my-bucket/dir/file",
+         "example": "s3://my-bucket/dir",
          "format": "uri",
          "type": "string"
         },
         "src": {
          "description": "Source path or uri to move files from",
-         "example": "./file.txt",
+         "example": "./dir",
          "format": "uri",
          "type": "string"
         }
@@ -20168,13 +20168,13 @@
         },
         "dst": {
          "description": "Destination to put files into",
-         "example": "s3://my-bucket/dir/file",
+         "example": "s3://my-bucket/dir",
          "format": "uri",
          "type": "string"
         },
         "src": {
          "description": "Source path or uri to move files from",
-         "example": "./file.txt",
+         "example": "./dir",
          "format": "uri",
          "type": "string"
         }

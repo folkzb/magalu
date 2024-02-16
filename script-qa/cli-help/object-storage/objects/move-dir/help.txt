@@ -2,15 +2,15 @@ Moves objects from a source to a destination.
 They can be either local or remote but not both local (Local -> Remote, Remote -> Local, Remote -> Remote)
 
 Usage:
-  ./cli object-storage objects move [src] [dst] [flags]
+  ./cli object-storage objects move-dir [src] [dst] [flags]
 
 Examples:
-  ./cli object-storage objects move --dst="s3://my-bucket/dir/file" --src="./file.txt"
+  ./cli object-storage objects move-dir --dst="s3://my-bucket/dir" --src="./dir"
 
 Flags:
       --batch-size integer   Limit of items per batch to process (range: 1 - 1000) (default 1000)
       --dst uri              Destination to put files into (required)
-  -h, --help                 help for move
+  -h, --help                 help for move-dir
       --src uri              Source path or uri to move files from (required)
 
 Global Flags:
