@@ -20468,12 +20468,12 @@
     },
     "result": {
      "properties": {
-      "Name": {
+      "name": {
        "type": "string"
       }
      },
      "required": [
-      "Name"
+      "name"
      ],
      "type": "object"
     },
@@ -20491,12 +20491,12 @@
     },
     "result": {
      "properties": {
-      "Name": {
+      "name": {
        "type": "string"
       }
      },
      "required": [
-      "Name"
+      "name"
      ],
      "type": "object"
     },
@@ -20523,12 +20523,12 @@
     },
     "result": {
      "properties": {
-      "Name": {
+      "name": {
        "type": "string"
       }
      },
      "required": [
-      "Name"
+      "name"
      ],
      "type": "object"
     },
@@ -20547,12 +20547,12 @@
     "result": {
      "items": {
       "properties": {
-       "Name": {
+       "name": {
         "type": "string"
        }
       },
       "required": [
-       "Name"
+       "name"
       ],
       "type": "object"
      },
@@ -20581,12 +20581,12 @@
     },
     "result": {
      "properties": {
-      "Name": {
+      "name": {
        "type": "string"
       }
      },
      "required": [
-      "Name"
+      "name"
      ],
      "type": "object"
     },

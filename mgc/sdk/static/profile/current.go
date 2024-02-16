@@ -19,7 +19,7 @@ var getCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 
 	return core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
-		return "template={{.Name}}\n"
+		return "template={{.name}}\n"
 	})
 })
 

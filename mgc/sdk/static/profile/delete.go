@@ -30,7 +30,7 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 
 	return core.NewExecuteResultOutputOptions(cExecutor, func(exec core.Executor, result core.Result) string {
-		return "template=Deleted profile {{.Name}}\n"
+		return "template=Deleted profile {{.name}}\n"
 	})
 })
 

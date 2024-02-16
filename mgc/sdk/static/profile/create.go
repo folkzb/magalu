@@ -24,7 +24,7 @@ var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 
 	return core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
-		return "template=Created profile {{.Name}}\n"
+		return "template=Created profile {{.name}}\n"
 	})
 })
 

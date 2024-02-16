@@ -5,7 +5,7 @@ import (
 )
 
 type Profile struct {
-	Name string
+	Name string `json:"name"`
 	m    *ProfileManager
 }
 
