@@ -25,12 +25,12 @@ func copyAllLogger() *zap.SugaredLogger {
 }
 
 type CopyObjectParams struct {
-	Source      mgcSchemaPkg.URI `json:"src" jsonschema:"description=Path of the object to be copied,example=bucket1/file.txt" mgc:"positional"`
+	Source      mgcSchemaPkg.URI `json:"src" jsonschema:"description=Path of the object in a bucket to be copied,example=bucket1/file.txt" mgc:"positional"`
 	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Full destination path in the bucket with desired filename,example=bucket2/dir/file.txt" mgc:"positional"`
 }
 
 type CopyAllObjectsParams struct {
-	Source      mgcSchemaPkg.URI `json:"src" jsonschema:"description=Path of objects to be copied,example=bucket1" mgc:"positional"`
+	Source      mgcSchemaPkg.URI `json:"src" jsonschema:"description=Path of objects in a bucket to be copied,example=bucket1" mgc:"positional"`
 	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Full destination path in the bucket,example=bucket2/dir/" mgc:"positional"`
 	Filters     `json:",squash"` // nolint
 }

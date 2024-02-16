@@ -19392,7 +19392,7 @@
        },
        "type": "object"
       },
-      "description": "Copy an object from a bucket to another",
+      "description": "Copy an object from a bucket to another bucket",
       "isInternal": false,
       "name": "copy",
       "parameters": {
@@ -19404,7 +19404,7 @@
          "type": "string"
         },
         "src": {
-         "description": "Path of the object to be copied",
+         "description": "Path of the object in a bucket to be copied",
          "example": "bucket1/file.txt",
          "format": "uri",
          "type": "string"
@@ -19473,7 +19473,7 @@
        },
        "type": "object"
       },
-      "description": "Copy all objects from a bucket",
+      "description": "Copy all objects from a bucket to another bucket",
       "isInternal": false,
       "name": "copy-all",
       "parameters": {
@@ -19502,7 +19502,7 @@
          "type": "array"
         },
         "src": {
-         "description": "Path of objects to be copied",
+         "description": "Path of objects in a bucket to be copied",
          "example": "bucket1",
          "format": "uri",
          "type": "string"
@@ -19540,7 +19540,7 @@
          "type": "array"
         },
         "src": {
-         "description": "Path of objects to be copied",
+         "description": "Path of objects in a bucket to be copied",
          "example": "bucket1",
          "format": "uri",
          "type": "string"
