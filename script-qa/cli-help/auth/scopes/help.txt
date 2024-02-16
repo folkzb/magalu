@@ -13,6 +13,9 @@ Commands:
   remove       Remove scopes from the current scopes in the access token.
   set          Set the scopes for the current scopes in the access token.
 
+Additional Commands:
+  select       call "list-all", prompt selection and then "set"
+
 Flags:
   -h, --help   help for scopes
 

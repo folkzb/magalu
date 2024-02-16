@@ -43,49 +43,56 @@ func (c selectorChoice) String() string {
 	}
 }
 
-func matchListAndSetExecutor(setExec, listExec core.Executor) bool {
+func matchListAndSetExecutor(setExec, listExec core.Executor) (matchingListExec core.Executor, multiple bool) {
 	listSchema := listExec.ResultSchema()
 	if listSchema == nil || listSchema.Type != "array" {
 		logger().Debugw("List executor does not return an array", "list", listExec, "schema", listSchema)
-		return false
+		return
 	}
 
 	listSchema = (*mgcSchemaPkg.Schema)(listSchema.Items.Value)
 
 	for paramName, paramSchemaRef := range setExec.ParametersSchema().Properties {
 		paramSchema := (*mgcSchemaPkg.Schema)(paramSchemaRef.Value)
+		if paramSchema.Type == "array" && listSchema.Type != "array" {
+			// allow multiple selection of items
+			multiple = true
+			paramSchema = (*mgcSchemaPkg.Schema)(paramSchema.Items.Value)
+		}
+
 		if mgcSchemaPkg.CheckSimilarJsonSchemas(paramSchema, listSchema) {
 			// list of actual items to be used
 			continue
 		}
 
 		if listSchema.Type != "object" {
-			return false
+			return
 		}
 		fieldSchemaRef := listSchema.Properties[paramName]
 		if fieldSchemaRef == nil {
-			return false
+			return
 		}
 		if !mgcSchemaPkg.CheckSimilarJsonSchemas(paramSchema, (*mgcSchemaPkg.Schema)(fieldSchemaRef.Value)) {
-			return false
+			return
 		}
 	}
 
 	logger().Debugw("List matches the Set executor", "list", listExec, "set", setExec)
-
-	return true
+	matchingListExec = listExec
+	return
 }
 
-func findListForSetExecutor(setExec core.Executor, listExecutors []core.Executor) core.Executor {
+func findListForSetExecutor(setExec core.Executor, listExecutors []core.Executor) (listExec core.Executor, multiple bool) {
 	// TODO: maybe use explicit links to annotate that?
 
-	for _, listExec := range listExecutors {
-		if matchListAndSetExecutor(setExec, listExec) {
-			return listExec
+	for _, exec := range listExecutors {
+		listExec, multiple = matchListAndSetExecutor(setExec, exec)
+		if listExec != nil {
+			return
 		}
 	}
 
-	return nil
+	return
 }
 
 func loadSelectHelperCommand(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Grouper) (err error) {
@@ -110,8 +117,8 @@ func loadSelectHelperCommand(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper cor
 	}
 
 	for _, setExec := range setExecutors {
-		if listExec := findListForSetExecutor(setExec, listExecutors); listExec != nil {
-			if err = addSelectHelperCommand(sdk, cmd, setExec, listExec); err != nil {
+		if listExec, multiple := findListForSetExecutor(setExec, listExecutors); listExec != nil {
+			if err = addSelectHelperCommand(sdk, cmd, setExec, listExec, multiple); err != nil {
 				return
 			}
 		}
@@ -120,7 +127,109 @@ func loadSelectHelperCommand(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper cor
 	return
 }
 
-func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, listExec core.Executor) (err error) {
+func getChoiceValue(choice selectorChoice, paramName string, paramSchema, listSchema *mgcSchemaPkg.Schema) (any, bool) {
+	if mgcSchemaPkg.CheckSimilarJsonSchemas(paramSchema, (*mgcSchemaPkg.Schema)(listSchema)) {
+		// list of actual items to be used
+		return choice.value, true
+	}
+
+	if m, ok := choice.value.(map[string]any); ok {
+		if value, ok := m[paramName]; ok {
+			return value, ok
+		}
+	}
+
+	return nil, false
+}
+
+func getMultiChoiceValue(choices []selectorChoice, paramName string, paramSchema, listSchema *mgcSchemaPkg.Schema) (any, bool) {
+	if paramSchema.Type == "array" && listSchema.Type != "array" {
+		paramSchema = (*mgcSchemaPkg.Schema)(paramSchema.Items.Value)
+		lst := make([]any, 0, len(choices))
+		for _, c := range choices {
+			if value, ok := getChoiceValue(c, paramName, paramSchema, listSchema); ok {
+				lst = append(lst, value)
+			}
+		}
+		return lst, true
+	}
+
+	for _, c := range choices {
+		if value, ok := getChoiceValue(c, paramName, paramSchema, listSchema); ok {
+			return value, true
+		}
+	}
+
+	return nil, false
+}
+
+func selectMultipleAndSetupParameters(
+	setCmdName string,
+	setExec, listExec core.Executor,
+	choices []selectorChoice,
+) (parameters core.Parameters, err error) {
+	selection, err := ui.MultiSelectionPrompt(
+		fmt.Sprintf("Select multiple entries to be used with %q:", setCmdName),
+		choices,
+	)
+	if err != nil {
+		return
+	}
+
+	parameters = core.Parameters{}
+	listSchema := (*mgcSchemaPkg.Schema)(listExec.ResultSchema().Items.Value) // this was checked by matchListAndSetExecutor()
+	for paramName, paramSchemaRef := range setExec.ParametersSchema().Properties {
+		paramSchema := (*mgcSchemaPkg.Schema)(paramSchemaRef.Value)
+		if value, ok := getMultiChoiceValue(selection, paramName, paramSchema, listSchema); ok {
+			parameters[paramName] = value
+		} else {
+			logger().Warnw(
+				"Missing set parameter from list result (multiple choices)",
+				"paramName", paramName,
+				"selection", selection,
+				"paramSchema", paramSchema,
+				"listSchema", listSchema,
+			)
+		}
+	}
+
+	return
+}
+
+func selectOneAndSetupParameters(
+	setCmdName string,
+	setExec, listExec core.Executor,
+	choices []selectorChoice,
+) (parameters core.Parameters, err error) {
+	choice, err := ui.SelectionPrompt(
+		fmt.Sprintf("Select one entry to be used with %q:", setCmdName),
+		choices,
+	)
+	if err != nil {
+		return
+	}
+
+	parameters = core.Parameters{}
+	listSchema := (*mgcSchemaPkg.Schema)(listExec.ResultSchema().Items.Value) // this was checked by matchListAndSetExecutor()
+	for paramName, paramSchemaRef := range setExec.ParametersSchema().Properties {
+		paramSchema := (*mgcSchemaPkg.Schema)(paramSchemaRef.Value)
+		if value, ok := getChoiceValue(choice, paramName, paramSchema, listSchema); ok {
+			parameters[paramName] = value
+		} else {
+			logger().Warnw(
+				"Missing set parameter from list result",
+				"paramName", paramName,
+				"choice", choice.value,
+				"paramSchema", paramSchema,
+				"listSchema", listSchema,
+			)
+		}
+	}
+
+	return
+}
+
+func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, listExec core.Executor, multiple bool) (err error) {
 	setCmdName, _ := getCommandNameAndAliases(setExec.Name())
 	listCmdName, _ := getCommandNameAndAliases(listExec.Name())
 
@@ -170,32 +279,13 @@ func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, 
 				choices[i] = selectorChoice{value: v}
 			}
 
-			choice, err := ui.SelectionPrompt(
-				fmt.Sprintf("Select entry to be used with %q:", setCmdName),
-				choices,
-			)
+			if multiple {
+				parameters, err = selectMultipleAndSetupParameters(setCmdName, setExec, listExec, choices)
+			} else {
+				parameters, err = selectOneAndSetupParameters(setCmdName, setExec, listExec, choices)
+			}
 			if err != nil {
 				return
-			}
-
-			choiceValue := choice.value
-
-			parameters = core.Parameters{}
-			listSchema := listExec.ResultSchema().Items.Value // this was checked by matchListAndSetExecutor()
-			for paramName, paramSchemaRef := range setExec.ParametersSchema().Properties {
-				paramSchema := (*mgcSchemaPkg.Schema)(paramSchemaRef.Value)
-				if mgcSchemaPkg.CheckSimilarJsonSchemas(paramSchema, (*mgcSchemaPkg.Schema)(listSchema)) {
-					// list of actual items to be used
-					parameters[paramName] = choiceValue
-					continue
-				}
-				if m, ok := choiceValue.(map[string]any); ok {
-					if value, ok := m[paramName]; ok {
-						parameters[paramName] = value
-						continue
-					}
-				}
-				logger().Warnw("Missing set parameter from list result", "paramName", paramName, "choice", choice)
 			}
 
 			ctx = sdk.NewContext() // use a new context, reset timeouts and the likes
