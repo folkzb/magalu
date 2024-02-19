@@ -29,6 +29,7 @@ var getUploadDir = utils.NewLazyLoader[core.Executor](func() core.Executor {
 		core.DescriptorSpec{
 			Name:        "upload-dir",
 			Description: "Upload a directory to a bucket",
+			Scopes:      core.Scopes{"object-storage.write"},
 		},
 		uploadDir,
 	)
