@@ -404,11 +404,21 @@ func columnsFromMap(v reflect.Value, prefix string) (result []*column, err error
 
 			var columns []*column
 			switch subKind {
-			case reflect.Array, reflect.Slice:
-				columns, err = columnsFromAny(subVal.Interface(), jsonPath)
-
 			case reflect.Map:
 				columns, err = columnsFromAny(subVal.Interface(), jsonPath)
+
+			case reflect.Array, reflect.Slice:
+				if len(keys) == 1 {
+					// single key objects have their single child promoted
+					result, err = columnsFromAny(subVal.Interface(), jsonPath)
+					if len(result) > 0 && result[0].Name == "" {
+						result[0].Name = name
+					}
+					return
+				}
+
+				// whatever else is rendered as a sub table
+				fallthrough
 
 			default:
 				columns = []*column{{Name: name, JSONPath: jsonPath}}
@@ -772,14 +782,15 @@ func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 		columns, err = columnsFromAny(val, "$")
 
 		if mapVal, ok := val.(map[string]any); ok {
-			if len(mapVal) > 1 && len(columns) > 1 {
-				buildVertically = true
-			} else if len(mapVal) == 1 {
-				for _, firstProp := range mapVal {
-					if arr, ok := firstProp.([]any); ok {
-						buildVertically = len(arr) == 1
-					}
+			// objects with multiple fields or single-field where that is NOT an array
+			// are build vertically (one field per row)
+			if len(mapVal) == 1 {
+				for _, c := range mapVal {
+					_, isArray := c.([]any)
+					buildVertically = !isArray
 				}
+			} else if len(mapVal) > 1 {
+				buildVertically = true
 			}
 		}
 	}
