@@ -226,7 +226,7 @@ func (c *cmdLinks) addLinkCommand(link core.Linker) {
 	}
 
 	if getLink, ok := link.Links()["get"]; ok && getLink.IsTargetTerminatorExecutor() {
-		addWatchFlag(linkCmd)
+		linkFlags.addExtraFlag(newWatchFlag())
 	}
 
 	linkFlags.addFlags(linkCmd)

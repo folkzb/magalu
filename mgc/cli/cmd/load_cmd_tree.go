@@ -299,7 +299,7 @@ func addAction(
 	}
 
 	if getLink, ok := exec.Links()["get"]; ok && getLink.IsTargetTerminatorExecutor() {
-		addWatchFlag(actionCmd)
+		flags.addExtraFlag(newWatchFlag())
 	}
 
 	parentCmd.AddCommand(actionCmd)
