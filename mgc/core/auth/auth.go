@@ -93,7 +93,7 @@ type tenantResult struct {
 }
 
 type TokenExchangeResult struct {
-	TenantID     string    `json:"id"`
+	TenantID     string    `json:"uuid"`
 	CreatedAt    core.Time `json:"created_at"`
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`

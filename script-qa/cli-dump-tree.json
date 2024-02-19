@@ -425,9 +425,6 @@
         "created_at": {
          "type": "object"
         },
-        "id": {
-         "type": "string"
-        },
         "refresh_token": {
          "type": "string"
         },
@@ -436,10 +433,13 @@
           "type": "string"
          },
          "type": "array"
+        },
+        "uuid": {
+         "type": "string"
         }
        },
        "required": [
-        "id",
+        "uuid",
         "created_at",
         "access_token",
         "refresh_token",
