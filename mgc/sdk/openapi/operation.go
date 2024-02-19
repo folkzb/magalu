@@ -87,9 +87,11 @@ func newOperation(
 	return op
 }
 
-func collectAllScopes(o *operation) (allScopes []string) {
+func collectAllScopes(o *operation) (allScopes core.Scopes) {
 	_, _ = o.forEachSecurityRequirement(func(_ string, scopes []string) (run bool, err error) {
-		allScopes = append(allScopes, scopes...)
+		for _, scope := range scopes {
+			allScopes.Add(core.Scope(scope))
+		}
 		return true, nil
 	})
 	return allScopes

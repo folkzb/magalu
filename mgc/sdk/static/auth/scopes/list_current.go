@@ -20,7 +20,7 @@ var getListCurrent = utils.NewLazyLoader(func() core.Executor {
 	)
 })
 
-func listCurrent(ctx context.Context) (auth.Scopes, error) {
+func listCurrent(ctx context.Context) (core.Scopes, error) {
 	a := auth.FromContext(ctx)
 	if a == nil {
 		return nil, fmt.Errorf("programming error: context did not contain SDK Auth information")

@@ -13,7 +13,7 @@ import (
 )
 
 type addParameters struct {
-	Scopes auth.Scopes `json:"scopes" jsonschema:"description=Scopes to be added to the current access token" mgc:"positional"`
+	Scopes core.Scopes `json:"scopes" jsonschema:"description=Scopes to be added to the current access token" mgc:"positional"`
 }
 
 var addLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
@@ -32,7 +32,7 @@ to see all available scopes to be added`,
 	)
 })
 
-func add(ctx context.Context, params addParameters, _ struct{}) (auth.Scopes, error) {
+func add(ctx context.Context, params addParameters, _ struct{}) (core.Scopes, error) {
 	a := auth.FromContext(ctx)
 	if a == nil {
 		return nil, fmt.Errorf("programming error: context did not contain SDK Auth information")

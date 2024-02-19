@@ -6,12 +6,12 @@ import (
 )
 
 type DescriptorSpec struct {
-	Name        string   `json:"name"`
-	Version     string   `json:"version"`
-	Description string   `json:"description"`
-	Summary     string   `json:"summary"`
-	IsInternal  *bool    `json:"isInternal,omitempty"`
-	Scopes      []string `json:"scopes"`
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	Description string `json:"description"`
+	Summary     string `json:"summary"`
+	IsInternal  *bool  `json:"isInternal,omitempty"`
+	Scopes      Scopes `json:"scopes"`
 }
 
 func (d *DescriptorSpec) Validate() error {
@@ -32,7 +32,7 @@ type Descriptor interface {
 	Description() string
 	Summary() string
 	IsInternal() bool
-	Scopes() []string
+	Scopes() Scopes
 	DescriptorSpec() DescriptorSpec
 }
 
@@ -59,7 +59,7 @@ func (d *SimpleDescriptor) IsInternal() bool {
 	return *d.Spec.IsInternal
 }
 
-func (d *SimpleDescriptor) Scopes() []string {
+func (d *SimpleDescriptor) Scopes() Scopes {
 	return d.Spec.Scopes
 }
 

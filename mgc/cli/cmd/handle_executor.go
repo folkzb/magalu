@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"magalu.cloud/cli/ui"
 	"magalu.cloud/core"
-	"magalu.cloud/core/auth"
 	"magalu.cloud/core/progress_report"
 	mgcSdk "magalu.cloud/sdk"
 )
@@ -37,11 +36,11 @@ func checkScopes(sdk *mgcSdk.Sdk, exec core.Executor) error {
 		return fmt.Errorf("unable to get current scopes: %w", err)
 	}
 
-	var missing []string
+	var missing core.Scopes
 	necessaryScopes := exec.Scopes()
 	for _, scope := range necessaryScopes {
-		if !slices.Contains(currentScopes, auth.Scope(scope)) {
-			missing = append(missing, scope)
+		if !slices.Contains(currentScopes, scope) {
+			missing.Add(scope)
 		}
 	}
 

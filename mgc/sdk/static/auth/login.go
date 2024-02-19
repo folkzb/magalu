@@ -35,7 +35,7 @@ type loginParameters struct {
 	// default values aren't being generated correctly in the schema. When this issue is
 	// resolved, 'omitempty' should be removed.
 	// Ref: https://github.com/invopop/jsonschema/issues/127
-	Scopes auth.Scopes `json:"scopes,omitempty" jsonschema:"description=All desired scopes for the resulting access token"`
+	Scopes core.Scopes `json:"scopes,omitempty" jsonschema:"description=All desired scopes for the resulting access token"`
 	Show   bool        `json:"show,omitempty" jsonschema:"description=Show the access token after the login completes"`
 	QRcode bool        `json:"qrcode,omitempty" jsonschema:"description=Generate a qrcode for the login URL,default=false"`
 }

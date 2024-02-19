@@ -28,7 +28,7 @@ var getListAll = utils.NewLazyLoader(func() core.Executor {
 	)
 })
 
-func listAll(ctx context.Context, params listAllParameters, _ struct{}) (auth.Scopes, error) {
+func listAll(ctx context.Context, params listAllParameters, _ struct{}) (core.Scopes, error) {
 	if len(params.Targets) > 0 {
 		return listAllFromTargets(ctx, params)
 	} else {
@@ -36,7 +36,7 @@ func listAll(ctx context.Context, params listAllParameters, _ struct{}) (auth.Sc
 	}
 }
 
-func listAllFromTargets(ctx context.Context, params listAllParameters) (auth.Scopes, error) {
+func listAllFromTargets(ctx context.Context, params listAllParameters) (core.Scopes, error) {
 	rootRefResolver := core.RefPathResolverFromContext(ctx)
 	if rootRefResolver == nil {
 		return nil, fmt.Errorf("programming error: context did not contain SDK RefResolver information")
@@ -51,7 +51,7 @@ func listAllFromTargets(ctx context.Context, params listAllParameters) (auth.Sco
 		return nil, fmt.Errorf("unable to resolve target: %w", err)
 	}
 
-	allScopes := auth.Scopes{}
+	allScopes := core.Scopes{}
 	for _, targetRef := range params.Targets {
 		target, err := refResolver.Resolve(targetRef, mgcSdkDocumentUrl)
 		if err != nil {
@@ -63,15 +63,13 @@ func listAllFromTargets(ctx context.Context, params listAllParameters) (auth.Sco
 			return nil, fmt.Errorf("target was invalid, unable to get DescriptorSpec to fetch Scopes")
 		}
 
-		for _, scope := range targetDesc.Scopes() {
-			allScopes = append(allScopes, auth.Scope(scope))
-		}
+		allScopes.Add(targetDesc.Scopes()...)
 	}
 
 	return allScopes, nil
 }
 
-func ListAllAvailable(ctx context.Context) (auth.Scopes, error) {
+func ListAllAvailable(ctx context.Context) (core.Scopes, error) {
 	root := core.GrouperFromContext(ctx)
 	if root == nil {
 		return nil, fmt.Errorf("programming error: context did not contain SDK Grouper information")
@@ -83,7 +81,7 @@ func ListAllAvailable(ctx context.Context) (auth.Scopes, error) {
 	}
 
 	builtInScopes := a.BuiltInScopes()
-	scopeMap := make(map[auth.Scope]struct{}, len(builtInScopes))
+	scopeMap := make(map[core.Scope]struct{}, len(builtInScopes))
 
 	for _, scope := range builtInScopes {
 		scopeMap[scope] = struct{}{}
@@ -91,7 +89,7 @@ func ListAllAvailable(ctx context.Context) (auth.Scopes, error) {
 
 	_, err := core.VisitAllExecutors(root, []string{}, false, func(executor core.Executor, path []string) (bool, error) {
 		for _, scope := range executor.Scopes() {
-			scopeMap[auth.Scope(scope)] = struct{}{}
+			scopeMap[core.Scope(scope)] = struct{}{}
 		}
 		return true, nil
 	})
@@ -106,9 +104,9 @@ func ListAllAvailable(ctx context.Context) (auth.Scopes, error) {
 		}
 	}
 
-	allScopes := make(auth.Scopes, 0, len(scopeMap))
+	allScopes := make(core.Scopes, 0, len(scopeMap))
 	for scope := range scopeMap {
-		allScopes = append(allScopes, scope)
+		allScopes.Add(scope)
 	}
 
 	slices.Sort(allScopes)

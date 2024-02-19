@@ -13,7 +13,7 @@ import (
 )
 
 type removeParameters struct {
-	Scopes auth.Scopes `json:"scopes" jsonschema:"description=Scopes to be removed from the current access token" mgc:"positional"`
+	Scopes core.Scopes `json:"scopes" jsonschema:"description=Scopes to be removed from the current access token" mgc:"positional"`
 }
 
 var removeLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
@@ -32,7 +32,7 @@ Run 'auth scopes list-current' to see current scopes`,
 	)
 })
 
-func remove(ctx context.Context, params removeParameters, _ struct{}) (auth.Scopes, error) {
+func remove(ctx context.Context, params removeParameters, _ struct{}) (core.Scopes, error) {
 	a := auth.FromContext(ctx)
 	if a == nil {
 		return nil, fmt.Errorf("programming error: context did not contain SDK Auth information")
