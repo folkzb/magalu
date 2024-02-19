@@ -36,6 +36,10 @@ paths:
                             parameters:
                                 instance_id: $response.body#/id
                                 backup_id: $request.path.backup_id
+            x-mgc-wait-termination:
+                maxRetries: 20
+                interval: 5s
+                jsonPathQuery: $.status != PENDING && $.status != CREATING
             security:
             -   OAuth2:
                 - dbaas.read
@@ -180,6 +184,7 @@ paths:
                           description: Replica Resize.
                           parameters:
                               replica_id: $request.path.replica_id
+                          x-mgc-hidden: true
                       update/volume:
                           operationId: replica_resize_v1_replicas_post
                           description: Resizes a database instance.
@@ -201,7 +206,36 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.read
-
+    /v1/replicas/{replica_id}/resize:
+        post:
+            responses:
+                '200':
+                    links:
+                        get:
+                            x-mgc-wait-termination:
+                                maxRetries: 20
+                                interval: 5s
+                                jsonPathQuery: $.result.flavor_id == $.owner.parameters.flavor_id
+    /v1/replicas/{replica_id}/start:
+        post:
+            responses:
+                '200':
+                    links:
+                        get:
+                            x-mgc-wait-termination:
+                                maxRetries: 20
+                                interval: 5s
+                                jsonPathQuery: $.result.status == "ACTIVE"
+    /v1/replicas/{replica_id}/stop:
+        post:
+            responses:
+                '200':
+                    links:
+                        get:
+                            x-mgc-wait-termination:
+                                maxRetries: 20
+                                interval: 5s
+                                jsonPathQuery: $.result.status == "STOPPED"
 # ExclusiveMinimum must be replaced from number to boolean. JSON Schema new draft
 # proposes as a number, but this is only available in OpenAPI 3.1.0. Since kin-openapi
 # only supports up to 3.0.0, we need to patch to be a boolean

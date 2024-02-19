@@ -792,6 +792,10 @@ paths:
             security:
             -   OAuth2:
                 - dbaas.read
+            x-mgc-wait-termination:
+                maxRetries: 20
+                interval: 5s
+                jsonPathQuery: $.status != PENDING && $.status != CREATING
         delete:
             tags:
             - instances
@@ -1035,6 +1039,7 @@ paths:
                             description: Replica Resize.
                             parameters:
                                 replica_id: $request.path.replica_id
+                            x-mgc-hidden: true
                         update/status/ACTIVE:
                             operationId: replica_start_v1_replicas_post
                             description: Start an instance replica.
@@ -1129,6 +1134,10 @@ paths:
                             description: Get an instance replica detail.
                             parameters:
                                 replica_id: $request.path.replica_id
+                            x-mgc-wait-termination:
+                                maxRetries: 20
+                                interval: 5s
+                                jsonPathQuery: $.result.flavor_id == $.owner.parameters.flavor_id
                         delete:
                             operationId: replica_v1_delete
                             description: Deletes a replica instance.
@@ -1176,6 +1185,10 @@ paths:
                             description: Get an instance replica detail.
                             parameters:
                                 replica_id: $request.path.replica_id
+                            x-mgc-wait-termination:
+                                maxRetries: 20
+                                interval: 5s
+                                jsonPathQuery: $.result.status == "ACTIVE"
                         delete:
                             operationId: replica_v1_delete
                             description: Deletes a replica instance.
@@ -1223,6 +1236,10 @@ paths:
                             description: Get an instance replica detail.
                             parameters:
                                 replica_id: $request.path.replica_id
+                            x-mgc-wait-termination:
+                                maxRetries: 20
+                                interval: 5s
+                                jsonPathQuery: $.result.status == "STOPPED"
                         delete:
                             operationId: replica_v1_delete
                             description: Deletes a replica instance.
