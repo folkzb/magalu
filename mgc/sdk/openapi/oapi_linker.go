@@ -369,7 +369,7 @@ func (l *openapiLinker) Links() core.Links {
 }
 
 func (l *openapiLinker) IsTargetTerminatorExecutor() bool {
-	if _, isTerminator := getExtensionObject(l.owner.extensionPrefix, "wait-termination", l.link.Extensions, nil); isTerminator {
+	if wExt, ok := getExtensionObject(l.owner.extensionPrefix, "wait-termination", l.link.Extensions, nil); ok && wExt != nil {
 		return true
 	}
 	if _, isTerminator := core.ExecutorAs[core.TerminatorExecutor](l.target); isTerminator {
