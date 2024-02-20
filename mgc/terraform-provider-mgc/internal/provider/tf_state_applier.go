@@ -46,25 +46,7 @@ func applyMgcObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfStat
 	)
 
 	if isSchemaXOfObject(attr.mgcSchema) {
-		for propName, propSchemaRef := range attr.mgcSchema.Properties {
-			propSchema := propSchemaRef.Value
-			if propSchema.VisitJSON(mgcValue) == nil {
-				propAttr, ok := attr.childAttributes[mgcName(propName)]
-				if !ok {
-					return diagnostics.AppendLocalErrorReturn(
-						fmt.Sprintf("Unable to set property %q to state", propName),
-						"Couldn't find schema definition for property. This probably means that the property isn't expected at all in this resource",
-					)
-				}
-				attrPath := path.AtName(string(propName))
-				d := applyValueToState(ctx, mgcValue, propAttr, tfState, attrPath)
-				return diagnostics.AppendReturn(d...)
-			}
-		}
-		return diagnostics.AppendLocalErrorReturn(
-			"value does not fit any xof alternatives",
-			fmt.Sprintf("value does not fit any xof alternatives: %#v", mgcValue),
-		)
+		return applyMgcXOfObject(ctx, mgcValue, attr, tfState, path)
 	}
 
 	mgcMap, ok := mgcValue.(map[string]any)
@@ -124,6 +106,57 @@ func applyMgcObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfStat
 			return diagnostics
 		}
 	}
+	return diagnostics
+}
+
+func applyMgcXOfObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {
+	diagnostics := Diagnostics{}
+	tflog.Debug(
+		ctx,
+		"[applier] object is xof schema",
+		map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcValue, "mgcSchema": attr.mgcSchema},
+	)
+
+	propThatFits := ""
+
+	for propName, propSchemaRef := range attr.mgcSchema.Properties {
+		propSchema := propSchemaRef.Value
+		if propSchema.VisitJSON(mgcValue) != nil {
+			continue
+		}
+
+		propAttr, ok := attr.childAttributes[mgcName(propName)]
+		if !ok {
+			return diagnostics.AppendLocalErrorReturn(
+				fmt.Sprintf("Unable to set property %q to state", propName),
+				"Couldn't find schema definition for property. This probably means that the property isn't expected at all in this resource",
+			)
+		}
+
+		attrPath := path.AtName(string(propName))
+		d := applyValueToState(ctx, mgcValue, propAttr, tfState, attrPath)
+		if diagnostics.AppendCheckError(d...) {
+			return diagnostics
+		}
+
+		propThatFits = propName
+	}
+
+	if propThatFits == "" {
+		return diagnostics.AppendLocalErrorReturn(
+			"value does not fit any xof alternatives",
+			fmt.Sprintf("value does not fit any xof alternatives: %#v", mgcValue),
+		)
+	}
+
+	for propName := range attr.mgcSchema.Properties {
+		if propName == propThatFits {
+			continue
+		}
+
+		tfState.SetAttribute(ctx, path.AtName(propName), nil)
+	}
+
 	return diagnostics
 }
 
