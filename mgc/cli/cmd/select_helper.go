@@ -43,14 +43,39 @@ func (c selectorChoice) String() string {
 	}
 }
 
-func matchListAndSetExecutor(setExec, listExec core.Executor) (matchingListExec core.Executor, multiple bool) {
-	listSchema := listExec.ResultSchema()
-	if listSchema == nil || listSchema.Type != "array" {
-		logger().Debugw("List executor does not return an array", "list", listExec, "schema", listSchema)
+func findListSchema(schema *mgcSchemaPkg.Schema) (resourceSchema *mgcSchemaPkg.Schema, err error) {
+	if schema == nil {
+		err = fmt.Errorf("missing schema")
 		return
 	}
 
-	listSchema = (*mgcSchemaPkg.Schema)(listSchema.Items.Value)
+	if schema.Items != nil {
+		resourceSchema = (*mgcSchemaPkg.Schema)(schema.Items.Value)
+		return
+	}
+	// If the schema is an object and have only one field that is an array
+	if len(schema.Properties) == 1 {
+		for _, propRef := range schema.Properties {
+			prop := propRef.Value
+
+			if prop.Items != nil {
+				resourceSchema = (*mgcSchemaPkg.Schema)(prop.Items.Value)
+				return
+			}
+		}
+	}
+
+	// If no array schema is found in properties
+	err = fmt.Errorf("unable to find resource schema from list result schema")
+	return
+}
+
+func matchListAndSetExecutor(setExec, listExec core.Executor) (matchingListExec core.Executor, multiple bool) {
+	listSchema, err := findListSchema(listExec.ResultSchema())
+	if err != nil {
+		logger().Debugw("List executor does not return an array", "listSchema", listExec.ResultSchema(), "error", err)
+		return
+	}
 
 	for paramName, paramSchemaRef := range setExec.ParametersSchema().Properties {
 		paramSchema := (*mgcSchemaPkg.Schema)(paramSchemaRef.Value)
