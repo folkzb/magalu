@@ -515,6 +515,11 @@ func splitUnquoted(str string, separator string) (result []string, err error) {
 	return
 }
 
+// columns are split by ",", each column is split
+// by ":" into parts:
+//   - name: required
+//   - jsonPath: required
+//   - parents: optional, if present is a list split by spaces
 func columnsFromString(str string) ([]*column, error) {
 	colStrings, err := splitUnquoted(str, ",")
 	if err != nil {
@@ -525,15 +530,26 @@ func columnsFromString(str string) ([]*column, error) {
 		if colString == "" {
 			continue
 		}
-		parts := strings.SplitN(colString, ":", 2)
-		if len(parts) != 2 {
+		parts, err := splitUnquoted(colString, ":")
+		if err != nil {
+			return nil, err
+		}
+		if len(parts) < 2 || len(parts) > 3 {
 			return nil, fmt.Errorf("wrong table column format: %s", colString)
 		}
 
 		name := parts[0]
 		jsonPath := parts[1]
 
-		result = append(result, &column{Name: name, JSONPath: jsonPath})
+		var parents []string
+		if len(parts) > 2 {
+			parents, err = splitUnquoted(parts[2], " ")
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		result = append(result, &column{Name: name, Parents: parents, JSONPath: jsonPath})
 	}
 	return result, nil
 }

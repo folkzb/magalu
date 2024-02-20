@@ -326,6 +326,21 @@ instances:
 +--------------------------------------+-----------+
 ```
 
+Table may have options (all after `=` sign). If no options are specified,
+then columns will be inferred from the actual data. However, columns may
+be specified in a sequence delimited by `,`, in the following format:
+
+```
+name:jsonPath:parents
+```
+
+Where:
+- `name`: the column name (title/header) to be displayed **(required)**
+- `jsonPath`: selects the data to be displayed **(required)**
+- `parents`: space-delimited list of column parents, which is useful
+  to group multiple columns, if they have the same parent (optional)
+
+
 ### JSONPath
 
 ```sh
