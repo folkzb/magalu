@@ -91,8 +91,14 @@ func applyMgcObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfStat
 		return applyMgcMap(ctx, mgcMap, attr, tfState, path)
 	}
 
-	for mgcName, attr := range attr.childAttributes {
-		mgcValue, ok := mgcMap[string(mgcName)]
+	for childName, childAttr := range attr.childAttributes {
+		tflog.Debug(
+			ctx,
+			fmt.Sprintf("[applier] looping through object properties, current: %q", childName),
+			map[string]any{"mgcName": attr.mgcName, "tfName": attr.tfName, "value": mgcValue, "mgcSchema": attr.mgcSchema},
+		)
+
+		childValue, ok := mgcMap[string(childName)]
 		if !ok {
 			continue
 		}
@@ -100,20 +106,20 @@ func applyMgcObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfStat
 		tflog.Debug(
 			ctx,
 			"[applier] will try to apply map property",
-			map[string]any{"propMgcName": mgcName, "propMgcValue": mgcValue},
+			map[string]any{"propMgcName": childName, "propMgcValue": childValue},
 		)
 
-		tflog.Debug(ctx, fmt.Sprintf("applying %q attribute in state", mgcName), map[string]any{"value": mgcValue})
+		tflog.Debug(ctx, fmt.Sprintf("applying %q attribute in state", childName), map[string]any{"value": childValue})
 
-		attrPath := path.AtName(string(attr.tfName))
-		d := applyValueToState(ctx, mgcValue, attr, tfState, attrPath)
+		childPath := path.AtName(string(childAttr.tfName))
+		d := applyValueToState(ctx, childValue, childAttr, tfState, childPath)
 
 		if diagnostics.AppendCheckError(d...) {
-			attrSchema, _ := tfState.Schema.AttributeAtPath(ctx, attrPath)
+			childAttrSchema, _ := tfState.Schema.AttributeAtPath(ctx, childPath)
 			diagnostics.AddLocalAttributeError(
-				attrPath,
+				childPath,
 				"unable to load value",
-				fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", attrPath, mgcValue, attrSchema),
+				fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", childPath, mgcValue, childAttrSchema),
 			)
 			return diagnostics
 		}

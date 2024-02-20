@@ -93,7 +93,7 @@ func (t resAttrInfoTree) getTFInputFirst(name tfName) (*resAttrInfo, bool) {
 
 type resAttrInfoGenMetadata struct {
 	schema    *mgcSdk.Schema
-	modifiers func(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers
+	modifiers func(ctx context.Context, parentSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers
 }
 
 type resAttrInfoTreeGenMetadata struct {
@@ -134,10 +134,10 @@ func addMgcSchemaAttributes(
 
 	for propName, propSchemaRef := range mgcSchema.Properties {
 		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("adding attribute %q", propName))
-		mgcName := mgcName(propName)
+		propMgcName := mgcName(propName)
 		propSchema := (*mgcSchemaPkg.Schema)(propSchemaRef.Value)
 
-		modifiers := getModifiers(ctx, mgcSchema, mgcName)
+		modifiers := getModifiers(ctx, mgcSchema, propMgcName)
 		if hasSchemaBeenPromoted(propSchema) {
 			if modifiers.isRequired {
 				modifiers.isRequired = false
@@ -148,26 +148,26 @@ func addMgcSchemaAttributes(
 			tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("computing %q as oneOf, %+v", propName, propSchema))
 		}
 
-		tfSchema, childAttributes, err := mgcSchemaToTFAttribute(propSchema, getModifiers(ctx, mgcSchema, mgcName), ctx)
+		tfSchema, childAttributes, err := mgcSchemaToTFAttribute(propSchema, getModifiers(ctx, mgcSchema, propMgcName), ctx)
 		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q generated tfSchema %#v", propName, tfSchema))
 		if err != nil {
 			tflog.SubsystemError(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q schema: %+v; error: %s", propName, propSchema, err))
 			return fmt.Errorf("attribute %q, error=%s", propName, err)
 		}
 
-		name := mgcName.asTFName()
+		name := propMgcName.asTFName()
 		if modifiers.nameOverride != "" {
 			name = modifiers.nameOverride
 		}
 
 		attr := &resAttrInfo{
 			tfName:          name,
-			mgcName:         mgcName,
+			mgcName:         propMgcName,
 			mgcSchema:       propSchema,
 			tfSchema:        tfSchema,
 			childAttributes: childAttributes,
 		}
-		dst[mgcName] = attr
+		dst[propMgcName] = attr
 		tflog.SubsystemDebug(ctx, schemaGenSubsystem, fmt.Sprintf("attribute %q: %+v", propName, attr))
 	}
 

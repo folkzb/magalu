@@ -140,11 +140,11 @@ func (r *MgcResource) doesPropHaveSetter(name mgcName) bool {
 	return ok
 }
 
-func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, parentSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	var k = string(mgcName)
 
-	propSchema := (*core.Schema)(mgcSchema.Properties[k].Value)
-	isRequired := slices.Contains(mgcSchema.Required, k)
+	propSchema := (*core.Schema)(parentSchema.Properties[k].Value)
+	isRequired := slices.Contains(parentSchema.Required, k)
 	isComputed := !isRequired
 
 	if isComputed {
@@ -169,11 +169,11 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, mgcSchema *m
 	}
 }
 
-func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, parentSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	var k = string(mgcName)
 
 	isComputed := r.create.ResultSchema().Properties[k] != nil
-	required := slices.Contains(mgcSchema.Required, k)
+	required := slices.Contains(parentSchema.Required, k)
 
 	var nameOverride tfName
 	if withoutResPrefix, hasResPrefix := strings.CutPrefix(k, string(r.resMgcName.singular()+"_")); hasResPrefix && r.create.ResultSchema().Properties[withoutResPrefix] != nil {
@@ -194,14 +194,14 @@ func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, mgcSchema *m
 	}
 }
 
-func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, parentSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	k := string(mgcName)
 	if _, isInRead := r.read.ParametersSchema().Properties[k]; isInRead {
-		return r.getUpdateParamsModifiers(ctx, mgcSchema, mgcName)
+		return r.getUpdateParamsModifiers(ctx, parentSchema, mgcName)
 	}
 
 	if _, isInUpdate := r.update.ParametersSchema().Properties[k]; isInUpdate {
-		return r.getUpdateParamsModifiers(ctx, mgcSchema, mgcName)
+		return r.getUpdateParamsModifiers(ctx, parentSchema, mgcName)
 	}
 
 	isComputed := r.create.ResultSchema().Properties[k] != nil
@@ -230,8 +230,8 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, mgcSchema *m
 var propsUpdatableByServer = []string{"error", "updated_at", "updated"}
 var propsNotUpdatableByServer = []string{"created_at"}
 
-func (r *MgcResource) getResultModifiers(ctx context.Context, mgcSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
-	propSchema := (*mgcSchemaPkg.Schema)(mgcSchema.Properties[string(mgcName)].Value)
+func (r *MgcResource) getResultModifiers(ctx context.Context, parentSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
+	propSchema := (*mgcSchemaPkg.Schema)(parentSchema.Properties[string(mgcName)].Value)
 
 	isOptional := r.doesPropHaveSetter(mgcName)
 	useStateForUnknown := (isOptional || slices.Contains(propsNotUpdatableByServer, string(mgcName))) && !slices.Contains(propsUpdatableByServer, string(mgcName))
