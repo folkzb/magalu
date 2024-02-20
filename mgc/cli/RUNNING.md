@@ -340,6 +340,9 @@ Where:
 - `parents`: space-delimited list of column parents, which is useful
   to group multiple columns, if they have the same parent (optional)
 
+If the first column string (before `,`) is the special purpose string
+`transpose`, then the table will be build along the vertical axis,
+each column will become a row.
 
 ### JSONPath
 

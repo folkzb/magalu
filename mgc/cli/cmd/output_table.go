@@ -520,22 +520,26 @@ func splitUnquoted(str string, separator string) (result []string, err error) {
 //   - name: required
 //   - jsonPath: required
 //   - parents: optional, if present is a list split by spaces
-func columnsFromString(str string) ([]*column, error) {
+func columnsFromString(str string) (buildVertically bool, result []*column, err error) {
+	str, buildVertically = strings.CutPrefix(str, "transpose")
+
 	colStrings, err := splitUnquoted(str, ",")
 	if err != nil {
-		return nil, err
+		return
 	}
-	result := make([]*column, 0)
+	result = make([]*column, 0)
 	for _, colString := range colStrings {
 		if colString == "" {
 			continue
 		}
-		parts, err := splitUnquoted(colString, ":")
+		var parts []string
+		parts, err = splitUnquoted(colString, ":")
 		if err != nil {
-			return nil, err
+			return
 		}
 		if len(parts) < 2 || len(parts) > 3 {
-			return nil, fmt.Errorf("wrong table column format: %s", colString)
+			err = fmt.Errorf("wrong table column format: %s", colString)
+			return
 		}
 
 		name := parts[0]
@@ -545,13 +549,13 @@ func columnsFromString(str string) ([]*column, error) {
 		if len(parts) > 2 {
 			parents, err = splitUnquoted(parts[2], " ")
 			if err != nil {
-				return nil, err
+				return
 			}
 		}
 
 		result = append(result, &column{Name: name, Parents: parents, JSONPath: jsonPath})
 	}
-	return result, nil
+	return
 }
 
 func configureWriter(w table.Writer, options *tableOptions) {
@@ -793,7 +797,7 @@ func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 	var buildVertically bool
 
 	if options != "" {
-		columns, err = columnsFromString(options)
+		buildVertically, columns, err = columnsFromString(options)
 		logger().Debugw(
 			"explicitly declared columns",
 			"buildVertically", buildVertically,
