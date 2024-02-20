@@ -778,6 +778,13 @@ func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 
 	if options != "" {
 		columns, err = columnsFromString(options)
+		logger().Debugw(
+			"explicitly declared columns",
+			"buildVertically", buildVertically,
+			"columns", columns,
+			"value", val,
+			"err", err,
+		)
 	} else {
 		columns, err = columnsFromAny(val, "$")
 
@@ -793,6 +800,14 @@ func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 				buildVertically = true
 			}
 		}
+
+		logger().Debugw(
+			"auto inferred columns from value",
+			"buildVertically", buildVertically,
+			"columns", columns,
+			"value", val,
+			"err", err,
+		)
 	}
 
 	if err != nil {
