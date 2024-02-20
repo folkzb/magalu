@@ -245,6 +245,8 @@ type column struct {
 	Parents  []string // if provided, multiple header lines will be created merging these
 	JSONPath string
 	Config   *columnConfig
+
+	SubTableOptions *tableOptions
 }
 
 func (c *column) tableColumnConfig() *table.ColumnConfig {
@@ -508,6 +510,9 @@ func tableOptionsFromAny(val any, prefix string, parentOpts *tableOptions) (opti
 	}
 	options.Columns = columns
 	options.BuildVertically = buildVertically
+	if !options.BuildVertically {
+		options.Style = &noBorderStyle
+	}
 
 	return
 }
@@ -563,11 +568,11 @@ func tableOptionsFromString(str string) (options *tableOptions, err error) {
 			continue
 		}
 		var parts []string
-		parts, err = splitUnquoted(colString, ":", 3)
+		parts, err = splitUnquoted(colString, ":", 4)
 		if err != nil {
 			return
 		}
-		if len(parts) < 2 || len(parts) > 3 {
+		if len(parts) < 2 || len(parts) > 4 {
 			err = fmt.Errorf("wrong table column format: %s", colString)
 			return
 		}
@@ -583,10 +588,23 @@ func tableOptionsFromString(str string) (options *tableOptions, err error) {
 			}
 		}
 
-		columns = append(columns, &column{Name: name, Parents: parents, JSONPath: jsonPath})
+		var subOptions *tableOptions
+		if len(parts) > 3 && len(parts[3]) > 0 {
+			subOptions, err = tableOptionsFromString(parts[3])
+			if err != nil {
+				return
+			}
+		}
+
+		columns = append(columns, &column{Name: name, Parents: parents, JSONPath: jsonPath, SubTableOptions: subOptions})
 	}
 
-	return &tableOptions{Columns: columns, BuildVertically: buildVertically}, nil
+	options = &tableOptions{Columns: columns, BuildVertically: buildVertically}
+	if !options.BuildVertically {
+		options.Style = &noBorderStyle
+	}
+
+	return
 }
 
 func configureWriter(w table.Writer, options *tableOptions) {
@@ -646,7 +664,7 @@ func buildTableHorizontally(writer table.Writer, val any, options *tableOptions)
 
 	rows := []table.Row{}
 	configs := []table.ColumnConfig{}
-	handleVal := func(rowIdx int, colIdx int, value any) error {
+	handleVal := func(rowIdx int, colIdx int, value any, col *column) error {
 		if rowIdx >= len(rows) {
 			newRow := make(table.Row, columnCount)
 			for i := 0; i < columnCount; i++ {
@@ -659,7 +677,7 @@ func buildTableHorizontally(writer table.Writer, val any, options *tableOptions)
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
 			rows[rowIdx][colIdx] = value
 		case map[string]any, []any:
-			subTable, err := buildSubTable(value, options)
+			subTable, err := buildSubTable(value, options, col)
 			if err != nil {
 				return err
 			}
@@ -685,13 +703,13 @@ func buildTableHorizontally(writer table.Writer, val any, options *tableOptions)
 
 		if arr, ok := result.([]any); ok {
 			for rowIdx, v := range arr {
-				err := handleVal(rowIdx, colIdx, v)
+				err := handleVal(rowIdx, colIdx, v, col)
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			err := handleVal(0, colIdx, result)
+			err := handleVal(0, colIdx, result, col)
 			if err != nil {
 				return err
 			}
@@ -711,12 +729,14 @@ func buildTableHorizontally(writer table.Writer, val any, options *tableOptions)
 	return nil
 }
 
-func buildSubTable(val any, parentOpts *tableOptions) (result string, err error) {
-	subOptions, err := tableOptionsFromAny(val, "$", parentOpts)
-	if err != nil {
-		return "", err
+func buildSubTable(val any, parentOpts *tableOptions, col *column) (result string, err error) {
+	subOptions := col.SubTableOptions
+	if subOptions == nil {
+		subOptions, err = tableOptionsFromAny(val, "$", parentOpts)
+		if err != nil {
+			return "", err
+		}
 	}
-
 	subOptions.StyleCustomizations = func(s *table.Style) {
 		s.Options.DrawBorder = false
 	}
@@ -762,7 +782,7 @@ func buildTableVertically(tw table.Writer, val any, options *tableOptions) error
 		case bool, *bool, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64, float32, *float32, string, *string:
 			row = append(row, value)
 		case map[string]any, []any:
-			subTable, err := buildSubTable(value, options)
+			subTable, err := buildSubTable(value, options, col)
 			if err != nil {
 				return err
 			}
@@ -840,10 +860,6 @@ func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 
 	if err != nil {
 		return err
-	}
-
-	if !tableOptions.BuildVertically {
-		tableOptions.Style = &noBorderStyle
 	}
 
 	return formatTableWithOptions(val, tableOptions)
