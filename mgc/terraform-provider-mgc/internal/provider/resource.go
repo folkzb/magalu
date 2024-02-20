@@ -140,6 +140,16 @@ func (r *MgcResource) doesPropHaveSetter(name mgcName) bool {
 	return ok
 }
 
+func (r *MgcResource) isPropUpdatable(name mgcName) bool {
+	if r.doesPropHaveSetter(name) {
+		return true
+	}
+
+	_, inUpdateParams := r.update.ParametersSchema().Properties[string(name)]
+	_, inReadParams := r.read.ParametersSchema().Properties[string(name)]
+	return inUpdateParams && !inReadParams
+}
+
 func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, parentSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	var k = string(mgcName)
 
@@ -157,7 +167,9 @@ func (r *MgcResource) getCreateParamsModifiers(ctx context.Context, parentSchema
 		}
 	}
 
-	requiresReplace := r.update.ParametersSchema().Properties[k] == nil && !r.doesPropHaveSetter(mgcName) && propSchema.Default == nil
+	// TODO: Should the 'propSchema.Default == nil' check even exist here? Even if there is a default,
+	// if it's not updatable it should require replace regardless of the default value, right?
+	requiresReplace := !r.isPropUpdatable(mgcName) && propSchema.Default == nil
 
 	return attributeModifiers{
 		isRequired:                 isRequired,
@@ -233,7 +245,7 @@ var propsNotUpdatableByServer = []string{"created_at"}
 func (r *MgcResource) getResultModifiers(ctx context.Context, parentSchema *mgcSdk.Schema, mgcName mgcName) attributeModifiers {
 	propSchema := (*mgcSchemaPkg.Schema)(parentSchema.Properties[string(mgcName)].Value)
 
-	isOptional := r.doesPropHaveSetter(mgcName)
+	isOptional := r.isPropUpdatable(mgcName)
 	useStateForUnknown := (isOptional || slices.Contains(propsNotUpdatableByServer, string(mgcName))) && !slices.Contains(propsUpdatableByServer, string(mgcName))
 	// In the following cases, this Result Attr will have a different structure when compared to its
 	// Input counterpart, and this it will be transformed into 'current_<name>'. These 'current_<name>'
@@ -256,7 +268,7 @@ func (r *MgcResource) getResultModifiers(ctx context.Context, parentSchema *mgcS
 	if inputCounterpart != nil {
 		willSplit := !mgcSchemaPkg.CheckSimilarJsonSchemas(inputCounterpart, propSchema)
 		isOptional = isOptional && !willSplit
-		useStateForUnknown = !willSplit
+		useStateForUnknown = useStateForUnknown && !willSplit
 	}
 
 	return attributeModifiers{
