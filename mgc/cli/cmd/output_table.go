@@ -512,7 +512,7 @@ func tableOptionsFromAny(val any, prefix string, parentOpts *tableOptions) (opti
 	return
 }
 
-func splitUnquoted(str string, separator string) (result []string, err error) {
+func splitUnquoted(str string, separator string, maxSplit int) (result []string, err error) {
 	cur := ""
 	result = []string{}
 	var s scanner.Scanner
@@ -532,7 +532,7 @@ func splitUnquoted(str string, separator string) (result []string, err error) {
 			}
 		default:
 		}
-		if txt == separator {
+		if txt == separator && (maxSplit == 0 || maxSplit > len(result)+1) {
 			result = append(result, cur)
 			cur = ""
 		} else {
@@ -553,7 +553,7 @@ func splitUnquoted(str string, separator string) (result []string, err error) {
 func tableOptionsFromString(str string) (options *tableOptions, err error) {
 	str, buildVertically := strings.CutPrefix(str, "transpose")
 
-	colStrings, err := splitUnquoted(str, ",")
+	colStrings, err := splitUnquoted(str, ",", 0)
 	if err != nil {
 		return
 	}
@@ -563,7 +563,7 @@ func tableOptionsFromString(str string) (options *tableOptions, err error) {
 			continue
 		}
 		var parts []string
-		parts, err = splitUnquoted(colString, ":")
+		parts, err = splitUnquoted(colString, ":", 3)
 		if err != nil {
 			return
 		}
@@ -576,8 +576,8 @@ func tableOptionsFromString(str string) (options *tableOptions, err error) {
 		jsonPath := parts[1]
 
 		var parents []string
-		if len(parts) > 2 {
-			parents, err = splitUnquoted(parts[2], " ")
+		if len(parts) > 2 && len(parts[2]) > 0 {
+			parents, err = splitUnquoted(parts[2], " ", 0)
 			if err != nil {
 				return
 			}
