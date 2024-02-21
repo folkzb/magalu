@@ -93,27 +93,28 @@ func setMD5Checksum(req *http.Request) error {
 	if v := req.Header.Get(contentMD5Header); len(v) != 0 {
 		return nil
 	}
+	if req.GetBody == nil {
+		return fmt.Errorf("programming error: object storage operation must define a GetBody function in the request to set the MD5 Checksum")
+	}
 
-	h := md5.New()
-
-	// req.Body can be io.SectionReader, which cannot be cloned
-	// calling req.GetBody in this situation causes nil pointer exception.
-	// This code manually clones the body
-	buff := bytes.NewBuffer([]byte{})
-	tee := io.TeeReader(req.Body, buff)
-	defer func() {
-		req.Body.Close()
-		req.Body = io.NopCloser(bytes.NewReader(buff.Bytes()))
-		req.Header.Set("Content-Length", fmt.Sprint(len(buff.Bytes())))
-	}()
-
-	data, err := io.ReadAll(tee)
+	body, err := req.GetBody()
 	if err != nil {
 		return err
 	}
-	h.Write(data)
+
+	defer body.Close()
+
+	h := md5.New()
+
+	_, err = io.Copy(h, body)
+	defer body.Close()
+
+	if err != nil {
+		return err
+	}
 	checksum := base64.StdEncoding.EncodeToString(h.Sum(nil))
 	req.Header.Set(contentMD5Header, checksum)
+
 	return nil
 }
 
