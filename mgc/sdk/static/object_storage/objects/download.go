@@ -27,7 +27,7 @@ var getDownload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func download(ctx context.Context, p common.DownloadObjectParams, cfg common.Config) (result core.Value, err error) {
-	dst, err := common.GetDestination(p.Destination, p.Source)
+	dst, err := common.GetDownloadDirDst(p.Destination, p.Source)
 	if err != nil {
 		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 	}

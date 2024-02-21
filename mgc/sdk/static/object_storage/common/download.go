@@ -71,7 +71,7 @@ func NewDownloader(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mg
 	}
 }
 
-func GetDestination(dst mgcSchemaPkg.FilePath, src mgcSchemaPkg.URI) (mgcSchemaPkg.FilePath, error) {
+func GetDownloadDirDst(dst mgcSchemaPkg.FilePath, src mgcSchemaPkg.URI) (mgcSchemaPkg.FilePath, error) {
 	if dst == "" {
 		d, err := os.Getwd()
 		if err != nil {

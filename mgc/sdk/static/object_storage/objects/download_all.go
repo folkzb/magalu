@@ -127,7 +127,7 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 }
 
 func downloadAll(ctx context.Context, p downloadAllObjectsParams, cfg common.Config) (result core.Value, err error) {
-	dst, err := common.GetDestination(p.Destination, p.Source)
+	dst, err := common.GetDownloadDirDst(p.Destination, p.Source)
 	if err != nil {
 		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 	}
