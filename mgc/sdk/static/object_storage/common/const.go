@@ -38,7 +38,8 @@ const (
 
 	URIPrefix = "s3://"
 
-	CHUNK_SIZE = 1024 * 1024 * 5
+	MIN_CHUNK_SIZE = 1024 * 1024 * 5
+	MAX_CHUNK_SIZE = 1024 * 1024 * 1024 * 5
 
 	ApiLimitMaxItems = 1000
 

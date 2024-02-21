@@ -53,7 +53,7 @@ func NewDownloader(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mg
 		return nil, err
 	}
 
-	totalDownloadParts := int(math.Ceil(float64(metadata.ContentLength) / float64(CHUNK_SIZE)))
+	totalDownloadParts := int(math.Ceil(float64(metadata.ContentLength) / float64(cfg.chunkSizeInBytes())))
 
 	if totalDownloadParts > 1 {
 		return &bigFileDownloader{

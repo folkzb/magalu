@@ -67,7 +67,7 @@ func (u *bigFileDownloader) Download(ctx context.Context) error {
 		return err
 	}
 
-	chunkChan := pipeline.PrepareWriteChunks(ctx, writer, u.fileSize, CHUNK_SIZE)
+	chunkChan := pipeline.PrepareWriteChunks(ctx, writer, u.fileSize, int64(u.cfg.chunkSizeInBytes()))
 
 	bigFileDownloadErrorChan := pipeline.ParallelProcess(ctx, u.cfg.Workers, chunkChan, u.createPartDownloaderProcessor(cancel, u.cfg), nil)
 	bigFileDownloadErrorChan = pipeline.Filter(ctx, bigFileDownloadErrorChan, pipeline.FilterNonNil[error]{})

@@ -175,7 +175,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 		var err error
 		defer u.progressReporter.Report(0, err)
 
-		partNumber := int(chunk.StartOffset/CHUNK_SIZE) + 1
+		partNumber := int(chunk.StartOffset/int64(u.cfg.chunkSizeInBytes())) + 1
 		reader := progress_report.NewReporterReader(chunk.Reader, u.progressReporter.Report)
 		req, err := u.createMultipartRequest(ctx, partNumber, reader)
 		if err != nil {
@@ -185,7 +185,7 @@ func (u *bigFileUploader) createPartSenderProcessor(cancel context.CancelCauseFu
 
 		// This is used while retrying requests
 		req.GetBody = func() (io.ReadCloser, error) {
-			return progress_report.NewReporterReader(io.NewSectionReader(chunk.Reader, 0, CHUNK_SIZE), u.progressReporter.Report), nil
+			return progress_report.NewReporterReader(io.NewSectionReader(chunk.Reader, 0, int64(u.cfg.chunkSizeInBytes())), u.progressReporter.Report), nil
 		}
 
 		bigfileUploaderLogger().Debugw("Sending part", "part", partNumber, "total", totalParts)
@@ -221,8 +221,8 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 		return err
 	}
 
-	totalParts := int(math.Ceil(float64(u.fileInfo.Size()) / float64(CHUNK_SIZE)))
-	chunkChan := pipeline.ReadChunks(ctx, u.reader, u.fileInfo.Size(), CHUNK_SIZE)
+	totalParts := int(math.Ceil(float64(u.fileInfo.Size()) / float64(u.cfg.chunkSizeInBytes())))
+	chunkChan := pipeline.ReadChunks(ctx, u.reader, u.fileInfo.Size(), int64(u.cfg.chunkSizeInBytes()))
 
 	partChan := pipeline.ParallelProcess(ctx, u.workerN, chunkChan, u.createPartSenderProcessor(cancel, totalParts, uploadId), nil)
 

@@ -27,7 +27,7 @@ func NewUploader(cfg Config, src mgcSchemaPkg.FilePath, dst mgcSchemaPkg.URI) (u
 	size := fileInfo.Size()
 	mimeType := mime.TypeByExtension(filepath.Ext(fileInfo.Name()))
 
-	chunkN := int(math.Ceil(float64(size) / float64(CHUNK_SIZE)))
+	chunkN := int(math.Ceil(float64(size) / float64(cfg.chunkSizeInBytes())))
 
 	if chunkN > 1 {
 		return &bigFileUploader{

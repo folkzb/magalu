@@ -19252,6 +19252,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19336,6 +19343,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19411,6 +19425,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19496,6 +19517,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19578,6 +19606,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19686,6 +19721,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19761,6 +19803,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19860,6 +19909,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19941,6 +19997,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20039,6 +20102,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20112,6 +20182,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20236,6 +20313,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20310,6 +20394,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20398,6 +20489,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20492,6 +20590,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20560,6 +20665,13 @@
      {
       "configs": {
        "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
