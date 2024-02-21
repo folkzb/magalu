@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -77,7 +78,7 @@ func WalkDirEntries(
 			close(ch)
 		}()
 
-		_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		_ = fs.WalkDir(os.DirFS(root), ".", func(path string, d fs.DirEntry, err error) error {
 			if d == nil {
 				return filepath.SkipDir
 			}
