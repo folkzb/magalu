@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/pipeline"
@@ -39,10 +40,14 @@ var getUploadDir = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func createObjectUploadProcessor(cfg common.Config, destination mgcSchemaPkg.URI) pipeline.Processor[pipeline.WalkDirEntry, error] {
+func createObjectUploadProcessor(cfg common.Config, destination mgcSchemaPkg.URI, progressReporter *progress_report.UnitsReporter) pipeline.Processor[pipeline.WalkDirEntry, error] {
 	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
-		if err := dirEntry.Err(); err != nil {
-			return &common.ObjectError{Err: err}, pipeline.ProcessAbort
+		var err error
+		defer progressReporter.Report(1, 0, err)
+
+		if err = dirEntry.Err(); err != nil {
+			err = &common.ObjectError{Err: err}
+			return err, pipeline.ProcessAbort
 		}
 
 		if dirEntry.DirEntry().IsDir() {
@@ -52,14 +57,15 @@ func createObjectUploadProcessor(cfg common.Config, destination mgcSchemaPkg.URI
 		filePath := dirEntry.Path()
 		objURI := destination.JoinPath(filePath)
 
-		_, err := upload(
+		_, err = upload(
 			ctx,
 			uploadParams{Source: mgcSchemaPkg.FilePath(filePath), Destination: mgcSchemaPkg.URI(objURI)},
 			cfg,
 		)
 
 		if err != nil {
-			return &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}, pipeline.ProcessOutput
+			err = &common.ObjectError{Url: mgcSchemaPkg.URI(objURI), Err: err}
+			return err, pipeline.ProcessOutput
 		}
 
 		return nil, pipeline.ProcessOutput
@@ -75,16 +81,29 @@ func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (
 	}
 
 	progressReportMsg := "Uploading directory: " + params.Source.String()
-	progressReporter := progress_report.NewUnitsReporter(ctx, progressReportMsg, 1)
+	progressReporter := progress_report.NewUnitsReporter(ctx, progressReportMsg, 0)
 	progressReporter.Start()
 	defer progressReporter.End()
 
 	entries := pipeline.WalkDirEntries(ctx, params.Source.String(), func(path string, d fs.DirEntry, err error) error {
-		return err
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			fileCount, err := getFileCount(path)
+			if err != nil {
+				return err
+			}
+
+			progressReporter.Report(0, fileCount, err)
+		}
+
+		return nil
 	})
 
 	entries = common.ApplyFilters(ctx, entries, params.FilterParams, cancel)
-	uploadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, entries, createObjectUploadProcessor(cfg, params.Destination), nil)
+	uploadObjectsErrorChan := pipeline.ParallelProcess(ctx, cfg.Workers, entries, createObjectUploadProcessor(cfg, params.Destination, progressReporter), nil)
 	uploadObjectsErrorChan = pipeline.Filter(ctx, uploadObjectsErrorChan, pipeline.FilterNonNil[error]{})
 
 	objErr, err := pipeline.SliceItemConsumer[utils.MultiError](ctx, uploadObjectsErrorChan)
@@ -103,4 +122,29 @@ func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (
 		URI: params.Destination.String(),
 		Dir: params.Source.String(),
 	}, nil
+}
+
+func getFileCount(dirPath string) (count uint64, err error) {
+	i := 0
+	err = filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
+		defer func() { i += 1 }()
+		if err != nil {
+			return err
+		}
+
+		// First loop will always be the dir represented by 'dirPath' itself, so skip it
+		// bud don't return 'fs.SkipDir'
+		if i == 0 {
+			return nil
+		}
+
+		if d.IsDir() {
+			return fs.SkipDir
+		}
+
+		count += 1
+		return nil
+	})
+
+	return
 }
