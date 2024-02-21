@@ -24,7 +24,8 @@ var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	exec = core.NewPromptInputExecutor(
 		exec,
 		core.NewPromptInput(
-			"This command will delete the object at {{.confirmationValue}}, and its result is NOT reversible. Please confirm by retyping: {{.confirmationValue}}",
+			`This command will delete the object at {{.confirmationValue}}, and its result is NOT reversible.
+Please confirm by retyping: {{.confirmationValue}}`,
 			"{{.parameters.dst}}",
 		),
 	)

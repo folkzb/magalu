@@ -18,11 +18,13 @@ var getDeleteAll = utils.NewLazyLoader[core.Executor](func() core.Executor {
 		deleteAll,
 	)
 
-	msg := "This command will delete all objects at {{.confirmationValue}}, and its result is NOT reversible. Please confirm by retyping: {{.confirmationValue}}"
-
 	return core.NewPromptInputExecutor(
 		exec,
-		core.NewPromptInput(msg, "{{.parameters.bucket}}"),
+		core.NewPromptInput(
+			`This command will delete all objects at {{.confirmationValue}}, and its result is NOT reversible.
+Please confirm by retyping: {{.confirmationValue}}`,
+			"{{.parameters.bucket}}",
+		),
 	)
 })
 
