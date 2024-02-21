@@ -82,3 +82,23 @@ func GetDownloadDirDst(dst mgcSchemaPkg.FilePath, src mgcSchemaPkg.URI) (mgcSche
 	}
 	return dst, nil
 }
+
+// Same as GetDownloadDst, but if resulting 'dst' is a directory, append filename from 'src'
+func GetDownloadFileDst(dst mgcSchemaPkg.FilePath, src mgcSchemaPkg.URI) (mgcSchemaPkg.FilePath, error) {
+	dst, err := GetDownloadDirDst(dst, src)
+	if err != nil {
+		return dst, err
+	}
+
+	if dst.AsURI().Filename() != "" {
+		return dst, nil
+	}
+
+	filename := src.Filename()
+	if filename == "" {
+		return dst, fmt.Errorf("unable to infer dst filename as src also lacks filename")
+	}
+
+	dst = dst.Join(filename)
+	return dst, nil
+}
