@@ -126,17 +126,16 @@ func downloadMultipleFiles(ctx context.Context, cfg common.Config, params downlo
 	return nil
 }
 
-func downloadAll(ctx context.Context, p downloadAllObjectsParams, cfg common.Config) (result core.Value, err error) {
-	dst, err := common.GetDownloadDirDst(p.Destination, p.Source)
+func downloadAll(ctx context.Context, p downloadAllObjectsParams, cfg common.Config) (result common.DownloadObjectParams, err error) {
+	p.Destination, err = common.GetDownloadFileDst(p.Destination, p.Source)
 	if err != nil {
-		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
+		return result, fmt.Errorf("no destination specified and could not use local dir: %w", err)
 	}
-	p.Destination = dst
 	err = downloadMultipleFiles(ctx, cfg, p)
 
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 
-	return common.DownloadObjectParams{Source: p.Source, Destination: mgcSchemaPkg.FilePath(dst)}, nil
+	return common.DownloadObjectParams{Source: p.Source, Destination: p.Destination}, nil
 }

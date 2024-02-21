@@ -20069,33 +20069,24 @@
        "type": "object"
       },
       "result": {
-       "anyOf": [
-        {
-         "nullable": true,
-         "type": "null"
+       "properties": {
+        "dst": {
+         "description": "Path and file name to be saved (relative or absolute).If not specified it defaults to the current working directory",
+         "example": "file.txt",
+         "type": "string",
+         "x-contentMediaType": "application/octet-stream"
         },
-        {
-         "type": "boolean"
-        },
-        {
+        "src": {
+         "description": "Path of the object to be downloaded",
+         "example": "bucket1/file.txt",
+         "format": "uri",
          "type": "string"
-        },
-        {
-         "type": "number"
-        },
-        {
-         "type": "integer"
-        },
-        {
-         "items": {},
-         "type": "array"
-        },
-        {
-         "additionalProperties": true,
-         "type": "object"
         }
+       },
+       "required": [
+        "src"
        ],
-       "nullable": true
+       "type": "object"
       },
       "version": ""
      },
