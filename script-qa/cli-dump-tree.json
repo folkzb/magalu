@@ -20859,6 +20859,11 @@
          },
          "type": "array"
         },
+        "shallow": {
+         "default": false,
+         "description": "Don't upload subdirectories",
+         "type": "boolean"
+        },
         "src": {
          "description": "Source directory path for upload",
          "example": "path/to/folder",

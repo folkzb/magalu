@@ -17,6 +17,7 @@ import (
 type uploadDirParams struct {
 	Source         mgcSchemaPkg.DirPath `json:"src" jsonschema:"description=Source directory path for upload,example=path/to/folder" mgc:"positional"`
 	Destination    mgcSchemaPkg.URI     `json:"dst" jsonschema:"description=Full destination path in the bucket,example=my-bucket/dir/" mgc:"positional"`
+	Shallow        bool                 `json:"shallow,omitempty" jsonschema:"description=Don't upload subdirectories,default=false"`
 	common.Filters `json:",squash"`     // nolint
 }
 
@@ -88,6 +89,12 @@ func uploadDir(ctx context.Context, params uploadDirParams, cfg common.Config) (
 	entries := pipeline.WalkDirEntries(ctx, params.Source.String(), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
+		}
+
+		if path != params.Source.String() && path+"/" != params.Source.String() {
+			if d.IsDir() && params.Shallow {
+				return filepath.SkipDir
+			}
 		}
 
 		if d.IsDir() {
