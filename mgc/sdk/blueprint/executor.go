@@ -30,6 +30,10 @@ func newExecutor(spec *childSpec, logger *zap.SugaredLogger, refResolver *core.B
 		exec = core.NewConfirmableExecutor(exec, core.ConfirmPromptWithTemplate(execSpec.Confirm))
 	}
 
+	if execSpec.PromptInput != nil {
+		exec = core.NewPromptInputExecutor(exec, core.NewPromptInput(execSpec.PromptInput.MessageTemplate, execSpec.PromptInput.ConfirmValueTemplate))
+	}
+
 	if execSpec.WaitTermination != nil {
 		exec, err = execSpec.WaitTermination.Build(exec, func(result core.ResultWithValue) any {
 			if result, ok := core.ResultAs[*executorResult](result); ok {

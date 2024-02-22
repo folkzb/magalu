@@ -130,6 +130,9 @@ func (l *linker) CreateExecutor(originalResult core.Result) (target core.Executo
 	if _, ok := core.ExecutorAs[core.ConfirmableExecutor](target); ok {
 		exec = core.NewLinkConfirmableExecutor(exec)
 	}
+	if _, ok := core.ExecutorAs[core.PromptInputExecutor](target); ok {
+		exec = core.NewLinkPromptInputExecutor(exec)
+	}
 
 	return exec, nil
 }

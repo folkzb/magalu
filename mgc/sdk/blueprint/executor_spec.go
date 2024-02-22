@@ -45,6 +45,12 @@ type executorSpec struct {
 	Confirm         string                      `json:"confirm,omitempty"`
 	WaitTermination *core.WaitTerminationConfig `json:"waitTermination,omitempty"`
 	OutputFlag      string                      `json:"outputFlag,omitempty"`
+	PromptInput     *PromptInputSpec            `json:"promptInput,omitempty"`
+}
+
+type PromptInputSpec struct {
+	MessageTemplate      string `json:"message,omitempty"`
+	ConfirmValueTemplate string `json:"confirmValue,omitempty"`
 }
 
 func (e *executorSpec) isEmpty() bool {
