@@ -44,6 +44,26 @@ func set(ctx context.Context, params setParameters, _ struct{}) (core.Scopes, er
 		return nil, err
 	}
 
+	currentScopes, err := a.CurrentScopes()
+	if err != nil {
+		addLogger().Warnw(
+			"set operation was successful but unable to get current scopes to check",
+			"err", err,
+		)
+		return params.Scopes, nil
+	}
+
+	missing := core.Scopes{}
+	for _, scope := range params.Scopes {
+		if !slices.Contains(currentScopes, scope) {
+			missing.Add(scope)
+		}
+	}
+
+	if len(missing) > 1 {
+		return params.Scopes, fmt.Errorf("request was successful but resulting scopes are not as requested. Missing %v", missing)
+	}
+
 	slices.Sort(params.Scopes)
 
 	return params.Scopes, nil

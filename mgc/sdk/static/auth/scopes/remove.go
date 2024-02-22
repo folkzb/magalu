@@ -63,6 +63,26 @@ func remove(ctx context.Context, params removeParameters, _ struct{}) (core.Scop
 		return nil, err
 	}
 
+	currentScopes, err = a.CurrentScopes()
+	if err != nil {
+		addLogger().Warnw(
+			"remove operation was successful but unable to get current scopes to check",
+			"err", err,
+		)
+		return currentScopes, nil
+	}
+
+	leftovers := core.Scopes{}
+	for _, scope := range params.Scopes {
+		if slices.Contains(currentScopes, scope) {
+			leftovers.Add(scope)
+		}
+	}
+
+	if len(leftovers) > 1 {
+		return currentScopes, fmt.Errorf("request was successful but resulting scopes are not as requested. Leftovers %v", leftovers)
+	}
+
 	slices.Sort(currentScopes)
 
 	return currentScopes, nil

@@ -71,6 +71,26 @@ func add(ctx context.Context, params addParameters, _ struct{}) (core.Scopes, er
 		return nil, err
 	}
 
+	currentScopes, err = a.CurrentScopes()
+	if err != nil {
+		addLogger().Warnw(
+			"add operation was successful but unable to get current scopes to check",
+			"err", err,
+		)
+		return currentScopes, nil
+	}
+
+	missing := core.Scopes{}
+	for _, scope := range params.Scopes {
+		if !slices.Contains(currentScopes, scope) {
+			missing.Add(scope)
+		}
+	}
+
+	if len(missing) > 1 {
+		return currentScopes, fmt.Errorf("request was successful but resulting scopes are not as requested. Missing %v", missing)
+	}
+
 	slices.Sort(currentScopes)
 
 	return currentScopes, nil
