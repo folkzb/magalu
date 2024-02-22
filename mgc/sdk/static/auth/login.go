@@ -77,9 +77,11 @@ about a successful login, use the '--show' flag when logging in`,
 		return fmt.Sprintf(`template=Successfully logged in.{{if .access_token}}
 
 Access-token: {{.access_token}}{{end}}
-
+{{if .selected_tenant.legal_name}}
+Selected Tenant: {{.selected_tenant.legal_name}} (ID: {{.selected_tenant.uuid}})
+{{else}}
 Selected Tenant ID: {{.selected_tenant.uuid}}
-
+{{end}}
 Run '%s auth tenant list' to list all available Tenants for current login.
 `, appName)
 	})
