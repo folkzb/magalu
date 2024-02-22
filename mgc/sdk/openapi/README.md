@@ -50,13 +50,6 @@ Some extensions may be added in the OpenAPI spec in order to control the runtime
 and can be used to edit names and more complex behaviors. Be aware that some extensions can only be used in certain OpenAPI spec
 elements. The following list shows which extensions can be used in the spec:
 
-- Path
-    - `x-mgc-name`
-    - `x-mgc-description`
-    - `x-mgc-hidden`
-    - `x-mgc-confirmable`
-    - `x-mgc-wait-termination`
-    - `x-mgc-output-flag`
 - Parameter
     - `x-mgc-name`
     - `x-mgc-description`
@@ -70,6 +63,7 @@ elements. The following list shows which extensions can be used in the spec:
     - `x-mgc-description`
     - `x-mgc-hidden`
     - `x-mgc-confirmable`
+    - `x-mgc-confirmPrompt`
     - `x-mgc-wait-termination`
     - `x-mgc-output-flag`
     - `x-mgc-transforms`
@@ -132,6 +126,25 @@ paths:
         patch:
             x-mgc-confirmable:
                 message: "This action requires confirmation. Are you sure you wish to continue?"
+```
+
+### `x-mgc-promptInput`
+
+Add this extension to an operation in the CLI to demand stronger user confirmation before execution.
+It consists of an object with two string properties: `message` and `confirmValue`.
+The `message` can incorporate `{{.confirmationValue}}`, replaced with the content of `confirmValue`.
+Furthermore, `message` has access to `{{.parameters}}` and `{{.configs}}`.
+Essentially, `message` serves as the confirmation prompt shown to the user, while `confirmValue`
+specifies the input required from the user to confirm the operation.
+
+
+```yaml
+paths:
+   /v0/some/path:
+        patch:
+            x-mgc-promptInput:
+                message: "This action requires stronger confirmation. Please retype `{{.confirmationValue}} to confirm"
+                confirmValue: "I agree with this operation"
 ```
 
 ### `x-mgc-wait-termination`
