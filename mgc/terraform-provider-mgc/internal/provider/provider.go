@@ -71,10 +71,6 @@ func collectGroupResources(
 	var create, read, update, delete, list mgcSdk.Executor
 	var connectionExecs []mgcSdk.Executor
 	_, err := group.VisitChildren(func(child mgcSdk.Descriptor) (run bool, err error) {
-		if group.IsInternal() {
-			return true, nil
-		}
-
 		if childGroup, ok := child.(mgcSdk.Grouper); ok {
 			if slices.Contains(ignoredTFModules, childGroup.Name()) {
 				return true, nil
