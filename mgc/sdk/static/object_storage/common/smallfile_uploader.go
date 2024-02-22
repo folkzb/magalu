@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/fs"
 
@@ -13,8 +14,8 @@ type smallFileUploader struct {
 	cfg      Config
 	dst      mgcSchemaPkg.URI
 	mimeType string
-	reader   io.Reader
 	fileInfo fs.FileInfo
+	filePath mgcSchemaPkg.FilePath
 }
 
 var _ uploader = (*smallFileUploader)(nil)
@@ -24,8 +25,16 @@ func (u *smallFileUploader) Upload(ctx context.Context) error {
 	progressReporter.Start()
 	defer progressReporter.End()
 
-	wrappedReader := progress_report.NewReporterReader(u.reader, progressReporter.Report)
-	req, err := newUploadRequest(ctx, u.cfg, u.dst, wrappedReader)
+	ctx = progress_report.NewBytesReporterContext(ctx, progressReporter)
+	newReader := func() (io.ReadCloser, error) {
+		reader, err := readContent(u.filePath, u.fileInfo)
+		if err != nil {
+			return nil, fmt.Errorf("error reading file: %w", err)
+		}
+		return reader, nil
+	}
+
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, newReader)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,8 @@ import (
 	"io"
 )
 
+const bytesProgressReporterKey contextKey = "magalu.cli/core/progressreport/bytesreporter"
+
 type bytesProgressReport struct {
 	bytes uint64
 	err   error
@@ -28,6 +30,17 @@ func NewBytesReporter(
 		size:           size,
 		reportProgress: FromContext(ctx),
 	}
+}
+
+func NewBytesReporterContext(
+	ctx context.Context,
+	reporter *BytesReporter,
+) context.Context {
+	return context.WithValue(ctx, bytesProgressReporterKey, reporter)
+}
+
+func BytesReporterFromContext(ctx context.Context) *BytesReporter {
+	return ctx.Value(bytesProgressReporterKey).(*BytesReporter)
 }
 
 func (r *BytesReporter) Start() {

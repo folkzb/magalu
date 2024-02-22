@@ -20,7 +20,7 @@ type uploader interface {
 }
 
 func NewUploader(cfg Config, src mgcSchemaPkg.FilePath, dst mgcSchemaPkg.URI) (uploader, error) {
-	reader, fileInfo, err := readContent(src)
+	fileInfo, err := os.Stat(src.String())
 	if err != nil {
 		return nil, fmt.Errorf("error reading object: %w", err)
 	}
@@ -34,8 +34,8 @@ func NewUploader(cfg Config, src mgcSchemaPkg.FilePath, dst mgcSchemaPkg.URI) (u
 			cfg:      cfg,
 			dst:      dst,
 			mimeType: mimeType,
-			reader:   reader,
 			fileInfo: fileInfo,
+			filePath: src,
 			workerN:  cfg.Workers,
 		}, nil
 	} else {
@@ -43,39 +43,50 @@ func NewUploader(cfg Config, src mgcSchemaPkg.FilePath, dst mgcSchemaPkg.URI) (u
 			cfg:      cfg,
 			dst:      dst,
 			mimeType: mimeType,
-			reader:   reader,
 			fileInfo: fileInfo,
+			filePath: src,
 		}, nil
 	}
 }
 
-func newUploadRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI, reader io.Reader) (*http.Request, error) {
+func newUploadRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI, newReader func() (io.ReadCloser, error)) (*http.Request, error) {
 	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodPut, string(host), reader)
+
+	var body io.ReadCloser
+
+	if newReader != nil {
+		body, err = newReader()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, string(host), body)
+	if err != nil {
+		return nil, err
+	}
+	req.GetBody = newReader
+	return req, nil
 }
 
-func readContent(p mgcSchemaPkg.FilePath) (*os.File, fs.FileInfo, error) {
+func readContent(p mgcSchemaPkg.FilePath, file fs.FileInfo) (*os.File, error) {
 	path := p.String()
-	file, err := os.Stat(path)
-	if err != nil {
-		return nil, nil, core.UsageError{Err: err}
-	}
 
 	switch mode := file.Mode(); {
 	case mode&os.ModeSymlink != 0:
 		resolvedPath, err := os.Readlink(path)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		reader, err := os.Open(resolvedPath)
-		return reader, file, err
+		return reader, err
 	case mode.IsRegular():
 		reader, err := os.Open(path)
-		return reader, file, err
+		return reader, err
 	default:
-		return nil, nil, fmt.Errorf("file type %s not supported", mode.Type())
+		return nil, fmt.Errorf("file type %s not supported", mode.Type())
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 	"sort"
 
@@ -100,7 +101,12 @@ func (u *bigFileCopier) sendCompletionRequest(ctx context.Context, parts []compl
 
 	bigfileUploaderLogger().Debugw("All file parts uploaded, sending completion", "etags", parts)
 
-	req, err := newUploadRequest(ctx, u.cfg, u.dst, bytes.NewReader(parsed))
+	readerFunc := func() (io.ReadCloser, error) {
+		reader := bytes.NewReader(parsed)
+		return io.NopCloser(reader), nil
+	}
+
+	req, err := newUploadRequest(ctx, u.cfg, u.dst, readerFunc)
 	if err != nil {
 		return err
 	}
