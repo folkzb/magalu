@@ -69,87 +69,7 @@ var getLogin = utils.NewLazyLoader[core.Executor](func() core.Executor {
 the current Tenant will always be set to the default one. To see more details
 about a successful login, use the '--show' flag when logging in`,
 		},
-		func(ctx context.Context, parameters loginParameters, _ struct{}) (output *loginResult, err error) {
-			auth := mgcAuthPkg.FromContext(ctx)
-			if auth == nil {
-				return nil, fmt.Errorf("programming error: unable to retrieve authentication configuration")
-			}
-			httpClient := mgcHttpPkg.ClientFromContext(ctx)
-			if httpClient == nil {
-				return nil, fmt.Errorf("programming error: unable to retrieve http client configuration")
-			}
-
-			resultChan, cancel, err := startCallbackServer(ctx, auth)
-			if err != nil {
-				return nil, err
-			}
-			defer cancel()
-
-			// Always force built-in parameters
-			scopes := parameters.Scopes
-			for _, builtIn := range auth.BuiltInScopes() {
-				scopes.Add(builtIn)
-			}
-
-			if parameters.Scopes == nil {
-				// Also add all available scopes by default when logging if no scope is explicitly passed in
-				allScopes, err := mgcAuthScope.ListAllAvailable(ctx)
-				if err != nil {
-					return nil, err
-				}
-
-				for _, scope := range allScopes {
-					scopes.Add(scope)
-				}
-			}
-
-			codeUrl, err := auth.CodeChallengeToURL(scopes)
-			if err != nil {
-				return nil, err
-			}
-
-			loginLogger().Infow("opening browser", "codeUrl", codeUrl)
-			if err := browser.OpenURL(codeUrl.String()); err != nil {
-				loginLogger().Infow("Cant't open browser. Logging in a headless environment")
-				fmt.Println("Could not open browser, please open it manually: ")
-				if parameters.QRcode {
-					qrCode, err := qrcode.New(codeUrl.String(), qrcode.Low)
-					if err != nil {
-						return nil, err
-					}
-					qrCodeString := qrCode.ToSmallString(false)
-					fmt.Println(qrCodeString)
-
-				} else {
-					fmt.Print(codeUrl.String() + "\n\n")
-				}
-				err := headlessLogin(ctx, auth, resultChan)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			loginLogger().Infow("waiting authentication result", "redirectUri", auth.RedirectUri())
-			result := <-resultChan
-			if result.err != nil {
-				return nil, result.err
-			}
-
-			currentTenant, err := auth.CurrentTenant(ctx, &httpClient.Client)
-			if err != nil {
-				return nil, err
-			}
-
-			loginLogger().Infow("sucessfully logged in")
-
-			output = &loginResult{AccessToken: "", SelectedTenant: currentTenant}
-
-			if parameters.Show {
-				output.AccessToken = result.value
-			}
-
-			return output, nil
-		},
+		login,
 	)
 
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
@@ -164,6 +84,88 @@ Run '%s auth tenant list' to list all available Tenants for current login.
 `, appName)
 	})
 })
+
+func login(ctx context.Context, parameters loginParameters, _ struct{}) (*loginResult, error) {
+	auth := mgcAuthPkg.FromContext(ctx)
+	if auth == nil {
+		return nil, fmt.Errorf("programming error: unable to retrieve authentication configuration")
+	}
+	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+	if httpClient == nil {
+		return nil, fmt.Errorf("programming error: unable to retrieve http client configuration")
+	}
+
+	resultChan, cancel, err := startCallbackServer(ctx, auth)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	// Always force built-in parameters
+	scopes := parameters.Scopes
+	for _, builtIn := range auth.BuiltInScopes() {
+		scopes.Add(builtIn)
+	}
+
+	if parameters.Scopes == nil {
+		// Also add all available scopes by default when logging if no scope is explicitly passed in
+		allScopes, err := mgcAuthScope.ListAllAvailable(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, scope := range allScopes {
+			scopes.Add(scope)
+		}
+	}
+
+	codeUrl, err := auth.CodeChallengeToURL(scopes)
+	if err != nil {
+		return nil, err
+	}
+
+	loginLogger().Infow("opening browser", "codeUrl", codeUrl)
+	if err := browser.OpenURL(codeUrl.String()); err != nil {
+		loginLogger().Infow("Cant't open browser. Logging in a headless environment")
+		fmt.Println("Could not open browser, please open it manually: ")
+		if parameters.QRcode {
+			qrCode, err := qrcode.New(codeUrl.String(), qrcode.Low)
+			if err != nil {
+				return nil, err
+			}
+			qrCodeString := qrCode.ToSmallString(false)
+			fmt.Println(qrCodeString)
+
+		} else {
+			fmt.Print(codeUrl.String() + "\n\n")
+		}
+		err := headlessLogin(ctx, auth, resultChan)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	loginLogger().Infow("waiting authentication result", "redirectUri", auth.RedirectUri())
+	result := <-resultChan
+	if result.err != nil {
+		return nil, result.err
+	}
+
+	currentTenant, err := auth.CurrentTenant(ctx, &httpClient.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	loginLogger().Infow("sucessfully logged in")
+
+	output := &loginResult{AccessToken: "", SelectedTenant: currentTenant}
+
+	if parameters.Show {
+		output.AccessToken = result.value
+	}
+
+	return output, nil
+}
 
 func startCallbackServer(ctx context.Context, auth *auth.Auth) (resultChan chan *authResult, cancel func(), err error) {
 	callbackUrl, err := url.Parse(auth.RedirectUri())
