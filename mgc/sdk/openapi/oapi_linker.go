@@ -352,6 +352,9 @@ func (l *openapiLinker) CreateExecutor(originalResult core.Result) (core.Executo
 	if _, ok := core.ExecutorAs[core.ConfirmableExecutor](target); ok {
 		exec = core.NewLinkConfirmableExecutor(exec)
 	}
+	if _, ok := core.ExecutorAs[core.PromptInputExecutor](target); ok {
+		exec = core.NewLinkPromptInputExecutor(exec)
+	}
 
 	return exec, nil
 }

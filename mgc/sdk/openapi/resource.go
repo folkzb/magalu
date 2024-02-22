@@ -17,6 +17,11 @@ type confirmation struct {
 	Message string `json:"message"`
 }
 
+type promptSpec struct {
+	MessageTemplate      string `json:"message,omitempty"`
+	ConfirmValueTemplate string `json:"confirmValue,omitempty"`
+}
+
 // Source -> Module -> Resource -> Operation
 
 // Resource
@@ -112,6 +117,15 @@ func collectResourceChildren(
 			operation = cExec
 		}
 
+		cpExt, ok := getExtensionObject(extensionPrefix, "promptInput", desc.op.Extensions, nil)
+		if ok && cpExt != nil {
+			cpExt, err := wrapInPromptInputExecutor(cpExt, isDelete, operation)
+			if err != nil {
+				return children, err
+			}
+			operation = cpExt
+		}
+
 		if wtExt, ok := getExtensionObject(extensionPrefix, "wait-termination", desc.op.Extensions, nil); ok && wtExt != nil {
 			if tExec, err := wrapInTerminatorExecutor(operation, wtExt); err == nil {
 				operation = tExec
@@ -203,4 +217,16 @@ func wrapInConfirmableExecutor(cExt map[string]any, isDelete bool, exec core.Exe
 	}
 
 	return core.NewConfirmableExecutor(exec, core.ConfirmPromptWithTemplate(c.Message)), nil
+}
+
+func wrapInPromptInputExecutor(cpExt map[string]any, isDelete bool, exec core.Executor) (core.PromptInputExecutor, error) {
+	d := &promptSpec{}
+
+	if cpExt != nil {
+		if err := utils.DecodeValue(cpExt, d); err != nil {
+			return nil, fmt.Errorf("error decoding promptInput extension: %w", err)
+		}
+	}
+
+	return core.NewPromptInputExecutor(exec, core.NewPromptInput(d.MessageTemplate, d.ConfirmValueTemplate)), nil
 }
