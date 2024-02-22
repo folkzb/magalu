@@ -429,6 +429,33 @@ def check_is_path_method_tag_list(v: Any, base: Any) -> None:
     )
 
 
+SUPPORTED_CONFIRMABLE_CUSTOMIZATIONS = {
+    "message": check_is_string,
+}
+
+
+def check_is_confirmable(v: Any, base: Any) -> None:
+    check_is_object(
+        v,
+        base,
+        SUPPORTED_CONFIRMABLE_CUSTOMIZATIONS,
+    )
+
+
+SUPPORTED_PROMPT_INPUT_CUSTOMIZATIONS = {
+    "message": check_is_string,
+    "confirmValue": check_is_string,
+}
+
+
+def check_is_promptInput(v: Any, base: Any) -> None:
+    check_is_object(
+        v,
+        base,
+        SUPPORTED_PROMPT_INPUT_CUSTOMIZATIONS,
+    )
+
+
 SUPPORTED_PATH_METHOD_CUSTOMIZATIONS = {
     "x-mgc-name": check_is_string,
     "x-mgc-description": check_is_string,
@@ -436,6 +463,8 @@ SUPPORTED_PATH_METHOD_CUSTOMIZATIONS = {
     "x-mgc-output-flag": check_is_string,
     "x-mgc-transforms": check_is_transforms,
     "x-mgc-wait-termination": check_is_wait_termination,
+    "x-mgc-confirmable": check_is_confirmable,
+    "x-mgc-confirmPrompt": check_is_promptInput,
     "parameters": check_is_path_parameters,
     "responses": check_is_responses,
     "security": check_is_security_list,
