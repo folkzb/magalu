@@ -39,6 +39,7 @@ children:
 
       - name: security-group-attachment
         description: Manage the attachment between a Security Group and a Port
+        isInternal: true
         children:
           - name: create
             description: Attach a Security Group to a Port
@@ -136,6 +137,7 @@ children:
         isInternal: false
       - name: port-attachment
         description: Manage the attachment between a Public IP and a Port
+        isInternal: true
         children:
           - name: create
             description: Attach a Public IP to a Port

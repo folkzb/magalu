@@ -1505,7 +1505,7 @@
      }
     ],
     "description": "Block Storage Volume Attachment",
-    "isInternal": false,
+    "isInternal": true,
     "name": "volume-attachment",
     "version": ""
    },
@@ -14476,7 +14476,7 @@
        }
       ],
       "description": "Manage the attachment between a Security Group and a Port",
-      "isInternal": false,
+      "isInternal": true,
       "name": "security-group-attachment",
       "version": ""
      }
@@ -15236,7 +15236,7 @@
        }
       ],
       "description": "Manage the attachment between a Public IP and a Port",
-      "isInternal": false,
+      "isInternal": true,
       "name": "port-attachment",
       "version": ""
      }
