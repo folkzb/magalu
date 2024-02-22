@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -27,11 +28,17 @@ func (c selectorChoice) String() string {
 	switch v := c.value.(type) {
 	case map[string]any:
 		s := ""
-		for key, value := range v {
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+
+		for _, key := range keys {
 			if s != "" {
 				s += ", "
 			}
-			s += fmt.Sprintf("%s=%#v", key, value)
+			s += fmt.Sprintf("%s=%#v", key, v[key])
 		}
 		return s
 	default:
