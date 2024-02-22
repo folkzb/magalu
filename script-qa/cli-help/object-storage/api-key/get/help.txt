@@ -1,7 +1,7 @@
 Get the current Object Storage credentials
 
 Usage:
-  ./cli auth object-storage get [flags]
+  ./cli object-storage api-key get [flags]
 
 Flags:
   -h, --help   help for get

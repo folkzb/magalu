@@ -98,86 +98,6 @@
       "configs": {
        "type": "object"
       },
-      "description": "Get the current Object Storage credentials",
-      "isInternal": false,
-      "name": "get",
-      "parameters": {
-       "type": "object"
-      },
-      "result": {
-       "properties": {
-        "access_key_id": {
-         "description": "Access key id value",
-         "type": "string"
-        },
-        "secret_access_key": {
-         "description": "Secret access key value",
-         "type": "string"
-        }
-       },
-       "required": [
-        "access_key_id",
-        "secret_access_key"
-       ],
-       "type": "object"
-      },
-      "version": ""
-     },
-     {
-      "configs": {
-       "type": "object"
-      },
-      "description": "Set the credentials values used for Object Storage requests",
-      "isInternal": false,
-      "name": "set",
-      "parameters": {
-       "properties": {
-        "access_key_id": {
-         "description": "Access key id value",
-         "type": "string"
-        },
-        "secret_access_key": {
-         "description": "Secret access key value",
-         "type": "string"
-        }
-       },
-       "required": [
-        "access_key_id",
-        "secret_access_key"
-       ],
-       "type": "object"
-      },
-      "result": {
-       "properties": {
-        "access_key_id": {
-         "description": "Access key id value",
-         "type": "string"
-        },
-        "secret_access_key": {
-         "description": "Secret access key value",
-         "type": "string"
-        }
-       },
-       "required": [
-        "access_key_id",
-        "secret_access_key"
-       ],
-       "type": "object"
-      },
-      "version": ""
-     }
-    ],
-    "description": "Object Storage uses a different set of credentials when compared\nto normal HTTP requests. Two keys are needed, the 'SecretKey' and\n'AccessKeyId'. Instructions on how to create these can be found\nhere: https://id.magalu.com/api-keys",
-    "isInternal": false,
-    "name": "object-storage",
-    "version": ""
-   },
-   {
-    "children": [
-     {
-      "configs": {
-       "type": "object"
-      },
       "description": "Add new scopes to the current access token. Run 'auth scopes list-all'\nto see all available scopes to be added",
       "isInternal": false,
       "name": "add",
@@ -19247,6 +19167,230 @@
  },
  {
   "children": [
+   {
+    "children": [
+     {
+      "configs": {
+       "type": "object"
+      },
+      "description": "Create new credentials used for Object Storage requests",
+      "isInternal": false,
+      "name": "create",
+      "parameters": {
+       "properties": {
+        "description": {
+         "description": "Description of new api key",
+         "type": "string"
+        },
+        "expiration": {
+         "description": "Date to expire new api",
+         "example": "2024-11-07 (YYYY-MM-DD)",
+         "type": "string"
+        },
+        "name": {
+         "description": "Name of new api key",
+         "type": "string"
+        }
+       },
+       "required": [
+        "name"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "uuid": {
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "type": "object"
+      },
+      "description": "Get the current Object Storage credentials",
+      "isInternal": false,
+      "name": "get",
+      "parameters": {
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "access_key_id": {
+         "description": "Access key id value",
+         "type": "string"
+        },
+        "secret_access_key": {
+         "description": "Secret access key value",
+         "type": "string"
+        }
+       },
+       "required": [
+        "access_key_id",
+        "secret_access_key"
+       ],
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "type": "object"
+      },
+      "description": "List valid Object Storage credentials",
+      "isInternal": false,
+      "name": "list",
+      "parameters": {
+       "type": "object"
+      },
+      "result": {
+       "items": {
+        "properties": {
+         "description": {
+          "type": "string"
+         },
+         "end_validity": {
+          "type": "string"
+         },
+         "key_pair_id": {
+          "type": "string"
+         },
+         "key_pair_secret": {
+          "type": "string"
+         },
+         "name": {
+          "type": "string"
+         },
+         "revoked_at": {
+          "type": "string"
+         },
+         "start_validity": {
+          "type": "string"
+         },
+         "tenant_name": {
+          "type": "string"
+         },
+         "uuid": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "uuid",
+         "name",
+         "description",
+         "key_pair_id",
+         "key_pair_secret",
+         "start_validity"
+        ],
+        "type": "object"
+       },
+       "type": "array"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "type": "object"
+      },
+      "description": "Revoke credentials used in Object Storage requests",
+      "isInternal": false,
+      "name": "revoke",
+      "parameters": {
+       "properties": {
+        "uuid": {
+         "description": "UUID of api key to revoke",
+         "type": "string"
+        }
+       },
+       "required": [
+        "uuid"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "uuid": {
+         "description": "UUID of api key to revoke",
+         "type": "string"
+        }
+       },
+       "required": [
+        "uuid"
+       ],
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "type": "object"
+      },
+      "description": "Change current Object Storage credential to selected",
+      "isInternal": false,
+      "name": "set",
+      "parameters": {
+       "properties": {
+        "uuid": {
+         "description": "UUID of api key to select",
+         "type": "string"
+        }
+       },
+       "required": [
+        "uuid"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "description": {
+         "type": "string"
+        },
+        "end_validity": {
+         "type": "string"
+        },
+        "key_pair_id": {
+         "type": "string"
+        },
+        "key_pair_secret": {
+         "type": "string"
+        },
+        "name": {
+         "type": "string"
+        },
+        "revoked_at": {
+         "type": "string"
+        },
+        "start_validity": {
+         "type": "string"
+        },
+        "tenant_name": {
+         "type": "string"
+        },
+        "uuid": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "uuid",
+        "name",
+        "description",
+        "key_pair_id",
+        "key_pair_secret",
+        "start_validity"
+       ],
+       "type": "object"
+      },
+      "version": ""
+     }
+    ],
+    "description": "",
+    "isInternal": false,
+    "name": "api-key",
+    "version": ""
+   },
    {
     "children": [
      {

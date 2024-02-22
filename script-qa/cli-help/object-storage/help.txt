@@ -5,6 +5,7 @@ Usage:
   ./cli object-storage [command]
 
 Commands:
+  api-key     Manage credentials to use Object Storage
   buckets     Bucket operations for Object Storage API
   objects     Object operations for Object Storage API
 
