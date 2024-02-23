@@ -7,7 +7,6 @@ import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
 	mgcAuthPkg "magalu.cloud/core/auth"
-	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/utils"
 )
 
@@ -24,12 +23,7 @@ var getCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 				return nil, fmt.Errorf("programming error: unable to get auth from context")
 			}
 
-			httpClient := mgcHttpPkg.ClientFromContext(ctx)
-			if auth == nil {
-				return nil, fmt.Errorf("programming error: unable to get http client from context")
-			}
-
-			return auth.CurrentTenant(ctx, &httpClient.Client)
+			return auth.CurrentTenant(ctx)
 		},
 	)
 })

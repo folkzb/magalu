@@ -12,6 +12,7 @@ import (
 
 	"magalu.cloud/core"
 	"magalu.cloud/core/config"
+	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/profile_manager"
 	"magalu.cloud/core/utils"
 	"magalu.cloud/testing/fs_test_helper"
@@ -188,7 +189,9 @@ func selectTenant(name string, transport mockTransport, expectedResult *TokenExc
 		providedFs: provided,
 		expectedFs: expected,
 		run: func(auth *Auth) error {
-			tnt, err := auth.SelectTenant(context.Background(), `qwe123`, "")
+			ctx := context.Background()
+			ctx = mgcHttpPkg.NewClientContext(ctx, &mgcHttpPkg.Client{Client: http.Client{Transport: transport}})
+			tnt, err := auth.SelectTenant(ctx, `qwe123`, "")
 			hasErr := err != nil
 
 			if hasErr != expectedErr {
@@ -211,7 +214,9 @@ func listTenants(name string, transport mockTransport, expectedTenants []*Tenant
 		providedFs: provided,
 		expectedFs: expected,
 		run: func(auth *Auth) error {
-			tLst, err := auth.ListTenants(context.Background(), &http.Client{Transport: transport})
+			ctx := context.Background()
+			ctx = mgcHttpPkg.NewClientContext(ctx, &mgcHttpPkg.Client{Client: http.Client{Transport: transport}})
+			tLst, err := auth.ListTenants(ctx)
 			hasErr := err != nil
 
 			if hasErr != expectedErr {

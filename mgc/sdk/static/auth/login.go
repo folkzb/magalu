@@ -20,7 +20,6 @@ import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
 	mgcAuthPkg "magalu.cloud/core/auth"
-	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/utils"
 	mgcAuthScope "magalu.cloud/sdk/static/auth/scopes"
 )
@@ -92,10 +91,6 @@ func login(ctx context.Context, parameters loginParameters, _ struct{}) (*loginR
 	if auth == nil {
 		return nil, fmt.Errorf("programming error: unable to retrieve authentication configuration")
 	}
-	httpClient := mgcHttpPkg.ClientFromContext(ctx)
-	if httpClient == nil {
-		return nil, fmt.Errorf("programming error: unable to retrieve http client configuration")
-	}
 
 	resultChan, cancel, err := startCallbackServer(ctx, auth)
 	if err != nil {
@@ -153,7 +148,7 @@ func login(ctx context.Context, parameters loginParameters, _ struct{}) (*loginR
 		return nil, result.err
 	}
 
-	currentTenant, err := auth.CurrentTenant(ctx, &httpClient.Client)
+	currentTenant, err := auth.CurrentTenant(ctx)
 	if err != nil {
 		return nil, err
 	}

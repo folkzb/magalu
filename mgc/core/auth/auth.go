@@ -65,6 +65,10 @@ type Config struct {
 }
 
 type Auth struct {
+	// This Client should not have Access Token auto-refresh in transports, as it will
+	// be used in the request to auto-refresh the token. For requests that need the
+	// auto-refresh functionality, like Tenant operations, for example, mgcHttpPkg.ClientFromContext
+	// should be used instead
 	httpClient      *http.Client
 	profileManager  *profile_manager.ProfileManager
 	configMap       map[string]Config
@@ -222,13 +226,13 @@ func (o *Auth) CurrentTenantID() (string, error) {
 	return tenantId, nil
 }
 
-func (o *Auth) CurrentTenant(ctx context.Context, httpClient *http.Client) (*Tenant, error) {
+func (o *Auth) CurrentTenant(ctx context.Context) (*Tenant, error) {
 	currentTenantId, err := o.CurrentTenantID()
 	if err != nil {
 		return nil, err
 	}
 
-	tenants, err := o.ListTenants(ctx, httpClient)
+	tenants, err := o.ListTenants(ctx)
 	if err != nil || len(tenants) == 0 {
 		logger().Warnw("Failed to get detailed info about Tenant, returning only ID", "err", err)
 		return &Tenant{UUID: currentTenantId}, nil
@@ -509,7 +513,12 @@ func (o *Auth) writeConfigFile(result *ConfigResult) error {
 	return o.profileManager.Current().Write(authFilename, yamlData)
 }
 
-func (o *Auth) ListTenants(ctx context.Context, httpClient *http.Client) ([]*Tenant, error) {
+func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
+	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+	if httpClient == nil {
+		return nil, fmt.Errorf("programming error: unable to get HTTP Client from context")
+	}
+
 	at, err := o.AccessToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
@@ -545,10 +554,10 @@ func (o *Auth) SelectTenant(ctx context.Context, id string, scopes core.ScopesSt
 		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
 	}
 
-	return o.runTokenExchange(ctx, at, id, scopes, o.httpClient)
+	return o.runTokenExchange(ctx, at, id, scopes)
 }
 
-func (o *Auth) SetScopes(ctx context.Context, scopes core.Scopes, client *http.Client) (*TokenExchangeResult, error) {
+func (o *Auth) SetScopes(ctx context.Context, scopes core.Scopes) (*TokenExchangeResult, error) {
 	at, err := o.AccessToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
@@ -558,10 +567,15 @@ func (o *Auth) SetScopes(ctx context.Context, scopes core.Scopes, client *http.C
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current tenant ID: %w", err)
 	}
-	return o.runTokenExchange(ctx, at, currentTenantId, scopes.AsScopesString(), client)
+	return o.runTokenExchange(ctx, at, currentTenantId, scopes.AsScopesString())
 }
 
-func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes core.ScopesString, client *http.Client) (*TokenExchangeResult, error) {
+func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes core.ScopesString) (*TokenExchangeResult, error) {
+	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+	if httpClient == nil {
+		return nil, fmt.Errorf("programming error: unable to get HTTP Client from context")
+	}
+
 	data := map[string]any{
 		"tenant": tenantId,
 		"scopes": scopes,
@@ -580,7 +594,7 @@ func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId 
 		return nil, err
 	}
 
-	resp, err := client.Do(r)
+	resp, err := httpClient.Do(r)
 	if err != nil {
 		return nil, err
 	}

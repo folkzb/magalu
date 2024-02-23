@@ -6,7 +6,6 @@ import (
 
 	"magalu.cloud/core"
 	mgcAuthPkg "magalu.cloud/core/auth"
-	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/utils"
 )
 
@@ -25,9 +24,5 @@ func listTenants(ctx context.Context) ([]*mgcAuthPkg.Tenant, error) {
 	if auth == nil {
 		return nil, fmt.Errorf("programming error: unable to get auth from context")
 	}
-	httpClient := mgcHttpPkg.ClientFromContext(ctx)
-	if httpClient == nil {
-		return nil, fmt.Errorf("programming error: unable to get http client from context")
-	}
-	return auth.ListTenants(ctx, &httpClient.Client)
+	return auth.ListTenants(ctx)
 }

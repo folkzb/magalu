@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/auth"
-	mgcHttpPkg "magalu.cloud/core/http"
 	"magalu.cloud/core/utils"
 )
 
@@ -38,11 +37,6 @@ func remove(ctx context.Context, params removeParameters, _ struct{}) (core.Scop
 		return nil, fmt.Errorf("programming error: context did not contain SDK Auth information")
 	}
 
-	httpClient := mgcHttpPkg.ClientFromContext(ctx)
-	if httpClient == nil {
-		return nil, fmt.Errorf("programming error: context did not contain http client")
-	}
-
 	builtInScopes := a.BuiltInScopes()
 	for _, scopeToRemove := range params.Scopes {
 		if slices.Contains(builtInScopes, scopeToRemove) {
@@ -63,7 +57,7 @@ func remove(ctx context.Context, params removeParameters, _ struct{}) (core.Scop
 	currentScopes.Remove(params.Scopes...)
 
 	removeLogger().Debugw("will call token exchange with new scopes", "scopes", currentScopes)
-	_, err = a.SetScopes(ctx, currentScopes, &httpClient.Client)
+	_, err = a.SetScopes(ctx, currentScopes)
 	if err != nil {
 		addLogger().Warnw("token exchange failed", "scopes", currentScopes, "err", err)
 		return nil, err
