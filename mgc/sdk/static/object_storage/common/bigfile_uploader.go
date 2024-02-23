@@ -134,7 +134,7 @@ func (u *bigFileUploader) sendCompletionRequest(ctx context.Context, parts []com
 		return err
 	}
 
-	bigfileUploaderLogger().Debugw("All file parts uploaded, sending completion", "etags", parts)
+	bigfileUploaderLogger().Infow("All file parts uploaded, sending completion", "etags", parts)
 
 	newReader := func() (io.ReadCloser, error) {
 		reader := bytes.NewReader(parsed)
