@@ -25,10 +25,9 @@ var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func list(ctx context.Context) ([]*apiKeysResult, error) {
-
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
-		return nil, fmt.Errorf("could not get Auth from context")
+		return nil, fmt.Errorf("programming error: could not get auth configuration from context")
 	}
 
 	r, err := http.NewRequestWithContext(ctx, http.MethodGet, auth.GetConfig().ApiKeysUrlV1, nil)

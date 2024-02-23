@@ -38,7 +38,7 @@ var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
 func create(ctx context.Context, parameter createParams, _ struct{}) (*apiKeyResult, error) {
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
-		return nil, fmt.Errorf("unable to retrieve authentication configuration")
+		return nil, fmt.Errorf("programming error: unable to retrieve auth configuration from context")
 	}
 
 	httpClient := mgcHttpPkg.ClientFromContext(ctx)

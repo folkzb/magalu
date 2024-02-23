@@ -39,15 +39,14 @@ var getRevoke = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func revoke(ctx context.Context, parameter revokeParams, _ struct{}) (*revokeParams, error) {
-
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
-		return nil, fmt.Errorf("unable to retrieve authentication configuration")
+		return nil, fmt.Errorf("programming error: unable to auth from context")
 	}
 
 	httpClient := mgcHttpPkg.ClientFromContext(ctx)
 	if httpClient == nil {
-		return nil, fmt.Errorf("couldn't get http client from context")
+		return nil, fmt.Errorf("programming error: unable to get HTTP Client from context")
 	}
 
 	url := fmt.Sprintf("%s/%s/revoke", auth.GetConfig().ApiKeysUrlV1, parameter.UUID)
