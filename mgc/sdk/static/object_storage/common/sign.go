@@ -32,30 +32,6 @@ func setContentHeader(req *http.Request, unsigned bool) (payloadHash string, err
 	return payloadHash, nil
 }
 
-// CopySeekableBody copies the seekable body to an io.Writer
-// Copied from https://github.com/aws/aws-sdk-go/blob/main/aws/types.go#L244
-func CopySeekableBody(dst io.Writer, src io.ReadSeeker) (int64, error) {
-	curPos, err := src.Seek(0, io.SeekCurrent)
-	if err != nil {
-		return 0, err
-	}
-
-	// copy errors may be assumed to be from the body.
-	n, err := io.Copy(dst, src)
-	if err != nil {
-		return n, err
-	}
-
-	// seek back to the first position after reading to reset
-	// the body for transmission.
-	_, err = src.Seek(curPos, io.SeekStart)
-	if err != nil {
-		return n, err
-	}
-
-	return n, nil
-}
-
 /*
 Computes the hash of the payload from the current request. We need to clone the
 request in order to safely read the body stream. If body is empty (i.e., GET requests),
