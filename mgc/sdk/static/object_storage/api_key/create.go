@@ -41,7 +41,11 @@ func create(ctx context.Context, parameter createParams, _ struct{}) (*apiKeyRes
 		return nil, fmt.Errorf("programming error: unable to retrieve auth configuration from context")
 	}
 
-	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+	httpClient := auth.AuthenticatedHttpClientFromContext(ctx)
+	if httpClient == nil {
+		return nil, fmt.Errorf("programming error: unable to retrieve HTTP Client from context")
+	}
+
 	config := auth.GetConfig()
 
 	currentTenantID, err := auth.CurrentTenantID()
@@ -87,12 +91,6 @@ func create(ctx context.Context, parameter createParams, _ struct{}) (*apiKeyRes
 		return nil, err
 	}
 
-	token, err := auth.AccessToken(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	r.Header.Set("Authorization", "Bearer "+token)
 	r.Header.Set("Content-Type", "application/json")
 
 	resp, err := httpClient.Do(r)

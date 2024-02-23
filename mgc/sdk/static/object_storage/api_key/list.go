@@ -34,15 +34,14 @@ func list(ctx context.Context) ([]*apiKeysResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	token, err := auth.AccessToken(ctx)
-	if err != nil {
-		return nil, err
-	}
 
-	r.Header.Set("Authorization", "Bearer "+token)
 	r.Header.Set("Content-Type", "application/json")
 
-	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+	httpClient := auth.AuthenticatedHttpClientFromContext(ctx)
+	if httpClient == nil {
+		return nil, fmt.Errorf("programming error: could not get HTTP Client from context")
+	}
+
 	resp, err := httpClient.Do(r)
 	if err != nil {
 		return nil, err

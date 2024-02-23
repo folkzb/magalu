@@ -514,21 +514,15 @@ func (o *Auth) writeConfigFile(result *ConfigResult) error {
 }
 
 func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
-	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+	httpClient := o.AuthenticatedHttpClientFromContext(ctx)
 	if httpClient == nil {
 		return nil, fmt.Errorf("programming error: unable to get HTTP Client from context")
-	}
-
-	at, err := o.AccessToken(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get current access token. Did you forget to log in?")
 	}
 
 	r, err := http.NewRequestWithContext(ctx, http.MethodGet, o.GetConfig().TenantsListUrl, nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("Authorization", "Bearer "+at)
 	r.Header.Set("Content-Type", "application/json")
 
 	resp, err := httpClient.Do(r)
@@ -549,29 +543,19 @@ func (o *Auth) ListTenants(ctx context.Context) ([]*Tenant, error) {
 }
 
 func (o *Auth) SelectTenant(ctx context.Context, id string, scopes core.ScopesString) (*TokenExchangeResult, error) {
-	at, err := o.AccessToken(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
-	}
-
-	return o.runTokenExchange(ctx, at, id, scopes)
+	return o.runTokenExchange(ctx, id, scopes)
 }
 
 func (o *Auth) SetScopes(ctx context.Context, scopes core.Scopes) (*TokenExchangeResult, error) {
-	at, err := o.AccessToken(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get current access token: %w. Did you forget to log in?", err)
-	}
-
 	currentTenantId, err := o.CurrentTenantID()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get current tenant ID: %w", err)
 	}
-	return o.runTokenExchange(ctx, at, currentTenantId, scopes.AsScopesString())
+	return o.runTokenExchange(ctx, currentTenantId, scopes.AsScopesString())
 }
 
-func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId string, scopes core.ScopesString) (*TokenExchangeResult, error) {
-	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+func (o *Auth) runTokenExchange(ctx context.Context, tenantId string, scopes core.ScopesString) (*TokenExchangeResult, error) {
+	httpClient := o.AuthenticatedHttpClientFromContext(ctx)
 	if httpClient == nil {
 		return nil, fmt.Errorf("programming error: unable to get HTTP Client from context")
 	}
@@ -587,7 +571,6 @@ func (o *Auth) runTokenExchange(ctx context.Context, currentAt string, tenantId 
 
 	bodyReader := bytes.NewReader(jsonData)
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, o.TokenExchangeUrl(), bodyReader)
-	r.Header.Set("Authorization", "Bearer "+currentAt)
 	r.Header.Set("Content-Type", "application/json")
 
 	if err != nil {

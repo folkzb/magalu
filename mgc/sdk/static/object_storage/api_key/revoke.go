@@ -44,7 +44,7 @@ func revoke(ctx context.Context, parameter revokeParams, _ struct{}) (*revokePar
 		return nil, fmt.Errorf("programming error: unable to auth from context")
 	}
 
-	httpClient := mgcHttpPkg.ClientFromContext(ctx)
+	httpClient := auth.AuthenticatedHttpClientFromContext(ctx)
 	if httpClient == nil {
 		return nil, fmt.Errorf("programming error: unable to get HTTP Client from context")
 	}
@@ -54,12 +54,7 @@ func revoke(ctx context.Context, parameter revokeParams, _ struct{}) (*revokePar
 	if err != nil {
 		return nil, err
 	}
-	token, err := auth.AccessToken(ctx)
-	if err != nil {
-		return nil, err
-	}
 
-	r.Header.Set("Authorization", "Bearer "+token)
 	r.Header.Set("Content-Type", "application/json")
 
 	resp, err := httpClient.Do(r)
