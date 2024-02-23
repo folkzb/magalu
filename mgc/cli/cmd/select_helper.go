@@ -48,9 +48,9 @@ func getSelectLabel(value any) string {
 
 		for _, key := range keys {
 			if s != "" {
-				s += ", "
+				s += " | "
 			}
-			s += fmt.Sprintf("%s=%#v", key, v[key])
+			s += fmt.Sprintf("%s: %#v", strings.ReplaceAll(key, "_", " "), v[key])
 		}
 		return s
 	default:
