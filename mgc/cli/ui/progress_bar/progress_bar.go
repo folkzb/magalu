@@ -76,6 +76,11 @@ func (pb *ProgressBar) ReportProgress(msg string, done, total uint64, units prog
 			castTracker.MarkAsDone()
 			return
 		}
+		// Accept error reports even after report is done
+		if castTracker.IsDone() {
+			castTracker.Reset()
+			castTracker.Start()
+		}
 		castTracker.MarkAsErrored()
 		castTracker.UpdateMessage(fmt.Sprintf("%s [%s]", msg, reportErr.Error()))
 	}
