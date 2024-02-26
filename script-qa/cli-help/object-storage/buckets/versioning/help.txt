@@ -7,6 +7,7 @@ Usage:
 Commands:
   enable      Enable versioning for a Bucket
   get         Get versioning info for a Bucket
+  suspend     Suspend versioning for a Bucket
 
 Flags:
   -h, --help   help for versioning
