@@ -213,7 +213,16 @@ func (u *bigFileUploader) Upload(ctx context.Context) error {
 	ctx = progress_report.NewBytesReporterContext(ctx, progressReporter)
 
 	ctx, cancel := context.WithCancelCause(ctx)
-	defer cancel(nil)
+
+	var err error
+	defer func() {
+		if err == nil {
+			err = ctx.Err()
+		}
+
+		progressReporter.Report(0, err)
+		cancel(err)
+	}()
 
 	uploadId, err := u.getUploadId(ctx)
 	if err != nil {
