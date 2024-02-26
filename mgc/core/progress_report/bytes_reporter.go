@@ -40,7 +40,10 @@ func NewBytesReporterContext(
 }
 
 func BytesReporterFromContext(ctx context.Context) *BytesReporter {
-	return ctx.Value(bytesProgressReporterKey).(*BytesReporter)
+	if reporter, ok := ctx.Value(bytesProgressReporterKey).(*BytesReporter); ok {
+		return reporter
+	}
+	return nil
 }
 
 func (r *BytesReporter) Start() {
