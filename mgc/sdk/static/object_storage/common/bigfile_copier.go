@@ -140,7 +140,7 @@ func (u *bigFileCopier) sendCompletionRequest(ctx context.Context, parts []compl
 func (u *bigFileCopier) createPartSenderProcessor(cancel context.CancelCauseFunc, uploadId string) pipeline.Processor[pipeline.WriteableChunk, completionPart] {
 	return func(ctx context.Context, chunk pipeline.WriteableChunk) (part completionPart, status pipeline.ProcessStatus) {
 		var err error
-		defer u.progressReporter.Report(0, err)
+		defer func() { u.progressReporter.Report(0, err) }()
 
 		partNumber := int(chunk.StartOffset/int64(u.cfg.chunkSizeInBytes())) + 1
 		req, err := u.createMultipartRequest(ctx, partNumber, chunk.StartOffset, chunk.EndOffset)

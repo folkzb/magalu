@@ -54,7 +54,7 @@ func createObjectDownloadProcessor(
 		rootURI := bucketName.AsURI()
 		var err error
 
-		defer progressReporter.Report(1, 0, err)
+		defer func() { progressReporter.Report(1, 0, err) }()
 
 		objURI := rootURI.JoinPath(dirEntry.Path())
 

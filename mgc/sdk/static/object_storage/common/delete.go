@@ -110,7 +110,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName BucketName, progressRe
 			objIdentifiers = append(objIdentifiers, objectIdentifier{Key: obj.Key})
 		}
 
-		defer progressReporter.Report(uint64(len(dirEntries)), 0, err)
+		defer func() { progressReporter.Report(uint64(len(dirEntries)), 0, err) }()
 
 		req, err := newDeleteBatchRequest(ctx, cfg, bucketName, objIdentifiers)
 		if err != nil {

@@ -44,7 +44,7 @@ var getUploadDir = utils.NewLazyLoader[core.Executor](func() core.Executor {
 func createObjectUploadProcessor(cfg common.Config, destination mgcSchemaPkg.URI, progressReporter *progress_report.UnitsReporter) pipeline.Processor[pipeline.WalkDirEntry, error] {
 	return func(ctx context.Context, dirEntry pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
 		var err error
-		defer progressReporter.Report(1, 0, err)
+		defer func() { progressReporter.Report(1, 0, err) }()
 
 		if err = dirEntry.Err(); err != nil {
 			err = &common.ObjectError{Err: err}

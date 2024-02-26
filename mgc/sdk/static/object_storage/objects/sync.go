@@ -63,7 +63,7 @@ func createObjectSyncProcessor(
 		}
 
 		var err error
-		defer progressReporter.Report(1, 0, err)
+		defer func() { progressReporter.Report(1, 0, err) }()
 
 		absEntry, err := filepath.Abs(dirEntry.Path())
 		if err != nil {
