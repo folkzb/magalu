@@ -19708,6 +19708,82 @@
        "type": "object"
       },
       "version": ""
+     },
+     {
+      "children": [
+       {
+        "configs": {
+         "properties": {
+          "chunkSize": {
+           "default": 5,
+           "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+           "maximum": 5120,
+           "minimum": 5,
+           "type": "integer"
+          },
+          "region": {
+           "default": "br-ne1",
+           "description": "Region to reach the service",
+           "enum": [
+            "br-ne1",
+            "br-se1",
+            "br-mgl1"
+           ],
+           "type": "string"
+          },
+          "serverUrl": {
+           "description": "Manually specify the server to use",
+           "format": "uri",
+           "type": "string"
+          },
+          "workers": {
+           "default": 5,
+           "description": "Number of routines that spawn to do parallel operations within object_storage",
+           "minimum": 1,
+           "type": "integer"
+          }
+         },
+         "type": "object"
+        },
+        "description": "Get versioning info for a Bucket",
+        "isInternal": false,
+        "name": "get",
+        "parameters": {
+         "properties": {
+          "bucket": {
+           "description": "Bucket name to get versioning info from",
+           "maxLength": 63,
+           "minLength": 3,
+           "type": "string"
+          }
+         },
+         "required": [
+          "bucket"
+         ],
+         "type": "object"
+        },
+        "result": {
+         "properties": {
+          "MfaDelete": {
+           "type": "string"
+          },
+          "Status": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "Status",
+          "MfaDelete"
+         ],
+         "type": "object"
+        },
+        "version": ""
+       }
+      ],
+      "description": "Manage bucket versioning",
+      "isInternal": false,
+      "name": "versioning",
+      "version": ""
      }
     ],
     "description": "Bucket operations for Object Storage API",

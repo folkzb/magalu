@@ -9,6 +9,7 @@ Commands:
   delete      Delete an existing Bucket
   list        List all existing Buckets
   public-url  Get bucket public url
+  versioning  Manage bucket versioning
 
 Flags:
   -h, --help   help for buckets
