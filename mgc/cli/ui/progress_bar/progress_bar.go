@@ -69,7 +69,7 @@ func (pb *ProgressBar) ReportProgress(msg string, done, total uint64, units prog
 		pb.Writer.AppendTracker(castTracker)
 	}
 
-	castTracker.Total = int64(total)
+	castTracker.UpdateTotal(int64(total))
 	castTracker.SetValue(int64(done))
 	if reportErr != nil && !errors.Is(reportErr, io.EOF) {
 		if errors.Is(reportErr, progress_report.ErrorProgressDone) {
