@@ -13,7 +13,8 @@ var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 		},
 		func() []core.Descriptor {
 			return []core.Descriptor{
-				getGet(), // object-storage buckets versioning get
+				getGet(),    // object-storage buckets versioning get
+				getEnable(), // object-storage buckets versioning enable
 			}
 		},
 	)

@@ -5,6 +5,7 @@ Usage:
   ./cli object-storage buckets versioning [command]
 
 Commands:
+  enable      Enable versioning for a Bucket
   get         Get versioning info for a Bucket
 
 Flags:
