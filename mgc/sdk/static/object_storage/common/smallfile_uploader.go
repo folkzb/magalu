@@ -34,6 +34,11 @@ func (u *smallFileUploader) Upload(ctx context.Context) error {
 		return reader, nil
 	}
 
+	var err error
+	// TODO: This will only work sometimes... sometimes the error won't be nil but it won't
+	// be updated in the progress bar
+	defer func() { progressReporter.Report(0, err) }()
+
 	req, err := newUploadRequest(ctx, u.cfg, u.dst, newReader)
 	if err != nil {
 		return err
@@ -46,5 +51,6 @@ func (u *smallFileUploader) Upload(ctx context.Context) error {
 		return err
 	}
 
-	return ExtractErr(resp, req)
+	err = ExtractErr(resp, req)
+	return err
 }
