@@ -4,15 +4,22 @@ import (
 	"context"
 	"net/http"
 
+	"go.uber.org/zap"
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
+	"magalu.cloud/sdk/static/object_storage/buckets/versioning"
 	"magalu.cloud/sdk/static/object_storage/common"
 )
 
+var createLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
+	return logger().Named("create")
+})
+
 type createParams struct {
-	Name     common.BucketName `json:"name" jsonschema:"description=Name of the bucket to be created" mgc:"positional"`
-	ACL      string            `json:"acl,omitempty" jsonschema:"description=ACL Rules for the bucket"`
-	Location string            `json:"location,omitempty" jsonschema:"description=Location constraint for the bucket,default=br-ne-1"`
+	Name             common.BucketName `json:"name" jsonschema:"description=Name of the bucket to be created" mgc:"positional"`
+	ACL              string            `json:"acl,omitempty" jsonschema:"description=ACL Rules for the bucket"`
+	Location         string            `json:"location,omitempty" jsonschema:"description=Location constraint for the bucket,default=br-ne-1"`
+	EnableVersioning bool              `json:"enable_versioning,omitempty" jsonschema:"description=Enable versioning for this bucket,default=true"`
 }
 
 var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
@@ -59,6 +66,11 @@ func newCreateRequest(ctx context.Context, cfg common.Config, bucket common.Buck
 }
 
 func create(ctx context.Context, params createParams, cfg common.Config) (core.Value, error) {
+	logger := createLogger().With(
+		"bucket", params.Name,
+		"location", params.Location,
+	)
+
 	req, err := newCreateRequest(ctx, cfg, params.Name)
 	if err != nil {
 		return nil, err
@@ -72,6 +84,16 @@ func create(ctx context.Context, params createParams, cfg common.Config) (core.V
 	err = common.ExtractErr(resp, req)
 	if err != nil {
 		return nil, err
+	}
+
+	logger.Info("bucket created successfully")
+
+	if !params.EnableVersioning {
+		logger.Info("suspending bucket versioning, as 'enable_versioning' was passed as false")
+		_, err := versioning.SuspendBucketVersioning(ctx, versioning.SuspendBucketVersioningParams{Bucket: params.Name}, cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return params, nil

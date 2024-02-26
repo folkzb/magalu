@@ -19430,6 +19430,11 @@
          "description": "ACL Rules for the bucket",
          "type": "string"
         },
+        "enable_versioning": {
+         "default": true,
+         "description": "Enable versioning for this bucket",
+         "type": "boolean"
+        },
         "location": {
          "default": "br-ne-1",
          "description": "Location constraint for the bucket",

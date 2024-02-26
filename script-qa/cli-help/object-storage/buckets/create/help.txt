@@ -6,6 +6,7 @@ Usage:
 Flags:
       --acl string                    ACL Rules for the bucket
       --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --enable-versioning             Enable versioning for this bucket (default true)
   -h, --help                          help for create
       --location string               Location constraint for the bucket (default "br-ne-1")
       --name string                   Name of the bucket to be created (between 3 and 63 characters) (required)
