@@ -91,6 +91,8 @@ func newDeleteBatchRequest(ctx context.Context, cfg Config, bucketName BucketNam
 // success results and *Output* errors
 func createObjectDeletionProcessor(cfg Config, bucketName BucketName, progressReporter *progress_report.UnitsReporter) pipeline.Processor[[]pipeline.WalkDirEntry, error] {
 	return func(ctx context.Context, dirEntries []pipeline.WalkDirEntry) (error, pipeline.ProcessStatus) {
+		progressReporter.Report(0, uint64(len(dirEntries)), nil)
+
 		var objIdentifiers []objectIdentifier
 		var err error
 
