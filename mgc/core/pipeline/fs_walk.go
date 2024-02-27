@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -78,25 +79,26 @@ func WalkDirEntries(
 			close(ch)
 		}()
 
-		_ = fs.WalkDir(os.DirFS(root), ".", func(path string, d fs.DirEntry, err error) error {
+		_ = fs.WalkDir(os.DirFS(root), ".", func(p string, d fs.DirEntry, err error) error {
 			if d == nil {
 				return filepath.SkipDir
 			}
+			p = path.Join(root, p)
 			if checkPath != nil {
-				e := checkPath(path, d, err)
+				e := checkPath(p, d, err)
 				if e != nil {
-					logger.Debugw("checkPath != nil", "err", err, "path", path, "dirEntry", d)
+					logger.Debugw("checkPath != nil", "err", err, "path", p, "dirEntry", d)
 					return e
 				}
 			}
-			dir := NewSimpleWalkDirEntry(path, d, err)
+			dir := NewSimpleWalkDirEntry(p, d, err)
 			select {
 			case <-ctx.Done():
 				logger.Debugw("context.Done()", "err", ctx.Err())
 				return filepath.SkipAll
 
 			case ch <- dir:
-				logger.Debugw("entry", "err", err, "path", path, "dirEntry", d)
+				logger.Debugw("entry", "err", err, "path", p, "dirEntry", d)
 				return nil
 			}
 		})
