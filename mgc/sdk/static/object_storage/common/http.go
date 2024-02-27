@@ -53,7 +53,10 @@ func UnwrapResponse[T any](resp *http.Response, req *http.Request) (result T, er
 		return
 	case contentType == "application/json":
 		err = mgcHttpPkg.DecodeJSON(resp, &result)
-	case contentType == "application/xml":
+	// TODO: Don't assume that empty Content-Type is xml. We currently do this because the server
+	// has some endpoints that don't return Content-Type at all, but when those are fixed we should
+	// remove this check for `""`
+	case contentType == "application/xml" || contentType == "":
 		err = mgcHttpPkg.DecodeXML(resp, &result)
 	}
 
