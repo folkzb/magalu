@@ -12,8 +12,8 @@ type Config struct {
 
 var regionMap = map[string]string{
 	"br-ne1":  "br-ne-1",
-	"br-se1":  "br-se-1",
-	"br-mgl1": "br-mgl-1",
+	"br-se1":  "br-se1",
+	"br-mgl1": "br-se-1",
 }
 
 func (c *Config) translateRegion() string {
