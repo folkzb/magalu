@@ -11,10 +11,14 @@ func AssignToT[T any, U any](t *T, u U) error {
 		return nil
 	}
 
+	if t == nil {
+		return fmt.Errorf("can't assign value %#v to nil pointer", u)
+	}
+
 	tVal := reflect.ValueOf(t).Elem()
-	// Empty name means `any`
-	if tVal.Type().Name() != "" {
-		return fmt.Errorf("request response of type %T is not convertible to %T", *t, u)
+	// Empty 'String()' means `any`
+	if tVal.Type().String() != "" {
+		return fmt.Errorf("request response of type %T is not convertible to %T", u, *t)
 	}
 
 	tVal.Set(reflect.ValueOf(u))
