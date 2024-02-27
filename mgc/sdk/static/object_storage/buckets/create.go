@@ -16,10 +16,10 @@ var createLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
 })
 
 type createParams struct {
-	Name             common.BucketName `json:"name" jsonschema:"description=Name of the bucket to be created" mgc:"positional"`
-	ACL              string            `json:"acl,omitempty" jsonschema:"description=ACL Rules for the bucket"`
-	Location         string            `json:"location,omitempty" jsonschema:"description=Location constraint for the bucket,default=br-ne-1"`
-	EnableVersioning bool              `json:"enable_versioning,omitempty" jsonschema:"description=Enable versioning for this bucket,default=true"`
+	Name                  common.BucketName `json:"name" jsonschema:"description=Name of the bucket to be created" mgc:"positional"`
+	Location              string            `json:"location,omitempty" jsonschema:"description=Location constraint for the bucket,default=br-ne-1"`
+	EnableVersioning      bool              `json:"enable_versioning,omitempty" jsonschema:"description=Enable versioning for this bucket,default=true"`
+	common.ACLPermissions `json:",squash"`  // nolint
 }
 
 var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
@@ -57,21 +57,37 @@ var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func newCreateRequest(ctx context.Context, cfg common.Config, bucket common.BucketName) (*http.Request, error) {
+func newCreateRequest(ctx context.Context, cfg common.Config, bucket common.BucketName, aclPermissions common.ACLPermissions) (*http.Request, error) {
 	url, err := common.BuildBucketHost(cfg, bucket)
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodPut, string(url), nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, string(url), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = aclPermissions.SetHeaders(req, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
-func create(ctx context.Context, params createParams, cfg common.Config) (core.Value, error) {
+func create(ctx context.Context, params createParams, cfg common.Config) (result core.Value, err error) {
 	logger := createLogger().With(
 		"bucket", params.Name,
 		"location", params.Location,
 	)
 
-	req, err := newCreateRequest(ctx, cfg, params.Name)
+	err = params.ACLPermissions.Validate()
+	if err != nil {
+		return
+	}
+
+	req, err := newCreateRequest(ctx, cfg, params.Name, params.ACLPermissions)
 	if err != nil {
 		return nil, err
 	}
