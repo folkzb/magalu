@@ -43,7 +43,7 @@ var getSync = utils.NewLazyLoader[core.Executor](func() core.Executor {
 
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
 		return "template={{if and (eq .deleted 0) (eq .uploaded 0)}}Already Synced{{- else}}" +
-			"Synced files from {{.src}} to {{.dst}} {{.uploaded}} uploaded and {{if .hasDeleted}}{{.deleted}} deleted\n{{if gt .deleted 1}}Files:\n-{{- else if eq .deleted 1}}File:\n-{{- end}}{{.deletedFiles}}{{- else}}{{.deleted}} to be deleted with the parameter --delete{{- end}} {{- end}}\n"
+			"Synced files from {{.src}} to {{.dst}}\n- {{.uploaded}} uploaded\n- {{if .hasDeleted}}{{.deleted}} deleted\n\nDeleted files:\n-{{.deletedFiles}}{{- else}}{{.deleted}} to be deleted with the parameter --delete{{- end}}{{- end}}\n"
 	})
 })
 
