@@ -14,13 +14,13 @@ type selectParams struct {
 	UUID string `json:"uuid" jsonschema_description:"UUID of api key to select" mgc:"positional"`
 }
 
-var getSet = utils.NewLazyLoader[core.Executor](func() core.Executor {
+var getSetCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
-			Name:        "set",
+			Name:        "set-current",
 			Description: "Change current Object Storage credential to selected",
 		},
-		selectKey,
+		setCurrent,
 	)
 
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
@@ -28,8 +28,7 @@ var getSet = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	})
 })
 
-func selectKey(ctx context.Context, parameter selectParams, _ struct{}) (*apiKeysResult, error) {
-
+func setCurrent(ctx context.Context, parameter selectParams, _ struct{}) (*apiKeysResult, error) {
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
 		return nil, fmt.Errorf("could not get Auth from context")

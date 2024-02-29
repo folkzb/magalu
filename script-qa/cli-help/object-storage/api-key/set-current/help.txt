@@ -1,10 +1,10 @@
 Change current Object Storage credential to selected
 
 Usage:
-  ./cli object-storage api-key set [uuid] [flags]
+  ./cli object-storage api-key set-current [uuid] [flags]
 
 Flags:
-  -h, --help          help for set
+  -h, --help          help for set-current
       --uuid string   UUID of api key to select (required)
 
 Global Flags:

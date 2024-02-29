@@ -19207,7 +19207,7 @@
       },
       "description": "Get the current Object Storage credentials",
       "isInternal": false,
-      "name": "get",
+      "name": "get-current",
       "parameters": {
        "type": "object"
       },
@@ -19324,7 +19324,7 @@
       },
       "description": "Change current Object Storage credential to selected",
       "isInternal": false,
-      "name": "set",
+      "name": "set-current",
       "parameters": {
        "properties": {
         "uuid": {

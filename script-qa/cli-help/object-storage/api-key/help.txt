@@ -5,14 +5,14 @@ Usage:
   ./cli object-storage api-key [command]
 
 Commands:
-  create      Create new credentials used for Object Storage requests
-  get         Get the current Object Storage credentials
-  list        List valid Object Storage credentials
-  revoke      Revoke credentials used in Object Storage requests
-  set         Change current Object Storage credential to selected
+  create         Create new credentials used for Object Storage requests
+  get-current    Get the current Object Storage credentials
+  list           List valid Object Storage credentials
+  revoke         Revoke credentials used in Object Storage requests
+  set-current    Change current Object Storage credential to selected
 
 Additional Commands:
-  select      call "list", prompt selection and then "set"
+  select-current call "list", prompt selection and then "set-current"
 
 Flags:
   -h, --help   help for api-key

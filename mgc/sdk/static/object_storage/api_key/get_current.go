@@ -10,17 +10,17 @@ import (
 	"magalu.cloud/core"
 )
 
-var getGet = utils.NewLazyLoader[core.Executor](func() core.Executor {
+var getGetCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	return core.NewStaticExecuteSimple(
 		core.DescriptorSpec{
-			Name:        "get",
+			Name:        "get-current",
 			Description: "Get the current Object Storage credentials",
 		},
-		get,
+		getCurrent,
 	)
 })
 
-func get(ctx context.Context) (*authSetParams, error) {
+func getCurrent(ctx context.Context) (*authSetParams, error) {
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
 		return nil, fmt.Errorf("unable to retrieve authentication configuration")
