@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"slices"
 	"syscall"
 	"time"
 
@@ -153,6 +154,8 @@ func login(ctx context.Context, parameters loginParameters, _ struct{}) (*loginR
 		return nil, err
 	}
 
+	checkScopesAfterLogin(auth, scopes)
+
 	loginLogger().Infow("sucessfully logged in")
 
 	output := &loginResult{AccessToken: "", SelectedTenant: currentTenant}
@@ -162,6 +165,33 @@ func login(ctx context.Context, parameters loginParameters, _ struct{}) (*loginR
 	}
 
 	return output, nil
+}
+
+func checkScopesAfterLogin(a *auth.Auth, desiredScopes core.Scopes) {
+	currentScopes, err := a.CurrentScopes()
+	if err != nil {
+		loginLogger().Warnw(
+			"unable to check if current scopes match desired scopes",
+			"err", err,
+		)
+		return
+	}
+
+	missing := core.Scopes{}
+	for _, desiredScope := range desiredScopes {
+		if !slices.Contains(currentScopes, desiredScope) {
+			missing.Add(desiredScope)
+		}
+	}
+
+	if len(missing) < 1 {
+		return
+	}
+
+	loginLogger().Warnw(
+		"login was successful but resulting scopes were not as requested. This may lead to some operations failing until the scopes are added via 'auth scopes add'",
+		"missing", missing,
+	)
 }
 
 func startCallbackServer(ctx context.Context, auth *auth.Auth) (resultChan chan *authResult, cancel func(), err error) {
