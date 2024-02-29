@@ -19643,6 +19643,71 @@
        "type": "object"
       },
       "version": ""
+     },
+     {
+      "configs": {
+       "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1",
+          "br-mgl1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        },
+        "workers": {
+         "default": 5,
+         "description": "Number of routines that spawn to do parallel operations within object_storage",
+         "minimum": 1,
+         "type": "integer"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Get bucket public url",
+      "isInternal": false,
+      "name": "public-url",
+      "parameters": {
+       "properties": {
+        "dst": {
+         "description": "Path of the bucket to generate the public url",
+         "example": "bucket1",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "required": [
+        "dst"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "url": {
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "required": [
+        "url"
+       ],
+       "type": "object"
+      },
+      "version": ""
      }
     ],
     "description": "Bucket operations for Object Storage API",

@@ -8,6 +8,7 @@ Commands:
   create      Create a new Bucket
   delete      Delete an existing Bucket
   list        List all existing Buckets
+  public-url  Get bucket public url
 
 Flags:
   -h, --help   help for buckets
