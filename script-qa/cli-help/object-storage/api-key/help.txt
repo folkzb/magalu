@@ -6,6 +6,7 @@ Usage:
 
 Commands:
   create         Create new credentials used for Object Storage requests
+  get            Get details about a specific key
   get-current    Get the current Object Storage credentials
   list           List valid Object Storage credentials
   revoke         Revoke credentials used in Object Storage requests

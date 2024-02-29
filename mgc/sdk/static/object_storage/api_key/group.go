@@ -13,11 +13,12 @@ var GetGroup = utils.NewLazyLoader(func() core.Grouper {
 		},
 		func() []core.Descriptor {
 			return []core.Descriptor{
-				getList(),
-				getSetCurrent(),
-				getGetCurrent(),
 				getCreate(),
+				getGet(),
+				getGetCurrent(),
+				getList(),
 				getRevoke(),
+				getSetCurrent(),
 			}
 		},
 	)

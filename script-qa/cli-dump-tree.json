@@ -19205,6 +19205,66 @@
       "configs": {
        "type": "object"
       },
+      "description": "Get details about a specific key",
+      "isInternal": false,
+      "name": "get",
+      "parameters": {
+       "properties": {
+        "uuid": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "uuid"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "description": {
+         "type": "string"
+        },
+        "end_validity": {
+         "type": "string"
+        },
+        "key_pair_id": {
+         "type": "string"
+        },
+        "key_pair_secret": {
+         "type": "string"
+        },
+        "name": {
+         "type": "string"
+        },
+        "revoked_at": {
+         "type": "string"
+        },
+        "start_validity": {
+         "type": "string"
+        },
+        "tenant_name": {
+         "type": "string"
+        },
+        "uuid": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "uuid",
+        "name",
+        "description",
+        "key_pair_id",
+        "key_pair_secret",
+        "start_validity"
+       ],
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "type": "object"
+      },
       "description": "Get the current Object Storage credentials",
       "isInternal": false,
       "name": "get-current",

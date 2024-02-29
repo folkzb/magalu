@@ -2,7 +2,6 @@ package api_key
 
 import (
 	"context"
-	"fmt"
 
 	mgcAuthPkg "magalu.cloud/core/auth"
 	"magalu.cloud/core/utils"
@@ -29,24 +28,16 @@ var getSetCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func setCurrent(ctx context.Context, parameter selectParams, _ struct{}) (*apiKeysResult, error) {
-	auth := mgcAuthPkg.FromContext(ctx)
-	if auth == nil {
-		return nil, fmt.Errorf("could not get Auth from context")
-	}
-
-	apiList, err := list(ctx)
+	key, err := get(ctx, getKeyParams(parameter), struct{}{})
 	if err != nil {
 		return nil, err
 	}
-	for _, v := range apiList {
-		if v.UUID == parameter.UUID {
-			if err = mgcAuthPkg.FromContext(ctx).SetAccessKey(v.KeyPairID, v.KeyPairSecret); err != nil {
-				return nil, err
-			}
-			return v, nil
-		}
+
+	err = mgcAuthPkg.FromContext(ctx).SetAccessKey(key.KeyPairID, key.KeyPairSecret)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("the  API key (%s) is no longer valid", parameter.UUID)
+	return key, nil
 
 }
