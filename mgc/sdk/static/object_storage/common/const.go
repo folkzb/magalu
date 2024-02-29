@@ -53,3 +53,5 @@ const (
 
 	HeadContentLengthBitSize = 64
 )
+
+var defaultSignedHeaders = []string{"host"}

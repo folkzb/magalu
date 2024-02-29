@@ -115,16 +115,7 @@ func (u *bigFileCopier) sendCompletionRequest(ctx context.Context, parts []compl
 	q.Set("uploadId", uploadId)
 	req.URL.RawQuery = q.Encode()
 
-	// excludedHeaders is a global variable that needs to be altered specifically
-	// for this request, so set the correct headers and resets after
-	excludedHeaders["Content-Type"] = nil
-	excludedHeaders["Content-MD5"] = nil
-	defer func() {
-		delete(excludedHeaders, "Content-Type")
-		delete(excludedHeaders, "Content-MD5")
-	}()
-
-	resp, err := SendRequest(ctx, req)
+	resp, err := SendRequestWithIgnoredHeaders(ctx, req, bigFileCopierExcludedHeaders)
 	if err != nil {
 		return err
 	}

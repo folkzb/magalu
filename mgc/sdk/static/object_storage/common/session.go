@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,16 +14,25 @@ import (
 	"magalu.cloud/core/progress_report"
 )
 
-var excludedHeaders = HeaderMap{
-	"Authorization":         nil,
-	"Accept-Encoding":       nil,
-	"Amz-Sdk-Invocation-Id": nil,
-	"Amz-Sdk-Request":       nil,
-	"User-Agent":            nil,
-	"X-Amzn-Trace-Id":       nil,
-	"Expect":                nil,
-	"Content-Length":        nil,
+// note: must be in HTTP Header Canonical format (Title-Case-With-Dashes)
+// as per https://pkg.go.dev/net/http#CanonicalHeaderKey as they should match https://pkg.go.dev/net/http#Headervar
+var excludedHeaders = map[string]struct{}{
+	http.CanonicalHeaderKey("Authorization"):         {},
+	http.CanonicalHeaderKey("Accept-Encoding"):       {},
+	http.CanonicalHeaderKey("Amz-Sdk-Invocation-Id"): {},
+	http.CanonicalHeaderKey("Amz-Sdk-Request"):       {},
+	http.CanonicalHeaderKey("User-Agent"):            {},
+	http.CanonicalHeaderKey("X-Amzn-Trace-Id"):       {},
+	http.CanonicalHeaderKey("Expect"):                {},
+	http.CanonicalHeaderKey("Content-Length"):        {},
 }
+
+var bigFileCopierExcludedHeaders = func() map[string]struct{} {
+	r := maps.Clone(excludedHeaders)
+	r[http.CanonicalHeaderKey("Content-Type")] = struct{}{}
+	r[http.CanonicalHeaderKey("Content-Md5")] = struct{}{}
+	return r
+}()
 
 type HostString string
 type BucketHostString string
@@ -81,7 +91,7 @@ func BuildBucketHostWithPathURL(cfg Config, bucketName BucketName, path string) 
 	return url.Parse(string(bucketHost))
 }
 
-func SendRequest(ctx context.Context, req *http.Request) (res *http.Response, err error) {
+func SendRequestWithIgnoredHeaders(ctx context.Context, req *http.Request, ignoredHeaders map[string]struct{}) (res *http.Response, err error) {
 	httpClient := mgcHttpPkg.ClientFromContext(ctx)
 	if httpClient == nil {
 		err = fmt.Errorf("couldn't get http client from context")
@@ -99,7 +109,7 @@ func SendRequest(ctx context.Context, req *http.Request) (res *http.Response, er
 		return
 	}
 
-	if err = sign(req, accesskeyId, accessSecretKey, unsignedPayload, excludedHeaders); err != nil {
+	if err = signHeaders(req, accesskeyId, accessSecretKey, unsignedPayload, ignoredHeaders); err != nil {
 		return
 	}
 
@@ -125,4 +135,8 @@ func SendRequest(ctx context.Context, req *http.Request) (res *http.Response, er
 	}
 
 	return
+}
+
+func SendRequest(ctx context.Context, req *http.Request) (res *http.Response, err error) {
+	return SendRequestWithIgnoredHeaders(ctx, req, excludedHeaders)
 }

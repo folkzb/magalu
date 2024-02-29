@@ -8,16 +8,115 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sort"
+	"net/url"
 	"strings"
 	"time"
+
+	"slices"
 
 	"magalu.cloud/core"
 )
 
 type HeaderMap = map[string]any
 
-// TODO: refactor into a round tripper
+type SignatureParameters struct {
+	Algorithm     string
+	AccessKey     string
+	Credential    string
+	Scope         string
+	Date          string
+	ShortDate     string
+	PayloadHash   string
+	SignedHeaders []string // must be lower-case and sorted, see https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
+}
+
+func NewSignatureParameters(
+	accessKey string,
+	signingTime time.Time,
+	payloadHash string,
+	signedHeaders []string,
+) SignatureParameters {
+	shortDate := signingTime.Format(shortTimeFormat)
+	scope := strings.Join([]string{
+		shortDate,
+		signingRegion,
+		signingService,
+		requestSuffix,
+	}, "/")
+
+	return SignatureParameters{
+		Algorithm:     signingAlgorithm,
+		AccessKey:     accessKey,
+		Credential:    fmt.Sprintf("%s/%s", accessKey, scope),
+		Scope:         scope,
+		Date:          signingTime.Format(longTimeFormat),
+		ShortDate:     shortDate,
+		PayloadHash:   payloadHash,
+		SignedHeaders: signedHeaders,
+	}
+}
+
+type SignatureContext struct {
+	Parameters SignatureParameters
+
+	// Request
+	HTTPMethod       string
+	CanonicalURI     string
+	CanonicalQuery   string
+	CanonicalHeaders string
+
+	SignedHeaders string
+
+	// these are set by Sign
+	Signature string
+}
+
+func NewSignatureContext(
+	params SignatureParameters,
+	req *http.Request,
+) *SignatureContext {
+	canonicalHeaders := buildCanonicalHeaders(req, params.SignedHeaders)
+
+	return &SignatureContext{
+		Parameters: params,
+
+		// Request
+		HTTPMethod:       req.Method,
+		CanonicalURI:     req.URL.EscapedPath(),
+		CanonicalQuery:   buildCanonicalQuery(req.URL.Query()),
+		CanonicalHeaders: canonicalHeaders,
+
+		SignedHeaders: strings.Join(params.SignedHeaders, ";"),
+	}
+}
+
+// sorted as per https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
+func buildCanonicalQuery(query url.Values) string {
+	type p struct {
+		key, value string
+	}
+	pairs := make([]p, 0, len(query))
+	for key, values := range query {
+		for _, value := range values {
+			pairs = append(pairs, p{url.QueryEscape(key), url.QueryEscape(value)})
+		}
+	}
+
+	slices.SortFunc(pairs, func(a, b p) int {
+		return strings.Compare(a.key, b.key)
+	})
+
+	var result string
+	for _, pair := range pairs {
+		if result != "" {
+			result += "&"
+		}
+		result += pair.key + "=" + pair.value
+	}
+
+	return result
+}
+
 func setContentHeader(req *http.Request, unsigned bool) (payloadHash string, err error) {
 	if unsigned {
 		req.Header.Set(contentSHAKey, unsignedPayloadHeader)
@@ -94,48 +193,28 @@ func setMD5Checksum(req *http.Request) error {
 	return nil
 }
 
-// buildCredentialScope builds the Signature Version 4 (SigV4) signing scope
-func buildCredentialScope(shortTime string) string {
-	return strings.Join([]string{
-		shortTime,
-		signingRegion,
-		signingService,
-		requestSuffix,
-	}, "/")
-}
+func getSignedHeaders(req *http.Request, ignoredHeaders map[string]struct{}) []string {
+	signedHeaders := make([]string, 0, len(req.Header))
 
-func buildCredentialStr(parts ...string) string {
-	return strings.Join(parts, "/")
-}
-
-func buildCanonicalHeaders(req *http.Request, ignoredHeaders HeaderMap) (string, string) {
-	signedHeaders := []string{}
-	canonicalHeaders := ""
-
-	if req.Header.Get("Host") == "" {
-		req.Header.Set("Host", req.Host)
-	}
-
-	if req.Body != nil && req.Header.Get("Content-Type") == "" {
-		req.Header.Set("Content-Type", "application/octet-stream")
-	}
-
-	sortedHeaderKeys := make([]string, 0, len(req.Header))
 	for k := range req.Header {
-		sortedHeaderKeys = append(sortedHeaderKeys, k)
-	}
-	sort.Strings(sortedHeaderKeys)
-	for _, k := range sortedHeaderKeys {
-		v := req.Header.Values(k)
 		if _, ok := ignoredHeaders[k]; ok {
-			continue // ignored header
+			continue
 		}
+		signedHeaders = append(signedHeaders, strings.ToLower(k))
+	}
+
+	slices.Sort(signedHeaders)
+	return signedHeaders
+}
+
+func buildCanonicalHeaders(req *http.Request, signedHeaders []string) (canonicalHeaders string) {
+	for _, k := range signedHeaders {
+		v := req.Header.Values(k)
 
 		line := fmt.Sprintf("%s:%s", strings.ToLower(k), strings.Join(v, ","))
-		signedHeaders = append(signedHeaders, strings.ToLower(k))
 		canonicalHeaders = fmt.Sprintf("%s%s\n", canonicalHeaders, line)
 	}
-	return strings.Join(signedHeaders, ";"), canonicalHeaders
+	return
 }
 
 /*
@@ -147,14 +226,14 @@ means:
 - Headers: Trim out leading, trailing, and dedup inner spaces from signed header values.
 - Query: must be sorted before hashing for consistency
 */
-func buildCanonicalString(method, uri, query, signedHeaders, canonicalHeaders, payloadHash string) string {
+func buildCanonicalString(ctx *SignatureContext) string {
 	return strings.Join([]string{
-		method,
-		uri,
-		query,
-		canonicalHeaders,
-		signedHeaders,
-		payloadHash,
+		ctx.HTTPMethod,
+		ctx.CanonicalURI,
+		ctx.CanonicalQuery,
+		ctx.CanonicalHeaders,
+		ctx.SignedHeaders,
+		ctx.Parameters.PayloadHash,
 	}, "\n")
 }
 
@@ -167,15 +246,16 @@ canonical request string plus extra information about the request, such as:
 2. Signing Time
 3. Credentials Scope (region, service name, etc.)
 */
-func buildStringToSign(credScope, canonicalStr, longTime string) (string, error) {
+func buildStringToSign(ctx *SignatureContext) (string, error) {
+	canonicalStr := buildCanonicalString(ctx)
 	canonicalSHA, err := core.SHA256Hex(bytes.NewReader([]byte(canonicalStr)))
 	if err != nil {
 		return "", fmt.Errorf("failed to compute SHA from canonical str: %w", err)
 	}
 	return strings.Join([]string{
-		signingAlgorithm,
-		longTime,
-		credScope,
+		ctx.Parameters.Algorithm,
+		ctx.Parameters.Date,
+		ctx.Parameters.Scope,
 		canonicalSHA,
 	}, "\n"), nil
 }
@@ -187,11 +267,11 @@ as the key for the initial hashing operation:
 
 	Secret -> Date -> Region -deriveKey> Service -> Request Suffix
 */
-func deriveKey(prefix, secretKey, shortTime string) []byte {
-	hmacDate := core.HMACSHA256String([]byte(prefix+secretKey), shortTime)
+func deriveKey(secretKey, shortTime string) []byte {
+	hmacDate := core.HMACSHA256String([]byte(secretPrefix+secretKey), shortTime)
 	hmacRegion := core.HMACSHA256String(hmacDate, signingRegion)
 	hmacService := core.HMACSHA256String(hmacRegion, signingService)
-	return core.HMACSHA256String(hmacService, "aws4_request")
+	return core.HMACSHA256String(hmacService, requestSuffix)
 }
 
 /*
@@ -223,56 +303,86 @@ lowercase:
 
 	fe5f80f77d5fa3beca038a248ff027d0445342fe2855ddc963176630326f1024
 */
-func buildAuthorizationHeader(credentialStr, signedHeadersStr, signingSignature string) string {
-	const credential = "Credential="
-	const signedHeaders = "SignedHeaders="
-	const signature = "Signature="
-	return fmt.Sprintf("%s %s%s, %s%s, %s%s", signingAlgorithm, credential, credentialStr, signedHeaders, signedHeadersStr, signature, signingSignature)
+
+func buildAuthorizationHeader(ctx *SignatureContext) string {
+	return fmt.Sprintf(
+		"%s Credential=%s, SignedHeaders=%s, Signature=%s",
+		signingAlgorithm,
+		ctx.Parameters.Credential,
+		ctx.SignedHeaders,
+		ctx.Signature,
+	)
 }
 
-func sign(req *http.Request, accessKey, secretKey string, unsignedPayload bool, ignoredHeaders HeaderMap) error {
-	signingTime := time.Now().UTC()
+func sign(ctx *SignatureContext, secretKey string) (err error) {
+	strToSign, err := buildStringToSign(ctx)
+	if err != nil {
+		return
+	}
+	signKey := deriveKey(secretKey, ctx.Parameters.ShortDate)
+	ctx.Signature = hex.EncodeToString(core.HMACSHA256String(signKey, strToSign))
+	return
+}
+
+func signHeaders(req *http.Request, accessKey, secretKey string, unsignedPayload bool, ignoredHeaders map[string]struct{}) (err error) {
 	payloadHash, err := setContentHeader(req, unsignedPayload)
 	if err != nil {
-		return err
+		return
 	}
 
+	if req.Header.Get("Host") == "" {
+		req.Header.Set("Host", req.Host)
+	}
+
+	if req.Body != nil && req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", "application/octet-stream")
+	}
+
+	signedHeaders := getSignedHeaders(req, ignoredHeaders)
+	params := NewSignatureParameters(accessKey, time.Now().UTC(), payloadHash, signedHeaders)
+	ctx := NewSignatureContext(params, req)
+
 	// Set date header based on the custom key provided
-	req.Header.Set(headerDateKey, signingTime.Format(longTimeFormat))
+	req.Header.Set(headerDateKey, params.Date)
 
 	if _, ok := excludedHeaders["Content-MD5"]; !ok {
 		if err := setMD5Checksum(req); err != nil {
-			return fmt.Errorf("Unable to compute checksum of the body content: %w", err)
+			return fmt.Errorf("unable to compute checksum of the body content: %w", err)
 		}
 	}
 
-	// Sort Each Query Key's Values
-	query := req.URL.Query()
-	for key := range query {
-		sort.Strings(query[key])
+	if err = sign(ctx, secretKey); err != nil {
+		return
 	}
 
-	credScope := buildCredentialScope(signingTime.Format(shortTimeFormat))
-	credStr := buildCredentialStr(accessKey, credScope)
-
-	signedHeadersStr, canonicalHeaderStr := buildCanonicalHeaders(req, ignoredHeaders)
-	canonicalStr := buildCanonicalString(
-		req.Method,
-		req.URL.EscapedPath(),
-		req.URL.RawQuery,
-		signedHeadersStr,
-		canonicalHeaderStr,
-		payloadHash,
-	)
-	strToSign, err := buildStringToSign(credScope, canonicalStr, signingTime.Format(longTimeFormat))
-	if err != nil {
-		return err
-	}
-	signKey := deriveKey(secretPrefix, secretKey, signingTime.Format(shortTimeFormat))
-	signature := hex.EncodeToString(core.HMACSHA256String(signKey, strToSign))
-
-	signedAuthorization := buildAuthorizationHeader(credStr, signedHeadersStr, signature)
-	req.Header.Set(authorizationHeaderKey, signedAuthorization)
-
+	authorization := buildAuthorizationHeader(ctx)
+	req.Header.Set(authorizationHeaderKey, authorization)
 	return nil
+}
+
+func SignedUrl(req *http.Request, accessKey, secretKey string, expirationTime time.Duration) (url *url.URL, err error) {
+	params := NewSignatureParameters(accessKey, time.Now().UTC(), unsignedPayloadHeader, defaultSignedHeaders)
+
+	if req.Header.Get("Host") == "" {
+		req.Header.Set("Host", req.Host)
+	}
+
+	url = req.URL
+	q := url.Query()
+	q.Set("X-Amz-Expires", fmt.Sprintf("%d", int(expirationTime.Seconds())))
+	q.Set("X-Amz-Algorithm", params.Algorithm)
+	q.Set("X-Amz-Credential", params.Credential)
+	q.Set("X-Amz-Date", params.Date)
+	q.Set("X-Amz-SignedHeaders", strings.Join(params.SignedHeaders, ";"))
+	url.RawQuery = q.Encode()
+
+	ctx := NewSignatureContext(params, req)
+	if err = sign(ctx, secretKey); err != nil {
+		return
+	}
+
+	q.Set("X-Amz-Signature", ctx.Signature)
+
+	url.RawQuery = q.Encode()
+	return
 }
