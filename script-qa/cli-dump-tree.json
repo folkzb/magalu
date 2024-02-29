@@ -20649,6 +20649,86 @@
        },
        "type": "object"
       },
+      "description": "Generate a pre-signed URL for accessing an object",
+      "isInternal": false,
+      "name": "presign",
+      "parameters": {
+       "properties": {
+        "dst": {
+         "description": "Path of the object to generate pre-signed URL for",
+         "example": "bucket1/file.txt",
+         "format": "uri",
+         "type": "string"
+        },
+        "expires-in": {
+         "description": "Expiration time for the pre-signed URL. Valid time units are 'ns, 'us' (or 'µs'), 'ms', 's',  'm', and 'h'.",
+         "example": "2h",
+         "type": "string"
+        },
+        "method": {
+         "default": "GET",
+         "enum": [
+          "GET",
+          "PUT"
+         ],
+         "type": "string"
+        }
+       },
+       "required": [
+        "dst",
+        "expires-in",
+        "method"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "url": {
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "required": [
+        "url"
+       ],
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1",
+          "br-mgl1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        },
+        "workers": {
+         "default": 5,
+         "description": "Number of routines that spawn to do parallel operations within object_storage",
+         "minimum": 1,
+         "type": "integer"
+        }
+       },
+       "type": "object"
+      },
       "description": "This command uploads any file from the source to the destination if it's not present or has a different size. Additionally any file in the destination not present on the source is deleted.",
       "isInternal": false,
       "name": "sync",
