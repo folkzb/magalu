@@ -261,6 +261,37 @@ func selectOneAndSetupParameters(
 	return
 }
 
+func listSelectChoices(sdk *mgcSdk.Sdk, listExec core.Executor, parameters core.Parameters, configs core.Configs, cmd *cobra.Command) (resultArray []any, err error) {
+	ctx := sdk.NewContext()
+	listResult, err := handleExecutorPre(ctx, sdk, cmd, listExec, parameters, configs)
+	if err != nil {
+		return
+	}
+
+	resultWithValue, ok := core.ResultAs[core.ResultWithValue](listResult)
+	if !ok {
+		err = fmt.Errorf("list returned no value")
+		return
+	}
+
+	resultValue := resultWithValue.Value()
+	switch v := resultValue.(type) {
+	case []any:
+		resultArray = v
+	default:
+		err = fmt.Errorf("list expected to return array, got %T instead: %#v", v, v)
+		return
+	}
+
+	return
+}
+
+func setSelectChoice(sdk *mgcSdk.Sdk, setExec core.Executor, parameters core.Parameters, configs core.Configs, cmd *cobra.Command) (err error) {
+	ctx := sdk.NewContext() // use a new context, reset timeouts and the likes
+	_, err = handleExecutor(ctx, sdk, cmd, setExec, parameters, configs)
+	return
+}
+
 func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, listExec core.Executor, multiple bool) (err error) {
 	setCmdName, _ := getCommandNameAndAliases(setExec.Name())
 	listCmdName, _ := getCommandNameAndAliases(listExec.Name())
@@ -286,24 +317,9 @@ func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, 
 				return
 			}
 
-			ctx := sdk.NewContext()
-			listResult, err := handleExecutorPre(ctx, sdk, cmd, listExec, parameters, configs)
+			resultArray, err := listSelectChoices(sdk, listExec, parameters, configs, cmd)
 			if err != nil {
 				return
-			}
-
-			resultWithValue, ok := core.ResultAs[core.ResultWithValue](listResult)
-			if !ok {
-				return fmt.Errorf("list returned no value")
-			}
-
-			resultValue := resultWithValue.Value()
-			var resultArray []any
-			switch v := resultValue.(type) {
-			case []any:
-				resultArray = v
-			default:
-				return fmt.Errorf("list expected to return array, got %T instead: %#v", v, v)
 			}
 
 			choices := make([]selectorChoice, len(resultArray))
@@ -320,9 +336,7 @@ func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, 
 				return
 			}
 
-			ctx = sdk.NewContext() // use a new context, reset timeouts and the likes
-			_, err = handleExecutor(ctx, sdk, cmd, setExec, parameters, configs)
-			return err
+			return setSelectChoice(sdk, setExec, parameters, configs, cmd)
 		},
 	}
 
