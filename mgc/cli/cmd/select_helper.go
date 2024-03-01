@@ -19,13 +19,8 @@ const (
 	selectExecNamePrefix = "select"
 )
 
-// Let's make the String() more human-friendly, others default to json.
-type selectorChoice struct {
-	value any
-}
-
-func (c selectorChoice) String() string {
-	switch v := c.value.(type) {
+func getSelectLabel(value any) string {
+	switch v := value.(type) {
 	case map[string]any:
 		s := ""
 		keys := make([]string, 0, len(v))
@@ -159,13 +154,13 @@ func loadSelectHelperCommand(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper cor
 	return
 }
 
-func getChoiceValue(choice selectorChoice, paramName string, paramSchema, listSchema *mgcSchemaPkg.Schema) (any, bool) {
+func getChoiceValue(choice any, paramName string, paramSchema, listSchema *mgcSchemaPkg.Schema) (any, bool) {
 	if mgcSchemaPkg.CheckSimilarJsonSchemas(paramSchema, (*mgcSchemaPkg.Schema)(listSchema)) {
 		// list of actual items to be used
-		return choice.value, true
+		return choice, true
 	}
 
-	if m, ok := choice.value.(map[string]any); ok {
+	if m, ok := choice.(map[string]any); ok {
 		if value, ok := m[paramName]; ok {
 			return value, ok
 		}
@@ -174,7 +169,7 @@ func getChoiceValue(choice selectorChoice, paramName string, paramSchema, listSc
 	return nil, false
 }
 
-func getMultiChoiceValue(choices []selectorChoice, paramName string, paramSchema, listSchema *mgcSchemaPkg.Schema) (any, bool) {
+func getMultiChoiceValue(choices []any, paramName string, paramSchema, listSchema *mgcSchemaPkg.Schema) (any, bool) {
 	if paramSchema.Type == "array" && listSchema.Type != "array" {
 		paramSchema = (*mgcSchemaPkg.Schema)(paramSchema.Items.Value)
 		lst := make([]any, 0, len(choices))
@@ -198,9 +193,9 @@ func getMultiChoiceValue(choices []selectorChoice, paramName string, paramSchema
 func selectMultipleAndSetupParameters(
 	setCmdName string,
 	setExec, listExec core.Executor,
-	choices []selectorChoice,
+	choices []*ui.SelectionChoice,
 ) (parameters core.Parameters, err error) {
-	selection, err := ui.MultiSelectionPrompt(
+	selection, err := ui.MultiSelectionPrompt[any](
 		fmt.Sprintf("Select multiple entries to be used with %q:", setCmdName),
 		choices,
 	)
@@ -231,9 +226,9 @@ func selectMultipleAndSetupParameters(
 func selectOneAndSetupParameters(
 	setCmdName string,
 	setExec, listExec core.Executor,
-	choices []selectorChoice,
+	choices []*ui.SelectionChoice,
 ) (parameters core.Parameters, err error) {
-	choice, err := ui.SelectionPrompt(
+	choice, err := ui.SelectionPrompt[any](
 		fmt.Sprintf("Select one entry to be used with %q:", setCmdName),
 		choices,
 	)
@@ -251,7 +246,7 @@ func selectOneAndSetupParameters(
 			logger().Warnw(
 				"Missing set parameter from list result",
 				"paramName", paramName,
-				"choice", choice.value,
+				"choice", choice,
 				"paramSchema", paramSchema,
 				"listSchema", listSchema,
 			)
@@ -322,9 +317,12 @@ func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, 
 				return
 			}
 
-			choices := make([]selectorChoice, len(resultArray))
+			choices := make([]*ui.SelectionChoice, len(resultArray))
 			for i, v := range resultArray {
-				choices[i] = selectorChoice{value: v}
+				choices[i] = &ui.SelectionChoice{
+					Value: v,
+					Label: getSelectLabel(v),
+				}
 			}
 
 			if multiple {

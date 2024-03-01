@@ -6,63 +6,85 @@ import (
 	"github.com/erikgeiser/promptkit/selection"
 )
 
-func SelectionPrompt[C ~[]T, T any](msg string, choices C) (choice T, err error) {
+func SelectionPromptChoice(msg string, choices []*SelectionChoice) (choice *SelectionChoice, err error) {
 	sel := selection.New(msg, choices)
 	sel.LoopCursor = true
 
 	return sel.RunPrompt()
 }
 
+func SelectionPrompt[T any](msg string, choices []*SelectionChoice) (value T, err error) {
+	choice, err := SelectionPromptChoice(msg, choices)
+	if err != nil {
+		return
+	}
+	value, ok := choice.Value.(T)
+	if !ok {
+		err = fmt.Errorf("expected type %T, got %T (%#v)", *new(T), choice.Value, choice.Value)
+		return
+	}
+	return
+}
+
 type multipleSelectionDone string
 
 const multipleSelectionDoneValue = multipleSelectionDone("⏎ Done")
 
-type multipleSelectionChoice struct {
-	value      any
-	isSelected bool
+type SelectionChoice struct {
+	Value      any
+	Label      string
+	IsSelected bool
 }
 
-func (c *multipleSelectionChoice) String() string {
-	if c.value == multipleSelectionDoneValue {
+func (c *SelectionChoice) String() string {
+	if c.Value == multipleSelectionDoneValue {
 		return string(multipleSelectionDoneValue)
 	}
 
-	var mark string
-	if c.isSelected {
+	var mark, label string
+	if c.IsSelected {
 		mark = "✔"
 	} else {
 		mark = " "
 	}
-	return fmt.Sprintf("%s %s", mark, c.value)
+	if c.Label != "" {
+		label = c.Label
+	} else {
+		label = fmt.Sprint(c.Value)
+	}
+	return fmt.Sprintf("%s %s", mark, label)
 }
 
 // poor's man version since promptkit doesn't support it natively yet:
 // https://github.com/erikgeiser/promptkit/issues/2
-func MultiSelectionPrompt[C ~[]T, T any](msg string, choices C) (selected C, err error) {
-	items := make([]*multipleSelectionChoice, 0, len(choices)+1)
-	items = append(items, &multipleSelectionChoice{value: multipleSelectionDoneValue})
-	for _, c := range choices {
-		items = append(items, &multipleSelectionChoice{value: c})
-	}
+func MultiSelectionPrompt[T any](msg string, choices []*SelectionChoice) (selected []T, err error) {
+	items := make([]*SelectionChoice, 0, len(choices)+1)
+	items = append(items, &SelectionChoice{Value: multipleSelectionDoneValue})
+	items = append(items, choices...)
 
 	// prints the prompt message to avoid repeating it when executing the multiple selection prompt
 	fmt.Println(msg)
 
 	for {
-		var c *multipleSelectionChoice
-		c, err = SelectionPrompt("", items)
+		var c *SelectionChoice
+		c, err = SelectionPromptChoice("", items)
 		if err != nil {
 			return
 		}
-		if c.value == multipleSelectionDoneValue {
+		if c.Value == multipleSelectionDoneValue {
 			break
 		}
-		c.isSelected = !c.isSelected
+		c.IsSelected = !c.IsSelected
 	}
 
-	for _, item := range items {
-		if item.isSelected {
-			selected = append(selected, item.value.(T))
+	for i, item := range items {
+		if item.IsSelected {
+			value, ok := item.Value.(T)
+			if !ok {
+				err = fmt.Errorf("item #%d expected type %T, got %T (%#v)", i, *new(T), item.Value, item.Value)
+				return
+			}
+			selected = append(selected, value)
 		}
 	}
 
