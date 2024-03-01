@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/PaesslerAG/gval"
@@ -29,6 +30,35 @@ var hasKeyFunc = gval.Function("hasKey", func(args ...any) (any, error) {
 	_, hasKey := m[k]
 	return hasKey, nil
 })
+
+var startsWithFunc = gval.Function("startsWith", func(args ...any) (any, error) {
+	return performStringsFunction("startsWith", strings.HasPrefix, args...)
+})
+
+var endsWithFunc = gval.Function("endsWith", func(args ...any) (any, error) {
+	return performStringsFunction("endsWith", strings.HasSuffix, args...)
+})
+
+var containsFunc = gval.Function("contains", func(args ...any) (any, error) {
+	return performStringsFunction("contains", strings.Contains, args...)
+})
+
+func performStringsFunction(name string, function func(string, string) bool, args ...any) (any, error) {
+	if len(args) < 2 {
+		return nil, fmt.Errorf("%q jsonpath function expects two arguments, the base string and the string to search for. Got %v instead", name, args)
+	}
+
+	l, ok := args[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("%q jsonpath function expected string as first argument, got %T instead: %v", name, args[0], args[0])
+	}
+	r, ok := args[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("%q jsonpath function expected string as second argument, got %T instead: %v", name, args[1], args[1])
+	}
+
+	return function(l, r), nil
+}
 
 var fileSizeFunc = gval.Function("fileSize", func(args ...any) (result any, err error) {
 	if len(args) != 1 {
@@ -191,6 +221,9 @@ var humanTimeFunc = gval.Function("humanTime", func(args ...any) (result any, er
 var jsonPathBuilder = gval.Full(
 	jsonpath.PlaceholderExtension(),
 	hasKeyFunc,
+	startsWithFunc,
+	endsWithFunc,
+	containsFunc,
 	fileSizeFunc,
 	humanTimeFunc,
 )
