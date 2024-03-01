@@ -112,9 +112,11 @@ func (l *linker) CreateExecutor(originalResult core.Result) (target core.Executo
 	fillMissingConfigs(preparedConfigs, target.ConfigsSchema(), originalResult.Source().Configs)
 
 	if l.spec.WaitTermination != nil {
-		target, err = l.spec.WaitTermination.Build(target, func(result core.ResultWithValue) any {
-			if result, ok := core.ResultAs[*executorResult](result); ok {
-				return result.jsonPathDocumentWithResult()
+		target, err = l.spec.WaitTermination.Build(target, func(targetResult core.ResultWithValue) any {
+			if targetResult, ok := core.ResultAs[*executorResult](targetResult); ok {
+				doc := targetResult.jsonPathDocumentWithResult()
+				doc["owner"] = result.jsonPathDocumentWithResult()
+				return doc
 			}
 			return nil
 		})
