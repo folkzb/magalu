@@ -10,6 +10,7 @@ import (
 	"magalu.cloud/cli/ui"
 	"magalu.cloud/core"
 	mgcSchemaPkg "magalu.cloud/core/schema"
+	"magalu.cloud/core/utils"
 	mgcSdk "magalu.cloud/sdk"
 )
 
@@ -18,6 +19,22 @@ const (
 	listExecNamePrefix   = "list"
 	selectExecNamePrefix = "select"
 )
+
+var getCurrentExecNamePrefixes = []string{
+	"get",
+	"current",
+	"list-current",
+}
+
+func isGetCurrentExecutor(name string) bool {
+	for _, prefix := range getCurrentExecNamePrefixes {
+		if strings.HasPrefix(name, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
 
 func getSelectLabel(value any) string {
 	switch v := value.(type) {
@@ -122,8 +139,61 @@ func findListForSetExecutor(setExec core.Executor, listExecutors []core.Executor
 	return
 }
 
+func matchGetCurrentAndSetExecutor(setExec, getCurrentExec core.Executor, multiple bool) (matchingGetCurrentExec core.Executor) {
+	getCurrentSchema := getCurrentExec.ResultSchema()
+	if multiple {
+		var err error
+		getCurrentSchema, err = findListSchema(getCurrentSchema)
+		if err != nil {
+			logger().Debugw("Get current executor does not return an array", "getCurrentSchema", getCurrentExec.ResultSchema(), "error", err)
+			return
+		}
+	}
+
+	for paramName, paramSchemaRef := range setExec.ParametersSchema().Properties {
+		paramSchema := (*mgcSchemaPkg.Schema)(paramSchemaRef.Value)
+		if paramSchema.Type == "array" && getCurrentSchema.Type != "array" && multiple {
+			paramSchema = (*mgcSchemaPkg.Schema)(paramSchema.Items.Value)
+		}
+
+		if mgcSchemaPkg.CheckSimilarJsonSchemas(paramSchema, getCurrentSchema) {
+			// actual items to be used
+			continue
+		}
+
+		if getCurrentSchema.Type != "object" {
+			return
+		}
+		fieldSchemaRef := getCurrentSchema.Properties[paramName]
+		if fieldSchemaRef == nil {
+			return
+		}
+		if !mgcSchemaPkg.CheckSimilarJsonSchemas(paramSchema, (*mgcSchemaPkg.Schema)(fieldSchemaRef.Value)) {
+			return
+		}
+	}
+
+	logger().Debugw("Get current matches the Set executor", "getCurrent", getCurrentExec, "set", setExec)
+	matchingGetCurrentExec = getCurrentExec
+	return
+}
+
+func findGetCurrentForSetExecutor(setExec core.Executor, getCurrentExecutors []core.Executor, multiple bool) (getCurrentExec core.Executor) {
+	// TODO: maybe use explicit links to annotate that?
+
+	for _, exec := range getCurrentExecutors {
+		getCurrentExec = matchGetCurrentAndSetExecutor(setExec, exec, multiple)
+		if getCurrentExec != nil {
+			return
+		}
+	}
+
+	return
+}
+
 func loadSelectHelperCommand(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper core.Grouper) (err error) {
 	var setExecutors []core.Executor
+	var getCurrentExecutors []core.Executor
 	var listExecutors []core.Executor
 
 	_, err = cmdGrouper.VisitChildren(func(child core.Descriptor) (bool, error) {
@@ -132,6 +202,8 @@ func loadSelectHelperCommand(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper cor
 			switch {
 			case strings.HasPrefix(name, setExecNamePrefix):
 				setExecutors = append(setExecutors, exec)
+			case isGetCurrentExecutor(name):
+				getCurrentExecutors = append(getCurrentExecutors, exec)
 			case strings.HasPrefix(name, listExecNamePrefix):
 				listExecutors = append(listExecutors, exec)
 			}
@@ -145,7 +217,8 @@ func loadSelectHelperCommand(sdk *mgcSdk.Sdk, cmd *cobra.Command, cmdGrouper cor
 
 	for _, setExec := range setExecutors {
 		if listExec, multiple := findListForSetExecutor(setExec, listExecutors); listExec != nil {
-			if err = addSelectHelperCommand(sdk, cmd, setExec, listExec, multiple); err != nil {
+			getCurrentExec := findGetCurrentForSetExecutor(setExec, getCurrentExecutors, multiple)
+			if err = addSelectHelperCommand(sdk, cmd, setExec, getCurrentExec, listExec, multiple); err != nil {
 				return
 			}
 		}
@@ -188,6 +261,74 @@ func getMultiChoiceValue(choices []any, paramName string, paramSchema, listSchem
 	}
 
 	return nil, false
+}
+
+func isValueSelected(multiple bool, item, current any) bool {
+	if multiple {
+		if array, ok := current.([]any); ok {
+			for _, v := range array {
+				if utils.IsSameValueOrPointer(item, v) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	return utils.IsSameValueOrPointer(item, current)
+}
+
+func isSelected(setExec, getCurrentExec core.Executor, multiple bool, item, current any) (isSelected bool) {
+	if getCurrentExec == nil {
+		return
+	}
+
+	getCurrentSchema := getCurrentExec.ResultSchema()
+	if multiple {
+		var err error
+		getCurrentSchema, err = findListSchema(getCurrentSchema)
+		if err != nil {
+			return
+		}
+	}
+
+	for paramName, paramSchemaRef := range setExec.ParametersSchema().Properties {
+		paramSchema := (*mgcSchemaPkg.Schema)(paramSchemaRef.Value)
+		if paramSchema.Type == "array" && getCurrentSchema.Type != "array" && multiple {
+			paramSchema = (*mgcSchemaPkg.Schema)(paramSchema.Items.Value)
+		}
+
+		if mgcSchemaPkg.CheckSimilarJsonSchemas(paramSchema, getCurrentSchema) {
+			if !isValueSelected(multiple, item, current) {
+				return
+			}
+			continue
+		}
+
+		if getCurrentSchema.Type != "object" {
+			return
+		}
+		fieldSchemaRef := getCurrentSchema.Properties[paramName]
+		if fieldSchemaRef == nil {
+			return
+		}
+
+		itemObject, ok := item.(map[string]any)
+		if !ok {
+			return
+		}
+
+		currentObject, ok := current.(map[string]any)
+		if !ok {
+			return
+		}
+
+		if !utils.IsSameValueOrPointer(itemObject[paramName], currentObject[paramName]) {
+			return
+		}
+	}
+
+	return true
 }
 
 func selectMultipleAndSetupParameters(
@@ -281,13 +422,34 @@ func listSelectChoices(sdk *mgcSdk.Sdk, listExec core.Executor, parameters core.
 	return
 }
 
+func getCurrentSelectChoice(sdk *mgcSdk.Sdk, getCurrentExec core.Executor, parameters core.Parameters, configs core.Configs, cmd *cobra.Command) (resultValue any, err error) {
+	if getCurrentExec == nil {
+		return
+	}
+
+	ctx := sdk.NewContext() // use a new context, reset timeouts and the likes
+	getResult, err := handleExecutorPre(ctx, sdk, cmd, getCurrentExec, parameters, configs)
+	if err != nil {
+		return
+	}
+
+	resultWithValue, ok := core.ResultAs[core.ResultWithValue](getResult)
+	if !ok {
+		err = fmt.Errorf("get current returned no value")
+		return
+	}
+
+	resultValue = resultWithValue.Value()
+	return
+}
+
 func setSelectChoice(sdk *mgcSdk.Sdk, setExec core.Executor, parameters core.Parameters, configs core.Configs, cmd *cobra.Command) (err error) {
 	ctx := sdk.NewContext() // use a new context, reset timeouts and the likes
 	_, err = handleExecutor(ctx, sdk, cmd, setExec, parameters, configs)
 	return
 }
 
-func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, listExec core.Executor, multiple bool) (err error) {
+func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, getCurrentExec, listExec core.Executor, multiple bool) (err error) {
 	setCmdName, _ := getCommandNameAndAliases(setExec.Name())
 	listCmdName, _ := getCommandNameAndAliases(listExec.Name())
 
@@ -317,11 +479,17 @@ func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, 
 				return
 			}
 
+			getCurrentResult, err := getCurrentSelectChoice(sdk, getCurrentExec, parameters, configs, cmd)
+			if err != nil {
+				return
+			}
+
 			choices := make([]*ui.SelectionChoice, len(resultArray))
 			for i, v := range resultArray {
 				choices[i] = &ui.SelectionChoice{
-					Value: v,
-					Label: getSelectLabel(v),
+					Value:      v,
+					Label:      getSelectLabel(v),
+					IsSelected: isSelected(setExec, getCurrentExec, multiple, v, getCurrentResult),
 				}
 			}
 
