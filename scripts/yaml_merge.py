@@ -225,6 +225,8 @@ SUPPORTED_WAIT_TERMINATION_CUSTOMIZATIONS = {
     "interval": check_is_string,
     "jsonPathQuery": check_is_string,
     "templateQuery": check_is_string,
+    "errorJsonPathQuery": check_is_string,
+    "errorTemplateQuery": check_is_string,
 }
 
 

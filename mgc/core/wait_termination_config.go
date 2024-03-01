@@ -4,16 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"magalu.cloud/core/utils"
 )
 
 type WaitTerminationConfig struct {
-	MaxRetries    int           `json:"maxRetries,omitempty"`
-	Interval      time.Duration `json:"interval,omitempty"`
-	JSONPathQuery string        `json:"jsonPathQuery,omitempty"`
-	TemplateQuery string        `json:"templateQuery,omitempty"`
+	MaxRetries         int           `json:"maxRetries,omitempty"`
+	Interval           time.Duration `json:"interval,omitempty"`
+	JSONPathQuery      string        `json:"jsonPathQuery,omitempty"`
+	TemplateQuery      string        `json:"templateQuery,omitempty"`
+	ErrorJSONPathQuery string        `json:"errorJsonPathQuery,omitempty"`
+	ErrorTemplateQuery string        `json:"errorTemplateQuery,omitempty"`
 }
 
 var defaultWaitTermination = WaitTerminationConfig{MaxRetries: 30, Interval: time.Second}
@@ -39,13 +42,44 @@ func (c *WaitTerminationConfig) Build(exec Executor, getDocument func(result Res
 		err = errors.New("need one of jsonPathQuery or templateQuery")
 	}
 
+	var errorChecker func(value any) (bool, error)
+	if c.ErrorJSONPathQuery != "" && c.TemplateQuery != "" {
+		err = errors.New("cannot specify both errorJsonPathQuery and errorTemplateQuery")
+	} else if c.ErrorJSONPathQuery != "" {
+		errorChecker, err = utils.CreateJsonPathChecker(c.ErrorJSONPathQuery)
+	} else if c.ErrorTemplateQuery != "" {
+		errorChecker, err = utils.CreateTemplateChecker(c.ErrorJSONPathQuery)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	return NewTerminatorExecutorWithCheck(exec, maxRetries, interval, func(ctx context.Context, exec Executor, result ResultWithValue) (terminated bool, err error) {
 		doc := getDocument(result)
-		return expChecker(doc)
+
+		terminated, err = expChecker(doc)
+		if terminated || err != nil {
+			return
+		}
+
+		if errorChecker != nil {
+			terminated, err = errorChecker(doc)
+			if err != nil {
+				return
+			}
+
+			if terminated {
+				err = fmt.Errorf(
+					"wait termination for %q exited due to error condition returning true with document %#v",
+					exec.Name(),
+					doc,
+				)
+				return
+			}
+		}
+
+		return
 	}), nil
 }
 
