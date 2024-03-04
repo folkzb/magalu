@@ -144,12 +144,17 @@ A browser will open, redirecting the user to id.magalu.com. After completing aut
 the token will be saved to `$HOME/.config/mgc/<CURRENT_PROFILE>/auth.yaml` and reused by the CLI in further actions.
 
 > **NOTE:**
-> Upon logging in, your primary Tenant will be automatically selected. If you have multiple Tenants linked to your account, you can choose and switch between them as needed:
+> Upon logging in, you will be able to select any of the tenant delegated to you as your primary tenant.
+If you have multiple Tenants linked to your account, you can choose and
+switch between them as needed:
 
 > ```shell
 > ./mgc auth tenant list # to list all avaiable tenants for current login
-> ./mgc auth tenant select <id> # to set active Tenant to be used for all subsequencial requests
+> ./mgc auth tenant set <id> # to set active Tenant to be used for all subsequencial requests
 > ```
+
+Execute the `select` command without id parameter to choose from
+the available tenant interactively without needing to `list` them before
 
 To ensure it is working, perform a CLI command that requires authentication:
 
@@ -317,12 +322,12 @@ instances:
 ### Table
 
 ```sh
-./mgc virtual-machine instances list -o table='ID:$.instances[*].id,PWR_STATE:$.instances[*].power_state'
+./mgc virtual-machine instances list -o table='ID:$.instances[*].id,STATE:$.instances[*].state'
 
 +--------------------------------------+-----------+
-| ID                                   | PWR_STATE |
+| ID                                   |   STATE   |
 +--------------------------------------+-----------+
-| 12db59e3-8715-47af-a15f-1a595f6647ec | 4         |
+| 12db59e3-8715-47af-a15f-1a595f6647ec |  running  |
 +--------------------------------------+-----------+
 ```
 
