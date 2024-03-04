@@ -17,6 +17,7 @@ access token used in all other operations.`,
 		func() []core.Descriptor {
 			return []core.Descriptor{
 				getAdd(),
+				getAddAll(),
 				getListAll(),
 				getListCurrent(),
 				getRemove(),
