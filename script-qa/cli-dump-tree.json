@@ -21420,6 +21420,129 @@
        "type": "object"
       },
       "version": ""
+     },
+     {
+      "configs": {
+       "properties": {
+        "chunkSize": {
+         "default": 5,
+         "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
+         "maximum": 5120,
+         "minimum": 5,
+         "type": "integer"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1",
+          "br-mgl1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        },
+        "workers": {
+         "default": 5,
+         "description": "Number of routines that spawn to do parallel operations within object_storage",
+         "minimum": 1,
+         "type": "integer"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Retrieve all versions of an object",
+      "isInternal": false,
+      "name": "versions",
+      "parameters": {
+       "properties": {
+        "dst": {
+         "description": "Path of the object to retrieve versions from",
+         "example": "bucket1/file.txt",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "required": [
+        "dst"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "items": {
+        "properties": {
+         "ETag": {
+          "type": "string"
+         },
+         "IsLatest": {
+          "type": "boolean"
+         },
+         "Key": {
+          "type": "string"
+         },
+         "LastModified": {
+          "type": "string"
+         },
+         "Owner": {
+          "properties": {
+           "DisplayName": {
+            "type": "string"
+           },
+           "ID": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "DisplayName",
+           "ID"
+          ],
+          "type": "object"
+         },
+         "Size": {
+          "type": "integer"
+         },
+         "StorageClass": {
+          "type": "string"
+         },
+         "VersionID": {
+          "type": "string"
+         },
+         "XMLName": {
+          "properties": {
+           "Local": {
+            "type": "string"
+           },
+           "Space": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "Space",
+           "Local"
+          ],
+          "type": "object"
+         }
+        },
+        "required": [
+         "XMLName",
+         "VersionID",
+         "IsLatest",
+         "Key",
+         "LastModified",
+         "ETag",
+         "Size",
+         "Owner",
+         "StorageClass"
+        ],
+        "type": "object"
+       },
+       "type": "array"
+      },
+      "version": ""
      }
     ],
     "description": "Object operations for Object Storage API",

@@ -28,6 +28,7 @@ var GetGroup = utils.NewLazyLoader[core.Grouper](func() core.Grouper {
 				getUploadDir(),   // object-storage objects upload-dir
 				getPresign(),     // object-storage objects presigned
 				getPublicUrl(),   // object-storage objects public-url
+				getVersions(),    // object-storage objects versions
 			}
 		},
 	)
