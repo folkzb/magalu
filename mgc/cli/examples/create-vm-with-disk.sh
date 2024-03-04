@@ -32,16 +32,15 @@ DESCRIPTION="example-volume"
 DISK_NAME="example-volume";
 DISK_TYPE="cloud_nvme";
 DISK_SIZE=1;
-read DISK_ID < <($MGC_CLI block-storage volume create \
-    --description=$DESCRIPTION \
+read DISK_ID < <($MGC_CLI block-storage volumes create \
     --name=$DISK_NAME \
-    --volume-type=$DISK_TYPE \
+    --type.name=$DISK_TYPE \
     --size=$DISK_SIZE -o jsonpath='$.id')
 
 # 5. Wait for the VM to transition to a terminal state (active, shutoff or error)
 read ACTIVE_VM_ID < <($MGC_CLI virtual-machine instances get \
     $VM_ID \
-    -U="30,1s,jsonpath=\$.status == \"completed\"" \
+    -U="100,1s,jsonpath=\$.status == \"completed\"" \
     -o jsonpath='$.id')
 
 # 6. Check if VM is in active state
@@ -51,10 +50,10 @@ then
     exit 1
 else
     # 6. Attach Disk to VM - may fail if VM is in Pending status
-    $MGC_CLI block-storage volume attach \
+    $MGC_CLI block-storage volumes attach \
         --id=$DISK_ID \
         --virtual-machine-id=$VM_ID
 
     # 7. Shutoff VM
-    $MGC_CLI virtual-machine instances update --id=$VM_ID --status="shutoff"
+    $MGC_CLI virtual-machine instances stop --id=$VM_ID"
 fi
