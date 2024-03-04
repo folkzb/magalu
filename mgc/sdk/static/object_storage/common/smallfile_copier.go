@@ -7,15 +7,16 @@ import (
 )
 
 type smallFileCopier struct {
-	cfg Config
-	src mgcSchemaPkg.URI
-	dst mgcSchemaPkg.URI
+	cfg     Config
+	src     mgcSchemaPkg.URI
+	dst     mgcSchemaPkg.URI
+	version string
 }
 
 var _ copier = (*smallFileCopier)(nil)
 
 func (u *smallFileCopier) Copy(ctx context.Context) error {
-	req, err := newCopyRequest(ctx, u.cfg, u.src, u.dst)
+	req, err := newCopyRequest(ctx, u.cfg, u.src, u.dst, u.version)
 	if err != nil {
 		return err
 	}

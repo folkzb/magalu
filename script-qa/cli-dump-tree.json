@@ -20085,6 +20085,10 @@
          "format": "uri",
          "type": "string"
         },
+        "obj_version": {
+         "description": "Version of the object to be copied",
+         "type": "string"
+        },
         "src": {
          "description": "Path of the object in a bucket to be copied",
          "example": "bucket1/file.txt",
@@ -20477,6 +20481,10 @@
          "type": "string",
          "x-contentMediaType": "application/octet-stream"
         },
+        "obj_version": {
+         "description": "Version of the object to be downloaded",
+         "type": "string"
+        },
         "src": {
          "description": "Path of the object to be downloaded",
          "example": "bucket1/file.txt",
@@ -20602,6 +20610,10 @@
          "type": "string",
          "x-contentMediaType": "application/octet-stream"
         },
+        "obj_version": {
+         "description": "Version of the object to be downloaded",
+         "type": "string"
+        },
         "src": {
          "description": "Path of the object to be downloaded",
          "example": "bucket1/file.txt",
@@ -20659,6 +20671,10 @@
          "description": "Path of the object to be get metadata from",
          "example": "bucket1/file.txt",
          "format": "uri",
+         "type": "string"
+        },
+        "objVersion": {
+         "description": "Version of the object to be get metadata from",
          "type": "string"
         }
        },

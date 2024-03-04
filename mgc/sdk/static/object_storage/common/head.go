@@ -17,16 +17,28 @@ type HeadObjectResponse struct {
 	ContentType   string
 }
 
-func newHeadRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI) (*http.Request, error) {
+func newHeadRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI, version string) (*http.Request, error) {
 	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodHead, string(host), nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, string(host), nil)
+	if err != nil {
+		return nil, core.UsageError{Err: err}
+	}
+
+	if version != "" {
+		query := req.URL.Query()
+		query.Set("versionId", version)
+		req.URL.RawQuery = query.Encode()
+	}
+
+	return req, nil
 }
 
-func HeadFile(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI) (metadata HeadObjectResponse, err error) {
-	req, err := newHeadRequest(ctx, cfg, dst)
+func HeadFile(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI, version string) (metadata HeadObjectResponse, err error) {
+	req, err := newHeadRequest(ctx, cfg, dst, version)
 	if err != nil {
 		return
 	}

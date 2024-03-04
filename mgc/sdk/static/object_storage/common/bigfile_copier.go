@@ -22,6 +22,7 @@ type bigFileCopier struct {
 	totalParts       int
 	uploadId         string
 	progressReporter *progress_report.BytesReporter
+	version          string
 }
 
 var _ copier = (*bigFileCopier)(nil)
@@ -39,6 +40,10 @@ func (u *bigFileCopier) newPreparationRequest(ctx context.Context) (*http.Reques
 	req.Header.Set("Content-Type", "application/octet-stream")
 	q := req.URL.Query()
 	q.Set("uploads", "")
+
+	if u.version != "" {
+		q.Set("versionId", u.version)
+	}
 	req.URL.RawQuery = q.Encode()
 
 	return req, nil
@@ -71,7 +76,7 @@ func (u *bigFileCopier) createMultipartRequest(ctx context.Context, partNumber i
 	if err != nil {
 		return nil, err
 	}
-	req, err := newCopyRequest(ctx, u.cfg, u.src, u.dst)
+	req, err := newCopyRequest(ctx, u.cfg, u.src, u.dst, u.version)
 	if err != nil {
 		return nil, err
 	}

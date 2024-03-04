@@ -12,15 +12,16 @@ import (
 )
 
 type smallFileDownloader struct {
-	cfg Config
-	src mgcSchemaPkg.URI
-	dst mgcSchemaPkg.FilePath
+	cfg     Config
+	src     mgcSchemaPkg.URI
+	dst     mgcSchemaPkg.FilePath
+	version string
 }
 
 var _ downloader = (*smallFileDownloader)(nil)
 
 func (u *smallFileDownloader) Download(ctx context.Context) error {
-	req, err := NewDownloadRequest(ctx, u.cfg, u.src)
+	req, err := NewDownloadRequest(ctx, u.cfg, u.src, u.version)
 	if err != nil {
 		return err
 	}

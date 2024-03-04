@@ -16,13 +16,14 @@ type bigFileDownloader struct {
 	cfg              Config
 	src              mgcSchemaPkg.URI
 	dst              mgcSchemaPkg.FilePath
+	version          string
 	fileSize         int64
 	progressReporter *progress_report.BytesReporter
 }
 
 func (u *bigFileDownloader) createPartDownloaderProcessor(cancel context.CancelCauseFunc, cfg Config) pipeline.Processor[pipeline.WriteableChunk, error] {
 	return func(ctx context.Context, chunk pipeline.WriteableChunk) (error, pipeline.ProcessStatus) {
-		req, err := NewDownloadRequest(ctx, cfg, u.src)
+		req, err := NewDownloadRequest(ctx, cfg, u.src, u.version)
 		if err != nil {
 			cancel(err)
 			return err, pipeline.ProcessAbort

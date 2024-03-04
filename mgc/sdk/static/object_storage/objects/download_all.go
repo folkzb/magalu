@@ -70,7 +70,7 @@ func createObjectDownloadProcessor(
 		}
 
 		downloadAllLogger().Infow("Downloading object", "uri", objURI)
-		downloader, err := common.NewDownloader(ctx, cfg, objURI, params.Destination.Join(dirEntry.Path()))
+		downloader, err := common.NewDownloader(ctx, cfg, objURI, params.Destination.Join(dirEntry.Path()), "") // since we are downloading N objects, can't set a version
 		if err != nil {
 			return err, pipeline.ProcessAbort
 		}

@@ -26,7 +26,7 @@ var getCopy = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func copy(ctx context.Context, p common.CopyObjectParams, cfg common.Config) (result core.Value, err error) {
-	_, err = common.HeadFile(ctx, cfg, p.Source)
+	_, err = common.HeadFile(ctx, cfg, p.Source, p.Version)
 	if err != nil {
 		return nil, fmt.Errorf("error validating source: %w", err)
 	}
@@ -46,7 +46,7 @@ func copy(ctx context.Context, p common.CopyObjectParams, cfg common.Config) (re
 		fullDstPath = fullDstPath.JoinPath(fileName)
 	}
 
-	copier, err := common.NewCopier(ctx, cfg, p.Source, fullDstPath)
+	copier, err := common.NewCopier(ctx, cfg, p.Source, fullDstPath, p.Version)
 	if err != nil {
 		return nil, err
 	}

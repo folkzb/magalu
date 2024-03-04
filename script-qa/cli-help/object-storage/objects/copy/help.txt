@@ -7,9 +7,10 @@ Examples:
   ./cli object-storage objects copy --dst="bucket2/dir/file.txt" --src="bucket1/file.txt"
 
 Flags:
-      --dst uri   Full destination path in the bucket with desired filename (required)
-  -h, --help      help for copy
-      --src uri   Path of the object in a bucket to be copied (required)
+      --dst uri              Full destination path in the bucket with desired filename (required)
+  -h, --help                 help for copy
+      --obj-version string   Version of the object to be copied
+      --src uri              Path of the object in a bucket to be copied (required)
 
 Global Flags:
       --chunk-size integer     Chunk size to consider when doing multipart requests. Specified in Mb (range: 5 - 5120) (default 5)

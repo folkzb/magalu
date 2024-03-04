@@ -17,18 +17,31 @@ import (
 type DownloadObjectParams struct {
 	Source      mgcSchemaPkg.URI      `json:"src" jsonschema:"description=Path of the object to be downloaded,example=bucket1/file.txt" mgc:"positional"`
 	Destination mgcSchemaPkg.FilePath `json:"dst,omitempty" jsonschema:"description=Path and file name to be saved (relative or absolute).If not specified it defaults to the current working directory,example=file.txt" mgc:"positional"`
+	Version     string                `json:"obj_version,omitempty" jsonschema:"description=Version of the object to be downloaded"`
 }
 
 type downloader interface {
 	Download(context.Context) error
 }
 
-func NewDownloadRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI) (*http.Request, error) {
+func NewDownloadRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, version string) (*http.Request, error) {
 	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(src), src.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
 	}
-	return http.NewRequestWithContext(ctx, http.MethodGet, string(host), nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, string(host), nil)
+	if err != nil {
+		return nil, core.UsageError{Err: err}
+	}
+
+	if version != "" {
+		query := req.URL.Query()
+		query.Set("versionId", version)
+		req.URL.RawQuery = query.Encode()
+	}
+
+	return req, nil
 }
 
 func WriteToFile(ctx context.Context, reader io.ReadCloser, fileSize int64, outFile mgcSchemaPkg.FilePath) (err error) {
@@ -47,8 +60,8 @@ func WriteToFile(ctx context.Context, reader io.ReadCloser, fileSize int64, outF
 	return nil
 }
 
-func NewDownloader(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath) (downloader, error) {
-	metadata, err := HeadFile(ctx, cfg, src)
+func NewDownloader(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.FilePath, version string) (downloader, error) {
+	metadata, err := HeadFile(ctx, cfg, src, version)
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +74,14 @@ func NewDownloader(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mg
 			src:      src,
 			dst:      dst,
 			fileSize: metadata.ContentLength,
+			version:  version,
 		}, nil
 	} else {
 		return &smallFileDownloader{
-			cfg: cfg,
-			src: src,
-			dst: dst,
+			cfg:     cfg,
+			src:     src,
+			dst:     dst,
+			version: version,
 		}, nil
 	}
 }

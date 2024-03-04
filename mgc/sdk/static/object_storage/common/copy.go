@@ -27,6 +27,7 @@ func copyAllLogger() *zap.SugaredLogger {
 type CopyObjectParams struct {
 	Source      mgcSchemaPkg.URI `json:"src" jsonschema:"description=Path of the object in a bucket to be copied,example=bucket1/file.txt" mgc:"positional"`
 	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Full destination path in the bucket with desired filename,example=bucket2/dir/file.txt" mgc:"positional"`
+	Version     string           `json:"obj_version,omitempty" jsonschema:"description=Version of the object to be copied"`
 }
 
 type CopyAllObjectsParams struct {
@@ -39,7 +40,7 @@ type copier interface {
 	Copy(context.Context) error
 }
 
-func newCopyRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) (*http.Request, error) {
+func newCopyRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI, version string) (*http.Request, error) {
 	host, err := BuildBucketHostWithPath(cfg, NewBucketNameFromURI(dst), dst.Path())
 	if err != nil {
 		return nil, core.UsageError{Err: err}
@@ -56,6 +57,12 @@ func newCopyRequest(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst m
 	}
 
 	req.Header.Set("x-amz-copy-source", copySource)
+
+	if version != "" {
+		query := req.URL.Query()
+		query.Set("versionId", version)
+		req.URL.RawQuery = query.Encode()
+	}
 
 	return req, nil
 }
@@ -140,7 +147,7 @@ func CopySingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst m
 		dst = dst.JoinPath(src.Filename())
 	}
 
-	req, err := newCopyRequest(ctx, cfg, src, dst)
+	req, err := newCopyRequest(ctx, cfg, src, dst, "")
 	if err != nil {
 		return err
 	}
@@ -153,8 +160,8 @@ func CopySingleFile(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst m
 	return ExtractErr(resp, req)
 }
 
-func NewCopier(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI) (copier, error) {
-	metadata, err := HeadFile(ctx, cfg, src)
+func NewCopier(ctx context.Context, cfg Config, src mgcSchemaPkg.URI, dst mgcSchemaPkg.URI, version string) (copier, error) {
+	metadata, err := HeadFile(ctx, cfg, src, version)
 	if err != nil {
 		return nil, err
 	}
