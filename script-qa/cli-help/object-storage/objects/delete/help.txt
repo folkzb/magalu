@@ -7,8 +7,9 @@ Examples:
   ./cli object-storage objects delete --dst="bucket1/file.txt"
 
 Flags:
-      --dst uri   Path of the object to be deleted (required)
-  -h, --help      help for delete
+      --dst uri              Path of the object to be deleted (required)
+  -h, --help                 help for delete
+      --obj-version string   Version of the object to be deleted
 
 Global Flags:
       --chunk-size integer     Chunk size to consider when doing multipart requests. Specified in Mb (range: 5 - 5120) (default 5)

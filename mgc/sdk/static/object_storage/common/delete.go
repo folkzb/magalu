@@ -27,6 +27,7 @@ func deleteLogger() *zap.SugaredLogger {
 
 type DeleteObjectParams struct {
 	Destination mgcSchemaPkg.URI `json:"dst" jsonschema:"description=Path of the object to be deleted,example=bucket1/file.txt" mgc:"positional"`
+	Version     string           `json:"objVersion,omitempty" jsonschema:"description=Version of the object to be deleted"`
 }
 
 type DeleteBucketParams struct {
@@ -54,7 +55,8 @@ func newDeleteRequest(ctx context.Context, cfg Config, dst mgcSchemaPkg.URI) (*h
 }
 
 type objectIdentifier struct {
-	Key string `xml:"Key"`
+	Key       string `xml:"Key"`
+	VersionId string `xml:"VersionId,omitempty"`
 }
 
 type deleteBatchRequestBody struct {
@@ -193,7 +195,7 @@ func DeleteBucket(ctx context.Context, params DeleteBucketParams, cfg Config) er
 }
 
 func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err error) {
-	objKeys := []objectIdentifier{{Key: params.Destination.AsFilePath().String()}}
+	objKeys := []objectIdentifier{{Key: params.Destination.AsFilePath().String(), VersionId: params.Version}}
 
 	req, err := newDeleteBatchRequest(ctx, cfg, NewBucketNameFromURI(params.Destination), objKeys)
 	if err != nil {

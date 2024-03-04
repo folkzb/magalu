@@ -20292,6 +20292,10 @@
          "example": "bucket1/file.txt",
          "format": "uri",
          "type": "string"
+        },
+        "objVersion": {
+         "description": "Version of the object to be deleted",
+         "type": "string"
         }
        },
        "required": [
