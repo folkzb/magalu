@@ -77,7 +77,7 @@ elements. The following list shows which extensions can be used in the spec:
     - `x-mgc-hidden`
     - `x-mgc-transforms`
 
-# ## `x-mgc-name`
+### `x-mgc-name`
 
 Use this extension to rename a tag, operation, parameter or a JSON Schema property (i.e: request body).
 
