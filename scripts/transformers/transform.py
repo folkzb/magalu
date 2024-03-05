@@ -5,6 +5,7 @@ from typing import List, cast
 from urllib import parse
 from oapi_types import OAPI
 from transform_helpers import fetch_and_parse, load_yaml, save_external, add_spec_uid
+from spec_add_tags_block import AddTagsBlockTransformer
 from spec_types import SpecTranformer
 from spec_version_convert import ConvertVersionTransformer
 from spec_remove_param import RemoveParamTransformer
@@ -75,6 +76,7 @@ if __name__ == "__main__":
         RemoveParamTransformer("x-tenant-id"),
         AddSecurityTransformer(args.product_name),
         AddParameterTypes(),
+        AddTagsBlockTransformer(),
         FixLinksTransformer(),
         CreateLinks(),
     ]
