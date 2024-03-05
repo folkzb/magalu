@@ -1,7 +1,8 @@
 import re
 from typing import Optional
 from links_helper import extract_path, handle_exp
-from spec_types import OAPISchema, SpecTranformer
+from spec_types import SpecTranformer
+from oapi_types import OAPI
 import jsonpointer
 
 POSSIBLE_PARENTS = ["request", "response"]
@@ -18,7 +19,8 @@ METHODS_ALIAS = {
 class CreateLinks(SpecTranformer):
     """Create links"""
 
-    def transform(self, spec: OAPISchema) -> OAPISchema:
+    def transform(self, oapi: OAPI):
+        spec = oapi.obj
         all_paths = spec.get("paths", {})
 
         tree_root, level_paths, _ = build_tree(all_paths)
@@ -29,8 +31,6 @@ class CreateLinks(SpecTranformer):
             link = generated_links.get(path, {})
             if link:
                 self.populate_action_links(spec, operations, link)
-
-        return spec
 
     def generate_all_links(self, spec, related_paths, tree_root) -> dict:
         generated_links = {}

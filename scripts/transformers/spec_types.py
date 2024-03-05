@@ -1,8 +1,7 @@
-from typing import Any, Dict, Protocol
-
-OAPISchema = Dict[str, Any]
+from typing import Protocol
+from oapi_types import OAPI
 
 
 class SpecTranformer(Protocol):
-    def transform(self, spec: OAPISchema) -> OAPISchema:
+    def transform(self, oapi: OAPI):
         pass

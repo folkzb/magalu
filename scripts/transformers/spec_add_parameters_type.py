@@ -1,6 +1,7 @@
 from typing import Any
 
-from spec_types import OAPISchema, SpecTranformer
+from spec_types import SpecTranformer
+from oapi_types import OAPI
 
 
 class AddParameterTypes(SpecTranformer):
@@ -11,7 +12,8 @@ class AddParameterTypes(SpecTranformer):
     a string, let's set it to that.
     """
 
-    def transform(self, spec: OAPISchema) -> OAPISchema:
+    def transform(self, oapi: OAPI):
+        spec = oapi.obj
         paths = spec.get("paths")
         if not isinstance(paths, dict):
             return spec
@@ -19,8 +21,6 @@ class AddParameterTypes(SpecTranformer):
         for item in paths.values():
             assert isinstance(item, dict)
             self._convert_path_item(item)
-
-        return spec
 
     OPERATIONS = (
         "get",

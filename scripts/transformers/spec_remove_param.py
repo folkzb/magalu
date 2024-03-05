@@ -1,16 +1,18 @@
 from typing import Any, List, Tuple
 
-from spec_types import OAPISchema, SpecTranformer
+from spec_types import SpecTranformer
+from oapi_types import OAPI, OAPIObject
 
 
 class RemoveParamTransformer(SpecTranformer):
     def __init__(self, param_name: str):
         self.param_name = param_name
 
-    def transform(self, spec: OAPISchema) -> OAPISchema:
-        return self._remove_param(spec, param_name=self.param_name)
+    def transform(self, oapi: OAPI):
+        self._remove_param(oapi, param_name=self.param_name)
 
-    def _remove_param(self, spec: OAPISchema, param_name: str) -> OAPISchema:
+    def _remove_param(self, oapi: OAPI, param_name: str):
+        spec = oapi.obj
         refs_for_removal = set()
         for path in spec.get("paths", {}).values():
             for action in path.values():
@@ -27,11 +29,10 @@ class RemoveParamTransformer(SpecTranformer):
                 else:
                     action["parameters"] = filtered_params
 
-        self._remove_param_refs(spec, refs_for_removal)
-        return spec
+        self._remove_param_refs(spec, list(refs_for_removal))
 
     def _filter_params_and_refs(
-        self, params: List[str], spec: OAPISchema, param_name: str
+        self, params: List[str], spec: OAPIObject, param_name: str
     ) -> Tuple[List[str], List[str]]:
         refs = []
         filtered_params = []
@@ -55,7 +56,7 @@ class RemoveParamTransformer(SpecTranformer):
 
         return filtered_params, refs
 
-    def _remove_param_refs(self, spec: OAPISchema, refs: List[str]):
+    def _remove_param_refs(self, spec: OAPIObject, refs: List[str]):
         def should_delete(value: Any, keys: List[str]):
             if len(keys) == 0:
                 return True

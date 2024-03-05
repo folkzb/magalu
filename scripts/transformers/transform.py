@@ -1,6 +1,9 @@
+import jsonschema
+
 import argparse
-from typing import List
+from typing import List, cast
 from urllib import parse
+from oapi_types import OAPI
 from transform_helpers import fetch_and_parse, load_yaml, save_external, add_spec_uid
 from spec_types import SpecTranformer
 from spec_version_convert import ConvertVersionTransformer
@@ -10,7 +13,7 @@ from spec_remove_path import RemovePathTransformer
 from spec_remove_component import RemoveComponentTransformer
 from spec_add_security import AddSecurityTransformer
 from spec_add_parameters_type import AddParameterTypes
-from spec_check_links import FixLinksTransformer
+from spec_fix_links import FixLinksTransformer
 from spec_create_links import CreateLinks
 from validate_openapi_specs import validate_oapi
 
@@ -55,6 +58,14 @@ if __name__ == "__main__":
         # Load spec into dict
         product_spec = load_yaml(args.spec_file)
 
+    ref_resolver = jsonschema.RefResolver(args.spec_file, cast(dict, product_spec))
+    oapi = OAPI(
+        path=args.spec_file,
+        name=args.product_name,
+        obj=product_spec,
+        ref_resolver=ref_resolver,
+    )
+
     # Perform changes in the spec
     transformers: List[SpecTranformer] = [
         ConvertVersionTransformer(),
@@ -68,9 +79,9 @@ if __name__ == "__main__":
         CreateLinks(),
     ]
     for t in transformers:
-        product_spec = t.transform(product_spec)
+        t.transform(oapi)
 
     # Write external to output file
     add_spec_uid(product_spec, args.spec_uid)
-    validate_oapi(product_spec)
-    save_external(product_spec, args.output)
+    validate_oapi(cast(dict, oapi.obj))
+    save_external(oapi.obj, args.output)

@@ -1,5 +1,6 @@
-from spec_types import OAPISchema, SpecTranformer
-from typing import List
+from spec_types import SpecTranformer
+from oapi_types import OAPI
+from typing import Dict, List
 
 # TODO: Add other operation methods?
 read_requirements = ["get"]
@@ -10,7 +11,9 @@ class AddSecurityTransformer(SpecTranformer):
     def __init__(self, product_name: str):
         self.product_name = product_name
 
-    def get_security_schema(self, http_method: str) -> List[OAPISchema] | None:
+    def _get_security_schema(
+        self, http_method: str
+    ) -> List[Dict[str, List[str]]] | None:
         scope = ""
         if http_method in read_requirements:
             scope = "read"
@@ -21,22 +24,20 @@ class AddSecurityTransformer(SpecTranformer):
 
         return [{"OAuth2": [self.product_name + "." + scope]}]
 
-    def transform(self, spec: OAPISchema) -> OAPISchema:
+    def transform(self, oapi: OAPI):
         """
         Assume all operations need security and add them, with scope using
         product_name
         """
-
+        spec = oapi.obj
         paths = spec.get("paths", {})
         for operations in paths.values():
             for http_method, op in operations.items():
                 if op.get("security") is not None:
                     continue
 
-                security = self.get_security_schema(http_method)
+                security = self._get_security_schema(http_method)
                 if security is None:
                     continue
 
                 op["security"] = security
-
-        return spec

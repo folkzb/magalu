@@ -1,7 +1,8 @@
 import argparse
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 from links_helper import get_response_header, handle_exp
-from spec_types import OAPISchema, SpecTranformer
+from spec_types import SpecTranformer
+from oapi_types import OAPI, OAPIObject, OAPIOperationObject, OAPIResponseObject, get
 from urllib import parse
 import jsonpointer
 from transform_helpers import fetch_and_parse, load_yaml, save_external
@@ -12,35 +13,47 @@ POSSIBLE_SOURCES = ["query", "header", "path", "body"]
 class FixLinksTransformer(SpecTranformer):
     """Check if the id path in each link is valid"""
 
-    def transform(self, spec: OAPISchema) -> OAPISchema:
-        self._check_links_path(spec)
-        return spec
+    def transform(self, oapi: OAPI):
+        self._check_links_path(oapi)
 
-    def _check_links_path(self, spec: OAPISchema) -> None:
+    def _check_links_path(self, oapi: OAPI):
         """
         Adjusts response link IDs in the API spec
 
         Args:
             spec: The OpenAPI specification dictionary.
         """
-        for path, methods in spec.get("paths", {}).items():
-            for method, action in methods.items():
-                for status_code, response in action.get("responses", {}).items():
+        spec = oapi.obj
+        for path, path_item in spec.get("paths", {}).items():
+            path_ops: Dict[str, OAPIOperationObject | None] = {
+                "get": path_item.get("get"),
+                "post": path_item.get("post"),
+                "put": path_item.get("put"),
+                "patch": path_item.get("patch"),
+                "delete": path_item.get("delete"),
+            }
+
+            for method, op in path_ops.items():
+                if op is None:
+                    continue
+                for status_code, resp in op.get("responses", {}).items():
+                    response: OAPIResponseObject = get(resp, oapi.resolve)
+
                     if status_code == "default" or status_code.startswith("2"):
                         if "links" in response:
-                            for op, link in response.get("links", {}).items():
+                            for link in response.get("links", {}).values():
                                 try:
-                                    action_parameters = action.get("parameters")
+                                    op_parameters = op.get("parameters", [])
 
                                     request_schema = self._get_content_app_json_schema(
-                                        spec, action.get("requestBody", {})
+                                        spec, cast(dict, op.get("requestBody", {}))
                                     )
                                     response_schema = self._get_content_app_json_schema(
-                                        spec, response
+                                        spec, cast(dict, response)
                                     )
 
                                     response_header = get_response_header(
-                                        spec, response
+                                        cast(dict, response)
                                     )
 
                                     for key, link_path in link.get(
@@ -51,7 +64,7 @@ class FixLinksTransformer(SpecTranformer):
                                             request_schema,
                                             response_schema,
                                             response_header,
-                                            action_parameters,
+                                            op_parameters,
                                         )
 
                                         if result:
@@ -59,7 +72,7 @@ class FixLinksTransformer(SpecTranformer):
                                         if field is None:
                                             raise Exception(
                                                 f"Found a invalid link in: "
-                                                f"{path} - {method} - {op} - "
+                                                f"{path} - {method} - {link} - "
                                                 f"{key}: {link['parameters'][key]}"
                                             )
 
@@ -68,7 +81,7 @@ class FixLinksTransformer(SpecTranformer):
                                             response_schema,
                                             request_schema,
                                             response_header,
-                                            action_parameters,
+                                            op_parameters,
                                             field,
                                         )
                                         if new_result:
@@ -82,7 +95,7 @@ class FixLinksTransformer(SpecTranformer):
                                     pass
 
     def _get_content_app_json_schema(
-        self, spec: OAPISchema, sourceDict: dict
+        self, spec: OAPIObject, sourceDict: dict
     ) -> Optional[Dict]:
         """
         Return the path of the schema refered in response content
@@ -123,7 +136,7 @@ class FixLinksTransformer(SpecTranformer):
                 if new_exp == current:
                     continue
 
-                field, result = handle_exp(
+                _, result = handle_exp(
                     new_exp,
                     requestBody,
                     responseBody,

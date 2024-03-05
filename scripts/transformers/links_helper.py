@@ -1,6 +1,11 @@
 import re
-from typing import Optional
-from spec_types import OAPISchema
+from typing import Mapping, Optional, Sequence, Tuple
+from oapi_types import (
+    JSONSchema,
+    OAPIHeaderSchema,
+    OAPIParameterObject,
+    OAPIReferenceObject,
+)
 
 FIND_VARIABLE_REGEX = r"/{(\w+)}$"
 
@@ -19,34 +24,34 @@ def extract_path(input_path) -> str:
 
 
 def handle_exp(
-    path: str,
-    request_schema: Optional[dict],
-    response_schema: Optional[dict],
-    response_header: dict,
-    action_parameters: list,
-):
+    regexp: str,
+    request_schema: JSONSchema | None,
+    response_schema: JSONSchema | None,
+    response_header: Mapping[str, OAPIHeaderSchema],
+    action_parameters: Sequence[OAPIParameterObject | OAPIReferenceObject],
+) -> Tuple[Optional[str], Optional[str]]:
     # TODO if necessary, we could handle the other expressions here
     # https://spec.openapis.org/oas/latest.html#runtime-expressions
-    if path.startswith("$request."):
+    if regexp.startswith("$request."):
 
         def find_headers(field_name: str):
             return is_action_parameter_present(field_name, "header", action_parameters)
 
         return handle_source_exp(
-            path,
-            path.removeprefix("$request."),
+            regexp,
+            regexp.removeprefix("$request."),
             request_schema,
             find_headers,
             action_parameters,
         )
-    if path.startswith("$response."):
+    if regexp.startswith("$response."):
 
         def find_headers(field_name: str):
             return is_header_present(field_name, response_header)
 
         return handle_source_exp(
-            path,
-            path.removeprefix("$response."),
+            regexp,
+            regexp.removeprefix("$response."),
             response_schema,
             find_headers,
             action_parameters,
@@ -138,15 +143,19 @@ def get_rt_exp_query(
 
 
 def is_action_parameter_present(
-    field_name: str, source: str, action_parameters: list
+    field_name: str,
+    source: str,
+    action_parameters: Sequence[OAPIParameterObject | OAPIReferenceObject],
 ) -> bool:
     """
     Check for a field in action_parameters with specific source
     """
-    if action_parameters:
-        for obj in action_parameters:
-            if obj["name"] == field_name and obj["in"] == source:
-                return True
+    for param in action_parameters:
+        if param is OAPIReferenceObject:
+            return False  # TODO
+
+        if param.get("name") == field_name and param.get("in") == source:
+            return True
 
     return False
 
@@ -181,12 +190,12 @@ def build_path(json_pointer: str, field: str) -> str:
         return json_pointer
 
 
-def is_header_present(field_name: str, headers: dict) -> bool:
+def is_header_present(field_name: str, headers: Mapping[str, OAPIHeaderSchema]) -> bool:
     if headers:
-        if field_name in headers.values():
+        if field_name in headers.keys():
             return True
     return False
 
 
-def get_response_header(spec: OAPISchema, response: dict) -> dict:
+def get_response_header(response: dict) -> dict:
     return response.get("headers", {})

@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict
 
-from spec_types import OAPISchema, SpecTranformer
+from oapi_types import OAPI
+from spec_types import SpecTranformer
 
 
 class ConvertVersionTransformer(SpecTranformer):
@@ -15,11 +16,11 @@ class ConvertVersionTransformer(SpecTranformer):
 
     _dict_item_converters: Dict[str, Callable[[dict, str, Any], bool]]
 
-    def transform(self, spec: OAPISchema) -> OAPISchema:
-        self._fix_openapi_version(spec)
-        return spec
+    def transform(self, oapi: OAPI):
+        self._fix_openapi_version(oapi)
 
-    def _fix_openapi_version(self, spec: OAPISchema) -> None:
+    def _fix_openapi_version(self, oapi: OAPI):
+        spec = oapi.obj
         maj_ver, min_ver = tuple(int(x) for x in spec["openapi"].split("."))[:2]
         if maj_ver != 3:
             raise ValueError(f"unsupported openapi major version {maj_ver}")
