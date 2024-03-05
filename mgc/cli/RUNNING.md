@@ -430,3 +430,45 @@ CLI requests. For example, to create a VM, create a DISK, and attach both, run:
 ```shell
 ./examples/create-vm-with-disk.sh
 ```
+
+## Links
+
+Links are an easy and simple way of chaining operations in the cli.
+Through them  you can automatically use the output of a command as parameter
+for other operations.  The cli maps the fields on its own
+
+To list the possible links from a command, simply add the `--cli.list-links` flag.
+
+Example:
+
+```sh
+virtual-machine instances create --cli.list-links
+```
+
+It will return the following available links:
+
+```yaml
+DESCRIPTION                         NAME
+
+ Read Virtual Machine instance       get
+ Reboot a Virtual Machine instance   reboot
+ Rename a Virtual Machine instance   rename
+ Retype a Virtual Machine instance   retype
+ Start a Virtual Machine instance    start
+ Stop a Virtual Machine instance     stop
+ Suspend a Virtual Machine instance  suspend
+ Delete Virtual Machine instance     delete
+```
+
+To use links, you must use the character `!` followed by the link name.
+
+Example: To create a virtual machine instance, get the data, rename it and then suspend it, use:
+
+```yaml
+virtual-machine instances create  --name <exampleName> --image.id <imageId> --machine-type.id <machineTypeId> --ssh-key-name <sshKey> ! get ! rename --name <newName> ! stop
+```
+
+In addition, for some commands that have a `get` link and that link is a
+`TerminatorExecutor` you can use the `--cli.watch` flag to wait until
+the operation is completed.
+t's the same behavior as using `! get -w`.
