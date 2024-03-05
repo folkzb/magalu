@@ -36,15 +36,20 @@ func isGetCurrentExecutor(name string) bool {
 	return false
 }
 
-func getSelectLabel(value any) string {
+func getSelectLabel(value any, choiceKeysToInclude []string) string {
 	switch v := value.(type) {
 	case map[string]any:
 		s := ""
 		keys := make([]string, 0, len(v))
-		for k := range v {
-			keys = append(keys, k)
+
+		if len(choiceKeysToInclude) == 0 {
+			for k := range v {
+				keys = append(keys, k)
+			}
+			slices.Sort(keys)
+		} else {
+			keys = choiceKeysToInclude
 		}
-		slices.Sort(keys)
 
 		for _, key := range keys {
 			if s != "" {
@@ -484,11 +489,16 @@ func addSelectHelperCommand(sdk *mgcSdk.Sdk, parentCmd *cobra.Command, setExec, 
 				return
 			}
 
+			var choiceKeysToInclude []string
+			if humanResultExec, ok := core.ExecutorAs[core.HumanIdentifiableFieldsExecutor](listExec); ok {
+				choiceKeysToInclude = humanResultExec.HumanIdentifiableFields()
+			}
+
 			choices := make([]*ui.SelectionChoice, len(resultArray))
 			for i, v := range resultArray {
 				choices[i] = &ui.SelectionChoice{
 					Value:      v,
-					Label:      getSelectLabel(v),
+					Label:      getSelectLabel(v, choiceKeysToInclude),
 					IsSelected: isSelected(setExec, getCurrentExec, multiple, v, getCurrentResult),
 				}
 			}

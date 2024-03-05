@@ -14,7 +14,7 @@ import (
 )
 
 var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
-	return core.NewStaticExecuteSimple(
+	var exec core.Executor = core.NewStaticExecuteSimple(
 		core.DescriptorSpec{
 			Scopes:      core.Scopes{"pa:api-keys:read"},
 			Name:        "list",
@@ -22,6 +22,10 @@ var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
 		},
 		list,
 	)
+
+	exec = core.NewHumanIdentifiableFieldsExecutor(exec, []string{"name"})
+
+	return exec
 })
 
 func list(ctx context.Context) ([]*apiKeysResult, error) {

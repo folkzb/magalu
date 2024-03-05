@@ -10,13 +10,17 @@ import (
 )
 
 var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
-	return core.NewStaticExecuteSimple(
+	var exec core.Executor = core.NewStaticExecuteSimple(
 		core.DescriptorSpec{
 			Name:        "list",
 			Description: "List all available tenants for current login",
 		},
 		listTenants,
 	)
+
+	exec = core.NewHumanIdentifiableFieldsExecutor(exec, []string{"legal_name", "email"})
+
+	return exec
 })
 
 func listTenants(ctx context.Context) ([]*mgcAuthPkg.Tenant, error) {
