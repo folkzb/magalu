@@ -73,6 +73,29 @@ children:
             # see more about executors below
 ```
 
+### Including References Using `$ref`
+
+When defining the structure of your YAML file, you can include references
+using `$ref` to copy content from another source into your YAML structure.
+This is useful for reusing existing definitions or structures as a child
+without duplicating them.
+
+Example:
+```yaml
+children:
+  - name: port
+    description: VPC Port
+    children:
+      - $ref: http://magalu.cloud/sdk#/network/vpc/ports/create
+        isInternal: false
+```
+
+By doing so, you can define a new child that is basically a copy that includes
+all the properties defined in the `$ref`, including name, description, links, etc.
+The `$ref` can refer to a simple command or a grouping. In addition,
+If necessary, you can override properties (like `isInternal`) by setting them in the
+in the same way as for other children, but not affecting the original ref.
+
 ## Executors (Actions)
 
 The executors describes the schema of its input parameters and configs,
