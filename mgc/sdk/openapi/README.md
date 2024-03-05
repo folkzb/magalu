@@ -249,3 +249,25 @@ Server variables, header and cookie parameters are handled as **Config**.
 
 Query and path parameters, as well as request body properties are
 handled as **Parameters**.
+
+## Links
+
+Links are an effective strategy for chaining operations. This is because links
+make it easier to use a command response to call another executor,
+automatically mapping the parameters.
+
+When you add a new OpenAPI YAML file using the `scripts/add_specs.sh` script,
+the links between endpoints are automatically generated and included in the
+specification.
+
+Example: Suppose you have two endpoints in your API:
+
+```yaml
+/product (POST) : Creates a new product
+/product/{product_id} (GET): Retrieves details about a specific product
+```
+
+The script will generate a link from `/product` to `/product/{product_id}`.
+This allows users to easily create a new product using the POST method and then
+immediately retrieve the details of the newly created product using the GET
+method with the ID in POST response
