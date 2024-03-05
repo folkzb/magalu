@@ -431,6 +431,48 @@ CLI requests. For example, to create a VM, create a DISK, and attach both, run:
 ./examples/create-vm-with-disk.sh
 ```
 
+## Select Command
+
+The `select` command is available for resources that support both the
+`LIST` and `SET` commands. This command simplifies the process of setting
+values by automatically listing all the available options and prompting
+the user to select and set the desired value.
+
+### Example
+
+```sh
+./mgc auth scopes select
+```
+
+This command lists all the available scopes. The user
+can then select the ones they want to add. To finish the operation
+the user selects the `Done` option.
+
+```sh
+./mgc auth scopes select
+```
+
+```yaml
+Select multiple entries to be used with "set":
+Filter: Type to filter choices
+  ▸ ⏎ Done
+      "block-storage.read"
+      "block-storage.write"
+      "cpo:read"
+      "cpo:write"
+      "dbaas.read"
+      "dbaas.write"
+      "mke.read"
+      "mke.write"
+      "network.read"
+      "network.write"
+```
+
+> **NOTE:**
+> Notice that the options that are already predefined for the user
+have a `✔` in front of them. The user can then choose to keep them
+or unmark them
+
 ## Links
 
 Links are an easy and simple way of chaining operations in the cli.
