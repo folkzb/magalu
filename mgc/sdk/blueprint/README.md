@@ -392,7 +392,7 @@ related:
 
 ### Links
 
-Links can ease using the return of of the execution to call another
+Links can ease using the return of the execution to call another
 executor, automatically mapping parameters and config as described.
 
 Parameters must be explicitly declared. Configs will be automatically
