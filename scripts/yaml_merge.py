@@ -33,8 +33,10 @@ def merge_item(value: Any, new: Any, override: bool, path: list[str]) -> bool:
 
     if value_type == dict:
         merge_dict(value, new, override, path)
+        return False
     elif value_type == list:
         merge_list(value, new, override, path)
+        return False
     elif not override:
         raise ValueError(f"{path}: not overriding {value!r} with {new!r}")
     else:
@@ -44,10 +46,8 @@ def merge_item(value: Any, new: Any, override: bool, path: list[str]) -> bool:
 def merge_dict(dst: dict, extra: dict, override: bool, path: list[str]) -> dict:
     for k, new in extra.items():
         value = dst.setdefault(k, new)
-        if value is not new:
-            path.append(k)
-            replace = merge_item(value, new, override, path)
-            path.pop()
+        if value != new:
+            replace = merge_item(value, new, override, path + [k])
             if replace:
                 dst[k] = new
 
@@ -60,9 +60,7 @@ def merge_list(dst: list, extra: list, override: bool, path: list[str]) -> list:
             dst.append(new)
         else:
             value = dst[i]
-            path.append(i)
-            replace = merge_item(value, new, override, path)
-            path.pop()
+            replace = merge_item(value, new, override, path + [str(i)])
             if replace:
                 dst[i] = new
 
@@ -118,7 +116,7 @@ def check_is_object(
             checker = customization_checkers.get(k)
             if checker is None:
 
-                def checker(a, b):
+                def checker(a: Any, b: Any) -> None:
                     check_unknown(k, a, b)
 
             checker(v, b)
@@ -168,7 +166,7 @@ def check_is_list(
         raise ValueError(f"value must be a list, got {o!r}")
 
     for i, v in enumerate(o):
-        if base is not None and len(base) < i:
+        if base is not None and i < len(base):
             b = base[i]
         else:
             b = None
