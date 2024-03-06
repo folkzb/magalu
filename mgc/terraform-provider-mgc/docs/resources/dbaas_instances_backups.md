@@ -17,19 +17,23 @@ Database instances management. | backups
 
 ### Required
 
-- `instance_id` (String) Value referring to instance Id.
+- `instance_id` (String)
 - `mode` (String) An enumeration.
+
+### Optional
+
+- `exchange` (String)
 
 ### Read-Only
 
 - `created_at` (String)
 - `current_mode` (String) An enumeration.
-- `db_size` (Number) Database size in kilobytes (1024 kilobytes = 1 megabyte).
+- `db_size` (Number)
 - `finished_at` (String)
-- `id` (String) Value referring to backup Id.
+- `id` (String) The ID of this resource.
 - `location` (String)
 - `name` (String)
-- `size` (Number) Backup file size in kilobytes (1024 kilobytes = 1 megabyte).
+- `size` (Number)
 - `started_at` (String)
 - `status` (String) An enumeration.
 - `type` (String) An enumeration.

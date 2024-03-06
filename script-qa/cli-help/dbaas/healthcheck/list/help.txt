@@ -1,13 +1,11 @@
-Deletes a database instance.
+Health Check
 
 Usage:
-  ./cli dbaas instances delete [instance-id] [flags]
+  ./cli dbaas healthcheck list [flags]
 
 Flags:
-      --exchange string    Exchange (default "dbaas-internal")
-  -h, --help               help for delete
-      --instance-id uuid   Instance Id (required)
-  -v, --version            version for delete
+  -h, --help      help for list
+  -v, --version   version for list
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

@@ -40,6 +40,7 @@ dbaas.openapi:
               - backup_retention_days
               - backup_start_at
               - datastore_id
+              - exchange
               - flavor_id
               - name
               - password
@@ -55,19 +56,19 @@ dbaas.openapi:
               - created_at
               - datastore_id
               - finished_at
+              - generation
               - id
               - name
-              - password
               - replicas
               - started_at
               - status
-              - type
               - updated_at
-              - user
             non-computed:
+              - exchange
               - flavor_id
               - instance_id
               - size
+              - type
     - POST /v1/instances/{instance_id}/start:
         - '200':
             computed:
@@ -78,17 +79,17 @@ dbaas.openapi:
               - datastore_id
               - finished_at
               - flavor_id
+              - generation
               - id
               - name
-              - password
               - replicas
               - size
               - started_at
               - status
               - type
               - updated_at
-              - user
             non-computed:
+              - exchange
               - instance_id
     - POST /v1/instances/{instance_id}/stop:
         - '200':
@@ -100,23 +101,24 @@ dbaas.openapi:
               - datastore_id
               - finished_at
               - flavor_id
+              - generation
               - id
               - name
-              - password
               - replicas
               - size
               - started_at
               - status
               - type
               - updated_at
-              - user
             non-computed:
+              - exchange
               - instance_id
     - POST /v1/instances/{instance_id}/backups:
         - '202':
             computed:
               - id
             non-computed:
+              - exchange
               - instance_id
               - mode
     - POST /v1/instances/{instance_id}/restores:
@@ -125,12 +127,21 @@ dbaas.openapi:
               - id
             non-computed:
               - backup_id
+              - exchange
+              - instance_id
+    - POST /v1/internal/instances/{instance_id}/upgrades:
+        - '202':
+            computed:
+              - id
+            non-computed:
+              - exchange
               - instance_id
     - POST /v1/replicas:
         - '202':
             computed:
               - id
             non-computed:
+              - exchange
               - flavor_id
               - name
               - source_id
@@ -141,6 +152,7 @@ dbaas.openapi:
               - created_at
               - datastore_id
               - finished_at
+              - generation
               - id
               - name
               - size
@@ -150,6 +162,7 @@ dbaas.openapi:
               - type
               - updated_at
             non-computed:
+              - exchange
               - flavor_id
               - replica_id
     - POST /v1/replicas/{replica_id}/start:
@@ -160,6 +173,7 @@ dbaas.openapi:
               - datastore_id
               - finished_at
               - flavor_id
+              - generation
               - id
               - name
               - size
@@ -169,6 +183,7 @@ dbaas.openapi:
               - type
               - updated_at
             non-computed:
+              - exchange
               - replica_id
     - POST /v1/replicas/{replica_id}/stop:
         - '200':
@@ -178,6 +193,7 @@ dbaas.openapi:
               - datastore_id
               - finished_at
               - flavor_id
+              - generation
               - id
               - name
               - size
@@ -187,16 +203,30 @@ dbaas.openapi:
               - type
               - updated_at
             non-computed:
+              - exchange
               - replica_id
   missing-crud:
+    - backups:
+        - post
     - datastores:
         - post
         - delete
     - flavors:
         - post
         - delete
-    - backups:
-        - post
+  typeless-schemas:
+    - paths./v1/healthcheck.get.responses.200.content.application/json.schema
+    - paths./v1/backups/{backup_id}.delete.responses.202.content.application/json.schema
+    - paths./v1/instances/{instance_id}.delete.responses.202.content.application/json.schema
+    - paths./v1/instances/{instance_id}/backups/{backup_id}.delete.responses.202.content.application/json.schema
+  unused-components:
+    - '#/components/schemas/ValidationError'
+  xof-single-item:
+    - paths./v1/datastores.get.parameters.status.schema
+    - paths./v1/flavors.get.parameters.status.schema
+    - paths./v1/instances.get.parameters._expand.schema
+    - paths./v1/instances/{instance_id}.get.parameters._expand.schema
+    - components.schemas.InstanceVolumeRequest.type
 kubernetes.openapi:
   computed-variables:
     - POST /v0/clusters:

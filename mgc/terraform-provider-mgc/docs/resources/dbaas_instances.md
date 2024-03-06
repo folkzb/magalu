@@ -26,22 +26,20 @@ Database instances management.
 
 ### Optional
 
-- `backup_retention_days` (Number) The number of days that a particular backup is kept until its deletion.
-- `backup_start_at` (String) Start time which is allowed to start the automated backup process.
-- `status` (String)
+- `backup_retention_days` (Number)
+- `backup_start_at` (String)
+- `exchange` (String)
+- `status` (String) An enumeration.
 
 ### Read-Only
 
 - `addresses` (Attributes List) (see [below for nested schema](#nestedatt--addresses))
 - `created_at` (String)
-- `current_backup_start_at` (String) Start time (UTC timezone) which is allowed to start the automated backup process.
-- `current_name` (String) Database instance unique name.
-- `current_password` (String) Database Password.
-- `current_status` (String)
-- `current_user` (String) Database User.
+- `current_status` (String) An enumeration.
 - `current_volume` (Attributes) (see [below for nested schema](#nestedatt--current_volume))
 - `finished_at` (String)
-- `id` (String) Database Instance Unique Id.
+- `generation` (String) An enumeration.
+- `id` (String) The ID of this resource.
 - `replicas` (Attributes List) (see [below for nested schema](#nestedatt--replicas))
 - `started_at` (String)
 - `updated_at` (String)
@@ -51,11 +49,11 @@ Database instances management.
 
 Required:
 
-- `size` (Number) The size of the volume (in GiB).
+- `size` (Number)
 
 Optional:
 
-- `type` (String) The type of the volume.
+- `type` (String) An enumeration.
 
 
 <a id="nestedatt--addresses"></a>
@@ -63,9 +61,9 @@ Optional:
 
 Read-Only:
 
-- `access` (String) Determine if the IP can be accessed from the internet.
+- `access` (String) An enumeration.
 - `address` (String)
-- `type` (String)
+- `type` (String) An enumeration.
 
 
 <a id="nestedatt--current_volume"></a>
@@ -73,8 +71,8 @@ Read-Only:
 
 Read-Only:
 
-- `size` (Number) The size of the volume (in GiB).
-- `type` (String) The type of the volume.
+- `size` (Number)
+- `type` (String) An enumeration.
 
 
 <a id="nestedatt--replicas"></a>
@@ -84,14 +82,15 @@ Read-Only:
 
 - `addresses` (Attributes List) (see [below for nested schema](#nestedatt--replicas--addresses))
 - `created_at` (String)
-- `datastore_id` (String) Datastore unique identifier. Engine and version of datastore.
+- `datastore_id` (String)
 - `finished_at` (String)
 - `flavor_id` (String)
+- `generation` (String) An enumeration.
 - `id` (String)
 - `name` (String)
 - `source_id` (String)
 - `started_at` (String)
-- `status` (String)
+- `status` (String) An enumeration.
 - `updated_at` (String)
 - `volume` (Attributes) (see [below for nested schema](#nestedatt--replicas--volume))
 
@@ -100,9 +99,9 @@ Read-Only:
 
 Read-Only:
 
-- `access` (String)
+- `access` (String) An enumeration.
 - `address` (String)
-- `type` (String)
+- `type` (String) An enumeration.
 
 
 <a id="nestedatt--replicas--volume"></a>
@@ -110,5 +109,5 @@ Read-Only:
 
 Read-Only:
 
-- `size` (Number) The size of the volume (in GiB).
-- `type` (String) The type of the volume.
+- `size` (Number)
+- `type` (String) An enumeration.

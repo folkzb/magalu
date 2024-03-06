@@ -3,84 +3,49 @@
 # NOTE: Lists are merged by their indexes, be careful with parameters, tags and such!
 # to keep it sane, keep some list item identifier (ex: "name") and add extra properties,
 # such as "x-mgc-name" or "x-mgc-description"
-
+servers:
+-   url: https://{env}/{region}/database
+    variables:
+        region:
+            description: Region to reach the service
+            default: br-ne-1
+            enum:
+            - br-ne-1
+            - br-se1
+            - br-mgl1
+            x-mgc-transforms:
+            -   type: translate
+                allowMissing: true
+                translations:
+                -   from: br-ne1
+                    to: br-ne-1
+                -   from: br-mgl1
+                    to: br-se-1
+        env:
+            description: Environment to use
+            default: api.magalu.cloud
+            enum:
+            - api.magalu.cloud
+            - api.pre-prod.jaxyendy.com
+            x-mgc-transforms:
+            -   type: translate
+                translations:
+                -   from: prod
+                    to: api.magalu.cloud
+                -   from: pre-prod
+                    to: api.pre-prod.jaxyendy.com
 paths:
-    /v1/instances/{instance_id}/backups:
-        post:
-            responses:
-                '202':
-                    links:
-                        get:
-                            operationId: backup_detail_v1_instances__instance_id__backups__backup_id__get
-                            description: Read a Backup
-                            parameters:
-                                instance_id: $request.path.instance_id
-                                backup_id: $response.body#/id
-                        delete:
-                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
-                            description: Delete a Backup
-                            parameters:
-                                instance_id: $request.path.instance_id
-                                backup_id: $response.body#/id
-            security:
-                -   OAuth2:
-                    - dbaas.write
     /v1/instances/{instance_id}/backups/{backup_id}:
         get:
-            responses:
-                '200':
-                    links:
-                        delete:
-                            operationId: delete_backup_v1_instances__instance_id__backups__backup_id__delete
-                            description: Delete a Backup
-                            parameters:
-                                instance_id: $response.body#/id
-                                backup_id: $request.path.backup_id
             x-mgc-wait-termination:
                 maxRetries: 20
                 interval: 5s
                 jsonPathQuery: $.status != PENDING && $.status != CREATING
-            security:
-            -   OAuth2:
-                - dbaas.read
-    /v1/instances:
-        post:
-            responses:
-              '202':
-                  links:
-                      get:
-                          operationId: instances_v1_get_by_id
-                          description: Read Database instance
-                          parameters:
-                              instance_id: $response.body#/id
-                      update:
-                          operationId: instances_v1_patch
-                          description: Update Database instance
-                          parameters:
-                              instance_id: $response.body#/id
-                      delete:
-                          operationId: instances_v1_delete
-                          description: Delete Database instance
-                          parameters:
-                              instance_id: $response.body#/id
-            security:
-            -   OAuth2:
-                - dbaas.write
     /v1/instances/{instance_id}:
         get:
             responses:
               '200':
                   links:
-                      update:
-                          operationId: instances_v1_patch
-                          description: Update Database instance
-                          parameters:
-                              instance_id: $response.body#/instance_id
-                      delete:
-                          operationId: instances_v1_delete
-                          description: Delete Database instance
-                          parameters:
-                              instance_id: $response.body#/instance_id
                       update/flavor_id:
                           operationId: instances_v1_resize
                           description: Resizes a database instance.
@@ -99,9 +64,6 @@ paths:
                           parameters:
                               instance_id: $request.path.instance_id
                           x-mgc-hidden: true
-            security:
-            -   OAuth2:
-                - dbaas.read
             x-mgc-wait-termination:
                 maxRetries: 100
                 interval: 20s
@@ -112,25 +74,16 @@ paths:
               '200':
                   links:
                       get:
-                          operationId: instances_v1_get_by_id
-                          description: Read Database instance
-                          parameters:
-                              instance_id: $request.path.instance_id
                           x-mgc-wait-termination:
                               maxRetries: 20
                               interval: 10s
                               jsonPathQuery: $.result.volume.size == $.owner.parameters.volume.size
-            x-mgc-name: resize
     /v1/instances/{instance_id}/start:
         post:
             responses:
               '200':
                   links:
                       get:
-                          operationId: instances_v1_get_by_id
-                          description: Read Database instance
-                          parameters:
-                              instance_id: $request.path.instance_id
                           x-mgc-wait-termination:
                               maxRetries: 20
                               interval: 10s
@@ -142,49 +95,15 @@ paths:
               '200':
                   links:
                       get:
-                          operationId: instances_v1_get_by_id
-                          description: Read Database instance
-                          parameters:
-                              instance_id: $request.path.instance_id
                           x-mgc-wait-termination:
                               maxRetries: 20
                               interval: 10s
                               jsonPathQuery: $.result.status == "STOPPED"
-            x-mgc-name: stop
-    /v1/replicas:
-        post:
-            responses:
-              '202':
-                  links:
-                      get:
-                          operationId: replica_detail_v1_replicas__replica_id__get
-                          description: Read Database replica
-                          parameters:
-                              replica_id: $response.body#/id
-                      delete:
-                          operationId: replica_v1_delete
-                          description: Delete Database replica
-                          parameters:
-                              replica_id: $response.body#/id
-            security:
-                -   OAuth2:
-                    - dbaas.write
     /v1/replicas/{replica_id}:
         get:
             responses:
               '200':
                   links:
-                      delete:
-                          operationId: replica_v1_delete
-                          description: Delete Database replica
-                          parameters:
-                              replica_id: $request.path.replica_id
-                      update/flavor_id:
-                          operationId: replica_resize_v1_replicas_post
-                          description: Replica Resize.
-                          parameters:
-                              replica_id: $request.path.replica_id
-                          x-mgc-hidden: true
                       update/volume:
                           operationId: replica_resize_v1_replicas_post
                           description: Resizes a database instance.
@@ -192,20 +111,17 @@ paths:
                               replica_id: $request.path.replica_id
                           x-mgc-hidden: true
                       update/status/ACTIVE:
-                          operationId: replica_start_v1_replicas_post
+                          operationId: replica_start_v1_replicas__replica_id__start_post
                           description: Start an instance replica.
                           parameters:
                               replica_id: $request.path.replica_id
                           x-mgc-hidden: true
                       update/status/STOPPED:
-                          operationId: replica_stop_v1_replicas_post
+                          operationId: replica_stop_v1_replicas__replica_id__stop_post
                           description: Stop an instance replica.
                           parameters:
                               replica_id: $request.path.replica_id
                           x-mgc-hidden: true
-            security:
-            -   OAuth2:
-                - dbaas.read
     /v1/replicas/{replica_id}/resize:
         post:
             responses:
@@ -240,13 +156,6 @@ paths:
 # proposes as a number, but this is only available in OpenAPI 3.1.0. Since kin-openapi
 # only supports up to 3.0.0, we need to patch to be a boolean
 components:
-    parameters:
-        instance_expand:
-            x-mgc-name: expand
-        offset:
-            x-mgc-name: offset
-        limit:
-            x-mgc-name: limit
     schemas:
         BackupDetailResponse:
             properties:
@@ -254,16 +163,6 @@ components:
                     minimum: 0.0
                     exclusiveMinimum: true
                 size:
-                    minimum: 0.0
-                    exclusiveMinimum: true
-        DatabaseInstance:
-            properties:
-                backup_retention_days:
-                    minimum: 0.0
-                    exclusiveMinimum: true
-        DatabaseInstanceUpdateRequest:
-            properties:
-                backup_retention_days:
                     minimum: 0.0
                     exclusiveMinimum: true
         InstanceCreateRequest:
@@ -281,41 +180,22 @@ components:
                 backup_retention_days:
                     minimum: 0.0
                     exclusiveMinimum: true
+        InstanceDetailResponse:
+            properties:
+                backup_retention_days:
+                    minimum: 0.0
+                    exclusiveMinimum: true
+        InstanceUpdateRequest:
+            properties:
+                backup_retention_days:
+                    minimum: 0.0
+                    exclusiveMinimum: true
         InstanceVolumeRequest:
             properties:
                 size:
                     example: 30
                 type:
                     example: CLOUD_NVME
-
-servers:
--   url: https://{env}/{region}/database
-    variables:
-        region:
-            description: Region to reach the service
-            default: br-ne-1
-            enum:
-            - br-ne-1
-            - br-se1
-            - br-mgl1
-            x-mgc-transforms:
-            -   type: translate
-                allowMissing: true
-                translations:
-                -   from: br-ne1
-                    to: br-ne-1
-                -   from: br-mgl1
-                    to: br-se-1
-        env:
-            description: Environment to use
-            default: api.magalu.cloud
-            enum:
-            - api.magalu.cloud
-            - api.pre-prod.jaxyendy.com
-            x-mgc-transforms:
-            -   type: translate
-                translations:
-                -   from: prod
-                    to: api.magalu.cloud
-                -   from: pre-prod
-                    to: api.pre-prod.jaxyendy.com
+tags:
+-   name: healthcheck
+    x-mgc-hidden: true

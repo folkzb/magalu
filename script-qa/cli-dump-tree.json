@@ -3641,9 +3641,13 @@
        "additionalProperties": false,
        "properties": {
         "backup_id": {
-         "description": "Value referring to backup Id.",
          "format": "uuid",
          "title": "Backup Id",
+         "type": "string"
+        },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
          "type": "string"
         }
        },
@@ -3652,11 +3656,8 @@
        ],
        "type": "object"
       },
-      "result": {
-       "nullable": true,
-       "type": "null"
-      },
-      "version": "1.10.1"
+      "result": {},
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -3696,9 +3697,13 @@
        "additionalProperties": false,
        "properties": {
         "backup_id": {
-         "description": "Value referring to backup Id.",
          "format": "uuid",
          "title": "Backup Id",
+         "type": "string"
+        },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
          "type": "string"
         }
        },
@@ -3715,10 +3720,9 @@
          "type": "string"
         },
         "db_size": {
-         "description": "Database size in kilobytes (1024 kilobytes = 1 megabyte).",
          "exclusiveMinimum": true,
          "minimum": 0,
-         "title": "Database Size",
+         "title": "Db Size",
          "type": "integer"
         },
         "finished_at": {
@@ -3746,7 +3750,7 @@
           "FULL",
           "INCREMENTAL"
          ],
-         "title": "Backup Mode",
+         "title": "BackupMode",
          "type": "string"
         },
         "name": {
@@ -3754,7 +3758,6 @@
          "type": "string"
         },
         "size": {
-         "description": "Backup file size in kilobytes (1024 kilobytes = 1 megabyte).",
          "exclusiveMinimum": true,
          "minimum": 0,
          "title": "Size",
@@ -3773,9 +3776,10 @@
           "CREATED",
           "ERROR",
           "DELETING",
-          "DELETED"
+          "DELETED",
+          "ERROR_DELETING"
          ],
-         "title": "Backup Status",
+         "title": "BackupStatusResponse",
          "type": "string"
         },
         "type": {
@@ -3784,7 +3788,7 @@
           "ON_DEMAND",
           "AUTOMATED"
          ],
-         "title": "Backup Type",
+         "title": "BackupType",
          "type": "string"
         },
         "updated_at": {
@@ -3801,10 +3805,10 @@
         "mode",
         "created_at"
        ],
-       "title": "Backup Detail Response",
+       "title": "BackupDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -3843,48 +3847,54 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "limit": {
+        "_limit": {
          "default": 10,
-         "description": "limit",
          "maximum": 25,
          "minimum": 1,
+         "title": " Limit",
          "type": "integer"
         },
+        "_offset": {
+         "default": 0,
+         "minimum": 0,
+         "title": " Offset",
+         "type": "integer"
+        },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "mode": {
-         "description": "Value referring to backup mode.",
+         "description": "An enumeration.",
          "enum": [
           "FULL",
           "INCREMENTAL"
          ],
-         "title": "Backup Mode",
+         "title": "BackupMode",
          "type": "string"
         },
-        "offset": {
-         "default": 0,
-         "description": "offset",
-         "minimum": 0,
-         "type": "integer"
-        },
         "status": {
-         "description": "Value referring to backup status.",
+         "description": "An enumeration.",
          "enum": [
           "PENDING",
           "CREATING",
           "CREATED",
           "ERROR",
           "DELETING",
-          "DELETED"
+          "DELETED",
+          "ERROR_DELETING"
          ],
-         "title": "Backup Status",
+         "title": "BackupStatusResponse",
          "type": "string"
         },
         "type": {
-         "description": "Value referring to backup type.",
+         "description": "An enumeration.",
          "enum": [
           "ON_DEMAND",
           "AUTOMATED"
          ],
-         "title": "Backup Type",
+         "title": "BackupType",
          "type": "string"
         }
        },
@@ -3901,10 +3911,9 @@
             "type": "string"
            },
            "db_size": {
-            "description": "Database size in kilobytes (1024 kilobytes = 1 megabyte).",
             "exclusiveMinimum": true,
             "minimum": 0,
-            "title": "Database Size",
+            "title": "Db Size",
             "type": "integer"
            },
            "finished_at": {
@@ -3932,7 +3941,7 @@
              "FULL",
              "INCREMENTAL"
             ],
-            "title": "Backup Mode",
+            "title": "BackupMode",
             "type": "string"
            },
            "name": {
@@ -3940,7 +3949,6 @@
             "type": "string"
            },
            "size": {
-            "description": "Backup file size in kilobytes (1024 kilobytes = 1 megabyte).",
             "exclusiveMinimum": true,
             "minimum": 0,
             "title": "Size",
@@ -3959,9 +3967,10 @@
              "CREATED",
              "ERROR",
              "DELETING",
-             "DELETED"
+             "DELETED",
+             "ERROR_DELETING"
             ],
-            "title": "Backup Status",
+            "title": "BackupStatusResponse",
             "type": "string"
            },
            "type": {
@@ -3970,7 +3979,7 @@
              "ON_DEMAND",
              "AUTOMATED"
             ],
-            "title": "Backup Type",
+            "title": "BackupType",
             "type": "string"
            },
            "updated_at": {
@@ -3987,7 +3996,7 @@
            "mode",
            "created_at"
           ],
-          "title": "Backup Detail Response",
+          "title": "BackupDetailResponse",
           "type": "object"
          },
          "title": "Results",
@@ -3997,16 +4006,16 @@
        "required": [
         "results"
        ],
-       "title": "Backups Response",
+       "title": "BackupsResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      }
     ],
     "description": "Database backups management.",
     "isInternal": false,
     "name": "backups",
-    "version": "1.10.1"
+    "version": "1.15.3"
    },
    {
     "children": [
@@ -4062,13 +4071,10 @@
       "result": {
        "properties": {
         "engine": {
-         "description": "Database engine.",
-         "example": "mysql",
          "title": "Engine",
          "type": "string"
         },
         "id": {
-         "description": "Datastore unique identifier.",
          "format": "uuid",
          "title": "Id",
          "type": "string"
@@ -4079,25 +4085,24 @@
           "ACTIVE",
           "DEPRECATED"
          ],
-         "title": "Datastore Status",
+         "title": "DatastoreStatus",
          "type": "string"
         },
         "version": {
-         "description": "Database engine version.",
-         "example": "5.7",
          "title": "Version",
          "type": "string"
         }
        },
        "required": [
-        "engine",
         "id",
-        "version"
+        "engine",
+        "version",
+        "status"
        ],
-       "title": "Datastore",
+       "title": "DatastoreResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -4136,17 +4141,17 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "limit": {
+        "_limit": {
          "default": 10,
-         "description": "limit",
          "maximum": 25,
          "minimum": 1,
+         "title": "Limit",
          "type": "integer"
         },
-        "offset": {
+        "_offset": {
          "default": 0,
-         "description": "offset",
          "minimum": 0,
+         "title": "Offset",
          "type": "integer"
         },
         "status": {
@@ -4155,7 +4160,6 @@
           "ACTIVE",
           "DEPRECATED"
          ],
-         "title": "Datastore Status",
          "type": "string"
         }
        },
@@ -4167,13 +4171,10 @@
          "items": {
           "properties": {
            "engine": {
-            "description": "Database engine.",
-            "example": "mysql",
             "title": "Engine",
             "type": "string"
            },
            "id": {
-            "description": "Datastore unique identifier.",
             "format": "uuid",
             "title": "Id",
             "type": "string"
@@ -4184,22 +4185,21 @@
              "ACTIVE",
              "DEPRECATED"
             ],
-            "title": "Datastore Status",
+            "title": "DatastoreStatus",
             "type": "string"
            },
            "version": {
-            "description": "Database engine version.",
-            "example": "5.7",
             "title": "Version",
             "type": "string"
            }
           },
           "required": [
-           "engine",
            "id",
-           "version"
+           "engine",
+           "version",
+           "status"
           ],
-          "title": "Datastore",
+          "title": "DatastoreResponse",
           "type": "object"
          },
          "title": "Results",
@@ -4209,16 +4209,16 @@
        "required": [
         "results"
        ],
-       "title": "Datastores Response",
+       "title": "DatastoresResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      }
     ],
     "description": "Datastores available for database instances.",
     "isInternal": false,
     "name": "datastores",
-    "version": "1.10.1"
+    "version": "1.15.3"
    },
    {
     "children": [
@@ -4274,53 +4274,44 @@
       "result": {
        "properties": {
         "family_description": {
-         "description": "Flavor Family Description.",
-         "example": "Basic",
+         "title": "Family Description",
          "type": "string"
         },
         "family_slug": {
-         "description": "Flavor Family SLUG.",
-         "example": "bs1",
+         "title": "Family Slug",
          "type": "string"
         },
         "id": {
-         "description": "Flavor unique identifier.",
          "format": "uuid",
+         "title": "Id",
          "type": "string"
         },
         "label": {
-         "description": "Flavor label.",
-         "example": "cloud-dbaas-bs1.small",
+         "title": "Label",
          "type": "string"
         },
         "name": {
-         "description": "Flavor name.",
-         "example": "i0-c1-r4-d10",
+         "title": "Name",
          "type": "string"
         },
         "ram": {
-         "description": "RAM Amount.",
-         "example": "4 GB",
+         "title": "Ram",
          "type": "string"
         },
         "size": {
-         "description": "Flavor Size Description.",
-         "example": "Small",
+         "title": "Size",
          "type": "string"
         },
         "sku_replica": {
-         "description": "SKU Database Instance Replica.",
-         "example": "BRNE10610101sm",
+         "title": "Sku Replica",
          "type": "string"
         },
         "sku_source": {
-         "description": "SKU Database Instance Source.",
-         "example": "BRNE10600101sm",
+         "title": "Sku Source",
          "type": "string"
         },
         "vcpu": {
-         "description": "Number of vCPUs.",
-         "example": "1",
+         "title": "Vcpu",
          "type": "string"
         }
        },
@@ -4328,17 +4319,18 @@
         "id",
         "name",
         "label",
-        "vcpu",
-        "ram",
         "family_description",
         "family_slug",
         "size",
         "sku_source",
-        "sku_replica"
+        "sku_replica",
+        "vcpu",
+        "ram"
        ],
+       "title": "FlavorResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -4371,23 +4363,23 @@
        },
        "type": "object"
       },
-      "description": "Returns a list of available flavors. A flavor is a hardware template that defines the size of RAM and vCPU.",
+      "description": "Returns a list of available flavors. A flavor is a hardware template that defines the size of RAM and vcpu.",
       "isInternal": false,
       "name": "list",
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "limit": {
+        "_limit": {
          "default": 10,
-         "description": "limit",
          "maximum": 25,
          "minimum": 1,
+         "title": " Limit",
          "type": "integer"
         },
-        "offset": {
+        "_offset": {
          "default": 0,
-         "description": "offset",
          "minimum": 0,
+         "title": " Offset",
          "type": "integer"
         },
         "status": {
@@ -4397,7 +4389,6 @@
           "ACTIVE",
           "DEPRECATED"
          ],
-         "title": "Flavor Status",
          "type": "string"
         }
        },
@@ -4409,53 +4400,44 @@
          "items": {
           "properties": {
            "family_description": {
-            "description": "Flavor Family Description.",
-            "example": "Basic",
+            "title": "Family Description",
             "type": "string"
            },
            "family_slug": {
-            "description": "Flavor Family SLUG.",
-            "example": "bs1",
+            "title": "Family Slug",
             "type": "string"
            },
            "id": {
-            "description": "Flavor unique identifier.",
             "format": "uuid",
+            "title": "Id",
             "type": "string"
            },
            "label": {
-            "description": "Flavor label.",
-            "example": "cloud-dbaas-bs1.small",
+            "title": "Label",
             "type": "string"
            },
            "name": {
-            "description": "Flavor name.",
-            "example": "i0-c1-r4-d10",
+            "title": "Name",
             "type": "string"
            },
            "ram": {
-            "description": "RAM Amount.",
-            "example": "4 GB",
+            "title": "Ram",
             "type": "string"
            },
            "size": {
-            "description": "Flavor Size Description.",
-            "example": "Small",
+            "title": "Size",
             "type": "string"
            },
            "sku_replica": {
-            "description": "SKU Database Instance Replica.",
-            "example": "BRNE10610101sm",
+            "title": "Sku Replica",
             "type": "string"
            },
            "sku_source": {
-            "description": "SKU Database Instance Source.",
-            "example": "BRNE10600101sm",
+            "title": "Sku Source",
             "type": "string"
            },
            "vcpu": {
-            "description": "Number of vCPUs.",
-            "example": "1",
+            "title": "Vcpu",
             "type": "string"
            }
           },
@@ -4463,14 +4445,15 @@
            "id",
            "name",
            "label",
-           "vcpu",
-           "ram",
            "family_description",
            "family_slug",
            "size",
            "sku_source",
-           "sku_replica"
+           "sku_replica",
+           "vcpu",
+           "ram"
           ],
+          "title": "FlavorResponse",
           "type": "object"
          },
          "title": "Results",
@@ -4480,16 +4463,65 @@
        "required": [
         "results"
        ],
-       "title": "Flavors Response",
+       "title": "FlavorsResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      }
     ],
     "description": "Flavors available for database instances.",
     "isInternal": false,
     "name": "flavors",
-    "version": "1.10.1"
+    "version": "1.15.3"
+   },
+   {
+    "children": [
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1",
+          "br-mgl1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "",
+      "isInternal": false,
+      "name": "list",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object"
+      },
+      "result": {},
+      "version": "1.15.3"
+     }
+    ],
+    "description": "Health check.",
+    "isInternal": true,
+    "name": "healthcheck",
+    "version": "1.15.3"
    },
    {
     "children": [
@@ -4532,8 +4564,12 @@
         "parameters": {
          "additionalProperties": false,
          "properties": {
+          "exchange": {
+           "default": "dbaas-internal",
+           "title": "Exchange",
+           "type": "string"
+          },
           "instance_id": {
-           "description": "Value referring to instance Id.",
            "format": "uuid",
            "title": "Instance Id",
            "type": "string"
@@ -4543,7 +4579,7 @@
            "enum": [
             "FULL"
            ],
-           "title": "Backup Mode Request",
+           "title": "BackupModeRequest",
            "type": "string"
           }
          },
@@ -4564,10 +4600,10 @@
          "required": [
           "id"
          ],
-         "title": "Backup Response",
+         "title": "BackupResponse",
          "type": "object"
         },
-        "version": "1.10.1"
+        "version": "1.15.3"
        },
        {
         "configs": {
@@ -4607,13 +4643,16 @@
          "additionalProperties": false,
          "properties": {
           "backup_id": {
-           "description": "Value referring to backup Id.",
            "format": "uuid",
            "title": "Backup Id",
            "type": "string"
           },
+          "exchange": {
+           "default": "dbaas-internal",
+           "title": "Exchange",
+           "type": "string"
+          },
           "instance_id": {
-           "description": "Value referring to instance Id.",
            "format": "uuid",
            "title": "Instance Id",
            "type": "string"
@@ -4625,11 +4664,8 @@
          ],
          "type": "object"
         },
-        "result": {
-         "nullable": true,
-         "type": "null"
-        },
-        "version": "1.10.1"
+        "result": {},
+        "version": "1.15.3"
        },
        {
         "configs": {
@@ -4669,13 +4705,16 @@
          "additionalProperties": false,
          "properties": {
           "backup_id": {
-           "description": "Value referring to backup Id.",
            "format": "uuid",
            "title": "Backup Id",
            "type": "string"
           },
+          "exchange": {
+           "default": "dbaas-internal",
+           "title": "Exchange",
+           "type": "string"
+          },
           "instance_id": {
-           "description": "Value referring to instance Id.",
            "format": "uuid",
            "title": "Instance Id",
            "type": "string"
@@ -4695,10 +4734,9 @@
            "type": "string"
           },
           "db_size": {
-           "description": "Database size in kilobytes (1024 kilobytes = 1 megabyte).",
            "exclusiveMinimum": true,
            "minimum": 0,
-           "title": "Database Size",
+           "title": "Db Size",
            "type": "integer"
           },
           "finished_at": {
@@ -4726,7 +4764,7 @@
             "FULL",
             "INCREMENTAL"
            ],
-           "title": "Backup Mode",
+           "title": "BackupMode",
            "type": "string"
           },
           "name": {
@@ -4734,7 +4772,6 @@
            "type": "string"
           },
           "size": {
-           "description": "Backup file size in kilobytes (1024 kilobytes = 1 megabyte).",
            "exclusiveMinimum": true,
            "minimum": 0,
            "title": "Size",
@@ -4753,9 +4790,10 @@
             "CREATED",
             "ERROR",
             "DELETING",
-            "DELETED"
+            "DELETED",
+            "ERROR_DELETING"
            ],
-           "title": "Backup Status",
+           "title": "BackupStatusResponse",
            "type": "string"
           },
           "type": {
@@ -4764,7 +4802,7 @@
             "ON_DEMAND",
             "AUTOMATED"
            ],
-           "title": "Backup Type",
+           "title": "BackupType",
            "type": "string"
           },
           "updated_at": {
@@ -4781,10 +4819,10 @@
           "mode",
           "created_at"
          ],
-         "title": "Backup Detail Response",
+         "title": "BackupDetailResponse",
          "type": "object"
         },
-        "version": "1.10.1"
+        "version": "1.15.3"
        },
        {
         "configs": {
@@ -4823,54 +4861,59 @@
         "parameters": {
          "additionalProperties": false,
          "properties": {
+          "_limit": {
+           "default": 10,
+           "maximum": 25,
+           "minimum": 1,
+           "title": " Limit",
+           "type": "integer"
+          },
+          "_offset": {
+           "default": 0,
+           "minimum": 0,
+           "title": " Offset",
+           "type": "integer"
+          },
+          "exchange": {
+           "default": "dbaas-internal",
+           "title": "Exchange",
+           "type": "string"
+          },
           "instance_id": {
-           "description": "Value referring to instance Id.",
            "format": "uuid",
            "title": "Instance Id",
            "type": "string"
           },
-          "limit": {
-           "default": 10,
-           "description": "limit",
-           "maximum": 25,
-           "minimum": 1,
-           "type": "integer"
-          },
           "mode": {
-           "description": "Value referring to backup mode.",
+           "description": "An enumeration.",
            "enum": [
             "FULL",
             "INCREMENTAL"
            ],
-           "title": "Backup Mode",
+           "title": "BackupMode",
            "type": "string"
           },
-          "offset": {
-           "default": 0,
-           "description": "offset",
-           "minimum": 0,
-           "type": "integer"
-          },
           "status": {
-           "description": "Value referring to backup status.",
+           "description": "An enumeration.",
            "enum": [
             "PENDING",
             "CREATING",
             "CREATED",
             "ERROR",
             "DELETING",
-            "DELETED"
+            "DELETED",
+            "ERROR_DELETING"
            ],
-           "title": "Backup Status",
+           "title": "BackupStatusResponse",
            "type": "string"
           },
           "type": {
-           "description": "Value referring to backup type.",
+           "description": "An enumeration.",
            "enum": [
             "ON_DEMAND",
             "AUTOMATED"
            ],
-           "title": "Backup Type",
+           "title": "BackupType",
            "type": "string"
           }
          },
@@ -4890,10 +4933,9 @@
               "type": "string"
              },
              "db_size": {
-              "description": "Database size in kilobytes (1024 kilobytes = 1 megabyte).",
               "exclusiveMinimum": true,
               "minimum": 0,
-              "title": "Database Size",
+              "title": "Db Size",
               "type": "integer"
              },
              "finished_at": {
@@ -4921,7 +4963,7 @@
                "FULL",
                "INCREMENTAL"
               ],
-              "title": "Backup Mode",
+              "title": "BackupMode",
               "type": "string"
              },
              "name": {
@@ -4929,7 +4971,6 @@
               "type": "string"
              },
              "size": {
-              "description": "Backup file size in kilobytes (1024 kilobytes = 1 megabyte).",
               "exclusiveMinimum": true,
               "minimum": 0,
               "title": "Size",
@@ -4948,9 +4989,10 @@
                "CREATED",
                "ERROR",
                "DELETING",
-               "DELETED"
+               "DELETED",
+               "ERROR_DELETING"
               ],
-              "title": "Backup Status",
+              "title": "BackupStatusResponse",
               "type": "string"
              },
              "type": {
@@ -4959,7 +5001,7 @@
                "ON_DEMAND",
                "AUTOMATED"
               ],
-              "title": "Backup Type",
+              "title": "BackupType",
               "type": "string"
              },
              "updated_at": {
@@ -4976,7 +5018,7 @@
              "mode",
              "created_at"
             ],
-            "title": "Backup Detail Response",
+            "title": "BackupDetailResponse",
             "type": "object"
            },
            "title": "Results",
@@ -4986,16 +5028,16 @@
          "required": [
           "results"
          ],
-         "title": "Backups Response",
+         "title": "BackupsResponse",
          "type": "object"
         },
-        "version": "1.10.1"
+        "version": "1.15.3"
        }
       ],
       "description": "Database instances management. | backups",
       "isInternal": false,
       "name": "backups",
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -5035,18 +5077,14 @@
        "additionalProperties": false,
        "properties": {
         "backup_retention_days": {
-         "default": 30,
-         "description": "The number of days that a particular backup is kept until its deletion.",
-         "example": 7,
+         "default": 7,
          "exclusiveMinimum": true,
          "minimum": 0,
          "title": "Backup Retention Days",
          "type": "integer"
         },
         "backup_start_at": {
-         "default": "01:00:00",
-         "description": "Start time which is allowed to start the automated backup process.",
-         "example": "03:00:00",
+         "default": "04:00:00",
          "format": "time",
          "title": "Backup Start At",
          "type": "string"
@@ -5057,6 +5095,11 @@
          "title": "Datastore Id",
          "type": "string"
         },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "flavor_id": {
          "example": "8bbe8e01-40c8-4d2b-80e8-189debc44b1c",
          "format": "uuid",
@@ -5065,7 +5108,7 @@
         },
         "name": {
          "example": "dbaas-name",
-         "maxLength": 255,
+         "maxLength": 100,
          "title": "Name",
          "type": "string"
         },
@@ -5084,18 +5127,19 @@
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
            "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "default": "CLOUD_NVME",
-           "description": "The type of the volume.",
+           "default": "CLOUD_NVME_15K",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
-            "CLOUD_HDD"
+            "CLOUD_HDD",
+            "CLOUD_NVME_15K"
            ],
            "example": "CLOUD_NVME",
            "type": "string"
@@ -5104,7 +5148,7 @@
          "required": [
           "size"
          ],
-         "title": "Instance Volume Request",
+         "title": "InstanceVolumeRequest",
          "type": "object"
         }
        },
@@ -5129,10 +5173,10 @@
        "required": [
         "id"
        ],
-       "title": "Instance Response",
+       "title": "InstanceResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -5171,10 +5215,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "instance_id": {
-         "description": "Database Instance Unique Id.",
          "format": "uuid",
-         "title": "Database Instance Id",
+         "title": "Instance Id",
          "type": "string"
         }
        },
@@ -5183,11 +5231,8 @@
        ],
        "type": "object"
       },
-      "result": {
-       "nullable": true,
-       "type": "null"
-      },
-      "version": "1.10.1"
+      "result": {},
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -5226,17 +5271,22 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "expand": {
-         "description": "Instance extra attributes or relations to show with the main query. When available, more than one value can be informed using commas. e.g: `_expand=value1,value2`",
+        "_expand": {
+         "description": "\nInstance extra attributes or relations to show with the main query. When available, more than one value\ncan be informed using commas. e.g: `_expand=value1,value2`",
          "enum": [
           "replicas"
          ],
          "type": "string"
         },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "instance_id": {
          "description": "Database Instance Unique Id.",
          "format": "uuid",
-         "title": "Database Instance Id",
+         "title": "Instance Id",
          "type": "string"
         }
        },
@@ -5251,99 +5301,88 @@
          "items": {
           "properties": {
            "access": {
-            "description": "Determine if the IP can be accessed from the internet.",
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "title": "Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
-            "example": "172.53.10.82",
             "title": "Address",
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "title": "Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
-           "access",
-           "type",
-           "address"
+           "access"
           ],
+          "title": "InstanceAddressResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Addresses",
          "type": "array"
         },
         "backup_retention_days": {
-         "default": 30,
-         "description": "The number of days that a particular backup is kept until its deletion.",
-         "example": 7,
          "exclusiveMinimum": true,
          "minimum": 0,
          "title": "Backup Retention Days",
          "type": "integer"
         },
         "backup_start_at": {
-         "default": "04:00:00",
-         "description": "Start time (UTC timezone) which is allowed to start the automated backup process.",
-         "example": "02:00:00",
          "format": "time",
          "title": "Backup Start At",
          "type": "string"
         },
         "created_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Creation date",
+         "title": "Created At",
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
-         "description": "Flavor unique identifier. Instance size.",
          "format": "uuid",
+         "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
-         "description": "Database instance unique identifier.",
          "format": "uuid",
-         "readOnly": true,
          "title": "Id",
          "type": "string"
         },
         "name": {
-         "description": "Database instance unique name.",
-         "example": "mydbinstance",
          "maxLength": 100,
          "title": "Name",
          "type": "string"
-        },
-        "password": {
-         "description": "Database Password.",
-         "example": "cGFzc3dk",
-         "format": "password",
-         "maxLength": 50,
-         "type": "string",
-         "writeOnly": true
         },
         "replicas": {
          "items": {
@@ -5352,12 +5391,12 @@
             "items": {
              "properties": {
               "access": {
+               "description": "An enumeration.",
                "enum": [
                 "PRIVATE",
                 "PUBLIC"
                ],
-               "example": "PRIVATE",
-               "title": "Address Access",
+               "title": "AddressAccess",
                "type": "string"
               },
               "address": {
@@ -5365,19 +5404,19 @@
                "type": "string"
               },
               "type": {
+               "description": "An enumeration.",
                "enum": [
                 "IPv4",
                 "IPv6"
                ],
-               "example": "IPv4",
-               "title": "Address Type",
+               "title": "AddressType",
                "type": "string"
               }
              },
              "required": [
               "access"
              ],
-             "title": "Replica Address Response",
+             "title": "ReplicaAddressResponse",
              "type": "object"
             },
             "title": "Addresses",
@@ -5389,20 +5428,29 @@
             "type": "string"
            },
            "datastore_id": {
-            "description": "Datastore unique identifier. Engine and version of datastore.",
             "format": "uuid",
-            "readOnly": true,
+            "title": "Datastore Id",
             "type": "string"
            },
            "finished_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup finish date",
+            "title": "Finished At",
             "type": "string"
            },
            "flavor_id": {
             "format": "uuid",
             "title": "Flavor Id",
+            "type": "string"
+           },
+           "generation": {
+            "description": "An enumeration.",
+            "enum": [
+             "G0B",
+             "G1B",
+             "G2B",
+             "G3B"
+            ],
+            "title": "InstanceGeneration",
             "type": "string"
            },
            "id": {
@@ -5421,11 +5469,11 @@
            },
            "started_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup start date",
+            "title": "Started At",
             "type": "string"
            },
            "status": {
+            "description": "An enumeration.",
             "enum": [
              "CREATING",
              "ERROR",
@@ -5440,10 +5488,10 @@
              "BACKING_UP",
              "DELETING",
              "RESTORING",
-             "ERROR_DELETING"
+             "ERROR_DELETING",
+             "MAINTENANCE"
             ],
-            "example": "ACTIVE",
-            "readOnly": true,
+            "title": "InstanceStatusResponse",
             "type": "string"
            },
            "updated_at": {
@@ -5454,19 +5502,19 @@
            "volume": {
             "properties": {
              "size": {
-              "description": "The size of the volume (in GiB).",
-              "example": 30,
               "maximum": 50000,
               "minimum": 10,
-              "type": "number"
+              "title": "Size",
+              "type": "integer"
              },
              "type": {
-              "description": "The type of the volume.",
+              "description": "An enumeration.",
               "enum": [
                "CLOUD_NVME",
                "CLOUD_HDD",
                "CLOUD_NVME_15K"
               ],
+              "title": "VolumeType",
               "type": "string"
              }
             },
@@ -5474,34 +5522,35 @@
              "size",
              "type"
             ],
+            "title": "ReplicaVolumeResponse",
             "type": "object"
            }
           },
           "required": [
-           "addresses",
-           "created_at",
+           "id",
+           "source_id",
+           "name",
            "datastore_id",
            "flavor_id",
            "volume",
-           "id",
-           "name",
-           "source_id",
-           "status"
+           "addresses",
+           "status",
+           "generation",
+           "created_at"
           ],
-          "title": "Replica Detail Response",
+          "title": "ReplicaDetailResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Replicas",
          "type": "array"
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -5516,41 +5565,33 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Last updated date",
+         "title": "Updated At",
          "type": "string"
-        },
-        "user": {
-         "description": "Database User.",
-         "example": "myuser",
-         "maxLength": 25,
-         "type": "string",
-         "writeOnly": true
         },
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -5558,6 +5599,7 @@
           "size",
           "type"
          ],
+         "title": "InstanceVolumeResponse",
          "type": "object"
         }
        },
@@ -5569,13 +5611,15 @@
         "volume",
         "addresses",
         "status",
+        "generation",
         "created_at",
-        "backup_start_at",
-        "backup_retention_days"
+        "backup_retention_days",
+        "backup_start_at"
        ],
+       "title": "InstanceDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -5608,34 +5652,39 @@
        },
        "type": "object"
       },
-      "description": "Returns a list of database instances for a tenant.",
+      "description": "Returns a list of database instances for a x-tenant-id.",
       "isInternal": false,
       "name": "list",
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "expand": {
-         "description": "Instance extra attributes or relations to show with the main query. When available, more than one value can be informed using commas. e.g: `_expand=value1,value2`",
+        "_expand": {
+         "description": "\nInstance extra attributes or relations to show with the main query. When available, more than one value\ncan be informed using commas. e.g: `_expand=value1,value2`",
          "enum": [
           "replicas"
          ],
          "type": "string"
         },
-        "limit": {
+        "_limit": {
          "default": 10,
-         "description": "limit",
          "maximum": 25,
          "minimum": 1,
+         "title": " Limit",
          "type": "integer"
         },
-        "offset": {
+        "_offset": {
          "default": 0,
-         "description": "offset",
          "minimum": 0,
+         "title": " Offset",
          "type": "integer"
+        },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
         },
         "status": {
-         "description": "Value referring to instace status.",
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -5650,10 +5699,10 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         }
        },
@@ -5668,99 +5717,88 @@
             "items": {
              "properties": {
               "access": {
-               "description": "Determine if the IP can be accessed from the internet.",
+               "description": "An enumeration.",
                "enum": [
                 "PRIVATE",
                 "PUBLIC"
                ],
-               "title": "Access",
+               "title": "AddressAccess",
                "type": "string"
               },
               "address": {
-               "example": "172.53.10.82",
                "title": "Address",
                "type": "string"
               },
               "type": {
+               "description": "An enumeration.",
                "enum": [
                 "IPv4",
                 "IPv6"
                ],
-               "title": "Type",
+               "title": "AddressType",
                "type": "string"
               }
              },
              "required": [
-              "access",
-              "type",
-              "address"
+              "access"
              ],
+             "title": "InstanceAddressResponse",
              "type": "object"
             },
-            "readOnly": true,
             "title": "Addresses",
             "type": "array"
            },
            "backup_retention_days": {
-            "default": 30,
-            "description": "The number of days that a particular backup is kept until its deletion.",
-            "example": 7,
             "exclusiveMinimum": true,
             "minimum": 0,
             "title": "Backup Retention Days",
             "type": "integer"
            },
            "backup_start_at": {
-            "default": "04:00:00",
-            "description": "Start time (UTC timezone) which is allowed to start the automated backup process.",
-            "example": "02:00:00",
             "format": "time",
             "title": "Backup Start At",
             "type": "string"
            },
            "created_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Creation date",
+            "title": "Created At",
             "type": "string"
            },
            "datastore_id": {
-            "description": "Datastore unique identifier. Engine and version of datastore.",
             "format": "uuid",
+            "title": "Datastore Id",
             "type": "string"
            },
            "finished_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup finish date",
+            "title": "Finished At",
             "type": "string"
            },
            "flavor_id": {
-            "description": "Flavor unique identifier. Instance size.",
             "format": "uuid",
+            "title": "Flavor Id",
+            "type": "string"
+           },
+           "generation": {
+            "description": "An enumeration.",
+            "enum": [
+             "G0B",
+             "G1B",
+             "G2B",
+             "G3B"
+            ],
+            "title": "InstanceGeneration",
             "type": "string"
            },
            "id": {
-            "description": "Database instance unique identifier.",
             "format": "uuid",
-            "readOnly": true,
             "title": "Id",
             "type": "string"
            },
            "name": {
-            "description": "Database instance unique name.",
-            "example": "mydbinstance",
             "maxLength": 100,
             "title": "Name",
             "type": "string"
-           },
-           "password": {
-            "description": "Database Password.",
-            "example": "cGFzc3dk",
-            "format": "password",
-            "maxLength": 50,
-            "type": "string",
-            "writeOnly": true
            },
            "replicas": {
             "items": {
@@ -5769,12 +5807,12 @@
                "items": {
                 "properties": {
                  "access": {
+                  "description": "An enumeration.",
                   "enum": [
                    "PRIVATE",
                    "PUBLIC"
                   ],
-                  "example": "PRIVATE",
-                  "title": "Address Access",
+                  "title": "AddressAccess",
                   "type": "string"
                  },
                  "address": {
@@ -5782,19 +5820,19 @@
                   "type": "string"
                  },
                  "type": {
+                  "description": "An enumeration.",
                   "enum": [
                    "IPv4",
                    "IPv6"
                   ],
-                  "example": "IPv4",
-                  "title": "Address Type",
+                  "title": "AddressType",
                   "type": "string"
                  }
                 },
                 "required": [
                  "access"
                 ],
-                "title": "Replica Address Response",
+                "title": "ReplicaAddressResponse",
                 "type": "object"
                },
                "title": "Addresses",
@@ -5806,20 +5844,29 @@
                "type": "string"
               },
               "datastore_id": {
-               "description": "Datastore unique identifier. Engine and version of datastore.",
                "format": "uuid",
-               "readOnly": true,
+               "title": "Datastore Id",
                "type": "string"
               },
               "finished_at": {
                "format": "date-time",
-               "readOnly": true,
-               "title": "Initial setup finish date",
+               "title": "Finished At",
                "type": "string"
               },
               "flavor_id": {
                "format": "uuid",
                "title": "Flavor Id",
+               "type": "string"
+              },
+              "generation": {
+               "description": "An enumeration.",
+               "enum": [
+                "G0B",
+                "G1B",
+                "G2B",
+                "G3B"
+               ],
+               "title": "InstanceGeneration",
                "type": "string"
               },
               "id": {
@@ -5838,11 +5885,11 @@
               },
               "started_at": {
                "format": "date-time",
-               "readOnly": true,
-               "title": "Initial setup start date",
+               "title": "Started At",
                "type": "string"
               },
               "status": {
+               "description": "An enumeration.",
                "enum": [
                 "CREATING",
                 "ERROR",
@@ -5857,10 +5904,10 @@
                 "BACKING_UP",
                 "DELETING",
                 "RESTORING",
-                "ERROR_DELETING"
+                "ERROR_DELETING",
+                "MAINTENANCE"
                ],
-               "example": "ACTIVE",
-               "readOnly": true,
+               "title": "InstanceStatusResponse",
                "type": "string"
               },
               "updated_at": {
@@ -5871,19 +5918,19 @@
               "volume": {
                "properties": {
                 "size": {
-                 "description": "The size of the volume (in GiB).",
-                 "example": 30,
                  "maximum": 50000,
                  "minimum": 10,
-                 "type": "number"
+                 "title": "Size",
+                 "type": "integer"
                 },
                 "type": {
-                 "description": "The type of the volume.",
+                 "description": "An enumeration.",
                  "enum": [
                   "CLOUD_NVME",
                   "CLOUD_HDD",
                   "CLOUD_NVME_15K"
                  ],
+                 "title": "VolumeType",
                  "type": "string"
                 }
                },
@@ -5891,34 +5938,35 @@
                 "size",
                 "type"
                ],
+               "title": "ReplicaVolumeResponse",
                "type": "object"
               }
              },
              "required": [
-              "addresses",
-              "created_at",
+              "id",
+              "source_id",
+              "name",
               "datastore_id",
               "flavor_id",
               "volume",
-              "id",
-              "name",
-              "source_id",
-              "status"
+              "addresses",
+              "status",
+              "generation",
+              "created_at"
              ],
-             "title": "Replica Detail Response",
+             "title": "ReplicaDetailResponse",
              "type": "object"
             },
-            "readOnly": true,
             "title": "Replicas",
             "type": "array"
            },
            "started_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup start date",
+            "title": "Started At",
             "type": "string"
            },
            "status": {
+            "description": "An enumeration.",
             "enum": [
              "CREATING",
              "ERROR",
@@ -5933,41 +5981,33 @@
              "BACKING_UP",
              "DELETING",
              "RESTORING",
-             "ERROR_DELETING"
+             "ERROR_DELETING",
+             "MAINTENANCE"
             ],
-            "example": "ACTIVE",
-            "readOnly": true,
+            "title": "InstanceStatusResponse",
             "type": "string"
            },
            "updated_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Last updated date",
+            "title": "Updated At",
             "type": "string"
-           },
-           "user": {
-            "description": "Database User.",
-            "example": "myuser",
-            "maxLength": 25,
-            "type": "string",
-            "writeOnly": true
            },
            "volume": {
             "properties": {
              "size": {
-              "description": "The size of the volume (in GiB).",
-              "example": 30,
               "maximum": 50000,
               "minimum": 10,
-              "type": "number"
+              "title": "Size",
+              "type": "integer"
              },
              "type": {
-              "description": "The type of the volume.",
+              "description": "An enumeration.",
               "enum": [
                "CLOUD_NVME",
                "CLOUD_HDD",
                "CLOUD_NVME_15K"
               ],
+              "title": "VolumeType",
               "type": "string"
              }
             },
@@ -5975,6 +6015,7 @@
              "size",
              "type"
             ],
+            "title": "InstanceVolumeResponse",
             "type": "object"
            }
           },
@@ -5986,10 +6027,12 @@
            "volume",
            "addresses",
            "status",
+           "generation",
            "created_at",
-           "backup_start_at",
-           "backup_retention_days"
+           "backup_retention_days",
+           "backup_start_at"
           ],
+          "title": "InstanceDetailResponse",
           "type": "object"
          },
          "title": "Results",
@@ -5999,10 +6042,10 @@
        "required": [
         "results"
        ],
-       "title": "Instances Response",
+       "title": "InstancesResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -6041,31 +6084,46 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "flavor_id": {
          "format": "uuid",
          "title": "Flavor Id",
          "type": "string"
         },
         "instance_id": {
-         "description": "Database Instance Unique Id.",
          "format": "uuid",
-         "title": "Database Instance Id",
+         "title": "Instance Id",
          "type": "string"
         },
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
            "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
+          },
+          "type": {
+           "default": "CLOUD_NVME_15K",
+           "description": "An enumeration.",
+           "enum": [
+            "CLOUD_NVME",
+            "CLOUD_HDD",
+            "CLOUD_NVME_15K"
+           ],
+           "example": "CLOUD_NVME",
+           "type": "string"
           }
          },
          "required": [
           "size"
          ],
-         "title": "Instance Volume Request",
+         "title": "InstanceVolumeRequest",
          "type": "object"
         }
        },
@@ -6080,99 +6138,88 @@
          "items": {
           "properties": {
            "access": {
-            "description": "Determine if the IP can be accessed from the internet.",
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "title": "Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
-            "example": "172.53.10.82",
             "title": "Address",
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "title": "Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
-           "access",
-           "type",
-           "address"
+           "access"
           ],
+          "title": "InstanceAddressResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Addresses",
          "type": "array"
         },
         "backup_retention_days": {
-         "default": 30,
-         "description": "The number of days that a particular backup is kept until its deletion.",
-         "example": 7,
          "exclusiveMinimum": true,
          "minimum": 0,
          "title": "Backup Retention Days",
          "type": "integer"
         },
         "backup_start_at": {
-         "default": "04:00:00",
-         "description": "Start time (UTC timezone) which is allowed to start the automated backup process.",
-         "example": "02:00:00",
          "format": "time",
          "title": "Backup Start At",
          "type": "string"
         },
         "created_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Creation date",
+         "title": "Created At",
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
-         "description": "Flavor unique identifier. Instance size.",
          "format": "uuid",
+         "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
-         "description": "Database instance unique identifier.",
          "format": "uuid",
-         "readOnly": true,
          "title": "Id",
          "type": "string"
         },
         "name": {
-         "description": "Database instance unique name.",
-         "example": "mydbinstance",
          "maxLength": 100,
          "title": "Name",
          "type": "string"
-        },
-        "password": {
-         "description": "Database Password.",
-         "example": "cGFzc3dk",
-         "format": "password",
-         "maxLength": 50,
-         "type": "string",
-         "writeOnly": true
         },
         "replicas": {
          "items": {
@@ -6181,12 +6228,12 @@
             "items": {
              "properties": {
               "access": {
+               "description": "An enumeration.",
                "enum": [
                 "PRIVATE",
                 "PUBLIC"
                ],
-               "example": "PRIVATE",
-               "title": "Address Access",
+               "title": "AddressAccess",
                "type": "string"
               },
               "address": {
@@ -6194,19 +6241,19 @@
                "type": "string"
               },
               "type": {
+               "description": "An enumeration.",
                "enum": [
                 "IPv4",
                 "IPv6"
                ],
-               "example": "IPv4",
-               "title": "Address Type",
+               "title": "AddressType",
                "type": "string"
               }
              },
              "required": [
               "access"
              ],
-             "title": "Replica Address Response",
+             "title": "ReplicaAddressResponse",
              "type": "object"
             },
             "title": "Addresses",
@@ -6218,20 +6265,29 @@
             "type": "string"
            },
            "datastore_id": {
-            "description": "Datastore unique identifier. Engine and version of datastore.",
             "format": "uuid",
-            "readOnly": true,
+            "title": "Datastore Id",
             "type": "string"
            },
            "finished_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup finish date",
+            "title": "Finished At",
             "type": "string"
            },
            "flavor_id": {
             "format": "uuid",
             "title": "Flavor Id",
+            "type": "string"
+           },
+           "generation": {
+            "description": "An enumeration.",
+            "enum": [
+             "G0B",
+             "G1B",
+             "G2B",
+             "G3B"
+            ],
+            "title": "InstanceGeneration",
             "type": "string"
            },
            "id": {
@@ -6250,11 +6306,11 @@
            },
            "started_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup start date",
+            "title": "Started At",
             "type": "string"
            },
            "status": {
+            "description": "An enumeration.",
             "enum": [
              "CREATING",
              "ERROR",
@@ -6269,10 +6325,10 @@
              "BACKING_UP",
              "DELETING",
              "RESTORING",
-             "ERROR_DELETING"
+             "ERROR_DELETING",
+             "MAINTENANCE"
             ],
-            "example": "ACTIVE",
-            "readOnly": true,
+            "title": "InstanceStatusResponse",
             "type": "string"
            },
            "updated_at": {
@@ -6283,19 +6339,19 @@
            "volume": {
             "properties": {
              "size": {
-              "description": "The size of the volume (in GiB).",
-              "example": 30,
               "maximum": 50000,
               "minimum": 10,
-              "type": "number"
+              "title": "Size",
+              "type": "integer"
              },
              "type": {
-              "description": "The type of the volume.",
+              "description": "An enumeration.",
               "enum": [
                "CLOUD_NVME",
                "CLOUD_HDD",
                "CLOUD_NVME_15K"
               ],
+              "title": "VolumeType",
               "type": "string"
              }
             },
@@ -6303,34 +6359,35 @@
              "size",
              "type"
             ],
+            "title": "ReplicaVolumeResponse",
             "type": "object"
            }
           },
           "required": [
-           "addresses",
-           "created_at",
+           "id",
+           "source_id",
+           "name",
            "datastore_id",
            "flavor_id",
            "volume",
-           "id",
-           "name",
-           "source_id",
-           "status"
+           "addresses",
+           "status",
+           "generation",
+           "created_at"
           ],
-          "title": "Replica Detail Response",
+          "title": "ReplicaDetailResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Replicas",
          "type": "array"
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -6345,41 +6402,33 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Last updated date",
+         "title": "Updated At",
          "type": "string"
-        },
-        "user": {
-         "description": "Database User.",
-         "example": "myuser",
-         "maxLength": 25,
-         "type": "string",
-         "writeOnly": true
         },
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -6387,6 +6436,7 @@
           "size",
           "type"
          ],
+         "title": "InstanceVolumeResponse",
          "type": "object"
         }
        },
@@ -6398,13 +6448,15 @@
         "volume",
         "addresses",
         "status",
+        "generation",
         "created_at",
-        "backup_start_at",
-        "backup_retention_days"
+        "backup_retention_days",
+        "backup_start_at"
        ],
+       "title": "InstanceDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -6448,8 +6500,12 @@
          "title": "Backup Id",
          "type": "string"
         },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "instance_id": {
-         "description": "Value referring to instance Id.",
          "format": "uuid",
          "title": "Instance Id",
          "type": "string"
@@ -6472,10 +6528,10 @@
        "required": [
         "id"
        ],
-       "title": "Restore Response",
+       "title": "RestoreResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -6514,10 +6570,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "instance_id": {
-         "description": "Database Instance Unique Id.",
          "format": "uuid",
-         "title": "Database Instance Id",
+         "title": "Instance Id",
          "type": "string"
         }
        },
@@ -6532,99 +6592,88 @@
          "items": {
           "properties": {
            "access": {
-            "description": "Determine if the IP can be accessed from the internet.",
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "title": "Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
-            "example": "172.53.10.82",
             "title": "Address",
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "title": "Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
-           "access",
-           "type",
-           "address"
+           "access"
           ],
+          "title": "InstanceAddressResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Addresses",
          "type": "array"
         },
         "backup_retention_days": {
-         "default": 30,
-         "description": "The number of days that a particular backup is kept until its deletion.",
-         "example": 7,
          "exclusiveMinimum": true,
          "minimum": 0,
          "title": "Backup Retention Days",
          "type": "integer"
         },
         "backup_start_at": {
-         "default": "04:00:00",
-         "description": "Start time (UTC timezone) which is allowed to start the automated backup process.",
-         "example": "02:00:00",
          "format": "time",
          "title": "Backup Start At",
          "type": "string"
         },
         "created_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Creation date",
+         "title": "Created At",
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
-         "description": "Flavor unique identifier. Instance size.",
          "format": "uuid",
+         "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
-         "description": "Database instance unique identifier.",
          "format": "uuid",
-         "readOnly": true,
          "title": "Id",
          "type": "string"
         },
         "name": {
-         "description": "Database instance unique name.",
-         "example": "mydbinstance",
          "maxLength": 100,
          "title": "Name",
          "type": "string"
-        },
-        "password": {
-         "description": "Database Password.",
-         "example": "cGFzc3dk",
-         "format": "password",
-         "maxLength": 50,
-         "type": "string",
-         "writeOnly": true
         },
         "replicas": {
          "items": {
@@ -6633,12 +6682,12 @@
             "items": {
              "properties": {
               "access": {
+               "description": "An enumeration.",
                "enum": [
                 "PRIVATE",
                 "PUBLIC"
                ],
-               "example": "PRIVATE",
-               "title": "Address Access",
+               "title": "AddressAccess",
                "type": "string"
               },
               "address": {
@@ -6646,19 +6695,19 @@
                "type": "string"
               },
               "type": {
+               "description": "An enumeration.",
                "enum": [
                 "IPv4",
                 "IPv6"
                ],
-               "example": "IPv4",
-               "title": "Address Type",
+               "title": "AddressType",
                "type": "string"
               }
              },
              "required": [
               "access"
              ],
-             "title": "Replica Address Response",
+             "title": "ReplicaAddressResponse",
              "type": "object"
             },
             "title": "Addresses",
@@ -6670,20 +6719,29 @@
             "type": "string"
            },
            "datastore_id": {
-            "description": "Datastore unique identifier. Engine and version of datastore.",
             "format": "uuid",
-            "readOnly": true,
+            "title": "Datastore Id",
             "type": "string"
            },
            "finished_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup finish date",
+            "title": "Finished At",
             "type": "string"
            },
            "flavor_id": {
             "format": "uuid",
             "title": "Flavor Id",
+            "type": "string"
+           },
+           "generation": {
+            "description": "An enumeration.",
+            "enum": [
+             "G0B",
+             "G1B",
+             "G2B",
+             "G3B"
+            ],
+            "title": "InstanceGeneration",
             "type": "string"
            },
            "id": {
@@ -6702,11 +6760,11 @@
            },
            "started_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup start date",
+            "title": "Started At",
             "type": "string"
            },
            "status": {
+            "description": "An enumeration.",
             "enum": [
              "CREATING",
              "ERROR",
@@ -6721,10 +6779,10 @@
              "BACKING_UP",
              "DELETING",
              "RESTORING",
-             "ERROR_DELETING"
+             "ERROR_DELETING",
+             "MAINTENANCE"
             ],
-            "example": "ACTIVE",
-            "readOnly": true,
+            "title": "InstanceStatusResponse",
             "type": "string"
            },
            "updated_at": {
@@ -6735,19 +6793,19 @@
            "volume": {
             "properties": {
              "size": {
-              "description": "The size of the volume (in GiB).",
-              "example": 30,
               "maximum": 50000,
               "minimum": 10,
-              "type": "number"
+              "title": "Size",
+              "type": "integer"
              },
              "type": {
-              "description": "The type of the volume.",
+              "description": "An enumeration.",
               "enum": [
                "CLOUD_NVME",
                "CLOUD_HDD",
                "CLOUD_NVME_15K"
               ],
+              "title": "VolumeType",
               "type": "string"
              }
             },
@@ -6755,34 +6813,35 @@
              "size",
              "type"
             ],
+            "title": "ReplicaVolumeResponse",
             "type": "object"
            }
           },
           "required": [
-           "addresses",
-           "created_at",
+           "id",
+           "source_id",
+           "name",
            "datastore_id",
            "flavor_id",
            "volume",
-           "id",
-           "name",
-           "source_id",
-           "status"
+           "addresses",
+           "status",
+           "generation",
+           "created_at"
           ],
-          "title": "Replica Detail Response",
+          "title": "ReplicaDetailResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Replicas",
          "type": "array"
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -6797,41 +6856,33 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Last updated date",
+         "title": "Updated At",
          "type": "string"
-        },
-        "user": {
-         "description": "Database User.",
-         "example": "myuser",
-         "maxLength": 25,
-         "type": "string",
-         "writeOnly": true
         },
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -6839,6 +6890,7 @@
           "size",
           "type"
          ],
+         "title": "InstanceVolumeResponse",
          "type": "object"
         }
        },
@@ -6850,13 +6902,15 @@
         "volume",
         "addresses",
         "status",
+        "generation",
         "created_at",
-        "backup_start_at",
-        "backup_retention_days"
+        "backup_retention_days",
+        "backup_start_at"
        ],
+       "title": "InstanceDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -6895,10 +6949,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "instance_id": {
-         "description": "Database Instance Unique Id.",
          "format": "uuid",
-         "title": "Database Instance Id",
+         "title": "Instance Id",
          "type": "string"
         }
        },
@@ -6913,99 +6971,88 @@
          "items": {
           "properties": {
            "access": {
-            "description": "Determine if the IP can be accessed from the internet.",
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "title": "Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
-            "example": "172.53.10.82",
             "title": "Address",
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "title": "Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
-           "access",
-           "type",
-           "address"
+           "access"
           ],
+          "title": "InstanceAddressResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Addresses",
          "type": "array"
         },
         "backup_retention_days": {
-         "default": 30,
-         "description": "The number of days that a particular backup is kept until its deletion.",
-         "example": 7,
          "exclusiveMinimum": true,
          "minimum": 0,
          "title": "Backup Retention Days",
          "type": "integer"
         },
         "backup_start_at": {
-         "default": "04:00:00",
-         "description": "Start time (UTC timezone) which is allowed to start the automated backup process.",
-         "example": "02:00:00",
          "format": "time",
          "title": "Backup Start At",
          "type": "string"
         },
         "created_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Creation date",
+         "title": "Created At",
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
-         "description": "Flavor unique identifier. Instance size.",
          "format": "uuid",
+         "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
-         "description": "Database instance unique identifier.",
          "format": "uuid",
-         "readOnly": true,
          "title": "Id",
          "type": "string"
         },
         "name": {
-         "description": "Database instance unique name.",
-         "example": "mydbinstance",
          "maxLength": 100,
          "title": "Name",
          "type": "string"
-        },
-        "password": {
-         "description": "Database Password.",
-         "example": "cGFzc3dk",
-         "format": "password",
-         "maxLength": 50,
-         "type": "string",
-         "writeOnly": true
         },
         "replicas": {
          "items": {
@@ -7014,12 +7061,12 @@
             "items": {
              "properties": {
               "access": {
+               "description": "An enumeration.",
                "enum": [
                 "PRIVATE",
                 "PUBLIC"
                ],
-               "example": "PRIVATE",
-               "title": "Address Access",
+               "title": "AddressAccess",
                "type": "string"
               },
               "address": {
@@ -7027,19 +7074,19 @@
                "type": "string"
               },
               "type": {
+               "description": "An enumeration.",
                "enum": [
                 "IPv4",
                 "IPv6"
                ],
-               "example": "IPv4",
-               "title": "Address Type",
+               "title": "AddressType",
                "type": "string"
               }
              },
              "required": [
               "access"
              ],
-             "title": "Replica Address Response",
+             "title": "ReplicaAddressResponse",
              "type": "object"
             },
             "title": "Addresses",
@@ -7051,20 +7098,29 @@
             "type": "string"
            },
            "datastore_id": {
-            "description": "Datastore unique identifier. Engine and version of datastore.",
             "format": "uuid",
-            "readOnly": true,
+            "title": "Datastore Id",
             "type": "string"
            },
            "finished_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup finish date",
+            "title": "Finished At",
             "type": "string"
            },
            "flavor_id": {
             "format": "uuid",
             "title": "Flavor Id",
+            "type": "string"
+           },
+           "generation": {
+            "description": "An enumeration.",
+            "enum": [
+             "G0B",
+             "G1B",
+             "G2B",
+             "G3B"
+            ],
+            "title": "InstanceGeneration",
             "type": "string"
            },
            "id": {
@@ -7083,11 +7139,11 @@
            },
            "started_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup start date",
+            "title": "Started At",
             "type": "string"
            },
            "status": {
+            "description": "An enumeration.",
             "enum": [
              "CREATING",
              "ERROR",
@@ -7102,10 +7158,10 @@
              "BACKING_UP",
              "DELETING",
              "RESTORING",
-             "ERROR_DELETING"
+             "ERROR_DELETING",
+             "MAINTENANCE"
             ],
-            "example": "ACTIVE",
-            "readOnly": true,
+            "title": "InstanceStatusResponse",
             "type": "string"
            },
            "updated_at": {
@@ -7116,19 +7172,19 @@
            "volume": {
             "properties": {
              "size": {
-              "description": "The size of the volume (in GiB).",
-              "example": 30,
               "maximum": 50000,
               "minimum": 10,
-              "type": "number"
+              "title": "Size",
+              "type": "integer"
              },
              "type": {
-              "description": "The type of the volume.",
+              "description": "An enumeration.",
               "enum": [
                "CLOUD_NVME",
                "CLOUD_HDD",
                "CLOUD_NVME_15K"
               ],
+              "title": "VolumeType",
               "type": "string"
              }
             },
@@ -7136,34 +7192,35 @@
              "size",
              "type"
             ],
+            "title": "ReplicaVolumeResponse",
             "type": "object"
            }
           },
           "required": [
-           "addresses",
-           "created_at",
+           "id",
+           "source_id",
+           "name",
            "datastore_id",
            "flavor_id",
            "volume",
-           "id",
-           "name",
-           "source_id",
-           "status"
+           "addresses",
+           "status",
+           "generation",
+           "created_at"
           ],
-          "title": "Replica Detail Response",
+          "title": "ReplicaDetailResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Replicas",
          "type": "array"
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -7178,41 +7235,33 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Last updated date",
+         "title": "Updated At",
          "type": "string"
-        },
-        "user": {
-         "description": "Database User.",
-         "example": "myuser",
-         "maxLength": 25,
-         "type": "string",
-         "writeOnly": true
         },
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -7220,6 +7269,7 @@
           "size",
           "type"
          ],
+         "title": "InstanceVolumeResponse",
          "type": "object"
         }
        },
@@ -7231,13 +7281,15 @@
         "volume",
         "addresses",
         "status",
+        "generation",
         "created_at",
-        "backup_start_at",
-        "backup_retention_days"
+        "backup_retention_days",
+        "backup_start_at"
        ],
+       "title": "InstanceDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -7277,34 +7329,33 @@
        "additionalProperties": false,
        "properties": {
         "backup_retention_days": {
-         "default": 30,
-         "description": "The number of days that a particular backup is kept until its deletion.",
-         "example": 7,
          "exclusiveMinimum": true,
          "minimum": 0,
          "title": "Backup Retention Days",
          "type": "integer"
         },
         "backup_start_at": {
-         "default": "01:00:00",
-         "description": "Start time which is allowed to start the automated backup process.",
-         "example": "03:00:00",
          "format": "time",
          "title": "Backup Start At",
          "type": "string"
         },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "instance_id": {
-         "description": "Database Instance Unique Id.",
          "format": "uuid",
-         "title": "Database Instance Id",
+         "title": "Instance Id",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "ACTIVE",
           "STOPPED"
          ],
-         "example": "ACTIVE",
+         "title": "InstanceUpdateStatus",
          "type": "string"
         }
        },
@@ -7319,99 +7370,88 @@
          "items": {
           "properties": {
            "access": {
-            "description": "Determine if the IP can be accessed from the internet.",
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "title": "Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
-            "example": "172.53.10.82",
             "title": "Address",
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "title": "Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
-           "access",
-           "type",
-           "address"
+           "access"
           ],
+          "title": "InstanceAddressResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Addresses",
          "type": "array"
         },
         "backup_retention_days": {
-         "default": 30,
-         "description": "The number of days that a particular backup is kept until its deletion.",
-         "example": 7,
          "exclusiveMinimum": true,
          "minimum": 0,
          "title": "Backup Retention Days",
          "type": "integer"
         },
         "backup_start_at": {
-         "default": "04:00:00",
-         "description": "Start time (UTC timezone) which is allowed to start the automated backup process.",
-         "example": "02:00:00",
          "format": "time",
          "title": "Backup Start At",
          "type": "string"
         },
         "created_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Creation date",
+         "title": "Created At",
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
-         "description": "Flavor unique identifier. Instance size.",
          "format": "uuid",
+         "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
-         "description": "Database instance unique identifier.",
          "format": "uuid",
-         "readOnly": true,
          "title": "Id",
          "type": "string"
         },
         "name": {
-         "description": "Database instance unique name.",
-         "example": "mydbinstance",
          "maxLength": 100,
          "title": "Name",
          "type": "string"
-        },
-        "password": {
-         "description": "Database Password.",
-         "example": "cGFzc3dk",
-         "format": "password",
-         "maxLength": 50,
-         "type": "string",
-         "writeOnly": true
         },
         "replicas": {
          "items": {
@@ -7420,12 +7460,12 @@
             "items": {
              "properties": {
               "access": {
+               "description": "An enumeration.",
                "enum": [
                 "PRIVATE",
                 "PUBLIC"
                ],
-               "example": "PRIVATE",
-               "title": "Address Access",
+               "title": "AddressAccess",
                "type": "string"
               },
               "address": {
@@ -7433,19 +7473,19 @@
                "type": "string"
               },
               "type": {
+               "description": "An enumeration.",
                "enum": [
                 "IPv4",
                 "IPv6"
                ],
-               "example": "IPv4",
-               "title": "Address Type",
+               "title": "AddressType",
                "type": "string"
               }
              },
              "required": [
               "access"
              ],
-             "title": "Replica Address Response",
+             "title": "ReplicaAddressResponse",
              "type": "object"
             },
             "title": "Addresses",
@@ -7457,20 +7497,29 @@
             "type": "string"
            },
            "datastore_id": {
-            "description": "Datastore unique identifier. Engine and version of datastore.",
             "format": "uuid",
-            "readOnly": true,
+            "title": "Datastore Id",
             "type": "string"
            },
            "finished_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup finish date",
+            "title": "Finished At",
             "type": "string"
            },
            "flavor_id": {
             "format": "uuid",
             "title": "Flavor Id",
+            "type": "string"
+           },
+           "generation": {
+            "description": "An enumeration.",
+            "enum": [
+             "G0B",
+             "G1B",
+             "G2B",
+             "G3B"
+            ],
+            "title": "InstanceGeneration",
             "type": "string"
            },
            "id": {
@@ -7489,11 +7538,11 @@
            },
            "started_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup start date",
+            "title": "Started At",
             "type": "string"
            },
            "status": {
+            "description": "An enumeration.",
             "enum": [
              "CREATING",
              "ERROR",
@@ -7508,10 +7557,10 @@
              "BACKING_UP",
              "DELETING",
              "RESTORING",
-             "ERROR_DELETING"
+             "ERROR_DELETING",
+             "MAINTENANCE"
             ],
-            "example": "ACTIVE",
-            "readOnly": true,
+            "title": "InstanceStatusResponse",
             "type": "string"
            },
            "updated_at": {
@@ -7522,19 +7571,19 @@
            "volume": {
             "properties": {
              "size": {
-              "description": "The size of the volume (in GiB).",
-              "example": 30,
               "maximum": 50000,
               "minimum": 10,
-              "type": "number"
+              "title": "Size",
+              "type": "integer"
              },
              "type": {
-              "description": "The type of the volume.",
+              "description": "An enumeration.",
               "enum": [
                "CLOUD_NVME",
                "CLOUD_HDD",
                "CLOUD_NVME_15K"
               ],
+              "title": "VolumeType",
               "type": "string"
              }
             },
@@ -7542,34 +7591,35 @@
              "size",
              "type"
             ],
+            "title": "ReplicaVolumeResponse",
             "type": "object"
            }
           },
           "required": [
-           "addresses",
-           "created_at",
+           "id",
+           "source_id",
+           "name",
            "datastore_id",
            "flavor_id",
            "volume",
-           "id",
-           "name",
-           "source_id",
-           "status"
+           "addresses",
+           "status",
+           "generation",
+           "created_at"
           ],
-          "title": "Replica Detail Response",
+          "title": "ReplicaDetailResponse",
           "type": "object"
          },
-         "readOnly": true,
          "title": "Replicas",
          "type": "array"
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -7584,41 +7634,33 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Last updated date",
+         "title": "Updated At",
          "type": "string"
-        },
-        "user": {
-         "description": "Database User.",
-         "example": "myuser",
-         "maxLength": 25,
-         "type": "string",
-         "writeOnly": true
         },
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -7626,6 +7668,7 @@
           "size",
           "type"
          ],
+         "title": "InstanceVolumeResponse",
          "type": "object"
         }
        },
@@ -7637,19 +7680,21 @@
         "volume",
         "addresses",
         "status",
+        "generation",
         "created_at",
-        "backup_start_at",
-        "backup_retention_days"
+        "backup_retention_days",
+        "backup_start_at"
        ],
+       "title": "InstanceDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      }
     ],
     "description": "Database instances management.",
     "isInternal": false,
     "name": "instances",
-    "version": "1.10.1"
+    "version": "1.15.3"
    },
    {
     "children": [
@@ -7690,6 +7735,11 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "flavor_id": {
          "format": "uuid",
          "title": "Flavor Id",
@@ -7723,10 +7773,10 @@
        "required": [
         "id"
        ],
-       "title": "Replica Response",
+       "title": "ReplicaResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -7765,10 +7815,14 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "replica_id": {
-         "description": "Database Replica Unique Id",
          "format": "uuid",
-         "title": "Database Replica Id",
+         "title": "Replica Id",
          "type": "string"
         }
        },
@@ -7781,7 +7835,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -7820,8 +7874,12 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "replica_id": {
-         "description": "Value referring to replica Id.",
          "format": "uuid",
          "title": "Replica Id",
          "type": "string"
@@ -7838,12 +7896,12 @@
          "items": {
           "properties": {
            "access": {
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "example": "PRIVATE",
-            "title": "Address Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
@@ -7851,19 +7909,19 @@
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "example": "IPv4",
-            "title": "Address Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
            "access"
           ],
-          "title": "Replica Address Response",
+          "title": "ReplicaAddressResponse",
           "type": "object"
          },
          "title": "Addresses",
@@ -7875,20 +7933,29 @@
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
-         "readOnly": true,
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
          "format": "uuid",
          "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
@@ -7907,11 +7974,11 @@
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -7926,10 +7993,10 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
@@ -7940,19 +8007,19 @@
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -7960,24 +8027,26 @@
           "size",
           "type"
          ],
+         "title": "ReplicaVolumeResponse",
          "type": "object"
         }
        },
        "required": [
-        "addresses",
-        "created_at",
+        "id",
+        "source_id",
+        "name",
         "datastore_id",
         "flavor_id",
         "volume",
-        "id",
-        "name",
-        "source_id",
-        "status"
+        "addresses",
+        "status",
+        "generation",
+        "created_at"
        ],
-       "title": "Replica Detail Response",
+       "title": "ReplicaDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -8016,21 +8085,25 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
-        "limit": {
+        "_limit": {
          "default": 10,
-         "description": "limit",
          "maximum": 25,
          "minimum": 1,
+         "title": " Limit",
          "type": "integer"
         },
-        "offset": {
+        "_offset": {
          "default": 0,
-         "description": "offset",
          "minimum": 0,
+         "title": " Offset",
          "type": "integer"
+        },
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
         },
         "source_id": {
-         "description": "Value referring to source Id.",
          "format": "uuid",
          "title": "Source Id",
          "type": "string"
@@ -8047,12 +8120,12 @@
             "items": {
              "properties": {
               "access": {
+               "description": "An enumeration.",
                "enum": [
                 "PRIVATE",
                 "PUBLIC"
                ],
-               "example": "PRIVATE",
-               "title": "Address Access",
+               "title": "AddressAccess",
                "type": "string"
               },
               "address": {
@@ -8060,19 +8133,19 @@
                "type": "string"
               },
               "type": {
+               "description": "An enumeration.",
                "enum": [
                 "IPv4",
                 "IPv6"
                ],
-               "example": "IPv4",
-               "title": "Address Type",
+               "title": "AddressType",
                "type": "string"
               }
              },
              "required": [
               "access"
              ],
-             "title": "Replica Address Response",
+             "title": "ReplicaAddressResponse",
              "type": "object"
             },
             "title": "Addresses",
@@ -8084,20 +8157,29 @@
             "type": "string"
            },
            "datastore_id": {
-            "description": "Datastore unique identifier. Engine and version of datastore.",
             "format": "uuid",
-            "readOnly": true,
+            "title": "Datastore Id",
             "type": "string"
            },
            "finished_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup finish date",
+            "title": "Finished At",
             "type": "string"
            },
            "flavor_id": {
             "format": "uuid",
             "title": "Flavor Id",
+            "type": "string"
+           },
+           "generation": {
+            "description": "An enumeration.",
+            "enum": [
+             "G0B",
+             "G1B",
+             "G2B",
+             "G3B"
+            ],
+            "title": "InstanceGeneration",
             "type": "string"
            },
            "id": {
@@ -8116,11 +8198,11 @@
            },
            "started_at": {
             "format": "date-time",
-            "readOnly": true,
-            "title": "Initial setup start date",
+            "title": "Started At",
             "type": "string"
            },
            "status": {
+            "description": "An enumeration.",
             "enum": [
              "CREATING",
              "ERROR",
@@ -8135,10 +8217,10 @@
              "BACKING_UP",
              "DELETING",
              "RESTORING",
-             "ERROR_DELETING"
+             "ERROR_DELETING",
+             "MAINTENANCE"
             ],
-            "example": "ACTIVE",
-            "readOnly": true,
+            "title": "InstanceStatusResponse",
             "type": "string"
            },
            "updated_at": {
@@ -8149,19 +8231,19 @@
            "volume": {
             "properties": {
              "size": {
-              "description": "The size of the volume (in GiB).",
-              "example": 30,
               "maximum": 50000,
               "minimum": 10,
-              "type": "number"
+              "title": "Size",
+              "type": "integer"
              },
              "type": {
-              "description": "The type of the volume.",
+              "description": "An enumeration.",
               "enum": [
                "CLOUD_NVME",
                "CLOUD_HDD",
                "CLOUD_NVME_15K"
               ],
+              "title": "VolumeType",
               "type": "string"
              }
             },
@@ -8169,21 +8251,23 @@
              "size",
              "type"
             ],
+            "title": "ReplicaVolumeResponse",
             "type": "object"
            }
           },
           "required": [
-           "addresses",
-           "created_at",
+           "id",
+           "source_id",
+           "name",
            "datastore_id",
            "flavor_id",
            "volume",
-           "id",
-           "name",
-           "source_id",
-           "status"
+           "addresses",
+           "status",
+           "generation",
+           "created_at"
           ],
-          "title": "Replica Detail Response",
+          "title": "ReplicaDetailResponse",
           "type": "object"
          },
          "title": "Results",
@@ -8193,10 +8277,10 @@
        "required": [
         "results"
        ],
-       "title": "Replicas Response",
+       "title": "ReplicasResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -8235,13 +8319,17 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "flavor_id": {
          "format": "uuid",
          "title": "Flavor Id",
          "type": "string"
         },
         "replica_id": {
-         "description": "Value referring to replica Id.",
          "format": "uuid",
          "title": "Replica Id",
          "type": "string"
@@ -8259,12 +8347,12 @@
          "items": {
           "properties": {
            "access": {
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "example": "PRIVATE",
-            "title": "Address Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
@@ -8272,19 +8360,19 @@
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "example": "IPv4",
-            "title": "Address Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
            "access"
           ],
-          "title": "Replica Address Response",
+          "title": "ReplicaAddressResponse",
           "type": "object"
          },
          "title": "Addresses",
@@ -8296,20 +8384,29 @@
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
-         "readOnly": true,
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
          "format": "uuid",
          "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
@@ -8328,11 +8425,11 @@
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -8347,10 +8444,10 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
@@ -8361,19 +8458,19 @@
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -8381,24 +8478,26 @@
           "size",
           "type"
          ],
+         "title": "ReplicaVolumeResponse",
          "type": "object"
         }
        },
        "required": [
-        "addresses",
-        "created_at",
+        "id",
+        "source_id",
+        "name",
         "datastore_id",
         "flavor_id",
         "volume",
-        "id",
-        "name",
-        "source_id",
-        "status"
+        "addresses",
+        "status",
+        "generation",
+        "created_at"
        ],
-       "title": "Replica Detail Response",
+       "title": "ReplicaDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -8437,8 +8536,12 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "replica_id": {
-         "description": "Value referring to replica Id.",
          "format": "uuid",
          "title": "Replica Id",
          "type": "string"
@@ -8455,12 +8558,12 @@
          "items": {
           "properties": {
            "access": {
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "example": "PRIVATE",
-            "title": "Address Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
@@ -8468,19 +8571,19 @@
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "example": "IPv4",
-            "title": "Address Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
            "access"
           ],
-          "title": "Replica Address Response",
+          "title": "ReplicaAddressResponse",
           "type": "object"
          },
          "title": "Addresses",
@@ -8492,20 +8595,29 @@
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
-         "readOnly": true,
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
          "format": "uuid",
          "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
@@ -8524,11 +8636,11 @@
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -8543,10 +8655,10 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
@@ -8557,19 +8669,19 @@
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -8577,24 +8689,26 @@
           "size",
           "type"
          ],
+         "title": "ReplicaVolumeResponse",
          "type": "object"
         }
        },
        "required": [
-        "addresses",
-        "created_at",
+        "id",
+        "source_id",
+        "name",
         "datastore_id",
         "flavor_id",
         "volume",
-        "id",
-        "name",
-        "source_id",
-        "status"
+        "addresses",
+        "status",
+        "generation",
+        "created_at"
        ],
-       "title": "Replica Detail Response",
+       "title": "ReplicaDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      },
      {
       "configs": {
@@ -8633,8 +8747,12 @@
       "parameters": {
        "additionalProperties": false,
        "properties": {
+        "exchange": {
+         "default": "dbaas-internal",
+         "title": "Exchange",
+         "type": "string"
+        },
         "replica_id": {
-         "description": "Value referring to replica Id.",
          "format": "uuid",
          "title": "Replica Id",
          "type": "string"
@@ -8651,12 +8769,12 @@
          "items": {
           "properties": {
            "access": {
+            "description": "An enumeration.",
             "enum": [
              "PRIVATE",
              "PUBLIC"
             ],
-            "example": "PRIVATE",
-            "title": "Address Access",
+            "title": "AddressAccess",
             "type": "string"
            },
            "address": {
@@ -8664,19 +8782,19 @@
             "type": "string"
            },
            "type": {
+            "description": "An enumeration.",
             "enum": [
              "IPv4",
              "IPv6"
             ],
-            "example": "IPv4",
-            "title": "Address Type",
+            "title": "AddressType",
             "type": "string"
            }
           },
           "required": [
            "access"
           ],
-          "title": "Replica Address Response",
+          "title": "ReplicaAddressResponse",
           "type": "object"
          },
          "title": "Addresses",
@@ -8688,20 +8806,29 @@
          "type": "string"
         },
         "datastore_id": {
-         "description": "Datastore unique identifier. Engine and version of datastore.",
          "format": "uuid",
-         "readOnly": true,
+         "title": "Datastore Id",
          "type": "string"
         },
         "finished_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup finish date",
+         "title": "Finished At",
          "type": "string"
         },
         "flavor_id": {
          "format": "uuid",
          "title": "Flavor Id",
+         "type": "string"
+        },
+        "generation": {
+         "description": "An enumeration.",
+         "enum": [
+          "G0B",
+          "G1B",
+          "G2B",
+          "G3B"
+         ],
+         "title": "InstanceGeneration",
          "type": "string"
         },
         "id": {
@@ -8720,11 +8847,11 @@
         },
         "started_at": {
          "format": "date-time",
-         "readOnly": true,
-         "title": "Initial setup start date",
+         "title": "Started At",
          "type": "string"
         },
         "status": {
+         "description": "An enumeration.",
          "enum": [
           "CREATING",
           "ERROR",
@@ -8739,10 +8866,10 @@
           "BACKING_UP",
           "DELETING",
           "RESTORING",
-          "ERROR_DELETING"
+          "ERROR_DELETING",
+          "MAINTENANCE"
          ],
-         "example": "ACTIVE",
-         "readOnly": true,
+         "title": "InstanceStatusResponse",
          "type": "string"
         },
         "updated_at": {
@@ -8753,19 +8880,19 @@
         "volume": {
          "properties": {
           "size": {
-           "description": "The size of the volume (in GiB).",
-           "example": 30,
            "maximum": 50000,
            "minimum": 10,
-           "type": "number"
+           "title": "Size",
+           "type": "integer"
           },
           "type": {
-           "description": "The type of the volume.",
+           "description": "An enumeration.",
            "enum": [
             "CLOUD_NVME",
             "CLOUD_HDD",
             "CLOUD_NVME_15K"
            ],
+           "title": "VolumeType",
            "type": "string"
           }
          },
@@ -8773,36 +8900,38 @@
           "size",
           "type"
          ],
+         "title": "ReplicaVolumeResponse",
          "type": "object"
         }
        },
        "required": [
-        "addresses",
-        "created_at",
+        "id",
+        "source_id",
+        "name",
         "datastore_id",
         "flavor_id",
         "volume",
-        "id",
-        "name",
-        "source_id",
-        "status"
+        "addresses",
+        "status",
+        "generation",
+        "created_at"
        ],
-       "title": "Replica Detail Response",
+       "title": "ReplicaDetailResponse",
        "type": "object"
       },
-      "version": "1.10.1"
+      "version": "1.15.3"
      }
     ],
     "description": "Database replicas management.",
     "isInternal": false,
     "name": "replicas",
-    "version": "1.10.1"
+    "version": "1.15.3"
    }
   ],
   "description": "DBaaS API Product.",
   "isInternal": false,
   "name": "dbaas",
-  "version": "1.10.1"
+  "version": "1.15.3"
  },
  {
   "children": [
