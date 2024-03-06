@@ -4,10 +4,11 @@ Usage:
   ./cli kubernetes nodepool nodes [cluster-id] [node-pool-id] [flags]
 
 Flags:
-      --cluster-id uuid     Cluster's UUID. (required)
-  -h, --help                help for nodes
-      --node-pool-id uuid   Nodepool's UUID. (required)
-  -v, --version             version for nodes
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --cluster-id uuid               Cluster's UUID. (required)
+  -h, --help                          help for nodes
+      --node-pool-id uuid             Nodepool's UUID. (required)
+  -v, --version                       version for nodes
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

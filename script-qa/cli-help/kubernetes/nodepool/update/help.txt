@@ -1,7 +1,7 @@
 Updates nodes from a node pool by nodepool_uuid.
 
 Usage:
-  ./cli kubernetes nodepool update [cluster-id] [id] [flags]
+  ./cli kubernetes nodepool update [cluster-id] [node-pool-id] [flags]
 
 Examples:
   ./cli kubernetes nodepool update --auto-scale.max-replicas=5 --auto-scale.min-replicas=2
@@ -19,7 +19,7 @@ Flags:
       --cli.list-links enum[=table]       List all available links for this command (one of "json", "table" or "yaml")
       --cluster-id uuid                   Cluster's UUID. (required)
   -h, --help                              help for update
-      --id uuid                           Nodepool's UUID. (required)
+      --node-pool-id uuid                 Nodepool's UUID. (required)
       --replicas integer                  Number of replicas of the nodes in the node pool.
   -v, --version                           version for update
 

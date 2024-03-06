@@ -1,12 +1,12 @@
 Deletes a cluster by cluster_uuid.
 
 Usage:
-  ./cli kubernetes cluster delete [id] [flags]
+  ./cli kubernetes cluster delete [cluster-id] [flags]
 
 Flags:
-  -h, --help      help for delete
-      --id uuid   Cluster's UUID. (required)
-  -v, --version   version for delete
+      --cluster-id uuid   Cluster's UUID. (required)
+  -h, --help              help for delete
+  -v, --version           version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

@@ -1,13 +1,13 @@
 Deletes a node pool in a Kubernetes cluster by nodepool_uuid.
 
 Usage:
-  ./cli kubernetes nodepool delete [cluster-id] [id] [flags]
+  ./cli kubernetes nodepool delete [cluster-id] [node-pool-id] [flags]
 
 Flags:
-      --cluster-id uuid   Cluster's UUID. (required)
-  -h, --help              help for delete
-      --id uuid           Nodepool's UUID. (required)
-  -v, --version           version for delete
+      --cluster-id uuid     Cluster's UUID. (required)
+  -h, --help                help for delete
+      --node-pool-id uuid   Nodepool's UUID. (required)
+  -v, --version             version for delete
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

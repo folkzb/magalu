@@ -80,14 +80,19 @@ paths:
                     links:
                         get:
                             operationId: getClusterById
-                            description: Lists detailed cluster information by cluster_uuid.
+                            description: List a cluster by uuid
                             parameters:
-                                id: $response.body#/id
+                                cluster_id: $response.body#/id
                         delete:
                             operationId: deleteCluster
-                            description: Deletes a cluster by cluster_uuid.
+                            description: Delete a cluster
                             parameters:
-                                id: $response.body#/id
+                                cluster_id: $response.body#/id
+                        kubeconfig:
+                            operationId: getKubeConfigCluster
+                            description: Get kubeconfig cluster
+                            parameters:
+                                cluster_id: $response.body#/id
                 '400':
                     description: Bad Request
                     content:
@@ -370,7 +375,6 @@ paths:
                     type: string
                     format: uuid
                 description: Cluster's UUID.
-                x-mgc-name: id
             responses:
                 '200':
                     description: Successful operation
@@ -381,9 +385,14 @@ paths:
                     links:
                         delete:
                             operationId: deleteCluster
-                            description: Deletes a cluster by cluster_uuid.
+                            description: Delete a cluster
                             parameters:
-                                cluster_id: $request.path.cluster_id
+                                cluster_id: $response.body#/id
+                        kubeconfig:
+                            operationId: getKubeConfigCluster
+                            description: Get kubeconfig cluster
+                            parameters:
+                                cluster_id: $response.body#/id
                 '400':
                     description: Bad Request
                     content:
@@ -500,7 +509,6 @@ paths:
                     type: string
                     format: uuid
                 description: Cluster's UUID.
-                x-mgc-name: id
             responses:
                 '204':
                     description: Successful operation
@@ -627,7 +635,6 @@ paths:
                     type: string
                     format: uuid
                 description: Schema to get the cluster's kubeconfig file.
-                x-mgc-name: id
             responses:
                 '200':
                     description: Successful operation
@@ -635,6 +642,17 @@ paths:
                         application/yaml:
                             schema:
                                 $ref: '#/components/schemas/ClusterKubeConfigResponse'
+                    links:
+                        get:
+                            operationId: getClusterById
+                            description: List a cluster by uuid
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                        delete:
+                            operationId: deleteCluster
+                            description: Delete a cluster
+                            parameters:
+                                cluster_id: $request.path.cluster_id
                 '400':
                     description: Bad Request
                     content:
@@ -765,22 +783,32 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/NodePoolsResponse'
                     links:
+                        list:
+                            operationId: getClusterNodePools
+                            description: List node pools by cluster_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
                         get:
                             operationId: getNodePool
-                            description: Gets nodes in a node pool by nodepool_uuid.
+                            description: Get node pool by node_pool_id
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $response.body#/id
                         update:
                             operationId: patchNodePool
-                            description: Updates nodes from a node pool by nodepool_uuid.
+                            description: Patch node pool replicas by node_pool_id
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $response.body#/id
                         delete:
                             operationId: deleteNodePool
-                            description: Deletes a node pool in a Kubernetes cluster
-                                by nodepool_uuid.
+                            description: Delete node pool by node_pool_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $response.body#/id
+                        nodes:
+                            operationId: getNodes
+                            description: List nodes from a node pool by node_pool_id
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $response.body#/id
@@ -1064,7 +1092,6 @@ paths:
                     type: string
                     format: uuid
                 description: Nodepool's UUID.
-                x-mgc-name: id
             responses:
                 '200':
                     description: Successful operation
@@ -1073,16 +1100,31 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/NodePoolsResponse'
                     links:
+                        list:
+                            operationId: getClusterNodePools
+                            description: List node pools by cluster_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                        create:
+                            operationId: createNodePool
+                            description: Create a node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
                         update:
                             operationId: patchNodePool
-                            description: Updates nodes from a node pool by nodepool_uuid.
+                            description: Patch node pool replicas by node_pool_id
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
                         delete:
                             operationId: deleteNodePool
-                            description: Deletes a node pool in a Kubernetes cluster
-                                by nodepool_uuid.
+                            description: Delete node pool by node_pool_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
+                        nodes:
+                            operationId: getNodes
+                            description: List nodes from a node pool by node_pool_id
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
@@ -1209,7 +1251,6 @@ paths:
                     type: string
                     format: uuid
                 description: Nodepool's UUID.
-                x-mgc-name: id
             requestBody:
                 content:
                     application/json:
@@ -1223,16 +1264,31 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/NodePoolsResponse'
                     links:
+                        list:
+                            operationId: getClusterNodePools
+                            description: List node pools by cluster_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                        create:
+                            operationId: createNodePool
+                            description: Create a node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
                         get:
                             operationId: getNodePool
-                            description: Gets nodes in a node pool by nodepool_uuid.
+                            description: Get node pool by node_pool_id
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
                         delete:
                             operationId: deleteNodePool
-                            description: Deletes a node pool in a Kubernetes cluster
-                                by nodepool_uuid.
+                            description: Delete node pool by node_pool_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
+                        nodes:
+                            operationId: getNodes
+                            description: List nodes from a node pool by node_pool_id
                             parameters:
                                 cluster_id: $request.path.cluster_id
                                 node_pool_id: $request.path.node_pool_id
@@ -1376,7 +1432,6 @@ paths:
                     type: string
                     format: uuid
                 description: Nodepool's UUID.
-                x-mgc-name: id
             responses:
                 '204':
                     description: Successful operation
@@ -1511,6 +1566,35 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/NodesResponse'
+                    links:
+                        list:
+                            operationId: getClusterNodePools
+                            description: List node pools by cluster_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                        create:
+                            operationId: createNodePool
+                            description: Create a node pool
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                        get:
+                            operationId: getNodePool
+                            description: Get node pool by node_pool_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
+                        update:
+                            operationId: patchNodePool
+                            description: Patch node pool replicas by node_pool_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
+                        delete:
+                            operationId: deleteNodePool
+                            description: Delete node pool by node_pool_id
+                            parameters:
+                                cluster_id: $request.path.cluster_id
+                                node_pool_id: $request.path.node_pool_id
                 '400':
                     description: Bad Request
                     content:
