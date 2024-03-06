@@ -41,11 +41,19 @@ children:
         id: $.parameters.block_storage_id
         virtual_machine_id: $.parameters.virtual_machine_id
 
-      check:
-        errorMessageTemplate: |
-          Virtual machine {{ .parameters.virtual_machine_id }} was not attached to block storage {{ .parameters.block_storage_id }}
-        jsonPathQuery: |
-          hasKey($.current.result, "attachment") && $.current.result.attachment[?(@.machine_id == $.parameters.virtual_machine_id)]
+    links:
+      get:
+        target: /block-storage/volumes/get
+        description: Check if this Public IP is attached to a Port
+        parameters:
+          id: $.parameters.id
+        waitTermination:
+          maxRetries: 5
+          interval: 5s
+          jsonPathQuery: |
+            hasKey($.result, "attachment") && $.result.attachment.machine_id == $.owner.parameters.virtual_machine_id
+          errorJsonPathQuery: |
+            $.result.status == "attaching_error" || (!hasKey($.result, "attachment") && $.result.status == "completed")
 
   - name: get
     description: Check if a volume is attached to a virtual machine instance
@@ -69,23 +77,14 @@ children:
     - target: /block-storage/volumes/get
       parameters:
         id: $.parameters.block_storage_id
-      check:
-        errorMessageTemplate: |
-          Unable to find virtual machine {{ .parameters.virtual_machine_id }} in block storage {{ .parameters.block_storage_id }} attachments
-        jsonPathQuery: |
-          hasKey($.current.result, "attachment") && $.current.result.attachment[?(@.machine_id == $.parameters.virtual_machine_id)]
 
-  # UPDATE: not available, it's present o cope with TerraForm's constraints until it's fixed
-  - name: update
-    description: Update a block storage volume attachment
-    parametersSchema:
-      $ref: /block-storage/volume-attachment/get/parametersSchema
-    configsSchema:
-      $ref: /block-storage/volume-attachment/get/configsSchema
-    resultSchema:
-      $ref: /block-storage/volume-attachment/get/resultSchema
-    steps:
-    - target: /block-storage/volume-attachment/get
+    waitTermination:
+      maxRetries: 5
+      interval: 5s
+      jsonPathQuery: |
+        hasKey($.last.result, "attachment") && $.last.result.attachment.machine_id == $.parameters.virtual_machine_id
+      errorJsonPathQuery: |
+        $.last.result.status == "attaching_error" || (!hasKey($.last.result, "attachment") && $.last.result.status == "completed")
 
   - name: delete
     description: Detach a volume from a virtual machine instance
@@ -112,9 +111,3 @@ children:
     - target: /block-storage/volumes/detach
       parameters:
         id: $.parameters.block_storage_id
-
-      check:
-        errorMessageTemplate: |
-          Virtual machine is still attached to block storage {{ .parameters.block_storage_id }}
-        jsonPathQuery: |
-          !hasKey($.current.result, "attachment")

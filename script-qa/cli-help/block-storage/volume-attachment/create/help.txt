@@ -4,9 +4,11 @@ Usage:
   ./cli block-storage volume-attachment create [flags]
 
 Flags:
-      --block-storage-id uuid     Id
-  -h, --help                      help for create
-      --virtual-machine-id uuid   Virtual Machine Id
+      --block-storage-id uuid         Id
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --cli.watch                     Wait until the operation is completed by calling the 'get' link and waiting until termination. Akin to '! get -w'
+  -h, --help                          help for create
+      --virtual-machine-id uuid       Virtual Machine Id
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
