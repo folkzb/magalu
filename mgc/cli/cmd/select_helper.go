@@ -145,6 +145,10 @@ func findListForSetExecutor(setExec core.Executor, listExecutors []core.Executor
 }
 
 func matchGetCurrentAndSetExecutor(setExec, getCurrentExec core.Executor, multiple bool) (matchingGetCurrentExec core.Executor) {
+	if getCurrentParams := getCurrentExec.ParametersSchema(); len(getCurrentParams.Properties) > 0 {
+		return
+	}
+
 	getCurrentSchema := getCurrentExec.ResultSchema()
 	if multiple {
 		var err error
