@@ -19736,6 +19736,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19832,6 +19841,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -19913,6 +19931,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
@@ -19998,6 +20025,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20064,6 +20100,15 @@
            "maximum": 5120,
            "minimum": 5,
            "type": "integer"
+          },
+          "env": {
+           "default": "prod",
+           "description": "Environment to use",
+           "enum": [
+            "prod",
+            "pre-prod"
+           ],
+           "type": "string"
           },
           "region": {
            "default": "br-ne1",
@@ -20147,6 +20192,15 @@
            "minimum": 5,
            "type": "integer"
           },
+          "env": {
+           "default": "prod",
+           "description": "Environment to use",
+           "enum": [
+            "prod",
+            "pre-prod"
+           ],
+           "type": "string"
+          },
           "region": {
            "default": "br-ne1",
            "description": "Region to reach the service",
@@ -20214,6 +20268,15 @@
            "maximum": 5120,
            "minimum": 5,
            "type": "integer"
+          },
+          "env": {
+           "default": "prod",
+           "description": "Environment to use",
+           "enum": [
+            "prod",
+            "pre-prod"
+           ],
+           "type": "string"
           },
           "region": {
            "default": "br-ne1",
@@ -20311,6 +20374,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20403,6 +20475,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
@@ -20519,6 +20600,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20604,6 +20694,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
@@ -20711,6 +20810,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20802,6 +20910,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
@@ -20903,6 +21020,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -20986,6 +21112,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
@@ -21118,6 +21253,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -21198,6 +21342,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
@@ -21294,6 +21447,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -21374,6 +21536,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -21438,6 +21609,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
@@ -21540,6 +21720,15 @@
          "minimum": 5,
          "type": "integer"
         },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
         "region": {
          "default": "br-ne1",
          "description": "Region to reach the service",
@@ -21614,6 +21803,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
@@ -21711,6 +21909,15 @@
          "maximum": 5120,
          "minimum": 5,
          "type": "integer"
+        },
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
         },
         "region": {
          "default": "br-ne1",
