@@ -13589,13 +13589,13 @@
        "title": "Healthcheck",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      }
     ],
-    "description": "",
+    "description": "healthcheck",
     "isInternal": true,
     "name": "healthcheck",
-    "version": "1.101.2"
+    "version": "1.109.0"
    },
    {
     "children": [
@@ -13654,7 +13654,7 @@
        "type": "object"
       },
       "result": {},
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -13759,7 +13759,7 @@
        "title": "PortCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -13857,7 +13857,7 @@
        "title": "PortCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -13910,7 +13910,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -13971,24 +13971,34 @@
        },
        "properties": {
         "deleted_ports": {
-         "default": [],
-         "items": {},
-         "nullable": true,
+         "items": {
+          "additionalProperties": {
+           "type": "integer"
+          },
+          "type": "object"
+         },
          "title": "Deleted Ports",
          "type": "array"
         },
         "deleted_public_ips": {
-         "default": [],
-         "items": {},
-         "nullable": true,
+         "items": {
+          "additionalProperties": {
+           "type": "integer"
+          },
+          "type": "object"
+         },
          "title": "Deleted Public Ips",
          "type": "array"
         }
        },
+       "required": [
+        "deleted_ports",
+        "deleted_public_ips"
+       ],
        "title": "PortDeletedAllResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -14043,7 +14053,7 @@
        "type": "object"
       },
       "result": {},
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -14226,7 +14236,7 @@
        "title": "PortResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -14266,10 +14276,10 @@
        "additionalProperties": false,
        "properties": {
         "port_id_list": {
+         "default": [],
          "items": {
           "type": "string"
          },
-         "nullable": true,
          "title": "Port Id List",
          "type": "array"
         }
@@ -14414,7 +14424,7 @@
        "title": "Response Portsdetailedlist",
        "type": "array"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "children": [
@@ -14658,8 +14668,8 @@
     ],
     "description": "VPC Port",
     "isInternal": false,
-    "name": "port",
-    "version": "1.101.2"
+    "name": "ports",
+    "version": "1.109.0"
    },
    {
     "children": [
@@ -14718,7 +14728,7 @@
        "type": "object"
       },
       "result": {},
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -14760,6 +14770,7 @@
        "magalu.cloud/core/resolved": "true",
        "properties": {
         "description": {
+         "default": "",
          "nullable": true,
          "title": "Description",
          "type": "string"
@@ -14808,7 +14819,7 @@
        "title": "PublicIpCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -14861,7 +14872,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -14916,7 +14927,7 @@
        "type": "object"
       },
       "result": {},
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -15036,7 +15047,7 @@
        "title": "PublicIpDb",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -15174,7 +15185,7 @@
        "title": "PublicIpsList",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "children": [
@@ -15418,8 +15429,8 @@
     ],
     "description": "VPC Public IPs",
     "isInternal": false,
-    "name": "public_ip",
-    "version": "1.101.2"
+    "name": "public_ips",
+    "version": "1.109.0"
    },
    {
     "children": [
@@ -15522,13 +15533,13 @@
        "title": "QuotaResult",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      }
     ],
     "description": "VPC Quotas",
     "isInternal": true,
     "name": "quotas",
-    "version": "1.101.2"
+    "version": "1.109.0"
    },
    {
     "children": [
@@ -15651,7 +15662,7 @@
        "title": "RuleCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -15704,7 +15715,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -15840,7 +15851,7 @@
        "title": "RuleResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -16008,13 +16019,13 @@
        "title": "RulesList",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      }
     ],
     "description": "VPC Rules",
     "isInternal": false,
-    "name": "rule",
-    "version": "1.101.2"
+    "name": "rules",
+    "version": "1.109.0"
    },
    {
     "children": [
@@ -16056,6 +16067,7 @@
        "additionalProperties": false,
        "properties": {
         "description": {
+         "default": "",
          "nullable": true,
          "title": "Description",
          "type": "string"
@@ -16094,7 +16106,7 @@
        "title": "SecurityGroupCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -16150,7 +16162,7 @@
        "title": "SecurityGroupCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -16203,7 +16215,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -16256,17 +16268,23 @@
        },
        "properties": {
         "deleted_security_groups": {
-         "default": [],
-         "items": {},
-         "nullable": true,
+         "items": {
+          "additionalProperties": {
+           "type": "integer"
+          },
+          "type": "object"
+         },
          "title": "Deleted Security Groups",
          "type": "array"
         }
        },
+       "required": [
+        "deleted_security_groups"
+       ],
        "title": "SecurityGroupDeletedAllResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -16507,7 +16525,7 @@
        "title": "SecurityGroupDetailEvent",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -16657,7 +16675,7 @@
        "title": "SecurityGroupListEvent",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "children": [
@@ -16780,7 +16798,7 @@
          "title": "RuleCreateResponse",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        },
        {
         "configs": {
@@ -16948,19 +16966,19 @@
          "title": "RulesList",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        }
       ],
       "description": "VPC Security Groups | rules",
       "isInternal": true,
       "name": "rules",
-      "version": "1.101.2"
+      "version": "1.109.0"
      }
     ],
     "description": "VPC Security Groups",
     "isInternal": false,
-    "name": "security_group",
-    "version": "1.101.2"
+    "name": "security_groups",
+    "version": "1.109.0"
    },
    {
     "children": [
@@ -17059,7 +17077,7 @@
        "title": "SubnetCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -17112,7 +17130,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -17267,7 +17285,7 @@
        "title": "SubnetResponseDetail",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -17404,7 +17422,7 @@
        "title": "SubnetsResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -17478,13 +17496,13 @@
        "title": "SubnetResponseId",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      }
     ],
     "description": "VPC Subnets",
     "isInternal": false,
     "name": "subnets",
-    "version": "1.101.2"
+    "version": "1.109.0"
    },
    {
     "children": [
@@ -17554,7 +17572,7 @@
        "title": "VpcCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -17608,7 +17626,7 @@
        "title": "VpcCreateResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -17661,7 +17679,7 @@
        "nullable": true,
        "type": "null"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -17746,45 +17764,67 @@
        },
        "properties": {
         "deleted_networks": {
-         "default": [],
-         "items": {},
-         "nullable": true,
+         "items": {
+          "additionalProperties": {
+           "type": "integer"
+          },
+          "type": "object"
+         },
          "title": "Deleted Networks",
          "type": "array"
         },
         "deleted_routers": {
-         "default": [],
-         "items": {},
-         "nullable": true,
+         "items": {
+          "additionalProperties": {
+           "type": "integer"
+          },
+          "type": "object"
+         },
          "title": "Deleted Routers",
          "type": "array"
         },
         "deleted_security_groups": {
          "default": [],
-         "items": {},
-         "nullable": true,
+         "items": {
+          "additionalProperties": {
+           "type": "integer"
+          },
+          "type": "object"
+         },
          "title": "Deleted Security Groups",
          "type": "array"
         },
         "deleted_subnet_pools": {
-         "default": [],
-         "items": {},
-         "nullable": true,
+         "items": {
+          "additionalProperties": {
+           "type": "integer"
+          },
+          "type": "object"
+         },
          "title": "Deleted Subnet Pools",
          "type": "array"
         },
         "deleted_vpcs": {
-         "default": [],
-         "items": {},
-         "nullable": true,
+         "items": {
+          "additionalProperties": {
+           "type": "integer"
+          },
+          "type": "object"
+         },
          "title": "Deleted Vpcs",
          "type": "array"
         }
        },
+       "required": [
+        "deleted_vpcs",
+        "deleted_subnet_pools",
+        "deleted_routers",
+        "deleted_networks"
+       ],
        "title": "VpcDeletedAllResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -17927,7 +17967,7 @@
        "title": "VpcResponse",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "configs": {
@@ -18096,7 +18136,7 @@
        "title": "VpcResponseList",
        "type": "object"
       },
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "children": [
@@ -18203,7 +18243,7 @@
          "title": "PortCreateResponse",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        },
        {
         "configs": {
@@ -18531,13 +18571,13 @@
          "title": "Response Listports",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        }
       ],
       "description": "Virtual Private Cloud (VPC) | ports",
       "isInternal": false,
       "name": "ports",
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "children": [
@@ -18581,6 +18621,7 @@
          "magalu.cloud/core/resolved": "true",
          "properties": {
           "description": {
+           "default": "",
            "nullable": true,
            "title": "Description",
            "type": "string"
@@ -18629,7 +18670,7 @@
          "title": "PublicIpCreateResponse",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        },
        {
         "configs": {
@@ -18776,13 +18817,13 @@
          "title": "PublicIpsList",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        }
       ],
       "description": "Virtual Private Cloud (VPC) | public-ips",
       "isInternal": false,
       "name": "public-ips",
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "children": [
@@ -18824,6 +18865,7 @@
          "additionalProperties": false,
          "properties": {
           "description": {
+           "default": "",
            "nullable": true,
            "title": "Description",
            "type": "string"
@@ -18877,7 +18919,7 @@
          "title": "SecurityGroupCreateResponse",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        },
        {
         "configs": {
@@ -19036,13 +19078,13 @@
          "title": "SecurityGroupListEvent",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        }
       ],
       "description": "Virtual Private Cloud (VPC) | security-groups",
       "isInternal": true,
       "name": "security-groups",
-      "version": "1.101.2"
+      "version": "1.109.0"
      },
      {
       "children": [
@@ -19141,7 +19183,7 @@
          "title": "SubnetCreateResponse",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        },
        {
         "configs": {
@@ -19278,67 +19320,123 @@
          "title": "SubnetsResponse",
          "type": "object"
         },
-        "version": "1.101.2"
+        "version": "1.109.0"
        }
       ],
       "description": "Virtual Private Cloud (VPC) | subnets",
       "isInternal": true,
       "name": "subnets",
-      "version": "1.101.2"
+      "version": "1.109.0"
      }
     ],
     "description": "Virtual Private Cloud (VPC)",
     "isInternal": false,
-    "name": "vpc",
-    "version": "1.101.2"
+    "name": "vpcs",
+    "version": "1.109.0"
    },
    {
-    "children": [],
-    "description": "",
+    "children": [
+     {
+      "configs": {
+       "additionalProperties": false,
+       "properties": {
+        "env": {
+         "default": "prod",
+         "description": "Environment to use",
+         "enum": [
+          "prod",
+          "pre-prod"
+         ],
+         "type": "string"
+        },
+        "region": {
+         "default": "br-ne1",
+         "description": "Region to reach the service",
+         "enum": [
+          "br-ne1",
+          "br-se1",
+          "br-mgl1"
+         ],
+         "type": "string"
+        },
+        "serverUrl": {
+         "description": "Manually specify the server to use",
+         "format": "uri",
+         "type": "string"
+        }
+       },
+       "type": "object"
+      },
+      "description": "Update a public ip from the provided tenant_id",
+      "isInternal": true,
+      "name": "update",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "error": {
+         "nullable": true,
+         "title": "Error",
+         "type": "string"
+        },
+        "external_id": {
+         "nullable": true,
+         "title": "External Id",
+         "type": "string"
+        },
+        "public_ip": {
+         "nullable": true,
+         "title": "Public Ip",
+         "type": "string"
+        },
+        "public_ip_id": {
+         "title": "Public Ip Id",
+         "type": "string"
+        },
+        "status": {
+         "enum": [
+          "created",
+          "pending",
+          "error"
+         ],
+         "title": "PublicIpStatus",
+         "type": "string"
+        }
+       },
+       "required": [
+        "public_ip_id",
+        "status"
+       ],
+       "type": "object"
+      },
+      "result": {
+       "example": {
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+       },
+       "properties": {
+        "id": {
+         "title": "Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ],
+       "title": "PublicIpResponseId",
+       "type": "object"
+      },
+      "version": "1.109.0"
+     }
+    ],
+    "description": "worker_public_ips",
     "isInternal": true,
-    "name": "xaas_port",
-    "version": "1.101.2"
-   },
-   {
-    "children": [],
-    "description": "",
-    "isInternal": true,
-    "name": "xaas_rule",
-    "version": "1.101.2"
-   },
-   {
-    "children": [],
-    "description": "",
-    "isInternal": true,
-    "name": "xaas_security_group",
-    "version": "1.101.2"
-   },
-   {
-    "children": [],
-    "description": "",
-    "isInternal": true,
-    "name": "xaas_subnetpools",
-    "version": "1.101.2"
-   },
-   {
-    "children": [],
-    "description": "",
-    "isInternal": true,
-    "name": "xaas_subnets",
-    "version": "1.101.2"
-   },
-   {
-    "children": [],
-    "description": "",
-    "isInternal": true,
-    "name": "xaas_vpc",
-    "version": "1.101.2"
+    "name": "worker_public_ips",
+    "version": "1.109.0"
    }
   ],
   "description": "APIs referentes ao produto de Network",
   "isInternal": false,
   "name": "network",
-  "version": "1.101.2"
+  "version": "1.109.0"
  },
  {
   "children": [

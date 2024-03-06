@@ -4,9 +4,10 @@ Usage:
   ./cli network subnets get [subnet-id] [flags]
 
 Flags:
-  -h, --help               help for get
-      --subnet-id string   Subnet Id (required)
-  -v, --version            version for get
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for get
+      --subnet-id string              Subnet Id (required)
+  -v, --version                       version for get
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

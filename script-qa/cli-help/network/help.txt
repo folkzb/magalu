@@ -5,12 +5,12 @@ Usage:
   ./cli network [command]
 
 Commands:
-  port           VPC Port
-  public-ip      VPC Public IPs
-  rule           VPC Rules
-  security-group VPC Security Groups
-  subnets        VPC Subnets
-  vpc            Virtual Private Cloud (VPC)
+  ports           VPC Port
+  public-ips      VPC Public IPs
+  rules           VPC Rules
+  security-groups VPC Security Groups
+  subnets         VPC Subnets
+  vpcs            Virtual Private Cloud (VPC)
 
 Flags:
   -h, --help      help for network

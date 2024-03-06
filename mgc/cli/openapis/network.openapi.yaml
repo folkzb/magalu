@@ -6,7 +6,7 @@ info:
         name: Tribo IAAS Cloud
         url: https://github.com/luizalabs
         email: thullyo.cunha@luizalabs.com
-    version: 1.101.2
+    version: 1.109.0
 paths:
     /v0/healthcheck:
         get:
@@ -45,6 +45,27 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PortCreateResponse'
+                    links:
+                        get:
+                            operationId: portDetails
+                            description: Port Details
+                            parameters:
+                                port_id: $response.body#/id
+                        delete:
+                            operationId: deletePort
+                            description: Delete Port
+                            parameters:
+                                port_id: $response.body#/id
+                        attach:
+                            operationId: attachSecurityGroup
+                            description: Attach Security Group
+                            parameters:
+                                port_id: $response.body#/id
+                        detach:
+                            operationId: detachSecurityGroup
+                            description: Detach Security Group
+                            parameters:
+                                port_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -68,11 +89,11 @@ paths:
                 in: query
                 required: false
                 schema:
-                    title: Port Id List
-                    nullable: true
                     type: array
                     items:
                         type: string
+                    default: []
+                    title: Port Id List
             responses:
                 '200':
                     description: Successful Response
@@ -121,16 +142,11 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/PortCreateResponse'
                     links:
-                        get:
-                            operationId: portDetails
-                            description: Read Port
+                        list:
+                            operationId: listPorts
+                            description: List Ports
                             parameters:
-                                port_id: $response.body#/id
-                        delete:
-                            operationId: deletePort
-                            description: Delete Port
-                            parameters:
-                                port_id: $response.body#/id
+                                vpc_id: $request.path.vpc_id
                 '422':
                     description: Validation Error
                     content:
@@ -233,7 +249,17 @@ paths:
                             operationId: deletePort
                             description: Delete Port
                             parameters:
-                                port_id: $request.path.port_id
+                                port_id: $response.body#/id
+                        attach:
+                            operationId: attachSecurityGroup
+                            description: Attach Security Group
+                            parameters:
+                                port_id: $response.body#/id
+                        detach:
+                            operationId: detachSecurityGroup
+                            description: Detach Security Group
+                            parameters:
+                                port_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -320,6 +346,23 @@ paths:
                     content:
                         application/json:
                             schema: {}
+                    links:
+                        get:
+                            operationId: portDetails
+                            description: Port Details
+                            parameters:
+                                port_id: $request.path.port_id
+                        delete:
+                            operationId: deletePort
+                            description: Delete Port
+                            parameters:
+                                port_id: $request.path.port_id
+                        detach:
+                            operationId: detachSecurityGroup
+                            description: Detach Security Group
+                            parameters:
+                                port_id: $request.path.port_id
+                                security_group_id: $request.path.security_group_id
                 '422':
                     description: Validation Error
                     content:
@@ -356,6 +399,23 @@ paths:
                     content:
                         application/json:
                             schema: {}
+                    links:
+                        get:
+                            operationId: portDetails
+                            description: Port Details
+                            parameters:
+                                port_id: $request.path.port_id
+                        delete:
+                            operationId: deletePort
+                            description: Delete Port
+                            parameters:
+                                port_id: $request.path.port_id
+                        attach:
+                            operationId: attachSecurityGroup
+                            description: Attach Security Group
+                            parameters:
+                                port_id: $request.path.port_id
+                                security_group_id: $request.path.security_group_id
                 '422':
                     description: Validation Error
                     content:
@@ -421,16 +481,11 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/PublicIpCreateResponse'
                     links:
-                        get:
-                            operationId: publicIpDetails
-                            description: Read Public IP
+                        list:
+                            operationId: ListPublicIps
+                            description: List Public IPs
                             parameters:
-                                public_ip_id: $response.body#/id
-                        delete:
-                            operationId: deletePublicIp
-                            description: Delete Public IP
-                            parameters:
-                                public_ip_id: $response.body#/id
+                                vpc_id: $request.path.vpc_id
                 '422':
                     description: Validation Error
                     content:
@@ -498,7 +553,19 @@ paths:
                             operationId: deletePublicIp
                             description: Delete Public IP
                             parameters:
-                                public_ip_id: $request.path.public_ip_id
+                                public_ip_id: $response.body#/id
+                        attach:
+                            operationId: attachPublicIp
+                            description: Attach Public IP
+                            parameters:
+                                public_ip_id: $response.body#/id
+                                port_id: $response.body#/port_id
+                        detach:
+                            operationId: detachPublicIp
+                            description: Detach Public IP
+                            parameters:
+                                public_ip_id: $response.body#/id
+                                port_id: $response.body#/port_id
                 '422':
                     description: Validation Error
                     content:
@@ -561,6 +628,23 @@ paths:
                     content:
                         application/json:
                             schema: {}
+                    links:
+                        get:
+                            operationId: publicIpDetails
+                            description: Public IP Details
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+                        delete:
+                            operationId: deletePublicIp
+                            description: Delete Public IP
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+                        detach:
+                            operationId: detachPublicIp
+                            description: Detach Public IP
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+                                port_id: $request.path.port_id
                 '422':
                     description: Validation Error
                     content:
@@ -597,6 +681,23 @@ paths:
                     content:
                         application/json:
                             schema: {}
+                    links:
+                        get:
+                            operationId: publicIpDetails
+                            description: Public IP Details
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+                        delete:
+                            operationId: deletePublicIp
+                            description: Delete Public IP
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+                        attach:
+                            operationId: attachPublicIp
+                            description: Attach Public IP
+                            parameters:
+                                public_ip_id: $request.path.public_ip_id
+                                port_id: $request.path.port_id
                 '422':
                     description: Validation Error
                     content:
@@ -718,16 +819,11 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/RuleCreateResponse'
                     links:
-                        get:
-                            operationId: ruleDetails
-                            description: Read Rule
+                        list:
+                            operationId: listRules
+                            description: List Rules
                             parameters:
-                                rule_id: $response.body#/id
-                        delete:
-                            operationId: deleteRule
-                            description: Delete Rule
-                            parameters:
-                                rule_id: $response.body#/id
+                                security_group_id: $request.path.security_group_id
                 '422':
                     description: Validation Error
                     content:
@@ -847,6 +943,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SecurityGroupCreateResponse'
+                    links:
+                        get:
+                            operationId: securityGroupDetails
+                            description: Security Group Details
+                            parameters:
+                                security_group_id: $response.body#/id
+                        delete:
+                            operationId: deleteSecurityGroup
+                            description: Delete a security group
+                            parameters:
+                                security_group_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -909,6 +1016,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SecurityGroupCreateResponse'
+                    links:
+                        get:
+                            operationId: securityGroupDetails
+                            description: Security Group Details
+                            parameters:
+                                security_group_id: $response.body#/id
+                        delete:
+                            operationId: deleteSecurityGroup
+                            description: Delete a security group
+                            parameters:
+                                security_group_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -977,16 +1095,11 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/SecurityGroupCreateResponse'
                     links:
-                        get:
-                            operationId: securityGroupDetails
-                            description: Read Security Group
+                        list:
+                            operationId: listSecurityGroup
+                            description: List Security Groups
                             parameters:
-                                security_group_id: $response.body#/id
-                        delete:
-                            operationId: deleteSecurityGroup
-                            description: Delete Security Group
-                            parameters:
-                                security_group_id: $response.body#/id
+                                vpc_id: $request.path.vpc_id
                 '422':
                     description: Validation Error
                     content:
@@ -1053,9 +1166,9 @@ paths:
                     links:
                         delete:
                             operationId: deleteSecurityGroup
-                            description: Delete Security Group
+                            description: Delete a security group
                             parameters:
-                                security_group_id: $request.path.security_group_id
+                                security_group_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -1175,6 +1288,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SubnetCreateResponse'
+                    links:
+                        list:
+                            operationId: listSubnets
+                            description: List Subnets
+                            parameters:
+                                vpc_id: $request.path.vpc_id
                 '422':
                     description: Validation Error
                     content:
@@ -1233,6 +1352,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SubnetResponseDetail'
+                    links:
+                        update:
+                            operationId: updateSubnet
+                            description: Update Subnet
+                            parameters:
+                                subnet_id: $response.body#/id
+                        update/dns_nameservers:
+                            operationId: updateSubnet
+                            description: Update Subnet
+                            parameters:
+                                subnet_id: $response.body#/id
+                            x-mgc-hidden: true
+                        delete:
+                            operationId: deleteSubnet
+                            description: Delete a Subnet
+                            parameters:
+                                subnet_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -1269,6 +1405,21 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SubnetResponseId'
+                    links:
+                        get:
+                            operationId: subnetDetails
+                            description: Subnet Details
+                            parameters:
+                                subnet_id: $response.body#/id
+                            x-mgc-wait-termination:
+                                interval: 5s
+                                maxRetries: 10
+                                jsonPathQuery: $.result.dns_nameservers == $.owner.parameters.dns_nameservers
+                        delete:
+                            operationId: deleteSubnet
+                            description: Delete a Subnet
+                            parameters:
+                                subnet_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -1292,6 +1443,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VpcCreateResponse'
+                    links:
+                        get:
+                            operationId: vpcDetails
+                            description: VPC Details
+                            parameters:
+                                vpc_id: $response.body#/id
+                        delete:
+                            operationId: deleteVpc
+                            description: Delete VPC
+                            parameters:
+                                vpc_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -1323,6 +1485,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VpcCreateResponse'
+                    links:
+                        get:
+                            operationId: vpcDetails
+                            description: VPC Details
+                            parameters:
+                                vpc_id: $response.body#/id
+                        delete:
+                            operationId: deleteVpc
+                            description: Delete VPC
+                            parameters:
+                                vpc_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -1377,6 +1550,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VpcResponse'
+                    links:
+                        delete:
+                            operationId: deleteVpc
+                            description: Delete VPC
+                            parameters:
+                                vpc_id: $response.body#/id
                 '422':
                     description: Validation Error
                     content:
@@ -1679,18 +1858,23 @@ components:
         PortDeletedAllResponse:
             properties:
                 deleted_ports:
+                    items:
+                        additionalProperties:
+                            type: integer
+                        type: object
+                    type: array
                     title: Deleted Ports
-                    default: []
-                    nullable: true
-                    items: {}
-                    type: array
                 deleted_public_ips:
-                    title: Deleted Public Ips
-                    default: []
-                    nullable: true
-                    items: {}
+                    items:
+                        additionalProperties:
+                            type: integer
+                        type: object
                     type: array
+                    title: Deleted Public Ips
             type: object
+            required:
+            - deleted_ports
+            - deleted_public_ips
             title: PortDeletedAllResponse
             example:
                 deleted_ports:
@@ -1850,6 +2034,7 @@ components:
             properties:
                 description:
                     title: Description
+                    default: ''
                     nullable: true
                     type: string
             type: object
@@ -2325,6 +2510,7 @@ components:
                     minLength: 5
                 description:
                     title: Description
+                    default: ''
                     nullable: true
                     type: string
             type: object
@@ -2348,12 +2534,15 @@ components:
         SecurityGroupDeletedAllResponse:
             properties:
                 deleted_security_groups:
-                    title: Deleted Security Groups
-                    default: []
-                    nullable: true
-                    items: {}
+                    items:
+                        additionalProperties:
+                            type: integer
+                        type: object
                     type: array
+                    title: Deleted Security Groups
             type: object
+            required:
+            - deleted_security_groups
             title: SecurityGroupDeletedAllResponse
             example:
                 deleted_security_groups:
@@ -2998,36 +3187,47 @@ components:
         VpcDeletedAllResponse:
             properties:
                 deleted_vpcs:
+                    items:
+                        additionalProperties:
+                            type: integer
+                        type: object
+                    type: array
                     title: Deleted Vpcs
-                    default: []
-                    nullable: true
-                    items: {}
-                    type: array
                 deleted_subnet_pools:
+                    items:
+                        additionalProperties:
+                            type: integer
+                        type: object
+                    type: array
                     title: Deleted Subnet Pools
-                    default: []
-                    nullable: true
-                    items: {}
-                    type: array
                 deleted_routers:
+                    items:
+                        additionalProperties:
+                            type: integer
+                        type: object
+                    type: array
                     title: Deleted Routers
-                    default: []
-                    nullable: true
-                    items: {}
-                    type: array
                 deleted_networks:
-                    title: Deleted Networks
-                    default: []
-                    nullable: true
-                    items: {}
+                    items:
+                        additionalProperties:
+                            type: integer
+                        type: object
                     type: array
+                    title: Deleted Networks
                 deleted_security_groups:
+                    items:
+                        additionalProperties:
+                            type: integer
+                        type: object
+                    type: array
                     title: Deleted Security Groups
                     default: []
-                    nullable: true
-                    items: {}
-                    type: array
             type: object
+            required:
+            - deleted_vpcs
+            - deleted_subnet_pools
+            - deleted_routers
+            - deleted_networks
             title: VpcDeletedAllResponse
             example:
                 deleted_networks:
@@ -3294,6 +3494,40 @@ components:
                 remote_ip_prefix: 100.94.0.0/24
                 resource_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                 status: created
+tags:
+-   name: healthcheck
+    description: healthcheck
+    x-mgc-hidden: true
+-   name: port
+    description: port
+    x-mgc-name: ports
+    x-mgc-description: VPC Port
+-   name: public_ip
+    description: public_ip
+    x-mgc-name: public_ips
+    x-mgc-description: VPC Public IPs
+-   name: quotas
+    description: quotas
+    x-mgc-description: VPC Quotas
+    x-mgc-hidden: true
+-   name: rule
+    description: rule
+    x-mgc-name: rules
+    x-mgc-description: VPC Rules
+-   name: security_group
+    description: security_group
+    x-mgc-name: security_groups
+    x-mgc-description: VPC Security Groups
+-   name: subnets
+    description: subnets
+    x-mgc-description: VPC Subnets
+-   name: vpc
+    description: vpc
+    x-mgc-name: vpcs
+    x-mgc-description: Virtual Private Cloud (VPC)
+-   name: worker_public_ips
+    description: worker_public_ips
+    x-mgc-hidden: true
 $id: https://network.jaxyendy.com/openapi.json
 servers:
 -   url: https://{env}/{region}/network
@@ -3326,33 +3560,3 @@ servers:
                     to: api.magalu.cloud
                 -   from: pre-prod
                     to: api.pre-prod.jaxyendy.com
-tags:
--   name: vpc
-    x-mgc-description: Virtual Private Cloud (VPC)
--   name: port
-    x-mgc-description: VPC Port
--   name: security_group
-    x-mgc-description: VPC Security Groups
--   name: rule
-    x-mgc-description: VPC Rules
--   name: public_ip
-    x-mgc-description: VPC Public IPs
--   name: subnets
-    x-mgc-description: VPC Subnets
--   name: healthcheck
-    x-mgc-hidden: true
--   name: xaas_vpc
-    x-mgc-hidden: true
--   name: xaas_subnetpools
-    x-mgc-hidden: true
--   name: xaas_rule
-    x-mgc-hidden: true
--   name: xaas_security_group
-    x-mgc-hidden: true
--   name: xaas_port
-    x-mgc-hidden: true
--   name: xaas_subnets
-    x-mgc-hidden: true
--   name: quotas
-    x-mgc-description: VPC Quotas
-    x-mgc-hidden: true

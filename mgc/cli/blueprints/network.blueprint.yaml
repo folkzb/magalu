@@ -12,9 +12,9 @@ components:
         - port_id
       properties:
         public_ip_id:
-          $ref: /network/public_ip/attach/parametersSchema/properties/public_ip_id
+          $ref: /network/public_ips/attach/parametersSchema/properties/public_ip_id
         port_id:
-          $ref: /network/public_ip/attach/parametersSchema/properties/port_id
+          $ref: /network/public_ips/attach/parametersSchema/properties/port_id
     PortAttachObject:
       type: object
       required:
@@ -22,19 +22,19 @@ components:
         - port_id
       properties:
         port_id:
-          $ref: /network/port/attach/parametersSchema/properties/port_id
+          $ref: /network/ports/attach/parametersSchema/properties/port_id
         security_group_id:
-          $ref: /network/port/attach/parametersSchema/properties/security_group_id
+          $ref: /network/ports/attach/parametersSchema/properties/security_group_id
 
   configsSchemas:
     default:
-      $ref: /network/public_ip/get/configsSchema
+      $ref: /network/public_ips/get/configsSchema
 
 children:
-  - name: port
+  - name: ports
     description: VPC Port
     children:
-      - $ref: http://magalu.cloud/sdk#/network/vpc/ports/create
+      - $ref: http://magalu.cloud/sdk#/network/vpcs/ports/create
         isInternal: false
 
       - name: security-group-attachment
@@ -54,12 +54,12 @@ children:
               $ref: blueprint#/components/schemas/PortAttachObject
 
             steps:
-            - target: /network/port/attach
+            - target: /network/ports/attach
               parameters:
                 security_group_id: $.parameters.security_group_id
                 port_id: $.parameters.port_id
 
-            - target: /network/port/get
+            - target: /network/ports/get
               parameters:
                 port_id: $.parameters.port_id
               check:
@@ -69,7 +69,7 @@ children:
                   hasKey($.current.result, "security_groups") && $.current.result.security_groups[?(@ == $.parameters.security_group_id)].length > 0
             links:
               get:
-                target: /network/port/security-group-attachment/get
+                target: /network/ports/security-group-attachment/get
                 description: Check if this Security Group is attached to this Port
                 parameters:
                   security_group_id: $.parameters.security_group_id
@@ -88,7 +88,7 @@ children:
               $ref: blueprint#/components/schemas/PortAttachObject
 
             steps:
-            - target: /network/port/get
+            - target: /network/ports/get
               parameters:
                 port_id: $.parameters.port_id
               retryUntil:
@@ -125,15 +125,15 @@ children:
               }
 
             steps:
-            - target: /network/port/detach
+            - target: /network/ports/detach
               parameters:
                 security_group_id: $.parameters.security_group_id
                 port_id: $.parameters.port_id
 
-  - name: public_ip
+  - name: public_ips
     description: VPC Public IPs
     children:
-      - $ref: http://magalu.cloud/sdk#/network/vpc/public-ips/create
+      - $ref: http://magalu.cloud/sdk#/network/vpcs/public-ips/create
         isInternal: false
       - name: port-attachment
         description: Manage the attachment between a Public IP and a Port
@@ -152,12 +152,12 @@ children:
               $ref: blueprint#/components/schemas/PublicIPAttachObject
 
             steps:
-            - target: /network/public_ip/attach
+            - target: /network/public_ips/attach
               parameters:
                 public_ip_id: $.parameters.public_ip_id
                 port_id: $.parameters.port_id
 
-            - target: /network/public_ip/get
+            - target: /network/public_ips/get
               parameters:
                 public_ip_id: $.parameters.public_ip_id
               check:
@@ -167,7 +167,7 @@ children:
                   hasKey($.current.result, "port_id") && $.current.result.port_id == $.current.parameters.port_id
             links:
               get:
-                target: /network/public_ip/port-attachment/get
+                target: /network/public_ips/port-attachment/get
                 description: Check if this Public IP is attached to a Port
                 parameters:
                   public_ip_id: $.parameters.public_ip_id
@@ -186,7 +186,7 @@ children:
               $ref: blueprint#/components/schemas/PublicIPAttachObject
 
             steps:
-            - target: /network/public_ip/get
+            - target: /network/public_ips/get
               parameters:
                 public_ip_id: $.parameters.public_ip_id
               retryUntil:
@@ -223,25 +223,25 @@ children:
               }
 
             steps:
-            - target: /network/public_ip/detach
+            - target: /network/public_ips/detach
               parameters:
                 public_ip_id: $.parameters.public_ip_id
                 port_id: $.parameters.port_id
 
-  - name: rule
+  - name: rules
     description: VPC Rules
     children:
-      - $ref: http://magalu.cloud/sdk#/network/security_group/rules/create
+      - $ref: http://magalu.cloud/sdk#/network/security_groups/rules/create
         isInternal: false
 
-      - $ref: http://magalu.cloud/sdk#/network/security_group/rules/list
+      - $ref: http://magalu.cloud/sdk#/network/security_groups/rules/list
         isInternal: false
 
   - name: subnets
     description: VPC Subnets
     children:
-      - $ref: http://magalu.cloud/sdk#/network/vpc/subnets/create
+      - $ref: http://magalu.cloud/sdk#/network/vpcs/subnets/create
         isInternal: false
 
-      - $ref: http://magalu.cloud/sdk#/network/vpc/subnets/list
+      - $ref: http://magalu.cloud/sdk#/network/vpcs/subnets/list
         isInternal: false

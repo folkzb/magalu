@@ -42,200 +42,33 @@ paths:
       tags:
         - vpc
       x-mgc-description: List VPC ports
-      parameters:
-        - name: vpc_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.read
     post:
       tags:
         - vpc
-      parameters:
-        - name: vpc_id
-          schema:
-            type: string
-      responses:
-        '200':
-          links:
-            get:
-              operationId: portDetails
-              description: Read Port
-              parameters:
-                port_id: $response.body#/id
-            delete:
-              operationId: deletePort
-              description: Delete Port
-              parameters:
-                port_id: $response.body#/id
-      security:
-        - OAuth2:
-            - network.write
-  /v0/ports/{port_id}:
-    get:
-      parameters:
-        - name: port_id
-          schema:
-            type: string
-      responses:
-        '200':
-          links:
-            delete:
-              operationId: deletePort
-              description: Delete Port
-              parameters:
-                port_id: $request.path.port_id
-      security:
-        - OAuth2:
-            - network.read
-    delete:
-      parameters:
-        - name: port_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.write
   /v0/vpcs/{vpc_id}/public_ips:
     post:
       tags:
         - vpc
       x-mgc-hidden: true
-      parameters:
-        - name: vpc_id
-          schema:
-            type: string
-      responses:
-        '200':
-          links:
-            get:
-              operationId: publicIpDetails
-              description: Read Public IP
-              parameters:
-                public_ip_id: $response.body#/id
-            delete:
-              operationId: deletePublicIp
-              description: Delete Public IP
-              parameters:
-                public_ip_id: $response.body#/id
-      security:
-        - OAuth2:
-            - network.write
     get:
       tags:
         - vpc
-      security:
-        - OAuth2:
-            - network.read
-  /v0/public_ips/{public_ip_id}:
-    get:
-      responses:
-        '200':
-          links:
-            delete:
-              operationId: deletePublicIp
-              description: Delete Public IP
-              parameters:
-                public_ip_id: $request.path.public_ip_id
-      security:
-        - OAuth2:
-            - network.read
-    delete:
-      security:
-        - OAuth2:
-            - network.write
   /v0/vpcs/{vpc_id}/security_groups:
     post:
       tags:
         - vpc
-      responses:
-        '200':
-          links:
-            get:
-              operationId: securityGroupDetails
-              description: Read Security Group
-              parameters:
-                security_group_id: $response.body#/id
-            delete:
-              operationId: deleteSecurityGroup
-              description: Delete Security Group
-              parameters:
-                security_group_id: $response.body#/id
-      security:
-        - OAuth2:
-            - network.write
     get:
       tags:
         - vpc
-      parameters:
-        - name: vpc_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.read
-  /v0/security_groups/{security_group_id}:
-    get:
-      parameters:
-        - name: security_group_id
-          schema:
-            type: string
-      responses:
-        '200':
-          links:
-            delete:
-              operationId: deleteSecurityGroup
-              description: Delete Security Group
-              parameters:
-                security_group_id: $request.path.security_group_id
-      security:
-        - OAuth2:
-            - network.read
-    delete:
-      parameters:
-        - name: security_group_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.write
   /v0/security_groups/{security_group_id}/rules:
     post:
       tags:
         - security_group
       x-mgc-hidden: true
-      parameters:
-        - name: security_group_id
-          schema:
-            type: string
-      responses:
-        '200':
-          links:
-            get:
-              operationId: ruleDetails
-              description: Read Rule
-              parameters:
-                rule_id: $response.body#/id
-            delete:
-              operationId: deleteRule
-              description: Delete Rule
-              parameters:
-                rule_id: $response.body#/id
-      security:
-        - OAuth2:
-            - network.write
     get:
       tags:
         - security_group
       x-mgc-hidden: true
-      parameters:
-        - name: security_group_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.read
   /v0/rules/{rule_id}:
     get:
       responses:
@@ -246,244 +79,82 @@ paths:
               description: Delete Rule
               parameters:
                 rule_id: $request.path.rule_id
-      security:
-        - OAuth2:
-            - network.read
-    delete:
-      security:
-        - OAuth2:
-            - network.write
-
-  /v0/healthcheck:
-    get:
-      security:
-        - OAuth2:
-            - network.read
   /v0/ports:
-    get:
-      security:
-        - OAuth2:
-            - network.read
     post:
       x-mgc-name: create-default-vpc
-      security:
-        - OAuth2:
-            - network.write
-  /v0/ports/all:
-    delete:
-      security:
-        - OAuth2:
-            - network.write
-  /v0/ports/{port_id}/attach/{security_group_id}:
-    post:
-      parameters:
-        - name: port_id
-          schema:
-            type: string
-        - name: security_group_id
-          schema:
-            type: string
-      # responses:
-      #   '200':
-      #     links:
-      #       get-connection: # Connection resources
-      #         description: Check if a Security Group is attached to this Port
-      #         operationId: portDetails
-      #         parameters:
-      #             port_id: $request.path.port_id
-      #         x-mgc-wait-termination:
-      #             maxRetries: 2
-      #             interval: 5s
-      #             jsonPathQuery: $.result.security_groups[?(@ == $.owner.parameters.security_group_id)]
-      #       delete-connection:
-      #           description: Detach this Security Group from this Port
-      #           operationId: detachSecurityGroup
-      #           parameters:
-      #               port_id: $request.path.port_id
-      #               security_group_id: $request.path.security_group_id
-      security:
-        - OAuth2:
-            - network.write
-  /v0/ports/{port_id}/detach/{security_group_id}:
-    post:
-      parameters:
-        - name: port_id
-          schema:
-            type: string
-        - name: security_group_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.write
-  /v0/public_ips/{public_ip_id}/attach/{port_id}:
-    post:
-      parameters:
-        - name: public_ip_id
-          schema:
-            type: string
-        - name: port_id
-          schema:
-            type: string
-      # responses:
-      #   '200':
-      #     links:
-      #       get-connection: # Connection Resource
-      #         description: Check if this Public IP is attached to this Port
-      #         operationId: publicIpDetails
-      #         parameters:
-      #           public_ip_id: $request.path.public_ip_id
-      #           port_id: $request.path.port_id
-      #         x-mgc-wait-termination:
-      #           maxRetries: 2
-      #           interval: 5s
-      #           jsonPathQuery: hasKey($.result, "port_id") && $.result.port_id == $.owner.parameters.port_id
-      #       delete-connection:
-      #           description: Detach this Public IP from this Port
-      #           operationId: detachPublicIp
-      #           parameters:
-      #             public_ip_id: $request.path.public_ip_id
-      #             port_id: $request.path.port_id
-      security:
-        - OAuth2:
-            - network.write
-  /v0/public_ips/{public_ip_id}/detach/{port_id}:
-    post:
-      parameters:
-        - name: public_ip_id
-          schema:
-            type: string
-        - name: port_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.write
-  /v0/public_ips:
-    get:
-      security:
-        - OAuth2:
-            - network.read
-  /v0/usage:
-    get:
-      security:
-        - OAuth2:
-            - network.read
-  /v0/security_groups/default:
-    post:
-      security:
-        - OAuth2:
-            - network.write
-  /v0/security_groups:
-    get:
-      security:
-        - OAuth2:
-            - network.read
-    post:
-      security:
-        - OAuth2:
-            - network.write
-  /v0/security_groups_all:
-    delete:
-      security:
-        - OAuth2:
-            - network.write
+#   The following links are for creating a Terraform Connection Resource automatically.
+#   Unfortunately, the ConnectionResources have a bug because Terraform is losing
+#   private state between requests (bug in Terraform). When that is resolved, this
+#   may be uncommented and the Blueprint version of this (volume-attachment) won't be needed anymor
+#   /v0/ports/{port_id}/attach/{security_group_id}:
+#     post:
+#       responses:
+#         '200':
+#           links:
+#             get-connection: # Connection resources
+#               description: Check if a Security Group is attached to this Port
+#               operationId: portDetails
+#               parameters:
+#                   port_id: $request.path.port_id
+#               x-mgc-wait-termination:
+#                   maxRetries: 2
+#                   interval: 5s
+#                   jsonPathQuery: $.result.security_groups[?(@ == $.owner.parameters.security_group_id)]
+#             delete-connection:
+#                 description: Detach this Security Group from this Port
+#                 operationId: detachSecurityGroup
+#                 parameters:
+#                     port_id: $request.path.port_id
+#                     security_group_id: $request.path.security_group_id
+#   /v0/public_ips/{public_ip_id}/attach/{port_id}:
+#     post:
+#       responses:
+#         '200':
+#           links:
+#             get-connection: # Connection Resource
+#               description: Check if this Public IP is attached to this Port
+#               operationId: publicIpDetails
+#               parameters:
+#                 public_ip_id: $request.path.public_ip_id
+#                 port_id: $request.path.port_id
+#               x-mgc-wait-termination:
+#                 maxRetries: 2
+#                 interval: 5s
+#                 jsonPathQuery: hasKey($.result, "port_id") && $.result.port_id == $.owner.parameters.port_id
+#             delete-connection:
+#                 description: Detach this Public IP from this Port
+#                 operationId: detachPublicIp
+#                 parameters:
+#                   public_ip_id: $request.path.public_ip_id
+#                   port_id: $request.path.port_id
   /v0/vpcs/{vpc_id}/subnets:
     get:
       x-mgc-hidden: true
-      parameters:
-        - name: vpc_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.read
     post:
       x-mgc-hidden: true
-      parameters:
-        - name: vpc_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.write
-  /v0/subnets/{subnet_id}:
-    get:
-      security:
-        - OAuth2:
-            - network.read
-    delete:
-      security:
-        - OAuth2:
-            - network.write
-    patch:
-      security:
-        - OAuth2:
-            - network.write
-  /v0/vpcs/default:
-    post:
-      security:
-        - OAuth2:
-            - network.write
-  /v0/vpcs:
-    get:
-      security:
-        - OAuth2:
-            - network.read
-    post:
-      security:
-        - OAuth2:
-            - network.write
-  /v0/vpcs/{vpc_id}:
-    get:
-      parameters:
-        - name: vpc_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.read
-    delete:
-      parameters:
-        - name: vpc_id
-          schema:
-            type: string
-      security:
-        - OAuth2:
-            - network.write
-  /v0/vpcs/all:
-    delete:
-      security:
-        - OAuth2:
-            - network.write
 
 tags:
--   name: vpc
-    x-mgc-description: Virtual Private Cloud (VPC)
--   name: port
-    x-mgc-description: VPC Port
--   name: security_group
-    x-mgc-description: VPC Security Groups
--   name: rule
-    x-mgc-description: VPC Rules
--   name: public_ip
-    x-mgc-description: VPC Public IPs
--   name: subnets
-    x-mgc-description: VPC Subnets
 -   name: healthcheck
     x-mgc-hidden: true
--   name: xaas_vpc
-    x-mgc-hidden: true
--   name: xaas_subnetpools
-    x-mgc-hidden: true
--   name: xaas_rule
-    x-mgc-hidden: true
--   name: xaas_security_group
-    x-mgc-hidden: true
--   name: xaas_port
-    x-mgc-hidden: true
--   name: xaas_subnets
-    x-mgc-hidden: true
+-   name: port
+    x-mgc-name: ports
+    x-mgc-description: VPC Port
+-   name: public_ip
+    x-mgc-name: public_ips
+    x-mgc-description: VPC Public IPs
 -   name: quotas
     x-mgc-description: VPC Quotas
+    x-mgc-hidden: true
+-   name: rule
+    x-mgc-name: rules
+    x-mgc-description: VPC Rules
+-   name: security_group
+    x-mgc-name: security_groups
+    x-mgc-description: VPC Security Groups
+-   name: subnets
+    x-mgc-description: VPC Subnets
+-   name: vpc
+    x-mgc-name: vpcs
+    x-mgc-description: Virtual Private Cloud (VPC)
+-   name: worker_public_ips
     x-mgc-hidden: true
