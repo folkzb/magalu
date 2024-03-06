@@ -188,9 +188,15 @@ func (r *MgcResource) getUpdateParamsModifiers(ctx context.Context, parentSchema
 	required := slices.Contains(parentSchema.Required, k)
 
 	var nameOverride tfName
+	// 'the_resource_id' -> 'id' when 'resMgcName' is 'the_resources'
 	if withoutResPrefix, hasResPrefix := strings.CutPrefix(k, string(r.resMgcName.singular()+"_")); hasResPrefix && r.create.ResultSchema().Properties[withoutResPrefix] != nil {
 		nameOverride = tfName(withoutResPrefix)
 		isComputed = true
+		// 'the_resource_id' -> 'id' when 'resMgcName' is 'theresources'
+	} else if withoutResPrefix, hasResPrefix := strings.CutPrefix(strings.ReplaceAll(k, "_", ""), string(r.resMgcName.singular())); hasResPrefix && r.create.ResultSchema().Properties[withoutResPrefix] != nil {
+		nameOverride = tfName(withoutResPrefix)
+		isComputed = true
+		// 'new_param' -> 'param'
 	} else if withoutNewPrefix, hasNewPrefix := strings.CutPrefix(k, "new_"); hasNewPrefix && r.read.ResultSchema().Properties[withoutNewPrefix] != nil {
 		nameOverride = tfName(withoutNewPrefix)
 	}
@@ -219,7 +225,12 @@ func (r *MgcResource) getDeleteParamsModifiers(ctx context.Context, parentSchema
 	isComputed := r.create.ResultSchema().Properties[k] != nil
 
 	var nameOverride tfName
+	// 'the_resource_id' -> 'id' when 'resMgcName' is 'the_resources'
 	if withoutResPrefix, hasResPrefix := strings.CutPrefix(k, string(r.resMgcName.singular()+"_")); hasResPrefix && r.create.ResultSchema().Properties[withoutResPrefix] != nil {
+		nameOverride = tfName(withoutResPrefix)
+		isComputed = true
+		// 'the_resource_id' -> 'id' when 'resMgcName' is 'theresources'
+	} else if withoutResPrefix, hasResPrefix := strings.CutPrefix(strings.ReplaceAll(k, "_", ""), string(r.resMgcName.singular())); hasResPrefix && r.create.ResultSchema().Properties[withoutResPrefix] != nil {
 		nameOverride = tfName(withoutResPrefix)
 		isComputed = true
 	}
