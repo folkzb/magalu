@@ -70,7 +70,7 @@ if __name__ == "__main__":
     transformers: List[SpecTranformer] = [
         ConvertVersionTransformer(),
         UpdateErrorTransformer(),
-        RemovePathTransformer("/xaas"),
+        RemovePathTransformer(".*xaas.*"),
         RemoveComponentTransformer("xaas"),
         RemoveParamTransformer("x-tenant-id"),
         AddSecurityTransformer(args.product_name),
