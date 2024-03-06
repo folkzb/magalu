@@ -7,7 +7,7 @@ from oapi_types import OAPI
 from transform_helpers import fetch_and_parse, load_yaml, save_external, add_spec_uid
 from spec_types import SpecTranformer
 from spec_version_convert import ConvertVersionTransformer
-from spec_remove_tenant_id import RemoveParamTransformer
+from spec_remove_param import RemoveParamTransformer
 from spec_update_error import UpdateErrorTransformer
 from spec_remove_path import RemovePathTransformer
 from spec_remove_component import RemoveComponentTransformer
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         ConvertVersionTransformer(),
         UpdateErrorTransformer(),
         RemovePathTransformer(".*xaas.*"),
-        RemoveComponentTransformer("xaas"),
+        RemoveComponentTransformer(".*(xaas|XAAS|Xaas).*"),
         RemoveParamTransformer("x-tenant-id"),
         AddSecurityTransformer(args.product_name),
         AddParameterTypes(),
