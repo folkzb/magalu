@@ -11,10 +11,12 @@ Usage:
   ./cli block-storage snapshots rename [id] [flags]
 
 Flags:
-  -h, --help          help for rename
-      --id uuid       Id (required)
-      --name string   Name (between 1 and 255 characters) (required)
-  -v, --version       version for rename
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+      --cli.watch                     Wait until the operation is completed by calling the 'get' link and waiting until termination. Akin to '! get -w'
+  -h, --help                          help for rename
+      --id uuid                       Id (required)
+      --name string                   Name (between 1 and 255 characters) (required)
+  -v, --version                       version for rename
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

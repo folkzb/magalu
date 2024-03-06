@@ -5,15 +5,15 @@ Usage:
   ./cli block-storage volumes [command]
 
 Commands:
-  attach      Attach a volume asynchronously
-  create      Create a volume asynchronously
-  delete      Delete a volume asynchronously
-  detach      Detach a volume asynchronously
-  extend      Extend a volume asynchronously
+  attach      Attach a Volume
+  create      Create a new Volume
+  delete      Delete a Volume
+  detach      Detach a Volume
+  extend      Extend a Volume
   get         Retrieve the details of a volume
-  list        List volumes in the current tenant
+  list        List all Volumes
   rename      Rename a volume
-  retype      Retype a volume asynchronously
+  retype      Retype a Volume
 
 Flags:
   -h, --help      help for volumes

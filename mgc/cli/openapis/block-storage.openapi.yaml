@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-    title: Block Storage API Product - v1
+    title: Block Storage API Product Documentation - v1
     description: Block Storage API Product Documentation
     contact:
         name: IaaS Products
@@ -93,17 +93,17 @@ paths:
         post:
             tags:
             - snapshots
-            summary: Create a snapshot asynchronously
-            description: "Asynchronously create a Snapshot for the currently authenticated\
-                \ tenant.\n\nThe Snapshot can be used when it reaches the \"available\"\
-                \ state and the\n \"completed\" status.\n\n#### Rules\n- The Snapshot\
-                \ name must be unique; otherwise, the creation will be disallowed.\n\
-                - Creating Snapshots from restored Volumes may lead to future conflicts\
-                \ as\n you can't delete a volume with an snapshot and can't delete\
-                \ a snapshot with a\n restored volume, so we recommend avoiding it.\n\
-                \n#### Notes\n- Use the **block-storage volume list** command to retrieve\
-                \ a list of all\n Volumes and obtain the ID of the volume that will\
-                \ be used to create the\n Snapshot."
+            summary: Create a snapshot
+            description: "Create a Snapshot for the currently authenticated tenant.\n\
+                \nThe Snapshot can be used when it reaches the \"available\" state\
+                \ and the\n \"completed\" status.\n\n#### Rules\n- The Snapshot name\
+                \ must be unique; otherwise, the creation will be disallowed.\n- Creating\
+                \ Snapshots from restored Volumes may lead to future conflicts as\n\
+                \ you can't delete a Volume with an Snapshot and can't delete a Snapshot\
+                \ with a\n restored Volume, so we recommend avoiding it.\n\n#### Notes\n\
+                - Use the **block-storage volume list** command to retrieve a list\
+                \ of all\n Volumes and obtain the ID of the Volume that will be used\
+                \ to create the\n Snapshot."
             operationId: create_snapshot_v1_snapshots_post
             requestBody:
                 required: true
@@ -119,9 +119,24 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/IdResponse'
                     links:
+                        get:
+                            operationId: get_snapshot_v1_snapshots__id__get
+                            description: Retrieve the details of a snapshot
+                            parameters:
+                                id: $response.body#/id
                         delete:
-                            operationRef: '#/paths/~1v1~1snapshots~1{id}/delete'
-                            description: Delete snapshot
+                            operationId: delete_snapshot_v1_snapshots__id__delete
+                            description: Delete a snapshot
+                            parameters:
+                                id: $response.body#/id
+                        rename:
+                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
+                            description: Rename a snapshot
+                            parameters:
+                                id: $response.body#/id
+                        create-snapshot_id:
+                            operationId: restore_snapshot_v1_snapshots__snapshot_id__post
+                            description: Restore a snapshot to a new volume
                             parameters:
                                 snapshot_id: $response.body#/id
                 '404':
@@ -159,17 +174,17 @@ paths:
         delete:
             tags:
             - snapshots
-            summary: Delete a snapshot asynchronously
-            description: "Asynchronously delete a Snapshot for the currently authenticated\
-                \ tenant.\n\n#### Rules\n- The Snapshot's status must be \"completed\"\
-                .\n- The Snapshot's state must be \"available\".\n- Deleting a Snapshot\
-                \ that has been restored is not possible. If necessary,\n delete the\
-                \ restored Volume first and then proceed to delete the Snapshot.\n\
-                \n#### Notes\n- Utilize the **block-storage snapshots** list command\
-                \ to retrieve a list of\n all Snapshots and obtain the ID of the Snapshot\
-                \ you wish to delete.\n- If needed, you can use the **block-storage\
-                \ volume list** command to retrieve\n a list of all Volumes and obtain\
-                \ the ID of the restored Volume."
+            summary: Delete a snapshot
+            description: "Delete a Snapshot for the currently authenticated tenant.\n\
+                \n#### Rules\n- The Snapshot's status must be \"completed\".\n- The\
+                \ Snapshot's state must be \"available\".\n- Deleting a Snapshot that\
+                \ has been restored is not possible. If necessary,\n delete the restored\
+                \ Volume first and then proceed to delete the Snapshot.\n\n#### Notes\n\
+                - Utilize the **block-storage snapshots** list command to retrieve\
+                \ a list of\n all Snapshots and obtain the ID of the Snapshot you\
+                \ wish to delete.\n- If needed, you can use the **block-storage volume\
+                \ list** command to retrieve\n a list of all Volumes and obtain the\
+                \ ID of the restored Volume."
             operationId: delete_snapshot_v1_snapshots__id__delete
             parameters:
             -   name: id
@@ -248,6 +263,28 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SnapshotResponse'
+                    links:
+                        delete:
+                            operationId: delete_snapshot_v1_snapshots__id__delete
+                            description: Delete a snapshot
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
+                            description: Rename a snapshot
+                            parameters:
+                                id: $request.path.id
+                        update/name:
+                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
+                            description: Rename a snapshot
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-hidden: true
+                        create-snapshot_id:
+                            operationId: restore_snapshot_v1_snapshots__snapshot_id__post
+                            description: Restore a snapshot to a new volume
+                            parameters:
+                                snapshot_id: $request.path.id
                 '404':
                     content:
                         application/json:
@@ -307,6 +344,26 @@ paths:
             responses:
                 '204':
                     description: Successful Response
+                    links:
+                        get:
+                            operationId: get_snapshot_v1_snapshots__id__get
+                            description: Retrieve the details of a snapshot
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-wait-termination:
+                                interval: 5s
+                                maxRetries: 10
+                                jsonPathQuery: $.result.name == $.owner.parameters.name
+                        delete:
+                            operationId: delete_snapshot_v1_snapshots__id__delete
+                            description: Delete a snapshot
+                            parameters:
+                                id: $request.path.id
+                        create-snapshot_id:
+                            operationId: restore_snapshot_v1_snapshots__snapshot_id__post
+                            description: Restore a snapshot to a new volume
+                            parameters:
+                                snapshot_id: $request.path.id
                 '404':
                     content:
                         application/json:
@@ -345,14 +402,14 @@ paths:
         post:
             tags:
             - snapshots
-            summary: Restore a snapshot asynchronously
-            description: "Asynchronously restore a Snapshot on a new Volume to the\
-                \ currently\n authenticated tenant.\n\nThe restored Volume can be\
-                \ used when it reaches the \"available\" state and the\n \"completed\"\
-                \ status.\n\n#### Notes\n- To obtain the ID of the Snapshot you wish\
-                \ to restore, you can use the\n **block-storage snapshots list** command\
-                \ to list all Snapshots.\n- Check the state and status of your Volume\
-                \ using the\n **block-storage volume get --id [uuid]** command."
+            summary: Restore a snapshot to a new volume
+            description: "Restore a Snapshot on a new Volume to the currently\n authenticated\
+                \ tenant.\n\nThe restored Volume can be used when it reaches the \"\
+                available\" state and the\n \"completed\" status.\n\n#### Notes\n\
+                - To obtain the ID of the Snapshot you wish to restore, you can use\
+                \ the\n **block-storage snapshots list** command to list all Snapshots.\n\
+                - Check the state and status of your Volume using the\n **block-storage\
+                \ volume get --id [uuid]** command."
             operationId: restore_snapshot_v1_snapshots__snapshot_id__post
             parameters:
             -   name: snapshot_id
@@ -375,6 +432,26 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/IdResponse'
+                    links:
+                        get:
+                            operationId: get_snapshot_v1_snapshots__id__get
+                            description: Retrieve the details of a snapshot
+                            parameters:
+                                id: $response.body#/id
+                            x-mgc-wait-termination:
+                                interval: 5s
+                                maxRetries: 10
+                                jsonPathQuery: $.result.name == $.owner.parameters.name
+                        delete:
+                            operationId: delete_snapshot_v1_snapshots__id__delete
+                            description: Delete a snapshot
+                            parameters:
+                                id: $response.body#/id
+                        rename:
+                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
+                            description: Rename a snapshot
+                            parameters:
+                                id: $response.body#/id
                 '404':
                     content:
                         application/json:
@@ -436,7 +513,7 @@ paths:
         get:
             tags:
             - volumes
-            summary: List volumes in the current tenant
+            summary: List all Volumes
             description: 'Retrieve a list of Volumes for the currently authenticated
                 tenant.
 
@@ -523,16 +600,15 @@ paths:
         post:
             tags:
             - volumes
-            summary: Create a volume asynchronously
-            description: "Asynchronously create a Volume for the currently authenticated\
-                \ tenant.\n\nThe Volume can be used when it reaches the \"available\"\
-                \ state and \"completed\"\n status.\n\n#### Rules\n- The Volume name\
-                \ must be unique; otherwise, the creation will be disallowed.\n- The\
-                \ Volume type must be available to use.\n\n#### Notes\n- Utilize the\
-                \ **block-storage volume-types list** command to retrieve a list\n\
-                \ of all available Volume Types.\n- Verify the state and status of\
-                \ your Volume using the\n**block-storage volume get --id [uuid]**\
-                \ command\"."
+            summary: Create a new Volume
+            description: "Create a Volume for the currently authenticated tenant.\n\
+                \nThe Volume can be used when it reaches the \"available\" state and\
+                \ \"completed\"\n status.\n\n#### Rules\n- The Volume name must be\
+                \ unique; otherwise, the creation will be disallowed.\n- The Volume\
+                \ type must be available to use.\n\n#### Notes\n- Utilize the **block-storage\
+                \ volume-types list** command to retrieve a list\n of all available\
+                \ Volume Types.\n- Verify the state and status of your Volume using\
+                \ the\n**block-storage volume get --id [uuid]** command\"."
             operationId: create_volume_v1_v1_volumes_post
             requestBody:
                 required: true
@@ -549,23 +625,38 @@ paths:
                                 $ref: '#/components/schemas/IdResponse'
                     links:
                         get:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}/get'
-                            description: Read Block Storage volume
-                            parameters:
-                                id: $response.body#/id
-                        update:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}~1rename/patch'
-                            description: Rename Block Storage volume
+                            operationId: get_volume_v1_v1_volumes__id__get
+                            description: Retrieve the details of a volume
                             parameters:
                                 id: $response.body#/id
                         delete:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}/delete'
-                            description: Delete Block Storage volume
+                            operationId: delete_volume_v1_v1_volumes__id__delete
+                            description: Delete a Volume
                             parameters:
                                 id: $response.body#/id
-                        update/name:
-                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
-                            description: Rename a snapshot
+                        attach:
+                            operationId: attach_volume_v1_v1_volumes__id__attach__virtual_machine_id__post
+                            description: Attach a Volume
+                            parameters:
+                                id: $response.body#/id
+                        detach:
+                            operationId: detach_volume_v1_v1_volumes__id__detach_post
+                            description: Detach a Volume
+                            parameters:
+                                id: $response.body#/id
+                        extend:
+                            operationId: extend_volume_v1_volumes__id__extend_post
+                            description: Extend a Volume
+                            parameters:
+                                id: $response.body#/id
+                        rename:
+                            operationId: rename_volume_v1_v1_volumes__id__rename_patch
+                            description: Rename a volume
+                            parameters:
+                                id: $response.body#/id
+                        retype:
+                            operationId: retype_volume_v1_volumes__id__retype_post
+                            description: Retype a Volume
                             parameters:
                                 id: $response.body#/id
                 '404':
@@ -603,13 +694,13 @@ paths:
         delete:
             tags:
             - volumes
-            summary: Delete a volume asynchronously
-            description: "Asynchronously delete a Volume for the currently authenticated\
-                \ tenant.\n\n#### Rules\n- The Volume cannot be attached to a Virtual\
-                \ Machine, i.e., its state cannot\n be \"in-use\". If necessary, detach\
-                \ the Volume from the Virtual Machine before\n proceeding with deletion.\n\
+            summary: Delete a Volume
+            description: "Delete a Volume for the currently authenticated tenant.\n\
+                \n#### Rules\n- The Volume cannot be attached to a Virtual Machine,\
+                \ i.e., its state cannot\n be \"in-use\". If necessary, detach the\
+                \ Volume from the Virtual Machine before\n proceeding with deletion.\n\
                 - The Volume must not have any snapshots. If necessary, delete the\
-                \ Volume's\n  snapshots before proceeding with deletion.\n- The volume\
+                \ Volume's\n  snapshots before proceeding with deletion.\n- The Volume\
                 \ must have the status \"completed\", i.e., must not have any\n  actions\
                 \ in progress.\n\n\n#### Notes\n- Check the state and status of your\
                 \ Volume using the\n**block-storage volume get --id [uuid]** command\"\
@@ -696,31 +787,51 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/VolumeResponseV1'
                     links:
-                        update:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}~1rename/patch'
-                            description: Update Block Storage volume
+                        delete:
+                            operationId: delete_volume_v1_v1_volumes__id__delete
+                            description: Delete a Volume
                             parameters:
                                 id: $request.path.id
-                        delete:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}/delete'
-                            description: Delete Block Storage volume
+                        attach:
+                            operationId: attach_volume_v1_v1_volumes__id__attach__virtual_machine_id__post
+                            description: Attach a Volume
                             parameters:
-                                id: $response.body#/id
-                        update/name:
-                            operationId: rename_snapshot_v1_snapshots__id__rename_patch
-                            description: Rename a snapshot
+                                id: $request.path.id
+                        detach:
+                            operationId: detach_volume_v1_v1_volumes__id__detach_post
+                            description: Detach a Volume
                             parameters:
-                                id: $response.body#/id
-                            x-mgc-hidden: true
+                                id: $request.path.id
+                        extend:
+                            operationId: extend_volume_v1_volumes__id__extend_post
+                            description: Extend a Volume
+                            parameters:
+                                id: $request.path.id
                         update/size:
                             operationId: extend_volume_v1_volumes__id__extend_post
-                            description: Extend a volume asynchronously
+                            description: Extend a Volume
                             parameters:
                                 id: $request.path.id
                             x-mgc-hidden: true
+                        rename:
+                            operationId: rename_volume_v1_v1_volumes__id__rename_patch
+                            description: Rename a volume
+                            parameters:
+                                id: $request.path.id
+                        update/name:
+                            operationId: rename_volume_v1_v1_volumes__id__rename_patch
+                            description: Rename a volume
+                            parameters:
+                                id: $request.path.id
+                            x-mgc-hidden: true
+                        retype:
+                            operationId: retype_volume_v1_volumes__id__retype_post
+                            description: Retype a Volume
+                            parameters:
+                                id: $request.path.id
                         update/type:
                             operationId: retype_volume_v1_volumes__id__retype_post
-                            description: Retype a volume asynchronously
+                            description: Retype a Volume
                             parameters:
                                 id: $request.path.id
                             x-mgc-hidden: true
@@ -756,19 +867,19 @@ paths:
         post:
             tags:
             - volumes
-            summary: Attach a volume asynchronously
-            description: "Asynchronously attach a Volume to a Virtual Machine instance\
-                \ for the currently\n authenticated tenant.\n\nThe Volume attachment\
-                \ will be completed when the volume status returns to\n\"completed\"\
-                , and the state becomes \"in-use\".\n\n#### Rules\n- The Volume and\
-                \ the Virtual Machine must belong to the same tenant.\n- Both the\
-                \ Volume and Virtual Machine must have the status \"completed\".\n\
-                - The Volume's state must be \"available\".\n- The Virtual Machine's\
-                \ state must be \"stopped\" or \"running\".\n\n#### Notes\n- Verify\
-                \ the state and status of your Volume using the\n **block-storage\
-                \ volume get --id [uuid]** command.\n- Verify the state and status\
-                \ of your Virtual Machine using the\n**virtual-machine instances get\
-                \ --id [uuid]** command\"."
+            summary: Attach a Volume
+            description: "Attach a Volume to a Virtual Machine instance for the currently\n\
+                \ authenticated tenant.\n\nThe Volume attachment will be completed\
+                \ when the Volume status returns to\n\"completed\", and the state\
+                \ becomes \"in-use\".\n\n#### Rules\n- The Volume and the Virtual\
+                \ Machine must belong to the same tenant.\n- Both the Volume and Virtual\
+                \ Machine must have the status \"completed\".\n- The Volume's state\
+                \ must be \"available\".\n- The Virtual Machine's state must be \"\
+                stopped\" or \"running\".\n\n#### Notes\n- Verify the state and status\
+                \ of your Volume using the\n **block-storage volume get --id [uuid]**\
+                \ command.\n- Verify the state and status of your Virtual Machine\
+                \ using the\n**virtual-machine instances get --id [uuid]** command\"\
+                ."
             operationId: attach_volume_v1_v1_volumes__id__attach__virtual_machine_id__post
             parameters:
             -   name: id
@@ -788,6 +899,37 @@ paths:
             responses:
                 '204':
                     description: Successful Response
+                    links:
+                        get:
+                            operationId: get_volume_v1_v1_volumes__id__get
+                            description: Retrieve the details of a volume
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            operationId: delete_volume_v1_v1_volumes__id__delete
+                            description: Delete a Volume
+                            parameters:
+                                id: $request.path.id
+                        detach:
+                            operationId: detach_volume_v1_v1_volumes__id__detach_post
+                            description: Detach a Volume
+                            parameters:
+                                id: $request.path.id
+                        extend:
+                            operationId: extend_volume_v1_volumes__id__extend_post
+                            description: Extend a Volume
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            operationId: rename_volume_v1_v1_volumes__id__rename_patch
+                            description: Rename a volume
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            operationId: retype_volume_v1_volumes__id__retype_post
+                            description: Retype a Volume
+                            parameters:
+                                id: $request.path.id
                 '404':
                     content:
                         application/json:
@@ -822,30 +964,29 @@ paths:
             security:
             -   OAuth2:
                 - block-storage.write
-            x-mgc-name: attach
     /v1/volumes/{id}/detach:
         post:
             tags:
             - volumes
-            summary: Detach a volume asynchronously
-            description: "Asynchronously detach a Volume from a Virtual Machine instance\
-                \ for the\n currently authenticated tenant.\n\nThe Volume detachment\
-                \ will be completed when the volume state returns to\n \"available,\"\
-                \ and the status becomes \"completed\".\n\n#### Rules\n- The Volume\
-                \ and the Virtual Machine must belong to the same tenant.\n- Both\
-                \ the Volume and Virtual Machine must have the status \"completed\"\
-                .\n- The Volume's state must be \"in-use\".\n- The Virtual Machine's\
+            summary: Detach a Volume
+            description: "Detach a Volume from a Virtual Machine instance for the\n\
+                \ currently authenticated tenant.\n\nThe Volume detachment will be\
+                \ completed when the Volume state returns to\n \"available,\" and\
+                \ the status becomes \"completed\".\n\n#### Rules\n- The Volume and\
+                \ the Virtual Machine must belong to the same tenant.\n- Both the\
+                \ Volume and Virtual Machine must have the status \"completed\".\n\
+                - The Volume's state must be \"in-use\".\n- The Virtual Machine's\
                 \ state must be \"stopped\".\n\n#### Notes\n- Verify the state and\
                 \ status of your Volume using the\n **block-storage volume get --id\
                 \ [uuid]** command.\n- Verify the state and status of your Virtual\
                 \ Machine using the\n **virtual-machine instances get --id [uuid]**\
                 \ command.\n- Ensure that any file systems on the device within your\
-                \ operating system are\n unmounted before detaching the volume.\n\n\
+                \ operating system are\n unmounted before detaching the Volume.\n\n\
                 #### Troubleshooting\n- A failure during detachment can result in\
-                \ the volume becoming stuck in the\n busy state. If this occurs, detachment\
-                \ may be delayed indefinitely until you\n unmount the volume, force\
+                \ the Volume becoming stuck in the\n busy state. If this occurs, detachment\
+                \ may be delayed indefinitely until you\n unmount the Volume, force\
                 \ detachment, reboot the instance, or perform all\n three."
-            operationId: detach_volume_v1_v1_volumes__id__detach__virtual_machine_id__post
+            operationId: detach_volume_v1_v1_volumes__id__detach_post
             parameters:
             -   name: id
                 in: path
@@ -857,6 +998,37 @@ paths:
             responses:
                 '204':
                     description: Successful Response
+                    links:
+                        get:
+                            operationId: get_volume_v1_v1_volumes__id__get
+                            description: Retrieve the details of a volume
+                            parameters:
+                                id: $request.path.id
+                        delete:
+                            operationId: delete_volume_v1_v1_volumes__id__delete
+                            description: Delete a Volume
+                            parameters:
+                                id: $request.path.id
+                        attach:
+                            operationId: attach_volume_v1_v1_volumes__id__attach__virtual_machine_id__post
+                            description: Attach a Volume
+                            parameters:
+                                id: $request.path.id
+                        extend:
+                            operationId: extend_volume_v1_volumes__id__extend_post
+                            description: Extend a Volume
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            operationId: rename_volume_v1_v1_volumes__id__rename_patch
+                            description: Rename a volume
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            operationId: retype_volume_v1_volumes__id__retype_post
+                            description: Retype a Volume
+                            parameters:
+                                id: $request.path.id
                 '404':
                     content:
                         application/json:
@@ -864,8 +1036,8 @@ paths:
                                 type: array
                                 items:
                                     $ref: '#/components/schemas/ErrorResponse'
-                                title: Response 404 Detach Volume V1 V1 Volumes  Id  Detach  Virtual
-                                    Machine Id  Post
+                                title: Response 404 Detach Volume V1 V1 Volumes  Id  Detach
+                                    Post
                     description: Not Found
                 '409':
                     content:
@@ -874,8 +1046,8 @@ paths:
                                 type: array
                                 items:
                                     $ref: '#/components/schemas/ErrorResponse'
-                                title: Response 409 Detach Volume V1 V1 Volumes  Id  Detach  Virtual
-                                    Machine Id  Post
+                                title: Response 409 Detach Volume V1 V1 Volumes  Id  Detach
+                                    Post
                     description: Conflict
                 '422':
                     content:
@@ -884,29 +1056,28 @@ paths:
                                 type: array
                                 items:
                                     $ref: '#/components/schemas/ErrorResponse'
-                                title: Response 422 Detach Volume V1 V1 Volumes  Id  Detach  Virtual
-                                    Machine Id  Post
+                                title: Response 422 Detach Volume V1 V1 Volumes  Id  Detach
+                                    Post
                     description: Unprocessable Entity
             x-viveiro: true
             security:
             -   OAuth2:
                 - block-storage.write
-            x-mgc-name: detach
     /v1/volumes/{id}/extend:
         post:
             tags:
             - volumes
-            summary: Extend a volume asynchronously
-            description: "Asynchronously extend the size of an existing Volume for\
-                \ the currently\n authenticated tenant.\n\nThe Volume extension will\
-                \ be completed when the Volume status returns to\n \"completed\".\n\
-                \n#### Rules\n- The Volume status must be \"available\".\n- The Volume\
-                \ status must be \"completed\" or \"extend_error\".\n- The new Volume\
-                \ size must be larger than the current size.\n\n#### Notes\n- Utilize\
-                \ the block-storage volume list command to retrieve a list of all\n\
-                \ Volumes and obtain the ID of the volume you want to extend.\n- Storage\
-                \ quotas are managed internally. If the operation fails due to quota\n\
-                \ restrictions, please contact our support team for assistance."
+            summary: Extend a Volume
+            description: "Extend the size of an existing Volume for the currently\n\
+                \ authenticated tenant.\n\nThe Volume extension will be completed\
+                \ when the Volume status returns to\n \"completed\".\n\n#### Rules\n\
+                - The Volume state must be \"available\".\n- The Volume status must\
+                \ be \"completed\" or \"extend_error\".\n- The new Volume size must\
+                \ be larger than the current size.\n\n#### Notes\n- Utilize the block-storage\
+                \ volume list command to retrieve a list of all\n Volumes and obtain\
+                \ the ID of the Volume you want to extend.\n- Storage quotas are managed\
+                \ internally. If the operation fails due to quota\n restrictions,\
+                \ please contact our support team for assistance."
             operationId: extend_volume_v1_volumes__id__extend_post
             parameters:
             -   name: id
@@ -927,14 +1098,39 @@ paths:
                     description: Successful Response
                     links:
                         get:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}/get'
-                            description: Read Block Storage volume
+                            operationId: get_volume_v1_v1_volumes__id__get
+                            description: Retrieve the details of a volume
                             parameters:
                                 id: $request.path.id
                             x-mgc-wait-termination:
-                                maxRetries: 5
                                 interval: 5s
+                                maxRetries: 10
                                 jsonPathQuery: $.result.size == $.owner.parameters.size
+                        delete:
+                            operationId: delete_volume_v1_v1_volumes__id__delete
+                            description: Delete a Volume
+                            parameters:
+                                id: $request.path.id
+                        attach:
+                            operationId: attach_volume_v1_v1_volumes__id__attach__virtual_machine_id__post
+                            description: Attach a Volume
+                            parameters:
+                                id: $request.path.id
+                        detach:
+                            operationId: detach_volume_v1_v1_volumes__id__detach_post
+                            description: Detach a Volume
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            operationId: rename_volume_v1_v1_volumes__id__rename_patch
+                            description: Rename a volume
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            operationId: retype_volume_v1_volumes__id__retype_post
+                            description: Retype a Volume
+                            parameters:
+                                id: $request.path.id
                 '404':
                     content:
                         application/json:
@@ -989,17 +1185,37 @@ paths:
                     description: Successful Response
                     links:
                         get:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}/get'
-                            description: Read Block Storage volume
+                            operationId: get_volume_v1_v1_volumes__id__get
+                            description: Retrieve the details of a volume
                             parameters:
                                 id: $request.path.id
                             x-mgc-wait-termination:
-                                maxRetries: 5
                                 interval: 5s
+                                maxRetries: 10
                                 jsonPathQuery: $.result.name == $.owner.parameters.name
                         delete:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}/delete'
-                            description: Delete Block Storage volume
+                            operationId: delete_volume_v1_v1_volumes__id__delete
+                            description: Delete a Volume
+                            parameters:
+                                id: $request.path.id
+                        attach:
+                            operationId: attach_volume_v1_v1_volumes__id__attach__virtual_machine_id__post
+                            description: Attach a Volume
+                            parameters:
+                                id: $request.path.id
+                        detach:
+                            operationId: detach_volume_v1_v1_volumes__id__detach_post
+                            description: Detach a Volume
+                            parameters:
+                                id: $request.path.id
+                        extend:
+                            operationId: extend_volume_v1_volumes__id__extend_post
+                            description: Extend a Volume
+                            parameters:
+                                id: $request.path.id
+                        retype:
+                            operationId: retype_volume_v1_volumes__id__retype_post
+                            description: Retype a Volume
                             parameters:
                                 id: $request.path.id
                 '404':
@@ -1040,18 +1256,17 @@ paths:
         post:
             tags:
             - volumes
-            summary: Retype a volume asynchronously
-            description: "Asynchronously change the Volume Type of an existing Volume\
-                \ for the currently\n authenticated tenant.\n\nThe Volume retype will\
-                \ be completed when the Volume status returns to\n \"completed\".\n\
-                \n#### Rules\n- The Volume state must be \"available\".\n- The Volume\
-                \ status must be \"completed\" or \"retype_error\".\n- The new Volume\
-                \ Type must belong to the same region as the Volume.\n\n#### Notes\n\
-                - Utilize the **block-storage volume list** command to retrieve a\
-                \ list of all\n Volumes and obtain the ID of the Volume you want to\
-                \ retype.\n- Utilize the **block-storage volume-types list** command\
-                \ to retrieve a list of\n all Volume Types and obtain the ID of the\
-                \ Volume Type you want to use."
+            summary: Retype a Volume
+            description: "Change the Volume Type of an existing Volume for the currently\n\
+                \ authenticated tenant.\n\nThe Volume retype will be completed when\
+                \ the Volume status returns to\n \"completed\".\n\n#### Rules\n- The\
+                \ Volume state must be \"available\".\n- The Volume status must be\
+                \ \"completed\" or \"retype_error\".\n- The new Volume Type must belong\
+                \ to the same region as the Volume.\n\n#### Notes\n- Utilize the **block-storage\
+                \ volume list** command to retrieve a list of all\n Volumes and obtain\
+                \ the ID of the Volume you want to retype.\n- Utilize the **block-storage\
+                \ volume-types list** command to retrieve a list of\n all Volume Types\
+                \ and obtain the ID of the Volume Type you want to use."
             operationId: retype_volume_v1_volumes__id__retype_post
             parameters:
             -   name: id
@@ -1072,18 +1287,43 @@ paths:
                     description: Successful Response
                     links:
                         get:
-                            operationRef: '#/paths/~1v1~1volumes~1{id}/get'
-                            description: Read Block Storage volume
+                            operationId: get_volume_v1_v1_volumes__id__get
+                            description: Retrieve the details of a volume
                             parameters:
                                 id: $request.path.id
                             x-mgc-wait-termination:
-                                maxRetries: 5
                                 interval: 5s
+                                maxRetries: 5
                                 jsonPathQuery: (hasKey($.owner.parameters.new_type,
                                     "id") && $.result.type.id == $.owner.parameters.new_type.id)
                                     || (hasKey($.owner.parameters.new_type, "name")
                                     && hasKey($.result.type, "name") && $.result.type.name
                                     == $.owner.parameters.new_type.name)
+                        delete:
+                            operationId: delete_volume_v1_v1_volumes__id__delete
+                            description: Delete a Volume
+                            parameters:
+                                id: $request.path.id
+                        attach:
+                            operationId: attach_volume_v1_v1_volumes__id__attach__virtual_machine_id__post
+                            description: Attach a Volume
+                            parameters:
+                                id: $request.path.id
+                        detach:
+                            operationId: detach_volume_v1_v1_volumes__id__detach_post
+                            description: Detach a Volume
+                            parameters:
+                                id: $request.path.id
+                        extend:
+                            operationId: extend_volume_v1_volumes__id__extend_post
+                            description: Extend a Volume
+                            parameters:
+                                id: $request.path.id
+                        rename:
+                            operationId: rename_volume_v1_v1_volumes__id__rename_patch
+                            description: Rename a volume
+                            parameters:
+                                id: $request.path.id
                 '404':
                     content:
                         application/json:
@@ -1116,9 +1356,15 @@ components:
                     type: string
                     title: Name
                 status:
-                    $ref: '#/components/schemas/InstanceStatus'
+                    anyOf:
+                    -   $ref: '#/components/schemas/InstanceStatus'
+                    -   type: string
+                    title: Status
                 state:
-                    $ref: '#/components/schemas/InstanceState'
+                    anyOf:
+                    -   $ref: '#/components/schemas/InstanceState'
+                    -   type: string
+                    title: State
                 created_at:
                     anyOf:
                     -   type: string
@@ -1712,11 +1958,10 @@ components:
             - extend_pending
             - extending
             - extend_error
-            - extend_quota
+            - extend_error_quota
             - attaching_pending
             - attaching_error
             - attaching
-            - in_use
             - detaching_pending
             - detaching_error
             - detaching

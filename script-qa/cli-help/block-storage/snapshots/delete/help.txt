@@ -1,4 +1,4 @@
-Asynchronously delete a Snapshot for the currently authenticated tenant.
+Delete a Snapshot for the currently authenticated tenant.
 
 #### Rules
 - The Snapshot's status must be "completed".

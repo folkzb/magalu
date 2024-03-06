@@ -1,4 +1,4 @@
-Asynchronously change the Volume Type of an existing Volume for the currently
+Change the Volume Type of an existing Volume for the currently
  authenticated tenant.
 
 The Volume retype will be completed when the Volume status returns to

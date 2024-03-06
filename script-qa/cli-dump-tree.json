@@ -434,7 +434,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously create a Snapshot for the currently authenticated tenant.\n\nThe Snapshot can be used when it reaches the \"available\" state and the\n \"completed\" status.\n\n#### Rules\n- The Snapshot name must be unique; otherwise, the creation will be disallowed.\n- Creating Snapshots from restored Volumes may lead to future conflicts as\n you can't delete a volume with an snapshot and can't delete a snapshot with a\n restored volume, so we recommend avoiding it.\n\n#### Notes\n- Use the **block-storage volume list** command to retrieve a list of all\n Volumes and obtain the ID of the volume that will be used to create the\n Snapshot.",
+      "description": "Create a Snapshot for the currently authenticated tenant.\n\nThe Snapshot can be used when it reaches the \"available\" state and the\n \"completed\" status.\n\n#### Rules\n- The Snapshot name must be unique; otherwise, the creation will be disallowed.\n- Creating Snapshots from restored Volumes may lead to future conflicts as\n you can't delete a Volume with an Snapshot and can't delete a Snapshot with a\n restored Volume, so we recommend avoiding it.\n\n#### Notes\n- Use the **block-storage volume list** command to retrieve a list of all\n Volumes and obtain the ID of the Volume that will be used to create the\n Snapshot.",
       "isInternal": false,
       "name": "create",
       "parameters": {
@@ -548,7 +548,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously delete a Snapshot for the currently authenticated tenant.\n\n#### Rules\n- The Snapshot's status must be \"completed\".\n- The Snapshot's state must be \"available\".\n- Deleting a Snapshot that has been restored is not possible. If necessary,\n delete the restored Volume first and then proceed to delete the Snapshot.\n\n#### Notes\n- Utilize the **block-storage snapshots** list command to retrieve a list of\n all Snapshots and obtain the ID of the Snapshot you wish to delete.\n- If needed, you can use the **block-storage volume list** command to retrieve\n a list of all Volumes and obtain the ID of the restored Volume.",
+      "description": "Delete a Snapshot for the currently authenticated tenant.\n\n#### Rules\n- The Snapshot's status must be \"completed\".\n- The Snapshot's state must be \"available\".\n- Deleting a Snapshot that has been restored is not possible. If necessary,\n delete the restored Volume first and then proceed to delete the Snapshot.\n\n#### Notes\n- Utilize the **block-storage snapshots** list command to retrieve a list of\n all Snapshots and obtain the ID of the Snapshot you wish to delete.\n- If needed, you can use the **block-storage volume list** command to retrieve\n a list of all Volumes and obtain the ID of the restored Volume.",
       "isInternal": false,
       "name": "delete",
       "parameters": {
@@ -1180,7 +1180,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously restore a Snapshot on a new Volume to the currently\n authenticated tenant.\n\nThe restored Volume can be used when it reaches the \"available\" state and the\n \"completed\" status.\n\n#### Notes\n- To obtain the ID of the Snapshot you wish to restore, you can use the\n **block-storage snapshots list** command to list all Snapshots.\n- Check the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.",
+      "description": "Restore a Snapshot on a new Volume to the currently\n authenticated tenant.\n\nThe restored Volume can be used when it reaches the \"available\" state and the\n \"completed\" status.\n\n#### Notes\n- To obtain the ID of the Snapshot you wish to restore, you can use the\n **block-storage snapshots list** command to list all Snapshots.\n- Check the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.",
       "isInternal": false,
       "name": "restore",
       "parameters": {
@@ -1701,7 +1701,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously attach a Volume to a Virtual Machine instance for the currently\n authenticated tenant.\n\nThe Volume attachment will be completed when the volume status returns to\n\"completed\", and the state becomes \"in-use\".\n\n#### Rules\n- The Volume and the Virtual Machine must belong to the same tenant.\n- Both the Volume and Virtual Machine must have the status \"completed\".\n- The Volume's state must be \"available\".\n- The Virtual Machine's state must be \"stopped\" or \"running\".\n\n#### Notes\n- Verify the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.\n- Verify the state and status of your Virtual Machine using the\n**virtual-machine instances get --id [uuid]** command\".",
+      "description": "Attach a Volume to a Virtual Machine instance for the currently\n authenticated tenant.\n\nThe Volume attachment will be completed when the Volume status returns to\n\"completed\", and the state becomes \"in-use\".\n\n#### Rules\n- The Volume and the Virtual Machine must belong to the same tenant.\n- Both the Volume and Virtual Machine must have the status \"completed\".\n- The Volume's state must be \"available\".\n- The Virtual Machine's state must be \"stopped\" or \"running\".\n\n#### Notes\n- Verify the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.\n- Verify the state and status of your Virtual Machine using the\n**virtual-machine instances get --id [uuid]** command\".",
       "isInternal": false,
       "name": "attach",
       "parameters": {
@@ -1763,7 +1763,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously create a Volume for the currently authenticated tenant.\n\nThe Volume can be used when it reaches the \"available\" state and \"completed\"\n status.\n\n#### Rules\n- The Volume name must be unique; otherwise, the creation will be disallowed.\n- The Volume type must be available to use.\n\n#### Notes\n- Utilize the **block-storage volume-types list** command to retrieve a list\n of all available Volume Types.\n- Verify the state and status of your Volume using the\n**block-storage volume get --id [uuid]** command\".",
+      "description": "Create a Volume for the currently authenticated tenant.\n\nThe Volume can be used when it reaches the \"available\" state and \"completed\"\n status.\n\n#### Rules\n- The Volume name must be unique; otherwise, the creation will be disallowed.\n- The Volume type must be available to use.\n\n#### Notes\n- Utilize the **block-storage volume-types list** command to retrieve a list\n of all available Volume Types.\n- Verify the state and status of your Volume using the\n**block-storage volume get --id [uuid]** command\".",
       "isInternal": false,
       "name": "create",
       "parameters": {
@@ -1881,7 +1881,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously delete a Volume for the currently authenticated tenant.\n\n#### Rules\n- The Volume cannot be attached to a Virtual Machine, i.e., its state cannot\n be \"in-use\". If necessary, detach the Volume from the Virtual Machine before\n proceeding with deletion.\n- The Volume must not have any snapshots. If necessary, delete the Volume's\n  snapshots before proceeding with deletion.\n- The volume must have the status \"completed\", i.e., must not have any\n  actions in progress.\n\n\n#### Notes\n- Check the state and status of your Volume using the\n**block-storage volume get --id [uuid]** command\".",
+      "description": "Delete a Volume for the currently authenticated tenant.\n\n#### Rules\n- The Volume cannot be attached to a Virtual Machine, i.e., its state cannot\n be \"in-use\". If necessary, detach the Volume from the Virtual Machine before\n proceeding with deletion.\n- The Volume must not have any snapshots. If necessary, delete the Volume's\n  snapshots before proceeding with deletion.\n- The Volume must have the status \"completed\", i.e., must not have any\n  actions in progress.\n\n\n#### Notes\n- Check the state and status of your Volume using the\n**block-storage volume get --id [uuid]** command\".",
       "isInternal": false,
       "name": "delete",
       "parameters": {
@@ -1935,7 +1935,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously detach a Volume from a Virtual Machine instance for the\n currently authenticated tenant.\n\nThe Volume detachment will be completed when the volume state returns to\n \"available,\" and the status becomes \"completed\".\n\n#### Rules\n- The Volume and the Virtual Machine must belong to the same tenant.\n- Both the Volume and Virtual Machine must have the status \"completed\".\n- The Volume's state must be \"in-use\".\n- The Virtual Machine's state must be \"stopped\".\n\n#### Notes\n- Verify the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.\n- Verify the state and status of your Virtual Machine using the\n **virtual-machine instances get --id [uuid]** command.\n- Ensure that any file systems on the device within your operating system are\n unmounted before detaching the volume.\n\n#### Troubleshooting\n- A failure during detachment can result in the volume becoming stuck in the\n busy state. If this occurs, detachment may be delayed indefinitely until you\n unmount the volume, force detachment, reboot the instance, or perform all\n three.",
+      "description": "Detach a Volume from a Virtual Machine instance for the\n currently authenticated tenant.\n\nThe Volume detachment will be completed when the Volume state returns to\n \"available,\" and the status becomes \"completed\".\n\n#### Rules\n- The Volume and the Virtual Machine must belong to the same tenant.\n- Both the Volume and Virtual Machine must have the status \"completed\".\n- The Volume's state must be \"in-use\".\n- The Virtual Machine's state must be \"stopped\".\n\n#### Notes\n- Verify the state and status of your Volume using the\n **block-storage volume get --id [uuid]** command.\n- Verify the state and status of your Virtual Machine using the\n **virtual-machine instances get --id [uuid]** command.\n- Ensure that any file systems on the device within your operating system are\n unmounted before detaching the Volume.\n\n#### Troubleshooting\n- A failure during detachment can result in the Volume becoming stuck in the\n busy state. If this occurs, detachment may be delayed indefinitely until you\n unmount the Volume, force detachment, reboot the instance, or perform all\n three.",
       "isInternal": false,
       "name": "detach",
       "parameters": {
@@ -1989,7 +1989,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously extend the size of an existing Volume for the currently\n authenticated tenant.\n\nThe Volume extension will be completed when the Volume status returns to\n \"completed\".\n\n#### Rules\n- The Volume status must be \"available\".\n- The Volume status must be \"completed\" or \"extend_error\".\n- The new Volume size must be larger than the current size.\n\n#### Notes\n- Utilize the block-storage volume list command to retrieve a list of all\n Volumes and obtain the ID of the volume you want to extend.\n- Storage quotas are managed internally. If the operation fails due to quota\n restrictions, please contact our support team for assistance.",
+      "description": "Extend the size of an existing Volume for the currently\n authenticated tenant.\n\nThe Volume extension will be completed when the Volume status returns to\n \"completed\".\n\n#### Rules\n- The Volume state must be \"available\".\n- The Volume status must be \"completed\" or \"extend_error\".\n- The new Volume size must be larger than the current size.\n\n#### Notes\n- Utilize the block-storage volume list command to retrieve a list of all\n Volumes and obtain the ID of the Volume you want to extend.\n- Storage quotas are managed internally. If the operation fails due to quota\n restrictions, please contact our support team for assistance.",
       "isInternal": false,
       "name": "extend",
       "parameters": {
@@ -2187,42 +2187,60 @@
                "type": "string"
               },
               "state": {
-               "enum": [
-                "new",
-                "running",
-                "stopped",
-                "suspended",
-                "deleted"
+               "anyOf": [
+                {
+                 "enum": [
+                  "new",
+                  "running",
+                  "stopped",
+                  "suspended",
+                  "deleted"
+                 ],
+                 "title": "InstanceState",
+                 "type": "string"
+                },
+                {
+                 "type": "string"
+                }
                ],
-               "title": "InstanceState",
+               "title": "State",
                "type": "string"
               },
               "status": {
-               "enum": [
-                "provisioning",
-                "creating",
-                "creating_error",
-                "creating_error_quota",
-                "completed",
-                "retyping_pending",
-                "retyping",
-                "retyping_confirmed",
-                "retyping_error",
-                "retyping_error_quota",
-                "stopping_pending",
-                "stopping",
-                "suspending_pending",
-                "suspending",
-                "rebooting_pending",
-                "rebooting",
-                "starting_pending",
-                "starting",
-                "deleting_pending",
-                "deleting",
-                "deleting_error",
-                "deleted"
+               "anyOf": [
+                {
+                 "enum": [
+                  "provisioning",
+                  "creating",
+                  "creating_error",
+                  "creating_error_quota",
+                  "completed",
+                  "retyping_pending",
+                  "retyping",
+                  "retyping_confirmed",
+                  "retyping_error",
+                  "retyping_error_quota",
+                  "stopping_pending",
+                  "stopping",
+                  "suspending_pending",
+                  "suspending",
+                  "rebooting_pending",
+                  "rebooting",
+                  "starting_pending",
+                  "starting",
+                  "deleting_pending",
+                  "deleting",
+                  "deleting_error",
+                  "deleted"
+                 ],
+                 "title": "InstanceStatus",
+                 "type": "string"
+                },
+                {
+                 "type": "string"
+                }
                ],
-               "title": "InstanceStatus",
+               "title": "Status",
                "type": "string"
               },
               "updated_at": {
@@ -2337,11 +2355,10 @@
           "extend_pending",
           "extending",
           "extend_error",
-          "extend_quota",
+          "extend_error_quota",
           "attaching_pending",
           "attaching_error",
           "attaching",
-          "in_use",
           "detaching_pending",
           "detaching_error",
           "detaching",
@@ -2680,42 +2697,60 @@
                   "type": "string"
                  },
                  "state": {
-                  "enum": [
-                   "new",
-                   "running",
-                   "stopped",
-                   "suspended",
-                   "deleted"
+                  "anyOf": [
+                   {
+                    "enum": [
+                     "new",
+                     "running",
+                     "stopped",
+                     "suspended",
+                     "deleted"
+                    ],
+                    "title": "InstanceState",
+                    "type": "string"
+                   },
+                   {
+                    "type": "string"
+                   }
                   ],
-                  "title": "InstanceState",
+                  "title": "State",
                   "type": "string"
                  },
                  "status": {
-                  "enum": [
-                   "provisioning",
-                   "creating",
-                   "creating_error",
-                   "creating_error_quota",
-                   "completed",
-                   "retyping_pending",
-                   "retyping",
-                   "retyping_confirmed",
-                   "retyping_error",
-                   "retyping_error_quota",
-                   "stopping_pending",
-                   "stopping",
-                   "suspending_pending",
-                   "suspending",
-                   "rebooting_pending",
-                   "rebooting",
-                   "starting_pending",
-                   "starting",
-                   "deleting_pending",
-                   "deleting",
-                   "deleting_error",
-                   "deleted"
+                  "anyOf": [
+                   {
+                    "enum": [
+                     "provisioning",
+                     "creating",
+                     "creating_error",
+                     "creating_error_quota",
+                     "completed",
+                     "retyping_pending",
+                     "retyping",
+                     "retyping_confirmed",
+                     "retyping_error",
+                     "retyping_error_quota",
+                     "stopping_pending",
+                     "stopping",
+                     "suspending_pending",
+                     "suspending",
+                     "rebooting_pending",
+                     "rebooting",
+                     "starting_pending",
+                     "starting",
+                     "deleting_pending",
+                     "deleting",
+                     "deleting_error",
+                     "deleted"
+                    ],
+                    "title": "InstanceStatus",
+                    "type": "string"
+                   },
+                   {
+                    "type": "string"
+                   }
                   ],
-                  "title": "InstanceStatus",
+                  "title": "Status",
                   "type": "string"
                  },
                  "updated_at": {
@@ -2830,11 +2865,10 @@
              "extend_pending",
              "extending",
              "extend_error",
-             "extend_quota",
+             "extend_error_quota",
              "attaching_pending",
              "attaching_error",
              "attaching",
-             "in_use",
              "detaching_pending",
              "detaching_error",
              "detaching",
@@ -3071,7 +3105,7 @@
        },
        "type": "object"
       },
-      "description": "Asynchronously change the Volume Type of an existing Volume for the currently\n authenticated tenant.\n\nThe Volume retype will be completed when the Volume status returns to\n \"completed\".\n\n#### Rules\n- The Volume state must be \"available\".\n- The Volume status must be \"completed\" or \"retype_error\".\n- The new Volume Type must belong to the same region as the Volume.\n\n#### Notes\n- Utilize the **block-storage volume list** command to retrieve a list of all\n Volumes and obtain the ID of the Volume you want to retype.\n- Utilize the **block-storage volume-types list** command to retrieve a list of\n all Volume Types and obtain the ID of the Volume Type you want to use.",
+      "description": "Change the Volume Type of an existing Volume for the currently\n authenticated tenant.\n\nThe Volume retype will be completed when the Volume status returns to\n \"completed\".\n\n#### Rules\n- The Volume state must be \"available\".\n- The Volume status must be \"completed\" or \"retype_error\".\n- The new Volume Type must belong to the same region as the Volume.\n\n#### Notes\n- Utilize the **block-storage volume list** command to retrieve a list of all\n Volumes and obtain the ID of the Volume you want to retype.\n- Utilize the **block-storage volume-types list** command to retrieve a list of\n all Volume Types and obtain the ID of the Volume Type you want to use.",
       "isInternal": false,
       "name": "retype",
       "parameters": {

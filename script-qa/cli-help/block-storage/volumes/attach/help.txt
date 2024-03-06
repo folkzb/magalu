@@ -1,7 +1,7 @@
-Asynchronously attach a Volume to a Virtual Machine instance for the currently
+Attach a Volume to a Virtual Machine instance for the currently
  authenticated tenant.
 
-The Volume attachment will be completed when the volume status returns to
+The Volume attachment will be completed when the Volume status returns to
 "completed", and the state becomes "in-use".
 
 #### Rules
@@ -20,10 +20,11 @@ Usage:
   ./cli block-storage volumes attach [id] [virtual-machine-id] [flags]
 
 Flags:
-  -h, --help                      help for attach
-      --id uuid                   Id (required)
-  -v, --version                   version for attach
-      --virtual-machine-id uuid   Virtual Machine Id (required)
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for attach
+      --id uuid                       Id (required)
+  -v, --version                       version for attach
+      --virtual-machine-id uuid       Virtual Machine Id (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

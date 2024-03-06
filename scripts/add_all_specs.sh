@@ -9,7 +9,7 @@ OAPI_PATH=$ROOTDIR/$OAPIDIR
 
 set -xe
 
-$BASEDIR/add_specs.sh block-storage volume https://block-storage.br-ne-1.jaxyendy.com/openapi.json https://block-storage.jaxyendy.com/openapi.json
+$BASEDIR/add_specs.sh block-storage volume https://block-storage.br-ne-1.jaxyendy.com/v1/openapi.json https://block-storage.jaxyendy.com/openapi.json
 
 $BASEDIR/add_specs.sh dbaas database https://dbaas.br-ne-1.jaxyendy.com/openapi.json https://dbaas.jaxyendy.com/openapi.json
 

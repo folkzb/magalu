@@ -1,4 +1,4 @@
-Asynchronously create a Volume for the currently authenticated tenant.
+Create a Volume for the currently authenticated tenant.
 
 The Volume can be used when it reaches the "available" state and "completed"
  status.

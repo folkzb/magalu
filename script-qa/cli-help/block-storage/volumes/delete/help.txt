@@ -1,4 +1,4 @@
-Asynchronously delete a Volume for the currently authenticated tenant.
+Delete a Volume for the currently authenticated tenant.
 
 #### Rules
 - The Volume cannot be attached to a Virtual Machine, i.e., its state cannot
@@ -6,7 +6,7 @@ Asynchronously delete a Volume for the currently authenticated tenant.
  proceeding with deletion.
 - The Volume must not have any snapshots. If necessary, delete the Volume's
   snapshots before proceeding with deletion.
-- The volume must have the status "completed", i.e., must not have any
+- The Volume must have the status "completed", i.e., must not have any
   actions in progress.
 
 

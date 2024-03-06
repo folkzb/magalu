@@ -1,7 +1,7 @@
-Asynchronously detach a Volume from a Virtual Machine instance for the
+Detach a Volume from a Virtual Machine instance for the
  currently authenticated tenant.
 
-The Volume detachment will be completed when the volume state returns to
+The Volume detachment will be completed when the Volume state returns to
  "available," and the status becomes "completed".
 
 #### Rules
@@ -16,21 +16,22 @@ The Volume detachment will be completed when the volume state returns to
 - Verify the state and status of your Virtual Machine using the
  **virtual-machine instances get --id [uuid]** command.
 - Ensure that any file systems on the device within your operating system are
- unmounted before detaching the volume.
+ unmounted before detaching the Volume.
 
 #### Troubleshooting
-- A failure during detachment can result in the volume becoming stuck in the
+- A failure during detachment can result in the Volume becoming stuck in the
  busy state. If this occurs, detachment may be delayed indefinitely until you
- unmount the volume, force detachment, reboot the instance, or perform all
+ unmount the Volume, force detachment, reboot the instance, or perform all
  three.
 
 Usage:
   ./cli block-storage volumes detach [id] [flags]
 
 Flags:
-  -h, --help      help for detach
-      --id uuid   Id (required)
-  -v, --version   version for detach
+      --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
+  -h, --help                          help for detach
+      --id uuid                       Id (required)
+  -v, --version                       version for detach
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
