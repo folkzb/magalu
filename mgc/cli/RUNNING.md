@@ -378,7 +378,7 @@ each column will become a row.
 ID:12db59e3-8715-47af-a15f-1a595f6647ec%
 ```
 
-## Retry/Pooling
+## Retry/Polling
 
 To execute a command it is possible to define its finish condition.
 
@@ -388,7 +388,7 @@ success(c) in their respective orders `r,i,c`.
 
 ```sh
 ./mgc virtual-machine instances get --id=111e3457-9013-40bf-b117-de23fc34a38c -U=3,30s,jsonpath='$.status == "active"'
-... pooling until the `get` request output matches the condition ...
+... polling until the `get` request output matches the condition ...
 {
  "id": "111e3457-9013-40bf-b117-de23fc34a38c",
  ...
@@ -396,7 +396,7 @@ success(c) in their respective orders `r,i,c`.
 }
 
 ./mgc virtual-machine instances get --id=111e3457-9013-40bf-b117-de23fc34a38c -U=3,30s,template='{{if eq .status "active"}}true{{end}}'
-... pooling until the `get` request output matches the condition ...
+... polling until the `get` request output matches the condition ...
 {
  "id": "111e3457-9013-40bf-b117-de23fc34a38c",
  ...
