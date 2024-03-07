@@ -555,8 +555,20 @@ func splitUnquoted(str string, separator string, maxSplit int) (result []string,
 //   - name: required
 //   - jsonPath: required
 //   - parents: optional, if present is a list split by spaces
-func tableOptionsFromString(str string) (options *tableOptions, err error) {
+func tableOptionsFromString(str string, val any) (options *tableOptions, err error) {
 	str, buildVertically := strings.CutPrefix(str, "transpose")
+
+	if str == "" {
+		if val == nil {
+			return nil, fmt.Errorf("unable to build table options from string as string is empty and data is nil")
+		}
+		options, err = tableOptionsFromAny(val, "$", nil)
+		if err != nil {
+			return
+		}
+		options.BuildVertically = buildVertically
+		return
+	}
 
 	colStrings, err := splitUnquoted(str, ",", 0)
 	if err != nil {
@@ -590,7 +602,7 @@ func tableOptionsFromString(str string) (options *tableOptions, err error) {
 
 		var subOptions *tableOptions
 		if len(parts) > 3 && len(parts[3]) > 0 {
-			subOptions, err = tableOptionsFromString(parts[3])
+			subOptions, err = tableOptionsFromString(parts[3], nil)
 			if err != nil {
 				return
 			}
@@ -841,7 +853,7 @@ func renderWriterWithFormat(writer table.Writer, format tableRenderFormat) strin
 func (f *tableOutputFormatter) Format(val any, options string) (err error) {
 	var tableOptions *tableOptions
 	if options != "" {
-		tableOptions, err = tableOptionsFromString(options)
+		tableOptions, err = tableOptionsFromString(options, val)
 		logger().Debugw(
 			"explicitly declared columns",
 			"tableOptions", tableOptions,
