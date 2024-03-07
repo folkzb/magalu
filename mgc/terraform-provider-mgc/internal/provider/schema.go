@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"slices"
 
@@ -889,11 +890,11 @@ func (n mgcName) singular() mgcName {
 		return n
 	}
 
-	if n[len(n)-1] != 's' {
-		return n
+	if strings.HasSuffix(string(n), "ies") {
+		return mgcName(strings.TrimSuffix(string(n), "ies") + "y")
 	}
 
-	return n[:len(n)-1]
+	return mgcName(strings.TrimSuffix(string(n), "s"))
 }
 
 func (n tfName) asDesired() tfName {

@@ -288,7 +288,12 @@ class CreateLinks(SpecTranformer):
         )
 
     def _table_name_singular(self, table: OperationTable) -> str:
-        return table.get("name", "").removesuffix("s")
+        name = table.get("name", "")
+
+        if name.endswith("ies"):
+            return name.removesuffix("ies") + "y"
+
+        return name.removesuffix("s")
 
     def _look_for_parameter(
         self,
