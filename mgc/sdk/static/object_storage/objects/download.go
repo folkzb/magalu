@@ -27,6 +27,10 @@ var getDownload = utils.NewLazyLoader[core.Executor](func() core.Executor {
 })
 
 func download(ctx context.Context, p common.DownloadObjectParams, cfg common.Config) (result core.Value, err error) {
+	if p.Source.Path() == "" {
+		return nil, core.UsageError{Err: fmt.Errorf("invalid source specified. Please include the object key in addition to the bucket name")}
+	}
+
 	dst, err := common.GetDownloadFileDst(p.Destination, p.Source)
 	if err != nil {
 		return nil, fmt.Errorf("no destination specified and could not use local dir: %w", err)
