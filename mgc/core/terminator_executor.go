@@ -9,8 +9,6 @@ import (
 type TerminatorExecutor interface {
 	Executor
 	ExecuteUntilTermination(context context.Context, parameters Parameters, configs Configs) (result Result, err error)
-	// Only errors if the desired condition is not achieved. Intermediate executions that error won't immediately return the error
-	ExecuteUntilTerminationIgnoreErrors(context context.Context, parameters Parameters, configs Configs) (result Result, err error)
 }
 
 type FailedTerminationError struct {
@@ -39,24 +37,15 @@ func (o *executeTerminatorWithCheck) Execute(ctx context.Context, parameters Par
 }
 
 func (o *executeTerminatorWithCheck) ExecuteUntilTermination(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
-	result, err = o.executeUntilTermination(context, parameters, configs, false)
+	result, err = o.executeUntilTermination(context, parameters, configs)
 	return ExecutorWrapResult(o, result, err)
 }
 
-func (o *executeTerminatorWithCheck) ExecuteUntilTerminationIgnoreErrors(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
-	result, err = o.executeUntilTermination(context, parameters, configs, true)
-	return ExecutorWrapResult(o, result, err)
-}
-
-func (o *executeTerminatorWithCheck) executeUntilTermination(context context.Context, parameters Parameters, configs Configs, ignoreErrors bool) (result Result, err error) {
+func (o *executeTerminatorWithCheck) executeUntilTermination(context context.Context, parameters Parameters, configs Configs) (result Result, err error) {
 	var exec func() (Result, error)
 	if tExec, ok := ExecutorAs[TerminatorExecutor](o.Unwrap()); ok {
 		exec = func() (result Result, err error) {
-			if ignoreErrors {
-				result, err = tExec.ExecuteUntilTerminationIgnoreErrors(context, parameters, configs)
-			} else {
-				result, err = tExec.ExecuteUntilTermination(context, parameters, configs)
-			}
+			result, err = tExec.ExecuteUntilTermination(context, parameters, configs)
 			return ExecutorWrapResult(o, result, err)
 		}
 	} else {
@@ -67,20 +56,19 @@ func (o *executeTerminatorWithCheck) executeUntilTermination(context context.Con
 
 	for i := 0; i < o.maxRetries; i++ {
 		result, err = exec()
-		if err == nil {
-			resultWithValue, ok := ResultAs[ResultWithValue](result)
-			if !ok {
-				return result, fmt.Errorf("result does not have a value")
-			}
-			terminated, err := o.checkTerminate(context, o.Executor, resultWithValue)
-			if err != nil {
-				return result, err
-			}
-			if terminated {
-				return result, nil
-			}
-		} else if !ignoreErrors {
+		if err != nil {
 			return result, err
+		}
+		resultWithValue, ok := ResultAs[ResultWithValue](result)
+		if !ok {
+			return result, fmt.Errorf("result does not have a value")
+		}
+		terminated, err := o.checkTerminate(context, o.Executor, resultWithValue)
+		if err != nil {
+			return result, err
+		}
+		if terminated {
+			return result, nil
 		}
 
 		timer := time.NewTimer(o.interval)
