@@ -1,12 +1,11 @@
 from oapi_types import OAPIObject
 from urllib import request
-import json
 import yaml
 
 
 def fetch_and_parse(json_oapi_url: str) -> OAPIObject:
     with request.urlopen(json_oapi_url, timeout=5) as response:
-        return json.loads(response.read())
+        return yaml.load(response.read(), Loader=yaml.FullLoader)
 
 
 def load_yaml(path: str) -> OAPIObject:
