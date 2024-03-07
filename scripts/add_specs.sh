@@ -45,7 +45,7 @@ servers:
                     to: br-se-1
         env:
             description: Environment to use
-            default: ''
+            default: api.magalu.cloud
             enum:
             - api.magalu.cloud
             - api.pre-prod.jaxyendy.com
@@ -56,7 +56,6 @@ servers:
                     to: api.magalu.cloud
                 -   from: pre-prod
                     to: api.pre-prod.jaxyendy.com
-
 EOF
 fi
 
