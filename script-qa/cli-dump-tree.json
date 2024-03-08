@@ -20261,10 +20261,16 @@
          "maxLength": 63,
          "minLength": 3,
          "type": "string"
+        },
+        "force": {
+         "default": false,
+         "description": "Delete the bucket even if there are still objects inside",
+         "type": "boolean"
         }
        },
        "required": [
-        "bucket"
+        "bucket",
+        "force"
        ],
        "type": "object"
       },

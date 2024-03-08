@@ -5,6 +5,7 @@ Usage:
 
 Flags:
       --bucket string   Name of the bucket to be deleted (between 3 and 63 characters) (required)
+      --force           Delete the bucket even if there are still objects inside (required)
   -h, --help            help for delete
 
 Global Flags:

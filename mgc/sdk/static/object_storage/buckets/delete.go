@@ -21,6 +21,7 @@ func deleteLogger() *zap.SugaredLogger {
 
 type deleteParams struct {
 	BucketName common.BucketName `json:"bucket" jsonschema:"description=Name of the bucket to be deleted" mgc:"positional"`
+	Force      bool              `json:"force" jsonschema:"description=Delete the bucket even if there are still objects inside,default=false"`
 }
 
 var getDelete = utils.NewLazyLoader[core.Executor](func() core.Executor {
@@ -53,13 +54,16 @@ func deleteBucket(ctx context.Context, params deleteParams, cfg common.Config) (
 		"cfg", cfg,
 	)
 
-	err := common.DeleteAllObjectsInBucket(ctx, common.DeleteAllObjectsInBucketParams{BucketName: params.BucketName, BatchSize: common.MaxBatchSize}, cfg)
-	if err != nil {
-		return nil, err
+	if params.Force {
+		logger.Info("Deleting all objects in bucket before deleting bucket itself because 'force' parameter was true")
+		err := common.DeleteAllObjectsInBucket(ctx, common.DeleteAllObjectsInBucketParams{BucketName: params.BucketName, BatchSize: common.MaxBatchSize}, cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	dst := params.BucketName.AsURI()
-	err = common.DeleteBucket(ctx, common.DeleteBucketParams{Destination: dst}, cfg)
+	err := common.DeleteBucket(ctx, common.DeleteBucketParams{Destination: dst}, cfg)
 	if err != nil {
 		return nil, err
 	}
