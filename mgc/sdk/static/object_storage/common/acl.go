@@ -103,40 +103,30 @@ func (p ACLStandardPermissions) IsEmpty() bool {
 	return len(nonEmptyFields) < 1
 }
 
-func (p ACLStandardPermissions) SetHeaders(req *http.Request, cfg Config) error {
-	for _, v := range p.GrantFullControl {
-		err := p.setHeader(req.Header, "x-amz-grant-full-control", v, cfg)
-		if err != nil {
-			return err
-		}
+func (p ACLStandardPermissions) SetHeaders(req *http.Request, cfg Config) (err error) {
+	err = p.setHeader(req.Header, "x-amz-grant-full-control", p.GrantFullControl, cfg)
+	if err != nil {
+		return err
 	}
 
-	for _, v := range p.GrantRead {
-		err := p.setHeader(req.Header, "x-amz-grant-read", v, cfg)
-		if err != nil {
-			return err
-		}
+	err = p.setHeader(req.Header, "x-amz-grant-read", p.GrantRead, cfg)
+	if err != nil {
+		return err
 	}
 
-	for _, v := range p.GrantWrite {
-		err := p.setHeader(req.Header, "x-amz-grant-write", v, cfg)
-		if err != nil {
-			return err
-		}
+	err = p.setHeader(req.Header, "x-amz-grant-write", p.GrantWrite, cfg)
+	if err != nil {
+		return err
 	}
 
-	for _, v := range p.GrantReadAcp {
-		err := p.setHeader(req.Header, "x-amz-grant-read-acp", v, cfg)
-		if err != nil {
-			return err
-		}
+	err = p.setHeader(req.Header, "x-amz-grant-read-acp", p.GrantReadAcp, cfg)
+	if err != nil {
+		return err
 	}
 
-	for _, v := range p.GrantWriteAcp {
-		err := p.setHeader(req.Header, "x-amz-grant-write-acp", v, cfg)
-		if err != nil {
-			return err
-		}
+	err = p.setHeader(req.Header, "x-amz-grant-write-acp", p.GrantWriteAcp, cfg)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -162,25 +152,37 @@ func (p ACLStandardPermissions) userProjectFromTenantId(tenantId string, cfg Con
 	return fmt.Sprintf("%s:%s", pattern, pattern)
 }
 
-func (p ACLStandardPermissions) setHeader(header http.Header, name string, permission ACLPermission, cfg Config) error {
-	_, err := uuid.Parse(permission.ID)
-	isTenantId := err == nil
-
-	if isTenantId {
-		userProject := p.userProjectFromTenantId(permission.ID, cfg)
-
-		header.Add(name, "id="+permission.ID)
-		header.Add(name, "id="+userProject)
-	} else {
-		tenantId, err := p.tenantIdFromUserProject(permission.ID)
-		if err != nil {
-			return err
+func (p ACLStandardPermissions) setHeader(header http.Header, name string, permissions []ACLPermission, cfg Config) error {
+	v := ""
+	for i, permission := range permissions {
+		if i > 0 {
+			v += ","
 		}
 
-		header.Add(name, "id="+tenantId)
-		header.Add(name, "id="+permission.ID)
+		var tenantId, userProject string
+
+		_, err := uuid.Parse(permission.ID)
+		isTenantId := err == nil
+
+		if isTenantId {
+			tenantId = permission.ID
+			userProject = p.userProjectFromTenantId(permission.ID, cfg)
+		} else {
+			userProject = permission.ID
+			tenantId, err = p.tenantIdFromUserProject(permission.ID)
+			if err != nil {
+				return err
+			}
+		}
+
+		v += fmt.Sprintf("id=%s,id=%s", tenantId, userProject)
 	}
 
+	if v == "" {
+		return nil
+	}
+
+	header.Set(name, v)
 	return nil
 }
 
