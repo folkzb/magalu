@@ -19419,18 +19419,41 @@
       },
       "result": {
        "properties": {
-        "access_key_id": {
-         "description": "Access key id value",
+        "description": {
          "type": "string"
         },
-        "secret_access_key": {
-         "description": "Secret access key value",
+        "end_validity": {
+         "type": "string"
+        },
+        "key_pair_id": {
+         "type": "string"
+        },
+        "key_pair_secret": {
+         "type": "string"
+        },
+        "name": {
+         "type": "string"
+        },
+        "revoked_at": {
+         "type": "string"
+        },
+        "start_validity": {
+         "type": "string"
+        },
+        "tenant_name": {
+         "type": "string"
+        },
+        "uuid": {
          "type": "string"
         }
        },
        "required": [
-        "access_key_id",
-        "secret_access_key"
+        "uuid",
+        "name",
+        "description",
+        "key_pair_id",
+        "key_pair_secret",
+        "start_validity"
        ],
        "type": "object"
       },

@@ -53,8 +53,3 @@ type createApiKey struct {
 type apiKeyResult struct {
 	UUID string `json:"uuid,omitempty"`
 }
-
-type authSetParams struct {
-	AccessKeyId     string `json:"access_key_id" jsonschema_description:"Access key id value" mgc:"positional"`
-	SecretAccessKey string `json:"secret_access_key" jsonschema_description:"Secret access key value" mgc:"positional"`
-}

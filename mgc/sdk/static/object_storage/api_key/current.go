@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
 	mgcAuthPkg "magalu.cloud/core/auth"
 	"magalu.cloud/core/utils"
 
@@ -20,12 +21,29 @@ var getGetCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 })
 
-func getCurrent(ctx context.Context) (*authSetParams, error) {
+var currentLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
+	return logger().Named("current")
+})
+
+func getCurrent(ctx context.Context) (*apiKeysResult, error) {
 	auth := mgcAuthPkg.FromContext(ctx)
 	if auth == nil {
 		return nil, fmt.Errorf("unable to retrieve authentication configuration")
 	}
 
 	id, secretKey := auth.AccessKeyPair()
-	return &authSetParams{AccessKeyId: id, SecretAccessKey: secretKey}, nil
+	keys, err := list(ctx)
+	if err != nil {
+		currentLogger().Warnw("Failed to get detailed info about current key, returning only KeyPairID and SecretKey", "err", err)
+		return &apiKeysResult{KeyPairID: id, KeyPairSecret: secretKey}, nil
+	}
+
+	for _, key := range keys {
+		if key.KeyPairID == id && key.KeyPairSecret == secretKey {
+			return key, nil
+		}
+	}
+
+	currentLogger().Warnw("unable to find a key in api-key list that matches the current KeyPairID- %s", id)
+	return &apiKeysResult{KeyPairID: id, KeyPairSecret: secretKey}, nil
 }
