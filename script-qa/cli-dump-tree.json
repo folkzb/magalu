@@ -19411,6 +19411,35 @@
       "configs": {
        "type": "object"
       },
+      "description": "Get the current Object Storage credentials",
+      "isInternal": false,
+      "name": "current",
+      "parameters": {
+       "type": "object"
+      },
+      "result": {
+       "properties": {
+        "access_key_id": {
+         "description": "Access key id value",
+         "type": "string"
+        },
+        "secret_access_key": {
+         "description": "Secret access key value",
+         "type": "string"
+        }
+       },
+       "required": [
+        "access_key_id",
+        "secret_access_key"
+       ],
+       "type": "object"
+      },
+      "version": ""
+     },
+     {
+      "configs": {
+       "type": "object"
+      },
       "description": "Get details about a specific key",
       "isInternal": false,
       "name": "get",
@@ -19462,35 +19491,6 @@
         "key_pair_id",
         "key_pair_secret",
         "start_validity"
-       ],
-       "type": "object"
-      },
-      "version": ""
-     },
-     {
-      "configs": {
-       "type": "object"
-      },
-      "description": "Get the current Object Storage credentials",
-      "isInternal": false,
-      "name": "get-current",
-      "parameters": {
-       "type": "object"
-      },
-      "result": {
-       "properties": {
-        "access_key_id": {
-         "description": "Access key id value",
-         "type": "string"
-        },
-        "secret_access_key": {
-         "description": "Secret access key value",
-         "type": "string"
-        }
-       },
-       "required": [
-        "access_key_id",
-        "secret_access_key"
        ],
        "type": "object"
       },
@@ -19590,7 +19590,7 @@
       },
       "description": "Change current Object Storage credential to selected",
       "isInternal": false,
-      "name": "set-current",
+      "name": "set",
       "parameters": {
        "properties": {
         "uuid": {

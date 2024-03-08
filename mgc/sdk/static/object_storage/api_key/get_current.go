@@ -13,7 +13,7 @@ import (
 var getGetCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	return core.NewStaticExecuteSimple(
 		core.DescriptorSpec{
-			Name:        "get-current",
+			Name:        "current",
 			Description: "Get the current Object Storage credentials",
 		},
 		getCurrent,

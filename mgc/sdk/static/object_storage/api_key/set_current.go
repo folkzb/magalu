@@ -16,7 +16,7 @@ type selectParams struct {
 var getSetCurrent = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	executor := core.NewStaticExecute(
 		core.DescriptorSpec{
-			Name:        "set-current",
+			Name:        "set",
 			Description: "Change current Object Storage credential to selected",
 		},
 		setCurrent,
