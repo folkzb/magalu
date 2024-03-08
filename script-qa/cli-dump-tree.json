@@ -21041,71 +21041,33 @@
          "type": "object"
         },
         "result": {
-         "properties": {
-          "AccessControlList": {
-           "properties": {
-            "Grant": {
-             "properties": {
-              "Grantee": {
-               "properties": {
-                "DisplayName": {
-                 "type": "string"
-                },
-                "EmailAddress": {
-                 "type": "string"
-                },
-                "ID": {
-                 "type": "string"
-                },
-                "URI": {
-                 "type": "string"
-                }
-               },
-               "required": [
-                "DisplayName",
-                "EmailAddress",
-                "ID",
-                "URI"
-               ],
-               "type": "object"
-              },
-              "Permission": {
-               "type": "string"
-              }
-             },
-             "required": [
-              "Grantee",
-              "Permission"
-             ],
-             "type": "object"
-            }
-           },
-           "required": [
-            "Grant"
-           ],
-           "type": "object"
+         "anyOf": [
+          {
+           "nullable": true,
+           "type": "null"
           },
-          "Owner": {
-           "properties": {
-            "DisplayName": {
-             "type": "string"
-            },
-            "ID": {
-             "type": "string"
-            }
-           },
-           "required": [
-            "DisplayName",
-            "ID"
-           ],
+          {
+           "type": "boolean"
+          },
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "items": {},
+           "type": "array"
+          },
+          {
+           "additionalProperties": true,
            "type": "object"
           }
-         },
-         "required": [
-          "Owner",
-          "AccessControlList"
          ],
-         "type": "object"
+         "nullable": true
         },
         "version": ""
        }

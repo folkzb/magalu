@@ -30,7 +30,7 @@ var getSet = utils.NewLazyLoader(func() core.Executor {
 	)
 })
 
-func set(ctx context.Context, p setObjectACLParams, cfg common.Config) (result common.AccessControlPolicy, err error) {
+func set(ctx context.Context, p setObjectACLParams, cfg common.Config) (result core.Value, err error) {
 	err = p.ACLPermissions.Validate()
 	if err != nil {
 		return
@@ -46,7 +46,12 @@ func set(ctx context.Context, p setObjectACLParams, cfg common.Config) (result c
 		return
 	}
 
-	return common.UnwrapResponse[common.AccessControlPolicy](resp, req)
+	err = common.ExtractErr(resp, req)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func newSetObjectAclRequest(ctx context.Context, p setObjectACLParams, cfg common.Config) (*http.Request, error) {
