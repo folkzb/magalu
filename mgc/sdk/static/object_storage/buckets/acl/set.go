@@ -41,7 +41,12 @@ func setACL(ctx context.Context, params setBucketACLParams, cfg common.Config) (
 		return
 	}
 
-	return common.UnwrapResponse[core.Value](resp, req)
+	err = common.ExtractErr(resp, req)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func newSetBucketACLRequest(ctx context.Context, p setBucketACLParams, cfg common.Config) (*http.Request, error) {
