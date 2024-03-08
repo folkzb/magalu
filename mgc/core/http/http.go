@@ -28,7 +28,12 @@ type Client struct {
 }
 
 func NewClient(transport http.RoundTripper) *Client {
-	return &Client{http.Client{Transport: transport}}
+	return &Client{http.Client{
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// Don't follow redirects, return an error to use the last response.
+			return http.ErrUseLastResponse
+		}}}
 }
 
 func NewClientContext(parent context.Context, client *Client) context.Context {
