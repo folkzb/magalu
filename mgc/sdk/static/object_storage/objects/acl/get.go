@@ -17,13 +17,17 @@ type getObjectACLParams struct {
 }
 
 var getGet = utils.NewLazyLoader(func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "get",
 			Description: "Get ACL information for the specified object",
 		},
 		getACL,
 	)
+	exec = core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "table"
+	})
+	return exec
 })
 
 func getACL(ctx context.Context, p getObjectACLParams, cfg common.Config) (result common.AccessControlPolicy, err error) {

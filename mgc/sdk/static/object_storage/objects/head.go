@@ -15,7 +15,7 @@ type headObjectParams struct {
 }
 
 var getHead = utils.NewLazyLoader[core.Executor](func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "head",
 			Description: "Get object metadata",
@@ -23,6 +23,10 @@ var getHead = utils.NewLazyLoader[core.Executor](func() core.Executor {
 		},
 		headObject,
 	)
+	exec = core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "table"
+	})
+	return exec
 })
 
 func headObject(ctx context.Context, p headObjectParams, cfg common.Config) (common.HeadObjectResponse, error) {

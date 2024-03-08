@@ -21,13 +21,17 @@ type setObjectACLParams struct {
 }
 
 var getSet = utils.NewLazyLoader(func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "set",
 			Description: "Set ACL information for the specified object",
 		},
 		set,
 	)
+	exec = core.NewExecuteFormat(exec, func(exec core.Executor, result core.Result) string {
+		return fmt.Sprintf("Successfully set ACL for object %q", result.Source().Parameters["dst"])
+	})
+	return exec
 })
 
 func set(ctx context.Context, p setObjectACLParams, cfg common.Config) (result core.Value, err error) {

@@ -24,7 +24,7 @@ func newListRequest(ctx context.Context, cfg common.Config) (*http.Request, erro
 }
 
 var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "list",
 			Description: "List all existing Buckets",
@@ -32,6 +32,10 @@ var getList = utils.NewLazyLoader[core.Executor](func() core.Executor {
 		},
 		list,
 	)
+	exec = core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "table"
+	})
+	return exec
 })
 
 func list(ctx context.Context, _ struct{}, cfg common.Config) (result ListResponse, err error) {

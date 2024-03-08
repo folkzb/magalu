@@ -14,13 +14,17 @@ type enableBucketVersioningParams struct {
 }
 
 var getEnable = utils.NewLazyLoader(func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "enable",
 			Description: "Enable versioning for a Bucket",
 		},
 		enableBucketVersioning,
 	)
+	exec = core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "template=Enabled versioning for {{.bucket}}"
+	})
+	return exec
 })
 
 func enableBucketVersioning(ctx context.Context, params enableBucketVersioningParams, cfg common.Config) (core.Value, error) {

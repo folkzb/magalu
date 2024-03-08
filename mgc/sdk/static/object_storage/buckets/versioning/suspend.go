@@ -14,13 +14,17 @@ type SuspendBucketVersioningParams struct {
 }
 
 var getSuspend = utils.NewLazyLoader(func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "suspend",
 			Description: "Suspend versioning for a Bucket",
 		},
 		SuspendBucketVersioning,
 	)
+	exec = core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "template=Suspended versioning for {{.bucket}}"
+	})
+	return exec
 })
 
 func SuspendBucketVersioning(ctx context.Context, params SuspendBucketVersioningParams, cfg common.Config) (core.Value, error) {

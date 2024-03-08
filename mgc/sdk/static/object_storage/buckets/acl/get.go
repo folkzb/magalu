@@ -14,13 +14,17 @@ type GetBucketACLParams struct {
 }
 
 var getGet = utils.NewLazyLoader[core.Executor](func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "get",
 			Description: "Get the ACL for the specified bucket",
 		},
 		getACL,
 	)
+	exec = core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "table"
+	})
+	return exec
 })
 
 func getACL(ctx context.Context, params GetBucketACLParams, cfg common.Config) (result common.AccessControlPolicy, err error) {

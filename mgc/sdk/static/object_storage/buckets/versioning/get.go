@@ -14,13 +14,17 @@ type getBucketVersioningParams struct {
 }
 
 var getGet = utils.NewLazyLoader(func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "get",
 			Description: "Get versioning info for a Bucket",
 		},
 		getBucketVersioning,
 	)
+	exec = core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "table"
+	})
+	return exec
 })
 
 func getBucketVersioning(ctx context.Context, params getBucketVersioningParams, cfg common.Config) (result versioningConfiguration, err error) {

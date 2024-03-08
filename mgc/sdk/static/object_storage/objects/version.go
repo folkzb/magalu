@@ -34,13 +34,17 @@ type ObjectVersion struct {
 }
 
 var getVersions = utils.NewLazyLoader(func() core.Executor {
-	return core.NewStaticExecute(
+	var exec core.Executor = core.NewStaticExecute(
 		core.DescriptorSpec{
 			Name:        "versions",
 			Description: "Retrieve all versions of an object",
 		},
 		getObjectVersioning,
 	)
+	exec = core.NewExecuteResultOutputOptions(exec, func(exec core.Executor, result core.Result) string {
+		return "table"
+	})
+	return exec
 })
 
 func getObjectVersioning(ctx context.Context, params versioningObjectParams, cfg common.Config) (result []ObjectVersion, err error) {
