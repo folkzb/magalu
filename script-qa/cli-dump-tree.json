@@ -21028,6 +21028,10 @@
            },
            "type": "array"
           },
+          "obj_version": {
+           "description": "Version of the object to set the ACL",
+           "type": "string"
+          },
           "private": {
            "description": "Owner gets FULL_CONTROL. No one else has access rights",
            "type": "boolean"

@@ -14,6 +14,7 @@ import (
 
 type setObjectACLParams struct {
 	Destination            mgcSchemaPkg.URI `json:"dst" jsonschema:"description=The full object URL to set the ACL information,example:my-bucket/file.txt" mgc:"positional"`
+	Version                string           `json:"obj_version,omitempty" jsonschema:"description=Version of the object to set the ACL"`
 	AwsExecRead            bool             `json:"aws_exec_read,omitempty"`
 	BucketOwnerRead        bool             `json:"bucket_owner_read,omitempty"`
 	BucketOwnerFullControl bool             `json:"bucket_owner_full_control,omitempty"`
@@ -66,6 +67,9 @@ func newSetObjectAclRequest(ctx context.Context, p setObjectACLParams, cfg commo
 
 	query := url.Query()
 	query.Add("acl", "")
+	if p.Version != "" {
+		query.Add("versionId", p.Version)
+	}
 
 	url.RawQuery = query.Encode()
 

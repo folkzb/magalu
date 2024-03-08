@@ -20,6 +20,7 @@ Flags:
       --grant-write-acp array(object)      Allows grantees to write the ACL for the applicable bucket
                                            Use --grant-write-acp=help for more details
   -h, --help                               help for set
+      --obj-version string                 Version of the object to set the ACL
       --private                            Owner gets FULL_CONTROL. No one else has access rights
       --public-read                        Owner gets FULL_CONTROL. Everyone else has READ rights
       --public-read-write                  Owner gets FULL_CONTROL. Everyone else has READ and WRITE rights
