@@ -30,7 +30,7 @@ var excludedHeaders = map[string]struct{}{
 var bigFileCopierExcludedHeaders = func() map[string]struct{} {
 	r := maps.Clone(excludedHeaders)
 	r[http.CanonicalHeaderKey("Content-Type")] = struct{}{}
-	r[http.CanonicalHeaderKey("Content-Md5")] = struct{}{}
+	r[http.CanonicalHeaderKey(contentMD5Header)] = struct{}{}
 	return r
 }()
 

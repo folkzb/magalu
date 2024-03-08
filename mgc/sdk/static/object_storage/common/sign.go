@@ -345,7 +345,7 @@ func signHeaders(req *http.Request, accessKey, secretKey string, unsignedPayload
 	// Set date header based on the custom key provided
 	req.Header.Set(headerDateKey, params.Date)
 
-	if _, ok := excludedHeaders["Content-MD5"]; !ok {
+	if _, ok := excludedHeaders[contentMD5Header]; !ok {
 		if err := setMD5Checksum(req); err != nil {
 			return fmt.Errorf("unable to compute checksum of the body content: %w", err)
 		}
