@@ -44,6 +44,6 @@ func getCurrent(ctx context.Context) (*apiKeysResult, error) {
 		}
 	}
 
-	currentLogger().Warnw("unable to find a key in api-key list that matches the current KeyPairID- %s", id)
+	currentLogger().Warnw("unable to find a key in api-key list that matches the current KeyPairID", "keyPairId", id)
 	return &apiKeysResult{KeyPairID: id, KeyPairSecret: secretKey}, nil
 }
