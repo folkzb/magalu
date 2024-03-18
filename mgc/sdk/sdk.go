@@ -130,7 +130,7 @@ func (o *Sdk) newBlueprintSource(rootRefResolver core.RefPathResolver) core.Grou
 
 func (o *Sdk) RefResolver() core.RefPathResolver {
 	if o.refResolver == nil {
-		o.refResolver = core.NewDocumentRefPathResolver(func() (any, error) { return o.group, nil })
+		o.refResolver = core.NewDocumentRefPathResolver(func() (any, error) { return o.Group(), nil })
 	}
 	return o.refResolver
 }
@@ -139,8 +139,8 @@ func (o *Sdk) Group() core.Grouper {
 	if o.group == nil {
 		o.group = core.NewMergeGroup(
 			core.DescriptorSpec{
-				Name:        "MagaLu Cloud",
-				Version:     "1.0",
+				Name:        "products",
+				Version:     Version,
 				Description: "All MagaLu Groups & Executors",
 			},
 			func() []core.Grouper {
