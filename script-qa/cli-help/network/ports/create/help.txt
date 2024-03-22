@@ -1,4 +1,4 @@
-Create a Port
+Create a Port with provided vpc_id and x-tenant-id. You can provide a list of security_groups_id or subnets
 
 Usage:
   ./cli network ports create [vpc-id] [flags]
@@ -12,7 +12,7 @@ Flags:
       --security-groups-id array(string)   Security Groups Id (default [])
       --subnets array(string)              Subnets (default [])
   -v, --version                            version for create
-      --vpc-id string                      Vpc Id (required)
+      --vpc-id string                      vpc_id: ID of the VPC to create port (required)
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text

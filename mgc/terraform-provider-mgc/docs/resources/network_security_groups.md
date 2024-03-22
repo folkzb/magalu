@@ -22,14 +22,14 @@ VPC Security Groups
 ### Optional
 
 - `description` (String)
-- `validate_quota` (Boolean)
+- `validate_quota` (Boolean) Validate the quota before creating Security Group
 
 ### Read-Only
 
 - `created_at` (String)
 - `error` (String)
 - `external_id` (String)
-- `id` (String) The ID of this resource.
+- `id` (String) Id of the security group to delete
 - `is_default` (Boolean)
 - `project_type` (String)
 - `rules` (Attributes List) (see [below for nested schema](#nestedatt--rules))

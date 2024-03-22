@@ -18,7 +18,7 @@ VPC Port
 ### Required
 
 - `name` (String)
-- `vpc_id` (String)
+- `vpc_id` (String) ID of the VPC to create port
 
 ### Optional
 
@@ -33,7 +33,7 @@ VPC Port
 - `current_name` (String)
 - `current_vpc_id` (String)
 - `description` (String)
-- `id` (String) The ID of this resource.
+- `id` (String) ID of the Port to delete
 - `ip_address` (Attributes List) (see [below for nested schema](#nestedatt--ip_address))
 - `is_admin_state_up` (Boolean)
 - `is_port_security_enabled` (Boolean)

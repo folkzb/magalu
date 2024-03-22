@@ -29,7 +29,7 @@ Virtual Private Cloud (VPC)
 - `current_id` (String)
 - `current_name` (String)
 - `external_network` (String)
-- `id` (String) The ID of this resource.
+- `id` (String) ID of the VPC to delete
 - `is_default` (Boolean)
 - `network_id` (String)
 - `router_id` (String)

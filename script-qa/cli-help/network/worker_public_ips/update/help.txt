@@ -8,7 +8,7 @@ Flags:
       --external-id string    External Id
   -h, --help                  help for update
       --public-ip string      Public Ip
-      --public-ip-id string   Public Ip Id (required)
+      --public-ip-id string   Public Ip Id: Id of the public ip to update (required)
       --status enum           PublicIpStatus (one of "created", "error" or "pending") (required)
   -v, --version               version for update
 

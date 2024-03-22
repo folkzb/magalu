@@ -17,13 +17,13 @@ VPC Public IPs
 
 ### Required
 
-- `vpc_id` (String)
+- `vpc_id` (String) Id of the VPC to create the Public IP in
 
 ### Optional
 
 - `description` (String)
-- `validate_quota` (Boolean)
-- `wait` (Boolean)
+- `validate_quota` (Boolean) Validate the quota before creating the Public IP
+- `wait` (Boolean) The request will be asynchronous. The wait parameter tells the API that you want the request to simulate synchronous behavior (to maintain endpoint compatibility). You can set an approximate timeout with the waitTimeout parameter
 - `wait_timeout` (Number) the approximate time in seconds you want to wait when simulating the request as synchronous (only works with wait=true)
 
 ### Read-Only
@@ -32,7 +32,7 @@ VPC Public IPs
 - `current_vpc_id` (String)
 - `error` (String)
 - `external_id` (String)
-- `id` (String) The ID of this resource.
+- `id` (String) Id of the Public IP to delete
 - `port_id` (String)
 - `public_ip` (String)
 - `status` (String)

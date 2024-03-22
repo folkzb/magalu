@@ -8,7 +8,7 @@ Flags:
       --description string            Description
   -h, --help                          help for create
       --name string                   Name (between 5 and 100 characters) (required)
-      --validate-quota                validateQuota (default true)
+      --validate-quota                validateQuota: Validate the quota before creating Security Group (default true)
   -v, --version                       version for create
 
 Global Flags:

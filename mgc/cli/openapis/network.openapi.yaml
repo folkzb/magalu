@@ -1,12 +1,12 @@
 openapi: 3.0.3
 info:
     title: vpc-api-product
-    description: APIs referentes ao produto de Network
+    description: APIs referentes ao produto de VPC
     contact:
         name: Tribo IAAS Cloud
         url: https://github.com/luizalabs
         email: thullyo.cunha@luizalabs.com
-    version: 1.109.0
+    version: 1.111.0
 paths:
     /v0/healthcheck:
         get:
@@ -30,7 +30,9 @@ paths:
             tags:
             - port
             summary: Create Port VPC Default
-            description: Create a Port on the default VPC
+            description: Create a Port on the default VPC. Uses VPC default in the
+                provided x-tenant-id. You can provide a list of security_groups_id
+                or subnets.
             operationId: createPortVpcDefault
             requestBody:
                 required: true
@@ -82,7 +84,7 @@ paths:
             tags:
             - port
             summary: Details of a Port list
-            description: Return a detailed list of ports
+            description: Return a detailed list of ports from the provided tenant_id
             operationId: portsDetailedList
             parameters:
             -   name: port_id_list
@@ -119,15 +121,18 @@ paths:
             tags:
             - vpc
             summary: Create Port
-            description: Create a Port
+            description: Create a Port with provided vpc_id and x-tenant-id. You can
+                provide a list of security_groups_id or subnets
             operationId: createPort
             parameters:
             -   name: vpc_id
                 in: path
                 required: true
                 schema:
-                    title: Vpc Id
+                    title: vpc_id
+                    description: ID of the VPC to create port
                     type: string
+                description: ID of the VPC to create port
             requestBody:
                 required: true
                 content:
@@ -161,15 +166,20 @@ paths:
             tags:
             - vpc
             summary: List Ports
-            description: Returns a list of ports for a provided vpc
+            description: Returns a list of ports for a provided vpc_id and x-tenant-id.
+                The list will be paginated, it means you can easily find what you
+                need just setting the page number(_offset) and the quantity of items
+                per page(_limit). The level of detail can also be set
             operationId: listPorts
             parameters:
             -   name: vpc_id
                 in: path
                 required: true
                 schema:
-                    title: Vpc Id
+                    title: vpc_id
+                    description: ID of VPC to list ports
                     type: string
+                description: ID of VPC to list ports
             -   name: detailed
                 in: query
                 required: false
@@ -184,7 +194,9 @@ paths:
                     type: integer
                     minimum: 1
                     title: Page Number
+                    description: Page Number
                     default: 1
+                description: Page Number
             -   name: _limit
                 in: query
                 required: false
@@ -192,7 +204,9 @@ paths:
                     type: integer
                     minimum: 1
                     title: Items Per Page
+                    description: Items Per Page
                     default: 10
+                description: Items Per Page
             -   name: port_id_list
                 in: query
                 required: false
@@ -209,8 +223,8 @@ paths:
                         application/json:
                             schema:
                                 anyOf:
-                                -   $ref: '#/components/schemas/PortsList'
                                 -   $ref: '#/components/schemas/PortsListSimplified'
+                                -   $ref: '#/components/schemas/PortsList'
                                 title: Response Listports
                 '422':
                     description: Validation Error
@@ -228,7 +242,7 @@ paths:
             tags:
             - port
             summary: Port Details
-            description: Return a port details
+            description: Return a port details from the provided tenant_id
             operationId: portDetails
             parameters:
             -   name: port_id
@@ -281,8 +295,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Port Id
+                    title: port_id
+                    description: ID of the Port to delete
                     type: string
+                description: ID of the Port to delete
             responses:
                 '204':
                     description: Successful Response
@@ -301,6 +317,7 @@ paths:
             tags:
             - port
             summary: Delete Port All
+            description: Delete a all ports from the provided tenant_id
             operationId: deleteAllPorts
             responses:
                 '200':
@@ -325,21 +342,26 @@ paths:
             tags:
             - port
             summary: Attach Security Group
-            description: Attach a Security Group to a Port
+            description: Attach a Security Group to a Port with provided port_id,
+                security_group_id, x-tenant-id of an specific project type
             operationId: attachSecurityGroup
             parameters:
             -   name: port_id
                 in: path
                 required: true
                 schema:
-                    title: Port Id
+                    title: port_id
+                    description: ID of the Port to attach security group
                     type: string
+                description: ID of the Port to attach security group
             -   name: security_group_id
                 in: path
                 required: true
                 schema:
-                    title: Security Group Id
+                    title: security_group_id
+                    description: ID of the Security Group to attach
                     type: string
+                description: ID of the Security Group to attach
             responses:
                 '200':
                     description: Successful Response
@@ -378,21 +400,26 @@ paths:
             tags:
             - port
             summary: Detach Security Group
-            description: Detach a Security Group to a Port
+            description: Detach a Security Group to a Port with provided port_id,
+                security_group_id, x-tenant-id of an specific project type
             operationId: detachSecurityGroup
             parameters:
             -   name: port_id
                 in: path
                 required: true
                 schema:
-                    title: Port Id
+                    title: port_id
+                    description: ID of the Port to detach security group
                     type: string
+                description: ID of the Port to detach security group
             -   name: security_group_id
                 in: path
                 required: true
                 schema:
-                    title: Security Group Id
+                    title: security_group_id
+                    description: ID of the Security Group to detach
                     type: string
+                description: ID of the Security Group to detach
             responses:
                 '200':
                     description: Successful Response
@@ -431,29 +458,42 @@ paths:
             tags:
             - vpc
             summary: Create Public IP
-            description: Create a Public IP
+            description: Create async Public IP in a VPC with provided vpc_id and
+                x_tenant_id
             operationId: createPublicIp
             parameters:
             -   name: vpc_id
                 in: path
                 required: true
                 schema:
-                    title: Vpc Id
+                    title: Vpc ID
+                    description: Id of the VPC to create the Public IP in
                     type: string
+                description: Id of the VPC to create the Public IP in
             -   name: validate_quota
                 in: query
                 required: false
                 schema:
                     type: boolean
                     title: validateQuota
+                    description: Validate the quota before creating the Public IP
                     default: true
+                description: Validate the quota before creating the Public IP
             -   name: wait
                 in: query
                 required: false
                 schema:
                     type: boolean
                     title: wait
+                    description: The request will be asynchronous. The wait parameter
+                        tells the API that you want the request to simulate synchronous
+                        behavior (to maintain endpoint compatibility). You can set
+                        an approximate timeout with the waitTimeout parameter
                     default: true
+                description: The request will be asynchronous. The wait parameter
+                    tells the API that you want the request to simulate synchronous
+                    behavior (to maintain endpoint compatibility). You can set an
+                    approximate timeout with the waitTimeout parameter
             -   name: wait_timeout
                 in: query
                 required: false
@@ -508,8 +548,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Vpc Id
+                    title: Vpc ID
+                    description: Id of the VPC to list the Public IPs in
                     type: string
+                description: Id of the VPC to list the Public IPs in
             responses:
                 '200':
                     description: Successful Response
@@ -539,8 +581,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Public Ip Id
+                    title: Public IP ID
+                    description: Id of the Public IP to retrieve
                     type: string
+                description: Id of the Public IP to retrieve
             responses:
                 '200':
                     description: Successful Response
@@ -587,8 +631,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Public Ip Id
+                    title: Public IP ID
+                    description: Id of the Public IP to delete
                     type: string
+                description: Id of the Public IP to delete
             responses:
                 '204':
                     description: Successful Response
@@ -614,14 +660,18 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Public Ip Id
+                    title: Public IP ID
+                    description: Id of the Public IP to attach port to
                     type: string
+                description: Id of the Public IP to attach port to
             -   name: port_id
                 in: path
                 required: true
                 schema:
-                    title: Port Id
+                    title: Port ID
+                    description: Id of the Port to attach the Public IP
                     type: string
+                description: Id of the Port to attach the Public IP
             responses:
                 '200':
                     description: Successful Response
@@ -667,14 +717,18 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Public Ip Id
+                    title: Public IP ID
+                    description: Id of the Public IP to detach port to
                     type: string
+                description: Id of the Public IP to detach port to
             -   name: port_id
                 in: path
                 required: true
                 schema:
-                    title: Port Id
+                    title: Port ID
+                    description: Id of the Port to detach the Public IP
                     type: string
+                description: Id of the Port to detach the Public IP
             responses:
                 '200':
                     description: Successful Response
@@ -737,14 +791,19 @@ paths:
             tags:
             - quotas
             summary: List usage quotas
-            description: Return a list of usage quotas from a provided tenant
+            description: Return a list of selected usage quotas from a provided tenant
             operationId: usageQuotasList
             parameters:
             -   name: quota_slug
                 in: query
                 required: true
                 schema:
-                    $ref: '#/components/schemas/SlugQuotas'
+                    allOf:
+                    -   $ref: '#/components/schemas/SlugQuotas'
+                    title: quota_slug
+                    description: Serivce to check quota usage
+                    type: string
+                description: Serivce to check quota usage
             responses:
                 '200':
                     description: Successful Response
@@ -768,30 +827,44 @@ paths:
             tags:
             - security_group
             summary: Create Rule
-            description: Create a Rule
+            description: Create a Rule async, returning its ID. To monitor the creation
+                progress, please check the status in the service message or implement
+                polling.
             operationId: createRule
             parameters:
             -   name: security_group_id
                 in: path
                 required: true
                 schema:
-                    title: Security Group Id
+                    title: Security Group ID
+                    description: Id of the Security Group
                     type: string
+                description: Id of the Security Group
             -   name: validate_quota
                 in: query
                 required: false
                 schema:
                     type: boolean
                     title: validateQuota
+                    description: Validate the quota before creating Rule
                     default: true
+                description: Validate the quota before creating Rule
             -   name: wait
                 in: query
                 required: false
                 schema:
+                    title: wait
+                    description: The request will be asynchronous. The wait parameter
+                        tells the API that you want the request to simulate synchronous
+                        behavior (to maintain endpoint compatibility). You can set
+                        an approximate timeout with the waitTimeout parameter
                     default: true
-                    title: Wait
                     nullable: true
                     type: boolean
+                description: The request will be asynchronous. The wait parameter
+                    tells the API that you want the request to simulate synchronous
+                    behavior (to maintain endpoint compatibility). You can set an
+                    approximate timeout with the waitTimeout parameter
             -   name: wait_timeout
                 in: query
                 required: false
@@ -846,8 +919,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Security Group Id
+                    title: Security Group ID
+                    description: Id of the Security Group
                     type: string
+                description: Id of the Security Group
             responses:
                 '200':
                     description: Successful Response
@@ -878,8 +953,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Rule Id
+                    title: Rule ID
+                    description: Id of the Rule
                     type: string
+                description: Id of the Rule
             responses:
                 '200':
                     description: Successful Response
@@ -914,8 +991,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Rule Id
+                    title: Rule ID
+                    description: Id of the Rule
                     type: string
+                description: Id of the Rule
             responses:
                 '204':
                     description: Successful Response
@@ -1002,7 +1081,9 @@ paths:
                 schema:
                     type: boolean
                     title: validateQuota
+                    description: Validate the quota before creating Security Group
                     default: true
+                description: Validate the quota before creating Security Group
             requestBody:
                 required: true
                 content:
@@ -1049,9 +1130,11 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Vpc Id
+                    title: VPC Id
+                    description: Id of the vpc to create the security group in
                     nullable: true
                     type: string
+                description: Id of the vpc to create the security group in
             -   name: wait
                 in: query
                 required: false
@@ -1122,8 +1205,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Vpc Id
+                    title: Vpc ID
+                    description: Id of the VPC to create the Security Group in
                     type: string
+                description: Id of the VPC to create the Security Group in
             responses:
                 '200':
                     description: Successful Response
@@ -1154,8 +1239,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Security Group Id
+                    title: Security Group ID
+                    description: Id of the security group to detail
                     type: string
+                description: Id of the security group to detail
             responses:
                 '200':
                     description: Successful Response
@@ -1190,8 +1277,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Security Group Id
+                    title: Security Group ID
+                    description: Id of the security group to delete
                     type: string
+                description: Id of the security group to delete
             responses:
                 '204':
                     description: Successful Response
@@ -1233,7 +1322,7 @@ paths:
     /v0/vpcs/{vpc_id}/subnets:
         get:
             tags:
-            - vpc
+            - subnets
             summary: List Subnets
             description: Returns a list of subnets for a provided vpc_id
             operationId: listSubnets
@@ -1242,8 +1331,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    type: string
                     title: Vpc Id
+                    description: Id of the VPC to list Subnets
+                    type: string
+                description: Id of the VPC to list Subnets
             responses:
                 '200':
                     description: Successful Response
@@ -1264,7 +1355,7 @@ paths:
             x-mgc-hidden: true
         post:
             tags:
-            - vpc
+            - subnets
             summary: Create Subnet
             description: Create a Subnet
             operationId: createSubnet
@@ -1273,8 +1364,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    type: string
                     title: Vpc Id
+                    description: Id of the VPC to create Subnet
+                    type: string
+                description: Id of the VPC to create Subnet
             requestBody:
                 required: true
                 content:
@@ -1317,8 +1410,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    type: string
                     title: Subnet Id
+                    description: Id of the Subnet to delete
+                    type: string
+                description: Id of the Subnet to delete
             responses:
                 '204':
                     description: Successful Response
@@ -1343,8 +1438,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    type: string
                     title: Subnet Id
+                    description: Id of the Subnet to detail
+                    type: string
+                description: Id of the Subnet to detail
             responses:
                 '200':
                     description: Successful Response
@@ -1541,8 +1638,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Vpc Id
+                    title: VPC Id
+                    description: ID of the VPC to detail
                     type: string
+                description: ID of the VPC to detail
             responses:
                 '200':
                     description: Successful Response
@@ -1577,8 +1676,10 @@ paths:
                 in: path
                 required: true
                 schema:
-                    title: Vpc Id
+                    title: VPC Id
+                    description: ID of the VPC to delete
                     type: string
+                description: ID of the VPC to delete
             responses:
                 '204':
                     description: Successful Response
@@ -1596,7 +1697,8 @@ paths:
         delete:
             tags:
             - vpc
-            summary: Delete Vpc All
+            summary: Delete all VPCs
+            description: Delete all VPCs from the provided tenant_id
             operationId: deleteAllVpcs
             responses:
                 '200':
@@ -1629,7 +1731,9 @@ paths:
                 required: true
                 schema:
                     title: Public Ip Id
+                    description: Id of the public ip to update
                     type: string
+                description: Id of the public ip to update
             requestBody:
                 required: true
                 content:
@@ -2004,6 +2108,7 @@ components:
                     security_groups:
                     - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     updated: '2022-01-01 00:00:00'
+                    vpc_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         PortsListSimplified:
             properties:
                 ports_simplified:
@@ -2016,7 +2121,7 @@ components:
             - ports_simplified
             title: PortsListSimplified
             example:
-                ports:
+                ports_simplified:
                 -   id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     ip_address:
                     -   ip_address: 172.20.0.2
@@ -2183,6 +2288,7 @@ components:
                 -   created_at: '2022-01-01 00:00:00'
                     description: port description
                     error: error
+                    external_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     port_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     public_ip: 100.94.5.31
@@ -2271,6 +2377,7 @@ components:
                 ip_address: 172.20.0.2
                 nic_vpc_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                 router_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                vpc_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         RouterInterfaceResponseList:
             properties:
                 router_interfaces:
@@ -2289,6 +2396,7 @@ components:
                     ip_address: 172.20.0.2
                     nic_vpc_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     router_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                    vpc_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         RuleCreateRequest:
             properties:
                 direction:
@@ -2500,6 +2608,7 @@ components:
                     remote_group_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     remote_ip_prefix: 100.94.0.0/24
                     security_group_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                    status: created
         SecurityGroupCreateRequest:
             properties:
                 name:
@@ -2613,8 +2722,11 @@ components:
                 created_at: '2022-01-01 00:00:00'
                 description: security group description
                 error: 'null'
+                external_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                 id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                is_default: true
                 name: security_group_name
+                project_type: default
                 rules:
                 -   created_at: '2022-01-01 00:00:00'
                     direction: egress
@@ -2629,6 +2741,7 @@ components:
                     security_group_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     status: created
                 status: created
+                tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                 updated: '2022-01-01 00:00:00'
                 vpc_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         SecurityGroupListEvent:
@@ -2648,8 +2761,11 @@ components:
                     description: security group description
                     error: 'null'
                     id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                    is_default: true
                     name: security_group_name
+                    project_type: default
                     status: created
+                    tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     updated: '2022-01-01 00:00:00'
                     vpc_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         SecurityGroupResponseEvent:
@@ -3312,7 +3428,6 @@ components:
                 is_default: true
                 name: vpc_name
                 network_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-                project_type: default
                 router_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                 security_groups:
                 - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -3340,7 +3455,6 @@ components:
                     is_default: true
                     name: vpc_name
                     network_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-                    project_type: default
                     router_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                     security_groups:
                     - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
