@@ -20038,10 +20038,10 @@
         "configs": {
          "properties": {
           "chunkSize": {
-           "default": 5,
+           "default": 8,
            "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
            "maximum": 5120,
-           "minimum": 5,
+           "minimum": 8,
            "type": "integer"
           },
           "region": {
@@ -20156,10 +20156,10 @@
         "configs": {
          "properties": {
           "chunkSize": {
-           "default": 5,
+           "default": 8,
            "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
            "maximum": 5120,
-           "minimum": 5,
+           "minimum": 8,
            "type": "integer"
           },
           "region": {
@@ -20344,10 +20344,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -20535,10 +20535,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -20621,10 +20621,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -20705,10 +20705,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -20772,10 +20772,10 @@
         "configs": {
          "properties": {
           "chunkSize": {
-           "default": 5,
+           "default": 8,
            "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
            "maximum": 5120,
-           "minimum": 5,
+           "minimum": 8,
            "type": "integer"
           },
           "region": {
@@ -20852,10 +20852,10 @@
         "configs": {
          "properties": {
           "chunkSize": {
-           "default": 5,
+           "default": 8,
            "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
            "maximum": 5120,
-           "minimum": 5,
+           "minimum": 8,
            "type": "integer"
           },
           "region": {
@@ -20918,10 +20918,10 @@
         "configs": {
          "properties": {
           "chunkSize": {
-           "default": 5,
+           "default": 8,
            "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
            "maximum": 5120,
-           "minimum": 5,
+           "minimum": 8,
            "type": "integer"
           },
           "region": {
@@ -21014,10 +21014,10 @@
         "configs": {
          "properties": {
           "chunkSize": {
-           "default": 5,
+           "default": 8,
            "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
            "maximum": 5120,
-           "minimum": 5,
+           "minimum": 8,
            "type": "integer"
           },
           "region": {
@@ -21133,10 +21133,10 @@
         "configs": {
          "properties": {
           "chunkSize": {
-           "default": 5,
+           "default": 8,
            "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
            "maximum": 5120,
-           "minimum": 5,
+           "minimum": 8,
            "type": "integer"
           },
           "region": {
@@ -21334,10 +21334,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -21427,10 +21427,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -21542,10 +21542,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -21628,10 +21628,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -21732,10 +21732,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -21824,10 +21824,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -21924,10 +21924,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22008,10 +22008,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22139,10 +22139,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22220,10 +22220,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22315,10 +22315,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22395,10 +22395,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22460,10 +22460,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22561,10 +22561,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22636,10 +22636,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
@@ -22733,10 +22733,10 @@
       "configs": {
        "properties": {
         "chunkSize": {
-         "default": 5,
+         "default": 8,
          "description": "Chunk size to consider when doing multipart requests. Specified in Mb",
          "maximum": 5120,
-         "minimum": 5,
+         "minimum": 8,
          "type": "integer"
         },
         "region": {
