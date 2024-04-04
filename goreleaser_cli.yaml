@@ -68,6 +68,8 @@ brews:
       owner: MagaluCloud
       name: homebrew-mgccli
       token: "{{ .Env.GITHUB_TOKEN }}"
+      pull_request:
+        enabled: true
     commit_author:
       name: MagaluCloud
       email: magalucloud.cli@luizalabs.com
@@ -78,9 +80,6 @@ release:
   github:
     owner: MagaluCloud
     name: mgccli
-    pull_request:
-        # Whether to enable it or not.
-        enabled: true
   prerelease: auto
   header: |
     ## CLI ({{ .Date }})
