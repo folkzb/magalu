@@ -78,6 +78,9 @@ release:
   github:
     owner: MagaluCloud
     name: mgccli
+    pull_request:
+        # Whether to enable it or not.
+        enabled: true
   prerelease: auto
   header: |
     ## CLI ({{ .Date }})
