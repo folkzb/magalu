@@ -74,6 +74,7 @@ brews:
     ids:
     - mgc
 release:
+  replace_existing_artifacts: true
   github:
     owner: MagaluCloud
     name: mgccli
