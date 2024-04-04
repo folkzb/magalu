@@ -66,7 +66,7 @@ brews:
     homepage: "https://magalu.cloud"
     repository:
       owner: MagaluCloud
-      name: homebrew-mgc
+      name: homebrew-mgccli
       token: "{{ .Env.GITHUB_TOKEN }}"
     commit_author:
       name: MagaluCloud
