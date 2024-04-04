@@ -3,6 +3,7 @@ package auth
 import (
 	"magalu.cloud/core"
 	"magalu.cloud/core/utils"
+	"magalu.cloud/sdk/static/auth/clients"
 	"magalu.cloud/sdk/static/auth/tenant"
 )
 
@@ -20,6 +21,7 @@ of HTTP requests using the MgcSDK. Authentication is done via Magalu Cloud accou
 				getLogin(),
 				getAccessToken(),
 				tenant.GetGroup(),
+				clients.GetGroup(),
 			}
 		},
 	)
