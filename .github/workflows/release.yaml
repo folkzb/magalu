@@ -45,7 +45,7 @@ jobs:
   cli-release:
     needs: build
     runs-on: ubuntu-latest
-    if:  ${{ inputs.runCLI }}
+    if: ${{ inputs.runCLI }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,7 +79,7 @@ jobs:
           go-version: stable
       - name: Import GPG key
         run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --yes --passphrase "${{ secrets.GPG_PASSPHRASE }}" --import
+          gpg --batch --import ./.github/workflows/test.txt
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
