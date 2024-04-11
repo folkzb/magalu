@@ -64,10 +64,9 @@ brews:
   -
     name: mgccli
     homepage: "https://magalu.cloud"
-    repository:
-      owner: MagaluCloud
-      name: homebrew-mgccli
-      token: "{{ .Env.GITHUB_TOKEN_NEW }}"
+    git:
+      url: 'git@github.com:MagaluCloud/homebrew-mgccli.git'
+      private_key: '{{ .Env.PRIVATE_KEY_PATH }}'
     commit_author:
       name: MagaluCloud
       email: magalucloud.cli@luizalabs.com
