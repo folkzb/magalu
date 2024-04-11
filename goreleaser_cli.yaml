@@ -64,7 +64,12 @@ brews:
   -
     name: mgccli
     homepage: "https://magalu.cloud"
+    # auto = skip when is -rc
+    # skip_upload: auto
     repository:
+      pull_request:
+        enabled: true
+        draft: true
       owner: MagaluCloud
       name: homebrew-mgccli
       branch: main
