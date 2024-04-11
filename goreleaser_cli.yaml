@@ -67,9 +67,7 @@ brews:
     repository:
       owner: MagaluCloud
       name: homebrew-mgccli
-      token: "{{ .Env.GITHUB_TOKEN }}"
-      pull_request:
-        enabled: true
+      token: "{{ .Env.GITHUB_TOKEN_NEW }}"
     commit_author:
       name: MagaluCloud
       email: magalucloud.cli@luizalabs.com

@@ -63,6 +63,7 @@ jobs:
           args: release --clean --config="goreleaser_cli.yaml"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN_NEW: ${{ secrets.GH_PAT_NEW }}
 
   terraform-release:
     needs: build
