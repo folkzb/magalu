@@ -11,7 +11,6 @@ on:
       - synchronize
       - reopened
       - ready_for_review
-  workflow_dispatch:
 
 # concurrency:
 #   group: ci-check-${{ github.ref }}
@@ -19,7 +18,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -40,7 +39,7 @@ jobs:
 
   test-build:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       PROFILES: ${{ secrets.tester_profiles_config }}
     container:
@@ -74,16 +73,16 @@ jobs:
   pre-commit:
     # TODO: when remove "continue-on-error: true" above, change below to "needs: test-build"
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
-      - name: "Install go imports"
-        run: go install golang.org/x/tools/cmd/goimports@latest
       - uses: actions/setup-go@v4
         with:
           go-version: '>=1.17.0'
           cache-dependency-path: "**/go.sum"
+      - name: "Install go imports"
+        run: go install golang.org/x/tools/cmd/goimports@latest
       - uses: pre-commit/action@v3.0.0
         with:
           extra_args: --show-diff-on-failure --color=always --hook-stage push --all-files
