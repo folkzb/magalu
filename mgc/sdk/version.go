@@ -1,9 +1,13 @@
 package sdk
 
 import (
+	_ "embed"
 	"os"
 	"strings"
 )
+
+//go:embed version.txt
+var rawVersion string
 
 var version string = func() string {
 	if vv := os.Getenv("VERSION"); vv != "" {
@@ -12,6 +16,5 @@ var version string = func() string {
 		}
 		return vv
 	}
-
-	return "v0.0.0"
+	return strings.Trim(rawVersion, " \t\n\r")
 }()
