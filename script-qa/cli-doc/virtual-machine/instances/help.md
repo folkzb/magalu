@@ -3,8 +3,8 @@
 ## Usage:
 ```bash
 Usage:
-  ./cli virtual-machine instances [flags]
-  ./cli virtual-machine instances [command]
+  ./mgc virtual-machine instances [flags]
+  ./mgc virtual-machine instances [command]
 ```
 
 ## Product catalog:
@@ -13,7 +13,7 @@ Usage:
 - delete      Delete a instance asynchronously
 - get         Retrieve the details of an instance.
 - list        Lists all instances in the current tenant.
-- reboot      Starts a running or suspended instance.
+- reboot      Reboot a running or suspended instance.
 - rename      Renames an instance.
 - retype      Changes a running or stopped instance machine type for another one.
 - start       Starts a running or suspended instance.
