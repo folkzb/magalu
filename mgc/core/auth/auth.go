@@ -29,6 +29,23 @@ const (
 	authFilename    = "auth.yaml"
 )
 
+type SecurityMethod int
+
+const (
+	BearerToken SecurityMethod = iota
+	APIKey
+)
+
+func (s SecurityMethod) String() string {
+	switch s {
+	case BearerToken:
+		return "bearerauth" // these hard-coded return values comes from security requirement field on openAPI spec
+	case APIKey:
+		return "apikeyauth"
+	}
+	return ""
+}
+
 // contextKey is an unexported type for keys defined in this package.
 // This prevents collisions with keys defined in other packages.
 type contextKey string
@@ -72,16 +89,18 @@ type Auth struct {
 	// be used in the request to auto-refresh the token. For requests that need the
 	// auto-refresh functionality, like Tenant operations, for example, mgcHttpPkg.ClientFromContext
 	// should be used instead
-	httpClient      *http.Client
-	profileManager  *profile_manager.ProfileManager
-	configMap       map[string]Config
-	accessToken     string
-	refreshToken    string
-	accessKeyId     string
-	secretAccessKey string
-	codeVerifier    *codeVerifier
-	group           singleflight.Group
-	mgcConfig       *config.Config
+	httpClient            *http.Client
+	profileManager        *profile_manager.ProfileManager
+	configMap             map[string]Config
+	accessToken           string
+	refreshToken          string
+	accessKeyId           string
+	secretAccessKey       string
+	codeVerifier          *codeVerifier
+	group                 singleflight.Group
+	mgcConfig             *config.Config
+	apiKey                string
+	currentSecurityMethod string
 }
 
 type Tenant struct {
@@ -118,6 +137,15 @@ type accessTokenClaims struct {
 
 type FailedRefreshAccessToken struct {
 	Message string
+}
+
+// APIKeyParameters
+type APIKeyParameters struct {
+	Key string
+}
+
+type APIKeyParametersList interface {
+	GetAPIKey() string
 }
 
 func (e FailedRefreshAccessToken) Error() string {
@@ -192,6 +220,13 @@ func (o *Auth) AccessToken(ctx context.Context) (string, error) {
 	}
 
 	return o.accessToken, nil
+}
+
+func (o *Auth) ApiKey(ctx context.Context) (string, error) {
+	if o.apiKey == "" {
+		return "", fmt.Errorf("API Key not set")
+	}
+	return o.apiKey, nil
 }
 
 func (o *Auth) BuiltInScopes() core.Scopes {
@@ -292,6 +327,10 @@ func (o *Auth) AccessKeyPair() (accessKeyId, secretAccessKey string) {
 	return o.accessKeyId, o.secretAccessKey
 }
 
+func (o *Auth) CurrentSecurityMethod() string {
+	return o.currentSecurityMethod
+}
+
 func (o *Auth) SetTokens(token *LoginResult) error {
 	// Always update the tokens, this way the user can assume the Auth object is
 	// up-to-date after this function, even in case of a persistance error
@@ -304,6 +343,26 @@ func (o *Auth) SetTokens(token *LoginResult) error {
 func (o *Auth) SetAccessKey(id string, key string) error {
 	o.accessKeyId = id
 	o.secretAccessKey = key
+	return o.writeCurrentConfig()
+}
+
+func (o *Auth) SetAPIKey(params APIKeyParametersList) error {
+	err := o.setCurrentSecurityMethod(APIKey)
+	if err != nil {
+		return err
+	}
+	o.apiKey = params.GetAPIKey()
+	return o.writeCurrentConfig()
+}
+
+// SetCurrentSecurityMethod informs auth what method will be used.
+// The possibles methods include "bearer_token" and "api_key".
+func (o *Auth) setCurrentSecurityMethod(securityMethod SecurityMethod) error {
+	if securityMethod.String() == "" {
+		return fmt.Errorf("unsupported security method")
+	}
+	o.currentSecurityMethod = securityMethod.String()
+
 	return o.writeCurrentConfig()
 }
 
