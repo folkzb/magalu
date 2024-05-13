@@ -11,10 +11,6 @@ Usage:
 ```
 
 ## Product catalog:
-- Aliases:
-- config, conf
-
-## Other commands:
 - Commands:
 - delete      Delete/unset a Config value that had been previously set
 - get         Get a specific Config value that has been previously set
@@ -22,9 +18,13 @@ Usage:
 - list        List all available Configs
 - set         Set a specific Config value in the configuration file
 
+## Other commands:
+- Flags:
+- -h, --help   help for config
+
 ## Flags:
 ```bash
-Flags:
-  -h, --help   help for config
+Global Flags:
+      --cli.show-cli-globals   Show all CLI global flags on usage text
 ```
 

@@ -8,15 +8,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, schema *mgcSchemaPkg.Schema, attrInfoMap resAttrInfoMap, tfState *tfsdk.State) Diagnostics {
+func applyMgcMapToTFState(ctx context.Context, mgcMap map[string]any, schema *mgcSchemaPkg.Schema, attrInfoMap resAttrInfoMap, state TerraformParams, tfState *tfsdk.State) Diagnostics {
 	resInfo := &resAttrInfo{
 		tfName:          "tfState",
 		mgcName:         "tfState",
 		mgcSchema:       schema,
 		childAttributes: attrInfoMap,
+		state:           state,
 	}
 	return applyMgcObject(ctx, mgcMap, resInfo, tfState, path.Empty())
 }
@@ -106,7 +108,55 @@ func applyMgcObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfStat
 			return diagnostics
 		}
 	}
+
+	for childName, childValue := range attr.state {
+		if _, ok := attr.childAttributes.get(childName); !ok {
+			emuleatedAttrInfo := &resAttrInfo{tfName: childName, mgcName: mgcName(childName), mgcSchema: &mgcSchemaPkg.Schema{Type: "string"}}
+			childPath := path.AtName(string(childName))
+			value := prepareMgcValue(ctx, childValue)
+			if value != nil {
+				d := applyValueToState(ctx, value, emuleatedAttrInfo, tfState, childPath)
+				if diagnostics.AppendCheckError(d...) {
+					childAttrSchema, _ := tfState.Schema.AttributeAtPath(ctx, childPath)
+					diagnostics.AddLocalAttributeError(
+						childPath,
+						"unable to force save value",
+						fmt.Sprintf("path: %#v - value: %#v - tfschema: %#v", childPath, mgcValue, childAttrSchema),
+					)
+				}
+			}
+		}
+	}
 	return diagnostics
+}
+
+func prepareMgcValue(ctx context.Context, value tftypes.Value) any {
+	valType := value.Type().String()
+
+	switch valType {
+	case "tftypes.Bool":
+		var cValue *bool
+		err := value.As(&cValue)
+		if err != nil {
+			tflog.Debug(ctx, err.Error())
+		}
+		return cValue
+	case "tftypes.String":
+		var cValue *string
+		err := value.As(&cValue)
+		if err != nil {
+			tflog.Debug(ctx, err.Error())
+		}
+		return cValue
+	case "tftypes.Number":
+		var cValue *float64
+		err := value.As(&cValue)
+		if err != nil {
+			tflog.Debug(ctx, err.Error())
+		}
+		return cValue
+	}
+	return nil
 }
 
 func applyMgcXOfObject(ctx context.Context, mgcValue any, attr *resAttrInfo, tfState *tfsdk.State, path path.Path) Diagnostics {

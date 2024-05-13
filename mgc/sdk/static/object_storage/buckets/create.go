@@ -16,13 +16,13 @@ var createLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
 })
 
 type createParams struct {
-	Name                  common.BucketName `json:"name" jsonschema:"description=Name of the bucket to be created" mgc:"positional"`
+	BucketName            common.BucketName `json:"bucket" jsonschema:"description=Name of the bucket to be created" mgc:"positional"`
 	EnableVersioning      bool              `json:"enable_versioning,omitempty" jsonschema:"description=Enable versioning for this bucket,default=true"`
 	common.ACLPermissions `json:",squash"`  // nolint
 }
 
 var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
-	executor := core.NewReflectedSimpleExecutor[createParams, common.Config, core.Value](
+	executor := core.NewReflectedSimpleExecutor[createParams, common.Config, *createParams](
 		core.ExecutorSpec{
 			DescriptorSpec: core.DescriptorSpec{
 				Name:        "create",
@@ -45,6 +45,13 @@ var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
 							Target: getList(),
 						},
 					),
+					"read": core.NewSimpleLink(
+						core.SimpleLinkSpec{
+							Owner:     e,
+							Target:    getBucket(),
+							FromOwner: map[string]string{"name": "bucket"},
+						},
+					),
 				}
 			}),
 		},
@@ -52,7 +59,7 @@ var getCreate = utils.NewLazyLoader[core.Executor](func() core.Executor {
 	)
 
 	return core.NewExecuteResultOutputOptions(executor, func(exec core.Executor, result core.Result) string {
-		return "template=Created bucket {{.name}}\n"
+		return "template=Created bucket {{.bucket}}\n"
 	})
 })
 
@@ -75,18 +82,19 @@ func newCreateRequest(ctx context.Context, cfg common.Config, bucket common.Buck
 	return req, nil
 }
 
-func create(ctx context.Context, params createParams, cfg common.Config) (result core.Value, err error) {
+func create(ctx context.Context, params createParams, cfg common.Config) (*createParams, error) {
+
 	logger := createLogger().With(
-		"bucket", params.Name,
+		"bucket", params.BucketName,
 		"location", cfg.Region,
 	)
 
-	err = params.ACLPermissions.Validate()
+	err := params.ACLPermissions.Validate()
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	req, err := newCreateRequest(ctx, cfg, params.Name, params.ACLPermissions)
+	req, err := newCreateRequest(ctx, cfg, params.BucketName, params.ACLPermissions)
 	if err != nil {
 		return nil, err
 	}
@@ -105,11 +113,11 @@ func create(ctx context.Context, params createParams, cfg common.Config) (result
 
 	if !params.EnableVersioning {
 		logger.Info("suspending bucket versioning, as 'enable_versioning' was passed as false")
-		_, err := versioning.SuspendBucketVersioning(ctx, versioning.SuspendBucketVersioningParams{Bucket: params.Name}, cfg)
+		_, err := versioning.SuspendBucketVersioning(ctx, versioning.SuspendBucketVersioningParams{Bucket: params.BucketName}, cfg)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return params, nil
+	return &params, nil
 }
