@@ -2,6 +2,7 @@ package buckets
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -17,6 +18,7 @@ var createLogger = utils.NewLazyLoader(func() *zap.SugaredLogger {
 
 type createParams struct {
 	BucketName            common.BucketName `json:"bucket" jsonschema:"description=Name of the bucket to be created" mgc:"positional"`
+	IsPrefix              bool              `json:"bucket_is_prefix" jsonschema:"description=Use bucket name as prefix value to generate a unique bucket name,default=false" mgc:"hidden"`
 	EnableVersioning      bool              `json:"enable_versioning,omitempty" jsonschema:"description=Enable versioning for this bucket,default=true"`
 	common.ACLPermissions `json:",squash"`  // nolint
 }
@@ -92,6 +94,11 @@ func create(ctx context.Context, params createParams, cfg common.Config) (*creat
 	err := params.ACLPermissions.Validate()
 	if err != nil {
 		return nil, err
+	}
+
+	if params.IsPrefix {
+		sufix := common.GetRandomWords(3, "-")
+		params.BucketName = common.BucketName(fmt.Sprintf("%s-%s", params.BucketName.String(), sufix))
 	}
 
 	req, err := newCreateRequest(ctx, cfg, params.BucketName, params.ACLPermissions)

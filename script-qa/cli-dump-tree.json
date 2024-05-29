@@ -21513,6 +21513,11 @@
          "description": "Name of the bucket to be created",
          "type": "string"
         },
+        "bucket_is_prefix": {
+         "default": false,
+         "description": "Use bucket name as prefix value to generate a unique bucket name",
+         "type": "boolean"
+        },
         "enable_versioning": {
          "default": true,
          "description": "Enable versioning for this bucket",
@@ -21617,7 +21622,8 @@
         }
        },
        "required": [
-        "bucket"
+        "bucket",
+        "bucket_is_prefix"
        ],
        "type": "object"
       },
@@ -21634,6 +21640,11 @@
          "description": "Name of the bucket to be created",
          "type": "string"
         },
+        "bucket_is_prefix": {
+         "default": false,
+         "description": "Use bucket name as prefix value to generate a unique bucket name",
+         "type": "boolean"
+        },
         "enable_versioning": {
          "default": true,
          "description": "Enable versioning for this bucket",
@@ -21738,7 +21749,8 @@
         }
        },
        "required": [
-        "bucket"
+        "bucket",
+        "bucket_is_prefix"
        ],
        "type": "object"
       },
@@ -21892,6 +21904,11 @@
          "description": "Name of the bucket to be created",
          "type": "string"
         },
+        "bucket_is_prefix": {
+         "default": false,
+         "description": "Use bucket name as prefix value to generate a unique bucket name",
+         "type": "boolean"
+        },
         "enable_versioning": {
          "default": true,
          "description": "Enable versioning for this bucket",
@@ -21996,7 +22013,8 @@
         }
        },
        "required": [
-        "bucket"
+        "bucket",
+        "bucket_is_prefix"
        ],
        "type": "object"
       },
