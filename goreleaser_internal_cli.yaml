@@ -6,6 +6,7 @@ builds:
     goos:
       - linux
       - windows
+      - darwin
     binary: mgc
     goarch:
       - amd64
