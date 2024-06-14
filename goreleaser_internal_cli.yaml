@@ -45,3 +45,6 @@ release:
   replace_existing_artifacts: true
   draft: true
   prerelease: true
+archives:
+- id: all
+  allow_different_binary_count: true
