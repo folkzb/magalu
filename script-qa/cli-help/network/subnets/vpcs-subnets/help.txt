@@ -1,12 +1,7 @@
-subnets | vpcs-subnets
+VPC Subnets | vpcs-subnets
 
 Usage:
   ./mgc network subnets vpcs-subnets [flags]
-  ./mgc network subnets vpcs-subnets [command]
-
-Commands:
-  create      Create Subnet
-  list        List Subnets
 
 Flags:
   -h, --help      help for vpcs-subnets
@@ -14,6 +9,4 @@ Flags:
 
 Global Flags:
       --cli.show-cli-globals   Show all CLI global flags on usage text
-
-Use "./mgc network subnets vpcs-subnets [command] --help" for more information about a command.
 
