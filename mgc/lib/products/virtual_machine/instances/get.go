@@ -54,14 +54,9 @@ type GetResultError struct {
 	Slug    string `json:"slug"`
 }
 
-// any of: GetResultImage0, GetResultImage1
+// any of: , GetResultImage1
 type GetResultImage struct {
-	GetResultImage0 `json:",squash"` // nolint
 	GetResultImage1 `json:",squash"` // nolint
-}
-
-type GetResultImage0 struct {
-	Id string `json:"id"`
 }
 
 type GetResultImage1 struct {
@@ -70,14 +65,9 @@ type GetResultImage1 struct {
 	Platform *string `json:"platform,omitempty"`
 }
 
-// any of: GetResultMachineType0, GetResultMachineType1
+// any of: , GetResultMachineType1
 type GetResultMachineType struct {
-	GetResultMachineType0 `json:",squash"` // nolint
 	GetResultMachineType1 `json:",squash"` // nolint
-}
-
-type GetResultMachineType0 struct {
-	Id string `json:"id"`
 }
 
 type GetResultMachineType1 struct {
@@ -88,21 +78,10 @@ type GetResultMachineType1 struct {
 	Vcpus int    `json:"vcpus"`
 }
 
-// any of: GetResultNetwork0, GetResultNetwork1
+// any of: , GetResultNetwork1
 type GetResultNetwork struct {
-	GetResultNetwork0 `json:",squash"` // nolint
 	GetResultNetwork1 `json:",squash"` // nolint
 }
-
-type GetResultNetwork0 struct {
-	Ports GetResultNetwork0Ports `json:"ports"`
-}
-
-type GetResultNetwork0PortsItem struct {
-	Id string `json:"id"`
-}
-
-type GetResultNetwork0Ports []GetResultNetwork0PortsItem
 
 type GetResultNetwork1 struct {
 	Ports *GetResultNetwork1Ports `json:"ports,omitempty"`

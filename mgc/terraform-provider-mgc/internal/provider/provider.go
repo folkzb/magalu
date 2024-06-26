@@ -3,13 +3,16 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
 	"slices"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	mgcSdk "magalu.cloud/sdk"
@@ -39,6 +42,7 @@ type ObjectStorageConfig struct {
 
 type ProviderConfig struct {
 	Region        types.String         `tfsdk:"region"`
+	Env           types.String         `tfsdk:"env"`
 	ApiKey        types.String         `tfsdk:"api_key"`
 	ObjectStorage *ObjectStorageConfig `tfsdk:"object_storage"`
 }
@@ -65,11 +69,11 @@ func (p *MgcProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 		Optional:            true,
 		Attributes: map[string]schema.Attribute{
 			"key_id": schema.StringAttribute{
-				MarkdownDescription: "API Key ID",
+				MarkdownDescription: "API Key ID\nOptionally you can set the environment variable MGC_OBJ_KEY_ID to override this value.",
 				Required:            true,
 			},
 			"key_secret": schema.StringAttribute{
-				MarkdownDescription: "API Key Secret",
+				MarkdownDescription: "API Key Secret\nOptionally you can set the environment variable MGC_OBJ_KEY_SECRET to override this value.",
 				Required:            true,
 			},
 		},
@@ -87,11 +91,21 @@ func (p *MgcProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 		Description: "Terraform Provider for Magalu Cloud",
 		Attributes: map[string]schema.Attribute{
 			"region": schema.StringAttribute{
-				MarkdownDescription: "Region",
+				MarkdownDescription: "Region. Options: br-ne1 / br-se1\nDefault is br-se1.\nOptionally you can set the environment variable MGC_REGION to override this value.",
 				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("br-ne1", "br-se1", "br-mgl1"),
+				},
+			},
+			"env": schema.StringAttribute{
+				MarkdownDescription: "Environment. Options: prod / pre-prod\nDefault is prod.\nOptionally you can set the environment variable MGC_ENV to override this value.",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("prod", "pre-prod"),
+				},
 			},
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: "Magalu API Key for authentication",
+				MarkdownDescription: "Magalu API Key for authentication\nOptionally you can set the environment variable MGC_API_KEY to override this value.",
 				Optional:            true,
 			},
 			"object_storage": schemaObjectStorage,
@@ -99,8 +113,6 @@ func (p *MgcProvider) Schema(ctx context.Context, req provider.SchemaRequest, re
 	}
 
 }
-
-var acceptedRegions = []string{"br-ne1", "br-se1", "br-mgl1"}
 
 func (p *MgcProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	tflog.Info(ctx, "configuring MGC provider")
@@ -112,31 +124,71 @@ func (p *MgcProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		tflog.Error(ctx, "fail to get configs from provider")
 	}
 
-	if !data.Region.IsNull() {
-		if !slices.Contains(acceptedRegions, data.Region.ValueString()) {
-			tflog.Error(ctx, "invalid region. Valid options: "+strings.Join(acceptedRegions, ", "))
+	// REGION
+	if !data.Region.IsNull() || os.Getenv("MGC_REGION") != "" {
+		region := os.Getenv("MGC_REGION")
+		if region == "" && !data.Region.IsNull() {
+			region = data.Region.ValueString()
 		}
-		if err := p.sdk.Config().SetTempConfig("region", data.Region.String()); err != nil {
+		if err := p.sdk.Config().SetTempConfig("region", region); err != nil {
 			tflog.Error(ctx, "fail to set region")
 		}
-	}
+	} else {
+		if err := p.sdk.Config().SetTempConfig("region", "br-se1"); err != nil {
+			tflog.Error(ctx, "fail to set region")
+		}
+	} //END REGION
 
-	if !data.ApiKey.IsNull() {
-		MgcApiKey := &MgcApiKey{data.ApiKey.ValueString()}
-		err := p.sdk.Auth().SetAPIKey(MgcApiKey)
+	// ENV
+	if !data.Env.IsNull() {
+		env := os.Getenv("MGC_ENV")
+		if env == "" && !data.Env.IsNull() {
+			env = data.Env.String()
+		}
+		if err := p.sdk.Config().SetTempConfig("env", env); err != nil {
+			tflog.Error(ctx, "fail to set env")
+		}
+	} // END ENV
+
+	// API KEY
+	if !data.ApiKey.IsNull() || os.Getenv("MGC_API_KEY") != "" {
+		apiKey := MgcApiKey{}
+		apiKey.ApiKey = os.Getenv("MGC_API_KEY")
+
+		if apiKey.ApiKey == "" && !data.ApiKey.IsNull() {
+			apiKey.ApiKey = data.ApiKey.ValueString()
+		}
+
+		err := p.sdk.Auth().SetAPIKey(&apiKey)
 		if err != nil {
 			tflog.Error(ctx, "fail to set api key")
 		}
+	} // END API KEY
+
+	// KEY PAIR OBJECT STORAGE
+	keyId := ""
+	keySecret := ""
+	if os.Getenv("MGC_OBJ_KEY_ID") != "" && os.Getenv("MGC_OBJ_KEY_SECRET") != "" {
+		keyId = os.Getenv("MGC_OBJ_KEY_ID")
+		keySecret = os.Getenv("MGC_OBJ_KEY_SECRET")
 	}
 
-	if data.ObjectStorage != nil && data.ObjectStorage.ObjectKeyPair != nil &&
+	if keyId == "" &&
+		keySecret == "" &&
+		data.ObjectStorage != nil &&
+		data.ObjectStorage.ObjectKeyPair != nil &&
 		!data.ObjectStorage.ObjectKeyPair.KeyID.IsNull() &&
 		!data.ObjectStorage.ObjectKeyPair.KeySecret.IsNull() {
-		p.sdk.Config().AddTempKeyPair("apikey",
-			data.ObjectStorage.ObjectKeyPair.KeyID.ValueString(),
-			data.ObjectStorage.ObjectKeyPair.KeySecret.ValueString(),
-		)
+		keyId = data.ObjectStorage.ObjectKeyPair.KeyID.ValueString()
+		keySecret = data.ObjectStorage.ObjectKeyPair.KeySecret.ValueString()
 	}
+	if keyId != "" && keySecret != "" {
+		p.sdk.Config().AddTempKeyPair("apikey",
+			keyId,
+			keySecret,
+		)
+		tflog.Debug(ctx, "setting object storage key pair")
+	} // END KEY PAIR
 	resp.DataSourceData = p.sdk
 	resp.ResourceData = p.sdk
 }
@@ -146,6 +198,10 @@ func (p *MgcProvider) Resources(ctx context.Context) []func() resource.Resource 
 
 	root := p.sdk.Group()
 	resources, err := collectGroupResources(ctx, p.sdk, root, []string{providerTypeName})
+	// Add manually the provider resource
+	resources = append(resources, NewVirtualMachineInstancesResource)
+	resources = append(resources, NewVirtualMachineSnapshotsResource)
+
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("An error occurred while generating the provider resource list: %v", err))
 	}
@@ -211,7 +267,19 @@ func collectGroupResources(
 		return resources, err
 	}
 
-	resourceName := tfName(strings.Join(path, "_"))
+	strResourceName := strings.Join(path, "_")
+	strResourceName = strings.Replace(strResourceName, "-", "_", -1)
+
+	// IGNORE THIS MODULES - they are be replaced by the new resources
+	ignoredTFModules := []string{"mgc_virtual_machine_instances", "mgc_virtual_machine_snapshots"}
+	if slices.Contains(ignoredTFModules, strResourceName) {
+		tflog.Debug(ctx, fmt.Sprintf("resource %q is ignored", strResourceName), debugMap)
+		return resources, nil
+	}
+	// END IGNORE
+
+	resourceName := tfName(strResourceName)
+
 	tflog.Debug(ctx, fmt.Sprintf("found resource %q", resourceName), debugMap)
 
 	res, err := newMgcResource(ctx, sdk, resourceName, mgcName(group.Name()), group.Description(), create, read, update, delete, list)
