@@ -35,14 +35,12 @@ archives:
     builds:
       - mgc
     files:
-      - src: "mgc/cli/RUNNING.md"
         dst: "README.md"
   - id: mgcwin
     format: zip
     builds:
       - mgcwin
     files:
-      - src: "mgc/cli/RUNNING.md"
         dst: "README.md"
 
 nfpms:
