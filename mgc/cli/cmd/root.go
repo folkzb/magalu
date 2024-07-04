@@ -34,7 +34,7 @@ func normalizeFlagName(f *pflag.FlagSet, name string) pflag.NormalizedName {
 func Execute() (err error) {
 	sdk := &mgcSdk.Sdk{}
 
-	vv := fmt.Sprintf("\nVersion: %s\nSO: %s/%s",
+	vv := fmt.Sprintf("%s (%s/%s)",
 		mgcSdk.Version,
 		runtime.GOOS,
 		runtime.GOARCH)
