@@ -34,15 +34,10 @@ archives:
   - id: mgc
     builds:
       - mgc
-    files:
-        dst: "README.md"
   - id: mgcwin
     format: zip
     builds:
       - mgcwin
-    files:
-        dst: "README.md"
-
 nfpms:
 -
   maintainer: Magalu Cloud <magalucloud.cli@luizalabs.com>
