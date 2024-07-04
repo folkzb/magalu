@@ -57,28 +57,20 @@ type GetResultInstance struct {
 	MachineType GetResultInstanceMachineType `json:"machine_type"`
 }
 
-// any of: , GetResultInstanceImage1
+// any of: GetResultInstanceImage
 type GetResultInstanceImage struct {
-	GetResultInstanceImage1 `json:",squash"` // nolint
-}
-
-type GetResultInstanceImage1 struct {
 	Id       string  `json:"id"`
-	Name     string  `json:"name"`
+	Name     *string `json:"name,omitempty"`
 	Platform *string `json:"platform,omitempty"`
 }
 
-// any of: , GetResultInstanceMachineType1
+// any of: GetResultInstanceMachineType
 type GetResultInstanceMachineType struct {
-	GetResultInstanceMachineType1 `json:",squash"` // nolint
-}
-
-type GetResultInstanceMachineType1 struct {
-	Disk  int    `json:"disk"`
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Ram   int    `json:"ram"`
-	Vcpus int    `json:"vcpus"`
+	Disk  *int    `json:"disk,omitempty"`
+	Id    string  `json:"id"`
+	Name  *string `json:"name,omitempty"`
+	Ram   *int    `json:"ram,omitempty"`
+	Vcpus *int    `json:"vcpus,omitempty"`
 }
 
 func (s *service) Get(

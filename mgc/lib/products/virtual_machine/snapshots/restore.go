@@ -40,14 +40,18 @@ type RestoreParameters struct {
 	UserData         *string                      `json:"user_data,omitempty"`
 }
 
-// any of: , RestoreParametersMachineType1
+// any of: RestoreParametersMachineType
 type RestoreParametersMachineType struct {
-	RestoreParametersMachineType1 `json:",squash"` // nolint
+	Id             string                                      `json:"id"`
+	Name           *string                                     `json:"name,omitempty"`
+	SecurityGroups *RestoreParametersMachineTypeSecurityGroups `json:"security_groups,omitempty"`
 }
 
-type RestoreParametersMachineType1 struct {
-	Name string `json:"name"`
+type RestoreParametersMachineTypeSecurityGroupsItem struct {
+	Id string `json:"id"`
 }
+
+type RestoreParametersMachineTypeSecurityGroups []RestoreParametersMachineTypeSecurityGroupsItem
 
 type RestoreParametersNetwork struct {
 	AssociatePublicIp *bool                              `json:"associate_public_ip,omitempty"`
@@ -55,24 +59,18 @@ type RestoreParametersNetwork struct {
 	Vpc               *RestoreParametersNetworkVpc       `json:"vpc,omitempty"`
 }
 
-// any of: , RestoreParametersNetworkInterface1
+// any of: RestoreParametersNetworkInterface
 type RestoreParametersNetworkInterface struct {
-	RestoreParametersNetworkInterface1 `json:",squash"` // nolint
+	Id             string                                      `json:"id"`
+	Name           *string                                     `json:"name,omitempty"`
+	SecurityGroups *RestoreParametersMachineTypeSecurityGroups `json:"security_groups,omitempty"`
 }
 
-type RestoreParametersNetworkInterface1 struct {
-	SecurityGroups *RestoreParametersNetworkInterface1SecurityGroups `json:"security_groups,omitempty"`
-}
-
-type RestoreParametersNetworkInterface1SecurityGroupsItem struct {
-	Id string `json:"id"`
-}
-
-type RestoreParametersNetworkInterface1SecurityGroups []RestoreParametersNetworkInterface1SecurityGroupsItem
-
-// any of: , RestoreParametersMachineType1
+// any of: RestoreParametersNetworkVpc
 type RestoreParametersNetworkVpc struct {
-	RestoreParametersMachineType1 `json:",squash"` // nolint
+	Id             string                                      `json:"id"`
+	Name           *string                                     `json:"name,omitempty"`
+	SecurityGroups *RestoreParametersMachineTypeSecurityGroups `json:"security_groups,omitempty"`
 }
 
 type RestoreConfigs struct {

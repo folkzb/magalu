@@ -41,13 +41,10 @@ type CreateParameters struct {
 	Volume      CreateParametersVolume `json:"volume"`
 }
 
-// any of: , CreateParametersVolume1
+// any of: CreateParametersVolume
 type CreateParametersVolume struct {
-	CreateParametersVolume1 `json:",squash"` // nolint
-}
-
-type CreateParametersVolume1 struct {
-	Name string `json:"name"`
+	Id   string  `json:"id"`
+	Name *string `json:"name,omitempty"`
 }
 
 type CreateConfigs struct {

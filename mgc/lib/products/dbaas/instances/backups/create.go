@@ -9,7 +9,7 @@ Backup Create.
 
 Creates a new backup asynchronously.
 
-Version: 1.22.0
+Version: 1.23.0
 
 import "magalu.cloud/lib/products/dbaas/instances/backups"
 */
@@ -21,9 +21,8 @@ import (
 )
 
 type CreateParameters struct {
-	Exchange   *string `json:"exchange,omitempty"`
-	InstanceId string  `json:"instance_id"`
-	Mode       string  `json:"mode"`
+	InstanceId string `json:"instance_id"`
+	Mode       string `json:"mode"`
 }
 
 type CreateConfigs struct {

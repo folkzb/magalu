@@ -9,7 +9,7 @@ Backup Detail.
 
 Get a backup detail.
 
-Version: 1.22.0
+Version: 1.23.0
 
 import "magalu.cloud/lib/products/dbaas/backups"
 */
@@ -21,8 +21,7 @@ import (
 )
 
 type GetParameters struct {
-	BackupId string  `json:"backup_id"`
-	Exchange *string `json:"exchange,omitempty"`
+	BackupId string `json:"backup_id"`
 }
 
 type GetConfigs struct {

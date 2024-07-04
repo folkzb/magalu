@@ -30,18 +30,16 @@ type CreateParameters struct {
 	UserData         *string                     `json:"user_data,omitempty"`
 }
 
-// any of: , CreateParametersImage1
+// any of: CreateParametersImage
 type CreateParametersImage struct {
-	CreateParametersImage1 `json:",squash"` // nolint
+	Id   string  `json:"id"`
+	Name *string `json:"name,omitempty"`
 }
 
-type CreateParametersImage1 struct {
-	Name string `json:"name"`
-}
-
-// any of: , CreateParametersImage1
+// any of: CreateParametersMachineType
 type CreateParametersMachineType struct {
-	CreateParametersImage1 `json:",squash"` // nolint
+	Id   string  `json:"id"`
+	Name *string `json:"name,omitempty"`
 }
 
 type CreateParametersNetwork struct {
@@ -50,24 +48,24 @@ type CreateParametersNetwork struct {
 	Vpc               *CreateParametersNetworkVpc       `json:"vpc,omitempty"`
 }
 
-// any of: , CreateParametersNetworkInterface1
+// any of: CreateParametersNetworkInterface
 type CreateParametersNetworkInterface struct {
-	CreateParametersNetworkInterface1 `json:",squash"` // nolint
+	Id             string                                          `json:"id"`
+	Name           *string                                         `json:"name,omitempty"`
+	SecurityGroups *CreateParametersNetworkInterfaceSecurityGroups `json:"security_groups,omitempty"`
 }
 
-type CreateParametersNetworkInterface1 struct {
-	SecurityGroups *CreateParametersNetworkInterface1SecurityGroups `json:"security_groups,omitempty"`
-}
-
-type CreateParametersNetworkInterface1SecurityGroupsItem struct {
+type CreateParametersNetworkInterfaceSecurityGroupsItem struct {
 	Id string `json:"id"`
 }
 
-type CreateParametersNetworkInterface1SecurityGroups []CreateParametersNetworkInterface1SecurityGroupsItem
+type CreateParametersNetworkInterfaceSecurityGroups []CreateParametersNetworkInterfaceSecurityGroupsItem
 
-// any of: , CreateParametersImage1
+// any of: CreateParametersNetworkVpc
 type CreateParametersNetworkVpc struct {
-	CreateParametersImage1 `json:",squash"` // nolint
+	Id             string                                          `json:"id"`
+	Name           *string                                         `json:"name,omitempty"`
+	SecurityGroups *CreateParametersNetworkInterfaceSecurityGroups `json:"security_groups,omitempty"`
 }
 
 type CreateConfigs struct {
