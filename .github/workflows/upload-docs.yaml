@@ -27,3 +27,9 @@ jobs:
           - name: Upload docs
             run: |
              mgc object objects upload-dir ./script-qa s3://magalucloud-docs
+          - name: Set Public Read Permissions
+            run: |
+              mgc object objects list magalucloud-docs --recursive -o json --raw | jq -r '.Contents[].Key' | while read -r key; do
+                mgc object objects acl set --public-read magalucloud-docs/"$key"
+                echo "Set public-read ACL for $key"
+              done
