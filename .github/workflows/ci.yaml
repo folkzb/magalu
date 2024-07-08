@@ -1,4 +1,4 @@
-name: MGC CI
+name: Validate Pre Commit Hooks
 
 on:
   push:
