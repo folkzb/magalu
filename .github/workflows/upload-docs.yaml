@@ -1,9 +1,6 @@
 name: Upload Docs to bucket
 
 on:
-    push:
-        branches:
-            - main
     release:
         types:
             - created
