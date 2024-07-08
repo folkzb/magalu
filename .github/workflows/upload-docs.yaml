@@ -17,7 +17,7 @@ jobs:
             uses: actions/checkout@v2
           - name: Download MGC CLI
             run: |
-             curl https://github.com/MagaluCloud/mgccli/releases/download/v0.20.0/mgccli_0.20.0_linux_arm64.deb -o mgccli_0.20.0_linux_arm64.deb
+             curl -L https://github.com/MagaluCloud/mgccli/releases/download/v0.20.0/mgccli_0.20.0_linux_arm64.deb -o mgccli_0.20.0_linux_arm64.deb
           - name: Install MGC CLI
             run: |
              sudo dpkg -i mgccli_0.20.0_linux_arm64.deb
