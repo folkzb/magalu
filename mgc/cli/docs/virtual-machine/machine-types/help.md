@@ -9,7 +9,7 @@ Usage:
 
 ## Product catalog:
 - Commands:
-- list        Retrieves all machine-types available in the region.
+- list        Retrieves all machine-types.
 
 ## Other commands:
 - Flags:

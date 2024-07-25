@@ -9,17 +9,17 @@ Usage:
 
 ## Product catalog:
 - Commands:
-- create      Create an instance asynchronously.
-- delete      Delete a instance asynchronously
-- get         Retrieve the details of an instance.
-- list        Lists all instances in the current tenant.
-- port        port
-- reboot      Reboot a running or suspended instance.
-- rename      Renames an instance.
-- retype      Changes a running or stopped instance machine type for another one.
-- start       Starts a running or suspended instance.
-- stop        Stops a running instance.
-- suspend     Suspends a running instance.
+- create            Create an instance.
+- delete            Delete an instance.
+- get               Retrieve the details of a specific instance.
+- list              List all instances.
+- network-interface network-interface
+- reboot            Reboot an instance.
+- rename            Renames an instance.
+- retype            Changes an instance machine-type.
+- start             Starts an instance.
+- stop              Stops an instance.
+- suspend           Suspends instance.
 
 ## Other commands:
 - Flags:

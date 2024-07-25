@@ -9,7 +9,7 @@ Usage:
 
 ## Product catalog:
 - Commands:
-- list        Retrieves all images available in the region.
+- list        Retrieves all images.
 
 ## Other commands:
 - Flags:

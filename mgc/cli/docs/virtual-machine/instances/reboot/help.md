@@ -6,7 +6,7 @@ of the instance that you want to reboot.
 ## Usage:
 ```bash
 #### Rules
-- The instance must be in the running state.
+- The instance must be in the running or suspend state.
 ```
 
 ## Product catalog:

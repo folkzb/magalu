@@ -1,4 +1,4 @@
-# Retrieve a list of images allowed for the current tenant which is logged in.
+# Retrieve a list of images allowed for the current region.
 
 ## Usage:
 ```bash

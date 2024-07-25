@@ -43,13 +43,13 @@ Usage:
 - This is the same as '--network.interface=security_groups:array'. (default [])
 - --network.vpc object                        network's vpc property: Vpc (at least one of: single property: id or single property: name)
 - Use --network.vpc=help for more details
-- This is the same as '--network=vpc:object'.
+- This is the same as '--network=vpc:object'. (default {"name":"default"})
 - --network.vpc.id string                     Vpc: Id (between 1 and 255 characters)
 - This is the same as '--network.vpc=id:string'.
 - --network.vpc.name string                   Vpc: Name (between 1 and 255 characters)
 - This is the same as '--network.vpc=name:string'.
-- --ssh-key-name string                       Ssh Key Name (required)
-- --user-data string                          User Data (between 1 and 65000 characters)
+- --ssh-key-name string                       Ssh key Name (required)
+- --user-data string                          Used to perform automated configuration tasks. (between 1 and 65000 characters)
 - -v, --version                                   version for create
 
 ## Flags:

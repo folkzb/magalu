@@ -9,12 +9,12 @@ Usage:
 
 ## Product catalog:
 - Commands:
-- create      Create a snapshot of a virtual machine asynchronously.
-- delete      Delete a Snapshot asynchronously
+- create      Create a snapshot of a virtual machine.
+- delete      Delete a Snapshot.
 - get         Retrieve the details of an snapshot.
 - list        Lists all snapshots in the current tenant.
-- rename      Renames a snapshot
-- restore     Restore a snapshot to a virtual machine
+- rename      Renames a snapshot.
+- restore     Restore a snapshot to a virtual machine.
 
 ## Other commands:
 - Flags:
