@@ -27,7 +27,7 @@ Usage:
 
 ## Other commands:
 - Settings:
-- auth               Actions with ID Magalu to log in, refresh tokens, change tenants and others
+- auth               Actions with ID Magalu to log in, API Keys, refresh tokens, change tenants and others
 - config             Manage Configuration values
 - profile            Profile related commands
 
