@@ -122,32 +122,20 @@ func runPrepare(cmd *cobra.Command, args []string) {
 
 			fmt.Printf("Total PATH removed: %v\n", len(toRemove))
 
-			toRemove = []string{}
+			// toRemove = []string{}
 
 			_, document, _, errs := document.RenderAndReload()
 			if len(errors) > 0 {
 				panic(fmt.Sprintf("cannot re-render document: %d errors reported", len(errs)))
 			}
 
-			docModel, errors = document.BuildV3Model()
+			_, errors = document.BuildV3Model()
 			if len(errors) > 0 {
 				for i := range errors {
 					fmt.Printf("error: %e\n", errors[i])
 				}
 				panic(fmt.Sprintf("cannot create v3 model from document: %d errors reported", len(errors)))
 			}
-
-			for pair := docModel.Model.Components.Schemas.Oldest(); pair != nil; pair = pair.Next() {
-				if strings.Contains(strings.ToLower(pair.Key), "xaas") {
-					toRemove = append(toRemove, pair.Key)
-				}
-			}
-
-			for _, key := range toRemove {
-				docModel.Model.Components.Schemas.Delete(key)
-			}
-
-			fmt.Printf("Total COMPONENT removed: %v\n", len(toRemove))
 
 			//todo - remove from py
 			// svar := orderedmap.New[string, *v3.ServerVariable]()
