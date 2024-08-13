@@ -749,6 +749,7 @@ func (o *operation) Execute(
 	logger.Debug("created HTTP request, now execute it...")
 
 	resp, err := client.Do(req)
+
 	if err != nil {
 		logger.Warnw("failed to execute HTTP request", "error", err)
 		return nil, fmt.Errorf("HTTP request error: %w", err)
