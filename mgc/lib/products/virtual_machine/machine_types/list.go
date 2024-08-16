@@ -33,11 +33,11 @@ type ListConfigs struct {
 }
 
 type ListResult struct {
-	InstanceTypes ListResultInstanceTypes `json:"instance_types"`
+	MachineTypes ListResultMachineTypes `json:"machine_types"`
 }
 
-// any of: ListResultInstanceTypesItem
-type ListResultInstanceTypesItem struct {
+// any of: ListResultMachineTypesItem
+type ListResultMachineTypesItem struct {
 	Disk   int    `json:"disk"`
 	Gpu    *int   `json:"gpu,omitempty"`
 	Id     string `json:"id"`
@@ -48,7 +48,7 @@ type ListResultInstanceTypesItem struct {
 	Vcpus  int    `json:"vcpus"`
 }
 
-type ListResultInstanceTypes []ListResultInstanceTypesItem
+type ListResultMachineTypes []ListResultMachineTypesItem
 
 func (s *service) List(
 	parameters ListParameters,

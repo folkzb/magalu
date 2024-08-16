@@ -16,7 +16,6 @@ class IndexModule(TypedDict):
     path: str
     version: str
     description: str
-    super_internal: bool
 
 
 IndexModules = List[IndexModule]
@@ -68,7 +67,6 @@ def load_mods(
         name = match.group("name")
         full_mods[filename] = data
         description = info.get("x-mgc-description", info.get("description", ""))
-        internal = ("internal" in filename) or ("internal" in url)
         mods.append(
             IndexModule(
                 name=name,
@@ -77,7 +75,6 @@ def load_mods(
                 description=description,
                 version=info.get("version", ""),
                 summary=info.get("summary", description),
-                super_internal=internal,
             )
         )
     return full_mods, mods
@@ -181,9 +178,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     full_mods, mods = load_mods(args.dir, args.output)
-    print("indexed modules:")
-    for mod in mods:
-        print(mod)
+    # print("indexed modules:")
+    # for mod in mods:
+    #     print(mod)
 
     idx_file = save_index(mods, args.output or args.dir)
     if args.embed:
