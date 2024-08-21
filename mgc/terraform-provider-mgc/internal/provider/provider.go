@@ -337,6 +337,8 @@ func (p *MgcProvider) DataSources(ctx context.Context) []func() datasource.DataS
 		datasources.NewDataSourceVMIMages,
 		datasources.NewDataSourceVmInstance,
 		datasources.NewDataSourceVmInstances,
+		datasources.NewDatasourceBucket,
+		datasources.NewDatasourceBuckets,
 	)
 
 	return dataSources
