@@ -10,8 +10,8 @@ import (
 )
 
 const outputFlag = "output"
-const defaultFormatter = "yaml"
 const helpFormatter = "help"
+const defaultFormatter = "yaml"
 
 type OutputFormatter interface {
 	Format(value any, options string, isRaw bool) error
@@ -77,47 +77,40 @@ func getOutputFormatter(name, options string) (formatter OutputFormatter, err er
 }
 
 func getOutputFor(sdk *mgcSdk.Sdk, cmd *cobra.Command, result core.Result) string {
-	hasOutputFromFlag := false
-	output := ""
-	if out := getOutputFlag(cmd); out != "" {
-		hasOutputFromFlag = true
-		output = out
+	var output string
+	var defaultConfigOutput string
+	var configFlag string
+
+	if defaultConfigOutput = getOutputConfig(sdk); defaultConfigOutput != "" {
+		output = defaultConfigOutput
 	}
 
-	if xoutput := getOutputConfig(sdk); output == "" && xoutput != "" {
-		output = xoutput
-	}
-	if output == "" {
-		output = "yaml"
+	if configFlag = getOutputFlag(cmd); configFlag != "" {
+		output = configFlag
 	}
 
-	if output == "" {
-		if outputOptions, ok := core.ResultAs[core.ResultWithDefaultOutputOptions](result); ok {
-			return "default=" + outputOptions.DefaultOutputOptions()
-		}
-	} else {
-		if outputOptions, ok := core.ResultAs[core.ResultWithDefaultOutputOptions](result); ok {
-			outputFromSpec := outputOptions.DefaultOutputOptions()
-			if !strings.Contains(outputFromSpec, "default=") {
-				//SPEC NAO CONTEM DEFAULT
-				if output != "" {
-					output = outputFromSpec + ";default=" + output
-				}
-			} else {
-				if hasOutputFromFlag {
-					outs := strings.Split(outputFromSpec, ";")
-					for i, ot := range outs {
-						if strings.HasPrefix(ot, "default=") {
-							outs[i] = "default=" + output
-						}
+	if outputOptions, ok := core.ResultAs[core.ResultWithDefaultOutputOptions](result); ok {
+		outputFromSpec := outputOptions.DefaultOutputOptions()
+		if strings.Contains(outputFromSpec, "default=") {
+			outs := strings.Split(outputFromSpec, ";")
+			for i, ot := range outs {
+				if strings.HasPrefix(ot, "default=") {
+					if defaultConfigOutput != "" {
+						outs[i] = "default=" + defaultConfigOutput
+					} else if configFlag != "" {
+						outs[i] = "default=" + configFlag
+					} else {
+						outs[i] = ot
 					}
-					output = strings.Join(outs, ";")
-				} else {
-					output = outputFromSpec
+					break
 				}
 			}
+			output = strings.Join(outs, ";")
 		}
+	}
 
+	if output == "" {
+		return defaultFormatter
 	}
 
 	return output
