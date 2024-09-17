@@ -3,13 +3,14 @@ Executor: get
 
 # Summary
 
-Flavor detail.
+Flavor detail (Deprecated).
 
 # Description
 
-Returns a flavor detail.
+**Deprecated**: This endpoint is being phased out. Please use the /v1/instance-types endpoint to retrieve the list of available instance types instead.
+Returns an instance type detail. It is recommended to update your integration to use the newer `/v1/instance-types/{instance_type_id}` endpoint for improved functionality and future compatibility.
 
-Version: 1.26.1
+Version: 1.27.1
 
 import "magalu.cloud/lib/products/dbaas/flavors"
 */
@@ -23,7 +24,7 @@ import (
 )
 
 type GetParameters struct {
-	FlavorId string `json:"flavor_id"`
+	InstanceTypeId string `json:"instance_type_id"`
 }
 
 type GetConfigs struct {
