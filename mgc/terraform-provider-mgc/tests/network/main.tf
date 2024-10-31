@@ -23,22 +23,22 @@ data "mgc_network_security_group" "primary_sg_data" {
 resource "mgc_network_security_groups_rules" "ssh_ipv4_rule" {
   description       = "Allow incoming SSH traffic"
   direction         = "ingress"
-  ethertype        = "IPv4"
-  port_range_max   = 22
-  port_range_min   = 22
-  protocol         = "tcp"
-  remote_ip_prefix = "192.168.1.0/24"
+  ethertype         = "IPv4"
+  port_range_max    = 22
+  port_range_min    = 22
+  protocol          = "tcp"
+  remote_ip_prefix  = "192.168.1.0/24"
   security_group_id = mgc_network_security_groups.primary_sg.id
 }
 
 resource "mgc_network_security_groups_rules" "ssh_ipv6_rule" {
   description       = "Allow incoming SSH traffic from IPv6"
   direction         = "ingress"
-  ethertype        = "IPv6"
-  port_range_max   = 22
-  port_range_min   = 22
-  protocol         = "tcp"
-  remote_ip_prefix = "::/0"
+  ethertype         = "IPv6"
+  port_range_max    = 22
+  port_range_min    = 22
+  protocol          = "tcp"
+  remote_ip_prefix  = "::/0"
   security_group_id = mgc_network_security_groups.primary_sg.id
 }
 
@@ -59,6 +59,11 @@ resource "mgc_network_vpcs_interfaces" "primary_interface" {
 
 data "mgc_network_vpcs_interface" "primary_interface_data" {
   id = mgc_network_vpcs_interfaces.primary_interface.id
+}
+
+resource "mgc_network_vpcs_interfaces" "pip_interface" {
+  name   = "pip-interface"
+  vpc_id = "9dd2d30e-565d-42ce-a0a3-f2de1c473fed"
 }
 
 resource "mgc_network_vpcs_interfaces" "pip_interface" {
@@ -107,6 +112,12 @@ resource "mgc_network_public_ips_attach" "example" {
   interface_id = mgc_network_vpcs_interfaces.pip_interface.id
 }
 
+#Subnetpools
+resource "mgc_network_subnetpools_book_cidr" "book_subnetpool" {
+  cidr = "172.18.0.199/32"
+  subnet_pool_id   = "0290a302-77b4-4315-801c-087c7b96867b"
+}
+
 # Outputs
 output "primary_security_group_data" {
   value = data.mgc_network_security_group.primary_sg_data
@@ -127,6 +138,11 @@ output "primary_interface_data" {
 output "primary_subnet_data" {
   value = data.mgc_network_vpcs_subnet.primary_subnet_data
 }
+
+output "datasource_public_ip_id" {
+  value = data.mgc_network_public_ip.example
+}
+
 
 output "datasource_public_ip_id" {
   value = data.mgc_network_public_ip.example
