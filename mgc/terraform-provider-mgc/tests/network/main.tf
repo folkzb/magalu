@@ -61,6 +61,11 @@ data "mgc_network_vpcs_interface" "primary_interface_data" {
   id = mgc_network_vpcs_interfaces.primary_interface.id
 }
 
+resource "mgc_network_vpcs_interfaces" "pip_interface" {
+  name   = "pip-interface"
+  vpc_id = "9dd2d30e-565d-42ce-a0a3-f2de1c473fed"
+}
+
 # Security Group Attachment
 resource "mgc_network_security_groups_attach" "primary_sg_attachment" {
   security_group_id = mgc_network_security_groups.primary_sg.id
@@ -86,6 +91,22 @@ data "mgc_network_vpcs_subnet" "primary_subnet_data" {
   id = "4a073774-5a74-4bc8-9ef4-405058ed802a"
 }
 
+# Public IP
+resource "mgc_network_public_ips" "example" {
+  description = "example public ip"
+  vpc_id      = mgc_network_vpcs.main_vpc.id
+}
+
+data "mgc_network_public_ip" "example" {
+  id = mgc_network_public_ips.example.id
+}
+
+#Public IP Attachment
+resource "mgc_network_public_ips_attach" "example" {
+  public_ip_id = mgc_network_public_ips.example.id
+  interface_id = mgc_network_vpcs_interfaces.pip_interface.id
+}
+
 # Outputs
 output "primary_security_group_data" {
   value = data.mgc_network_security_group.primary_sg_data
@@ -105,4 +126,8 @@ output "primary_interface_data" {
 
 output "primary_subnet_data" {
   value = data.mgc_network_vpcs_subnet.primary_subnet_data
+}
+
+output "datasource_public_ip_id" {
+  value = data.mgc_network_public_ip.example
 }

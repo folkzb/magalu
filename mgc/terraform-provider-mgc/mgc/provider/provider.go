@@ -139,11 +139,13 @@ func (p *mgcProvider) Resources(ctx context.Context) []func() resource.Resource 
 		resources.NewBlockStorageSnapshotsResource,
 		resources.NewBlockStorageVolumesResource,
 		resources.NewSshKeysResource,
+		resources.NewNetworkPublicIPResource,
 		resources.NewNetworkVPCResource,
 		resources.NewNetworkSecurityGroupsResource,
 		resources.NewNetworkSecurityGroupsRulesResource,
 		resources.NewNetworkVPCInterfaceResource,
 		resources.NewNetworkSecurityGroupsAttachResource,
+		resources.NewNetworkPublicIPAttachResource,
 	)
 }
 
@@ -164,6 +166,7 @@ func (p *mgcProvider) DataSources(ctx context.Context) []func() datasource.DataS
 		datasources.NewDataSourceNetworkVPCInterface,
 		datasources.NewDataSourceNetworkVpcsSubnet,
 		datasources.NewDataSourceNetworkSubnetpool,
+		datasources.NewDataSourceNetworkPublicIP,
 	}
 }
 
