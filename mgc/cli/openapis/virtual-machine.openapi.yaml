@@ -2388,7 +2388,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
             x-viveiro: false
-            x-mgc-hidden: true
             security:
             -   OAuth2:
                 - virtual-machine.write
@@ -4245,8 +4244,8 @@ components:
             title: Regions
             enum:
             - br-se1
-            - br-se-1
-            - br-ne-1
+            - br-mgl1
+            - br-ne1
         SecurityGroups:
             type: object
             properties:
@@ -4271,18 +4270,18 @@ components:
         SnapshotCopyRequest:
             type: object
             properties:
-                region:
+                destination_region:
                     type: string
                     title: Regions
                     enum:
                     - br-se1
-                    - br-se-1
-                    - br-ne-1
+                    - br-mgl1
+                    - br-ne1
             title: SnapshotCopyRequest
             required:
-            - region
+            - destination_region
             example:
-                region: br-ne-1
+                destination_region: br-ne1
         SnapshotCreateRequestV1:
             type: object
             properties:
