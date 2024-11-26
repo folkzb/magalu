@@ -249,7 +249,6 @@ func (r *bsVolumes) Create(ctx context.Context, req resource.CreateRequest, resp
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	state.FinalName = types.StringValue(state.Name.ValueString())
 	if state.NameIsPrefix.ValueBool() {
 		bwords := bws.BrazilianWords(3, "-")
@@ -296,6 +295,9 @@ func (r *bsVolumes) Create(ctx context.Context, req resource.CreateRequest, resp
 	}
 
 	state = convertToState(*getCreatedResource, state.Name.ValueString(), state.NameIsPrefix.ValueBool())
+	if createParam.Snapshot != nil && createParam.Snapshot.Id != "" {
+		state.SnapshotID = types.StringValue(createParam.Snapshot.Id)
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
