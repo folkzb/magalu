@@ -19,7 +19,7 @@ import (
 	"magalu.cloud/terraform-provider-mgc/mgc/tfutil"
 )
 
-const backupStatusTimeout = 30 * time.Minute
+const backupStatusTimeout = 70 * time.Minute
 
 type DBaaSInstanceBackupStatus string
 
@@ -40,7 +40,7 @@ func (s DBaaSInstanceBackupStatus) String() string {
 type DBaaSInstanceBackupModel struct {
 	Id         types.String `tfsdk:"id"`
 	InstanceId types.String `tfsdk:"instance_id"`
-	Mode       types.String `tfsdk:"name"`
+	Mode       types.String `tfsdk:"mode"`
 }
 
 type DBaaSInstanceBackupResource struct {
