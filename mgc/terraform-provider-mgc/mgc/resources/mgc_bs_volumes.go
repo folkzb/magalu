@@ -134,7 +134,6 @@ func (r *bsVolumes) Schema(_ context.Context, _ resource.SchemaRequest, resp *re
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"size": schema.Int64Attribute{
@@ -190,10 +189,9 @@ func (r *bsVolumes) Create(ctx context.Context, req resource.CreateRequest, resp
 	}
 
 	createParam := sdkBlockStorageVolumes.CreateParameters{
-		Name:             state.Name.ValueString(),
-		Size:             int(state.Size.ValueInt64()),
-		Encrypted:        state.Encrypted.ValueBoolPointer(),
-		AvailabilityZone: state.AvailabilityZone.ValueStringPointer(),
+		Name:      state.Name.ValueString(),
+		Size:      int(state.Size.ValueInt64()),
+		Encrypted: state.Encrypted.ValueBoolPointer(),
 		Type: sdkBlockStorageVolumes.CreateParametersType{
 			Name: state.Type.ValueStringPointer(),
 		},
@@ -202,6 +200,9 @@ func (r *bsVolumes) Create(ctx context.Context, req resource.CreateRequest, resp
 		createParam.Snapshot = &sdkBlockStorageVolumes.CreateParametersSnapshot{
 			Id: state.SnapshotID.ValueStringPointer(),
 		}
+	}
+	if !state.AvailabilityZone.IsUnknown() {
+		createParam.AvailabilityZone = state.AvailabilityZone.ValueStringPointer()
 	}
 
 	createResult, err := r.bsVolumes.CreateContext(ctx, createParam,
