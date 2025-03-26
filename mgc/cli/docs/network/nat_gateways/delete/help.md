@@ -1,9 +1,9 @@
-# V1 Delete a Nat Gateway
+# Delete a NAT (Network Address Translation) Gateway from a VPC.
 
 ## Usage:
 ```bash
 Usage:
-  ./mgc network nat-gateways delete [nat-gateway-id] [flags]
+  mgc network nat-gateways delete [nat-gateway-id] [flags]
 ```
 
 ## Product catalog:

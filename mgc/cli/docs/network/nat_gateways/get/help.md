@@ -1,9 +1,9 @@
-# V1 Detail a Nat Gateway
+# Detail a NAT (Network Address Translation) Gateway from a VPC.
 
 ## Usage:
 ```bash
 Usage:
-  ./mgc network nat-gateways get [nat-gateway-id] [flags]
+  mgc network nat-gateways get [nat-gateway-id] [flags]
 ```
 
 ## Product catalog:

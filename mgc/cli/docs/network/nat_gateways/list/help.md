@@ -1,9 +1,9 @@
-# V1 List Nat Gateways from a VPC
+# List the NAT (Network Address Translation) Gateways from a VPC.
 
 ## Usage:
 ```bash
 Usage:
-  ./mgc network nat-gateways list [flags]
+  mgc network nat-gateways list [flags]
 ```
 
 ## Product catalog:

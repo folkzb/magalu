@@ -1,9 +1,9 @@
-# V1 Create a Nat Gateway
+# Create a new NAT (Network Address Translation) Gateway for a specified VPC and zone.
 
 ## Usage:
 ```bash
 Usage:
-  ./mgc network nat-gateways create [flags]
+  mgc network nat-gateways create [flags]
 ```
 
 ## Product catalog:

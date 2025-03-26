@@ -3,8 +3,8 @@
 ## Usage:
 ```bash
 Usage:
-  ./mgc network nat-gateways [flags]
-  ./mgc network nat-gateways [command]
+  mgc network nat-gateways [flags]
+  mgc network nat-gateways [command]
 ```
 
 ## Product catalog:
@@ -13,10 +13,10 @@ Usage:
 
 ## Other commands:
 - Commands:
-- create      V1 Create Nat Gateway
-- delete      V1 Delete Nat Gateway
-- get         V1 Detail Nat Gateway
-- list        V1 List Nat Gateways from a VPC
+- create      Create a new NAT Gateway resource
+- delete      Delete a NAT Gateway from a VPC
+- get         Detail a NAT Gateway from a VPC
+- list        List the NAT Gateways from a VPC
 
 ## Flags:
 ```bash
