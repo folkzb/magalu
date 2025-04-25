@@ -84,7 +84,7 @@ func DeleteSingle(ctx context.Context, params DeleteObjectParams, cfg Config) er
 		return err
 	}
 
-	resp, err := SendRequest(ctx, req)
+	resp, err := SendRequest(ctx, req, cfg)
 	if err != nil {
 		return err
 	}
