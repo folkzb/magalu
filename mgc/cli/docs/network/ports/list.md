@@ -10,7 +10,7 @@ mgc network ports list [flags]
 ## Flags:
 ```
 -h, --help                         help for list
-    --port-id-list array(string)   Port Id List (default [])
+    --port-id-list array(string)   Port Id List
 ```
 
 ## Global Flags:

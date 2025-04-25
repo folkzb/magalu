@@ -9,7 +9,7 @@ mgc dbaas instances snapshots list [instance-id] [flags]
 
 ## Flags:
 ```
-    --control.limit integer    The maximum number of items per page. (range: 1 - 50) (default 10)
+    --control.limit integer    The maximum number of items per page. (range: 1 - 50)
     --control.offset integer   The number of items to skip before starting to collect the result set. (min: 0)
 -h, --help                     help for list
     --instance-id uuid         Value referring to instance Id. (required)

@@ -23,7 +23,7 @@ mgc kubernetes cluster create --allowed-cidrs='["192.168.1.0/24","10.0.0.0/16"]'
                                     Enables the use of a bastion host for secure access to the cluster.
                                     
     --enabled-server-group          Enables the use of a server group with anti-affinity policy during the creation of the cluster and its node pools.
-                                     (default true)
+                                    
 -h, --help                          help for create
     --name string                   Kubernetes cluster name. The name is primarily intended for idempotence, and must be unique within a namespace. The name cannot be changed.
                                     The name must follow the following rules:
@@ -37,7 +37,7 @@ mgc kubernetes cluster create --allowed-cidrs='["192.168.1.0/24","10.0.0.0/16"]'
                                     Use --node-pools=help for more details
     --version string                The native Kubernetes version of the cluster.
                                     Please specify the Kubernetes version using the standard "vX.Y.Z" format.
-                                     (default "v1.30.2")
+                                    
     --zone string                   [Deprecated] This parameter is deprecated and its use won't create a cluster at requested zone.
                                     Identifier of the zone where the Kubernetes cluster will be located.
 ```

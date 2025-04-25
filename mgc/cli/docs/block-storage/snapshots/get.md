@@ -10,7 +10,7 @@ mgc block-storage snapshots get [id] [flags]
 ## Flags:
 ```
     --cli.list-links enum[=table]   List all available links for this command (one of "json", "table" or "yaml")
-    --expand array(enum)            Expand (default [])
+    --expand array(enum)            Expand
 -h, --help                          help for get
     --id uuid                       Id (required)
 ```

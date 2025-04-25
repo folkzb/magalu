@@ -9,7 +9,7 @@ mgc audit event-types list [flags]
 
 ## Flags:
 ```
-    --control.limit integer    Limit: Number of items per page (default 50)
+    --control.limit integer    Limit: Number of items per page
     --control.offset integer   Offset for pagination
 -h, --help                     help for list
 ```

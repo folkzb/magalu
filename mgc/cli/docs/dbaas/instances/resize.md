@@ -25,7 +25,7 @@ mgc dbaas instances resize --volume.size=30
     --volume.size integer           Instance Volume Request: The size of the volume (in GiB). (range: 10 - 50000)
                                     This is the same as '--volume=size:integer'.
     --volume.type enum              Instance Volume Request: The type of the volume. (one of "CLOUD_HDD", "CLOUD_NVME" or "CLOUD_NVME_15K")
-                                    This is the same as '--volume=type:enum'. (default "CLOUD_NVME_15K")
+                                    This is the same as '--volume=type:enum'.
 ```
 
 ## Global Flags:
