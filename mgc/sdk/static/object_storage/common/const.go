@@ -23,9 +23,6 @@ const (
 
 	signingAlgorithm = "AWS4-HMAC-SHA256"
 
-	// Default region to sign payload
-	signingRegion = "us-east-1"
-
 	// Default service name to sign payload
 	signingService = "s3"
 

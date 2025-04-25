@@ -121,7 +121,7 @@ func createObjectDeletionProcessor(cfg Config, bucketName BucketName, progressRe
 			return &ObjectError{Err: err}, pipeline.ProcessAbort
 		}
 
-		resp, err := SendRequest(ctx, req)
+		resp, err := SendRequest(ctx, req, cfg)
 		if err != nil {
 			return &ObjectError{Url: mgcSchemaPkg.URI(bucketName), Err: err}, pipeline.ProcessOutput
 		}
@@ -186,7 +186,7 @@ func DeleteBucket(ctx context.Context, params DeleteBucketParams, cfg Config) er
 		return err
 	}
 
-	resp, err := SendRequest(ctx, req)
+	resp, err := SendRequest(ctx, req, cfg)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func Delete(ctx context.Context, params DeleteObjectParams, cfg Config) (err err
 		return
 	}
 
-	resp, err := SendRequest(ctx, req)
+	resp, err := SendRequest(ctx, req, cfg)
 	if err != nil {
 		return err
 	}

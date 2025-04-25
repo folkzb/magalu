@@ -202,7 +202,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config, on
 			var resp *http.Response
 
 			if err == nil {
-				resp, err = SendRequest(ctx, req)
+				resp, err = SendRequest(ctx, req, cfg)
 			}
 
 			if err == nil {

@@ -97,7 +97,7 @@ func BuildBucketHostWithPathURL(cfg Config, bucketName BucketName, path string) 
 	return url.Parse(string(bucketHost))
 }
 
-func SendRequestWithIgnoredHeaders(ctx context.Context, req *http.Request, ignoredHeaders map[string]struct{}) (res *http.Response, err error) {
+func SendRequestWithIgnoredHeaders(ctx context.Context, req *http.Request, cfg Config, ignoredHeaders map[string]struct{}) (res *http.Response, err error) {
 	httpClient := mgcHttpPkg.ClientFromContext(ctx)
 	if httpClient == nil {
 		err = fmt.Errorf("couldn't get http client from context")
@@ -115,7 +115,7 @@ func SendRequestWithIgnoredHeaders(ctx context.Context, req *http.Request, ignor
 		return
 	}
 
-	if err = signHeaders(req, accesskeyId, accessSecretKey, unsignedPayload, ignoredHeaders); err != nil {
+	if err = signHeaders(req, accesskeyId, accessSecretKey, cfg.Region, unsignedPayload , ignoredHeaders); err != nil {
 		return
 	}
 
@@ -128,6 +128,6 @@ func SendRequestWithIgnoredHeaders(ctx context.Context, req *http.Request, ignor
 	return
 }
 
-func SendRequest(ctx context.Context, req *http.Request) (res *http.Response, err error) {
-	return SendRequestWithIgnoredHeaders(ctx, req, excludedHeaders)
+func SendRequest(ctx context.Context, req *http.Request, cfg Config) (res *http.Response, err error) {
+	return SendRequestWithIgnoredHeaders(ctx, req, cfg, excludedHeaders)
 }
