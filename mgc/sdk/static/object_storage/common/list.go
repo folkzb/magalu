@@ -186,7 +186,7 @@ func newListRequest(ctx context.Context, cfg Config, bucketURI mgcSchemaPkg.URI,
 	}
 
 	if page.MaxItems <= 0 {
-		return nil, core.UsageError{Err: fmt.Errorf("invalid item limit MaxItems, must be higher than zero: %d", page.MaxItems)}
+		page.MaxItems = ApiLimitMaxItems
 	} else if page.MaxItems > ApiLimitMaxItems {
 		page.MaxItems = ApiLimitMaxItems
 	}
@@ -238,7 +238,7 @@ func ListGenerator(ctx context.Context, params ListObjectsParams, cfg Config, on
 				return
 			}
 
-			resp, err := SendRequest(ctx, req)
+			resp, err := SendRequest(ctx, req, cfg)
 			if err != nil {
 				logger.Warnw("failed to send request", "err", err)
 				return
