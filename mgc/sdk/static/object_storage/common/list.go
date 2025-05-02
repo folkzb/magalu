@@ -186,7 +186,7 @@ func newListRequest(ctx context.Context, cfg Config, bucketURI mgcSchemaPkg.URI,
 	}
 
 	if page.MaxItems <= 0 {
-		page.MaxItems = ApiLimitMaxItems
+		return nil, core.UsageError{Err: fmt.Errorf("invalid item limit MaxItems, must be higher than zero: %d", page.MaxItems)}
 	} else if page.MaxItems > ApiLimitMaxItems {
 		page.MaxItems = ApiLimitMaxItems
 	}
