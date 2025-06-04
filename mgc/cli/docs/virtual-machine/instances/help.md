@@ -13,6 +13,7 @@ mgc virtual-machine instances [command]
 create            Create an instance.
 delete            Delete an instance.
 get               Retrieve the details of a specific instance.
+init-logs         Get Instance Console Logs
 list              List all instances.
 network-interface network-interface
 password          Retrieve the first windows admin password

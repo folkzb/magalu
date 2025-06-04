@@ -9,7 +9,7 @@ mgc dbaas instances update [instance-id] [flags]
 
 ## Examples:
 ```
-mgc dbaas instances update --backup-retention-days=7 --backup-start-at="04:00:00" --status="ACTIVE"
+mgc dbaas instances update --backup-retention-days=7 --backup-start-at="04:00:00" --parameter-group-id="44ae8773-a21e-4d5e-a38f-b677ccfeb7f8"
 ```
 
 ## Flags:
@@ -19,7 +19,7 @@ mgc dbaas instances update --backup-retention-days=7 --backup-start-at="04:00:00
     --cli.list-links enum[=table]     List all available links for this command (one of "json", "table" or "yaml")
 -h, --help                            help for update
     --instance-id uuid                Value referring to instance Id. (required)
-    --status enum                     Instance Status Update (one of "ACTIVE" or "STOPPED")
+    --parameter-group-id uuid         Parameter group Id
 ```
 
 ## Global Flags:
