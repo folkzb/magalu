@@ -1,19 +1,21 @@
 package spec
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/MagaluCloud/magalu/mgc/spec_manipulator/cmd/tui"
+	// oasChanges "github.com/pb33f/openapi-changes"
 	"github.com/spf13/cobra"
 )
 
-func downloadSpecsCmd() *cobra.Command {
+func diffCheckerCmd() *cobra.Command {
 	var dir string
 	var menu string
 
 	cmd := &cobra.Command{
-		Use:   "download [dir] [menu]",
+		Use:   "diff [dir] [menu]",
 		Short: "Download available spec",
 		Run: func(cmd *cobra.Command, args []string) {
 
@@ -34,23 +36,29 @@ func downloadSpecsCmd() *cobra.Command {
 			spinner.Start("Downloading ...")
 			for _, v := range currentConfig {
 				spinner.UpdateText("Downloading " + v.File)
+				dir = filepath.Join(dir, "tmp")
+				os.MkdirAll(dir, 0755)
+
+				tmpFile := filepath.Join(dir, v.File)
+
 				if !strings.Contains(v.Url, "gitlab.luizalabs.com") {
-					err = getAndSaveFile(v.Url, filepath.Join(dir, v.File), v.Menu)
+					err = getAndSaveFile(v.Url, tmpFile, v.Menu)
 					if err != nil {
-						spinner.Fail(err)
 						return
 					}
 				}
 
 				if strings.Contains(v.Url, "gitlab.luizalabs.com") {
-					err = downloadGitlab(v.Url, filepath.Join(dir, v.File))
+					err = downloadGitlab(v.Url, tmpFile)
 					if err != nil {
-						spinner.Fail(err)
 						return
 					}
 				}
 
 				justRunValidate(dir, v)
+
+				//
+
 			}
 			spinner.Success("Specs downloaded successfully")
 		},
