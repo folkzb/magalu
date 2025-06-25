@@ -3,6 +3,8 @@ package objects
 import (
 	"context"
 	"fmt"
+	"net"
+	"time"
 	"strings"
 
 	"github.com/MagaluCloud/magalu/mgc/core"
@@ -54,7 +56,24 @@ func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploa
 		return nil, err
 	}
 
-	if err = uploader.Upload(ctx); err != nil {
+	retries := cfg.Retries
+	if retries <= 0 {
+		retries = 0
+	}
+	backoff := 500 * time.Millisecond
+
+	for i := 0; i <= retries; i++ {
+		err = uploader.Upload(ctx)
+		if err == nil {
+			break
+		}
+
+		if isTemporaryErr(err) && i < retries {
+			time.Sleep(backoff)
+			backoff *= 2
+			continue
+		}
+
 		return nil, err
 	}
 
@@ -62,4 +81,24 @@ func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploa
 		URI:  fullDstPath.String(),
 		File: fileName,
 	}, nil
+}
+
+func isTemporaryErr(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if netErr, ok := err.(net.Error); ok {
+		return netErr.Temporary() || netErr.Timeout()
+	}
+
+	errStr := err.Error()
+	if strings.Contains(errStr, "no such host") ||
+		strings.Contains(errStr, "server misbehaving") ||
+		strings.Contains(errStr, "dial tcp") ||
+		strings.Contains(errStr, "i/o timeout") {
+		return true
+	}
+
+	return false
 }
