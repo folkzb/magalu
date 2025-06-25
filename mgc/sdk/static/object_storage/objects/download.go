@@ -3,6 +3,7 @@ package objects
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/MagaluCloud/magalu/mgc/core"
 	mgcSchemaPkg "github.com/MagaluCloud/magalu/mgc/core/schema"
@@ -40,7 +41,22 @@ func download(ctx context.Context, p common.DownloadObjectParams, cfg common.Con
 		return nil, err
 	}
 
-	if err = downloader.Download(ctx); err != nil {
+	retries := cfg.Retries
+	if retries <= 0 {
+		retries = 0
+	}
+	backoff := 500 * time.Millisecond
+
+	for i := 0; i <= retries; i++ {
+		err = downloader.Download(ctx)
+		if err == nil {
+			break
+		}
+		if isTemporaryErr(err) && i < retries {
+			time.Sleep(backoff)
+			backoff *= 2
+			continue
+		}
 		return nil, err
 	}
 
