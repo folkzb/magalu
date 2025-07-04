@@ -30,6 +30,7 @@ mgc object-storage buckets acl get [dst] [flags]
 -o, --output string            Change the output format. Use '--output=help' to know more details.
 -r, --raw                      Output raw data, without any formatting or coloring
     --region string            Region to reach the service (default "br-se1")
+    --retries integer          Maximum number of retries for transient network errors (min: 0)
     --server-url uri           Manually specify the server to use
     --workers integer          Number of routines that spawn to do parallel operations within object_storage (min: 1) (required) (default 5)
 ```
