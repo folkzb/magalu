@@ -3,6 +3,7 @@ package objects
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/MagaluCloud/magalu/mgc/core"
 	"github.com/MagaluCloud/magalu/mgc/core/utils"
@@ -33,9 +34,27 @@ Please confirm by retyping: {{.confirmationValue}}`,
 })
 
 func deleteObject(ctx context.Context, params common.DeleteObjectParams, cfg common.Config) (core.Value, error) {
-	err := common.Delete(ctx, params, cfg)
-	if err != nil {
+	retries := cfg.Retries
+	if retries <= 0 {
+		retries = 0
+	}
+	backoff := 500 * time.Millisecond
+
+	var err error
+	for i := 0; i <= retries; i++ {
+		err = common.Delete(ctx, params, cfg)
+		if err == nil {
+			return nil, nil
+		}
+
+		if isTemporaryErr(err) && i < retries {
+			time.Sleep(backoff)
+			backoff *= 2
+			continue
+		}
+
 		return nil, err
 	}
+
 	return nil, err
 }

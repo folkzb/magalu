@@ -64,16 +64,13 @@ func upload(ctx context.Context, params uploadParams, cfg common.Config) (*uploa
 
 	for i := 0; i <= retries; i++ {
 		err = uploader.Upload(ctx)
-		if err == nil {
-			break
-		}
-
+		if err != nil {
 		if isTemporaryErr(err) && i < retries {
 			time.Sleep(backoff)
 			backoff *= 2
 			continue
+			}
 		}
-
 		return nil, err
 	}
 
